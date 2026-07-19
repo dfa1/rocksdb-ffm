@@ -6,7 +6,8 @@
 ![MacOS](https://img.shields.io/badge/macOS-fully_supported-green.svg)
 ![Linux](https://img.shields.io/badge/linux-fully_supported-green.svg)
 ![Linux aarch64](https://img.shields.io/badge/linux_aarch64-fully_supported-green.svg)
-![Windows](https://img.shields.io/badge/windows-not_supported-red.svg)
+![Windows](https://img.shields.io/badge/windows-fully_supported-green.svg)
+![Windows aarch64](https://img.shields.io/badge/windows_aarch64-fully_supported-green.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/dfa1/rocksdbffm/workflows/CI/badge.svg?branch=main)](https://github.com/dfa1/rocksdbffm/actions?query=branch=main)
 
@@ -20,13 +21,15 @@ The target is JDK 25+ because of `java.lang.foreign`.
 > work — C header mapping, test generation, and documentation. **Architecture, API design, and all decisions are
 > human-driven.**
 
-The native library is built from the RocksDB source via **`zig cc` / `zig c++`** as a drop-in C/C++ compiler
-(`PORTABLE=1 make shared_lib`). Zig bundles clang and libc++ for every target, enabling hermetic cross-compilation
-without a separate sysroot or system toolchain.
+The native library is built from the RocksDB source via **`zig cc` / `zig c++`** as a drop-in C/C++ compiler.
+macOS and Linux go through RocksDB's POSIX `Makefile` (`PORTABLE=1 make shared_lib`); Windows goes through RocksDB's
+CMake build instead (`CMAKE_SYSTEM_NAME=Windows` with zig cc/c++ acting as a MinGW-w64-compatible cross compiler),
+since the Makefile has no Windows target. Zig bundles clang and libc++ for every target, enabling hermetic
+cross-compilation without a separate sysroot or system toolchain.
 
 ## 📦 Coordinates
 
-The library comes with core (pure `Java`) and one additional native artifact per OS/Architecture. Windows is not yet supported: RocksDB's POSIX `Makefile` cannot cross-compile to a `.dll` via `zig cc`, and a CMake-based build path is needed. Contributions welcome.
+The library comes with core (pure `Java`) and one additional native artifact per OS/Architecture.
 
 ### Maven (BOM — recommended)
 
@@ -64,6 +67,14 @@ Import the BOM once; all artifact versions are managed automatically:
     <groupId>io.github.dfa1</groupId>
     <artifactId>rocksdbffm-native-linux-aarch64</artifactId>
   </dependency>
+  <dependency>
+    <groupId>io.github.dfa1</groupId>
+    <artifactId>rocksdbffm-native-windows-x86_64</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>io.github.dfa1</groupId>
+    <artifactId>rocksdbffm-native-windows-aarch64</artifactId>
+  </dependency>
 </dependencies>
 ```
 
@@ -76,6 +87,8 @@ implementation("io.github.dfa1:rocksdbffm-core")
 implementation("io.github.dfa1:rocksdbffm-native-osx-aarch64")
 implementation("io.github.dfa1:rocksdbffm-native-linux-x86_64")
 implementation("io.github.dfa1:rocksdbffm-native-linux-aarch64")
+implementation("io.github.dfa1:rocksdbffm-native-windows-x86_64")
+implementation("io.github.dfa1:rocksdbffm-native-windows-aarch64")
 ```
 
 ### 🔐 Supply‑chain & SBOM
@@ -94,6 +107,8 @@ PURLs allow SCA tools (Syft, Grype, Trivy, osv.dev, GitHub Advisory DB) to uniqu
 
 - JDK 25+.
 - [Zig](https://ziglang.org/) (any 0.15.x build).
+- [CMake](https://cmake.org/) (needed only for the Windows native builds), plus `make` or
+  [Ninja](https://ninja-build.org/) as its backing generator.
 
 ### Build and Test
 

@@ -9,8 +9,8 @@
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>rocksdbffm-native-linux-x86_64</artifactId>
-	<name>RocksDB FFM Native Linux x86_64</name>
+	<artifactId>rocksdbffm-native-windows-x86_64</artifactId>
+	<name>RocksDB FFM Native Windows x86_64</name>
 	<packaging>jar</packaging>
 
 	<build>
@@ -31,9 +31,9 @@
 								 windows-latest runners) instead. -->
 							<executable>bash</executable>
 							<arguments>
-								<argument>${maven.multiModuleProjectDirectory}/scripts/build-rocksdb.sh</argument>
+								<argument>${maven.multiModuleProjectDirectory}/scripts/build-rocksdb-windows.sh</argument>
 								<argument>${project.basedir}/src/main/resources</argument>
-								<argument>linux-x86_64</argument>
+								<argument>windows-x86_64</argument>
 							</arguments>
 						</configuration>
 					</execution>
