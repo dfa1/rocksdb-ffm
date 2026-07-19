@@ -1,6 +1,8 @@
 package io.github.dfa1.rocksdbffm;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
@@ -128,6 +130,11 @@ class EnvTest {
 	}
 
 	@Test
+	// RocksDB's MemEnv on the Windows port doesn't implement GetAbsolutePath
+	// (DB::Open calls it to canonicalize the DB directory), so this throws
+	// "Not implemented: GetAbsolutePath" on Windows — a RocksDB upstream
+	// limitation, not something this project's build can work around.
+	@DisabledOnOs(OS.WINDOWS)
 	void setEnv_withMemEnv_opensDb(@TempDir Path dir) {
 		// Given
 		try (var env = Env.memEnv();

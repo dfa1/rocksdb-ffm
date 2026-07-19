@@ -1,0 +1,133 @@
+name: Release smoke test
+
+# Verifies a PUBLISHED release on Maven Central actually loads and runs on every
+# supported OS/arch — one runner per native classifier. Pulls the release jars
+# from Central (no source build, no submodule, no zig), so it tests exactly what
+# users consume. Trigger manually and pass the version to check.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to smoke-test. Leave blank to use the latest release on Maven Central.
+        required: false
+        default: ""
+  schedule:
+    # Weekly, Mondays 06:00 UTC. No input on scheduled runs, so the resolve job
+    # picks the latest release on Maven Central — catches Central / runner-image
+    # drift against the published release without a manual trigger.
+    - cron: "0 6 * * 1"
+
+jobs:
+  resolve:
+    name: resolve version
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      version: ${{ steps.pick.outputs.version }}
+    steps:
+      - name: Resolve version (input, else latest on Maven Central)
+        id: pick
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          version="$INPUT_VERSION"
+          if [ -z "$version" ]; then
+            # <release> in maven-metadata.xml is the latest non-snapshot release.
+            version=$(curl -fsSL --proto '=https' --tlsv1.2 https://repo1.maven.org/maven2/io/github/dfa1/rocksdbffm-core/maven-metadata.xml \
+              | grep -oE '<release>[^<]+</release>' | sed -E 's/<\/?release>//g')
+          fi
+          if [ -z "$version" ]; then
+            echo "could not resolve a version from Maven Central" >&2
+            exit 1
+          fi
+          echo "Smoke-testing version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  smoke:
+    name: ${{ matrix.classifier }}
+    needs: resolve
+    # Every leg gates the workflow — the library claims to be portable across
+    # all 5 classifiers, so a failure on any one of them is a real regression.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest,    classifier: linux-x86_64 }
+          - { os: ubuntu-24.04-arm, classifier: linux-aarch64 }
+          - { os: macos-14,         classifier: osx-aarch64 }
+          - { os: windows-latest,   classifier: windows-x86_64 }
+          - { os: windows-11-arm,   classifier: windows-aarch64 }
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout (smoke sources only)
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          # Zulu ships JDK 25 for every target here, including Windows/ARM64,
+          # which Temurin does not yet.
+          distribution: zulu
+          java-version: '25'
+
+      # A real `mvn test` against .github/smoke/pom.xml (JUnit 5 via Surefire),
+      # via the vendored Maven Wrapper so no preinstalled Maven is required.
+      # -Drocksdbffm.version and -Drocksdbffm.classifier pin the release and
+      # native jar under test.
+      - name: Smoke-test ${{ needs.resolve.outputs.version }} on ${{ matrix.classifier }}
+        shell: bash
+        env:
+          VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          sh .github/smoke/mvnw -f .github/smoke/pom.xml --no-transfer-progress \
+            -Drocksdbffm.version="$VERSION" -Drocksdbffm.classifier=${{ matrix.classifier }} \
+            test
+
+  results:
+    name: results
+    needs: [resolve, smoke]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      # Per-leg results aren't visible to a needs-context (needs.smoke.result is
+      # one aggregate string for the whole matrix), so pull the real per-job
+      # conclusions from the Actions API and render one table up front instead
+      # of making readers open all 5 jobs to see what actually passed.
+      - name: Build results table
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          jobs=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?per_page=100" \
+            --jq '[.jobs[] | select(.name != "resolve version" and .name != "results")]')
+
+          {
+            echo "### Release smoke — version ${{ needs.resolve.outputs.version }}"
+            echo
+            echo "Every host below gates the workflow — a failure on any one of them is a real portability regression."
+            echo
+            echo "| Host | Result | Duration |"
+            echo "|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "$jobs" | jq -r '.[] |
+            (if .conclusion == "success" then "✅ pass"
+             elif .conclusion == "skipped" then "⏭️ skipped"
+             else "❌ **" + (.conclusion // "unknown") + "**" end) as $result |
+            (((.completed_at | fromdateiso8601) - (.started_at | fromdateiso8601))) as $dur |
+            (($dur / 60) | floor) as $m | ($dur % 60) as $s |
+            (if $m > 0 then ($m | tostring) + "m " + ($s | tostring) + "s" else ($s | tostring) + "s" end) as $duration |
+            "| " + .name + " | " + $result + " | " + $duration + " |"' >> "$GITHUB_STEP_SUMMARY"
+
+          total=$(echo "$jobs" | jq 'length')
+          pass=$(echo "$jobs" | jq '[.[] | select(.conclusion == "success")] | length')
+
+          {
+            echo
+            echo "**$pass/$total passed**"
+          } >> "$GITHUB_STEP_SUMMARY"

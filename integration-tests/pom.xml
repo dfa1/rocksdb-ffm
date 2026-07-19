@@ -39,6 +39,16 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>io.github.dfa1</groupId>
+			<artifactId>rocksdbffm-native-windows-x86_64</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.github.dfa1</groupId>
+			<artifactId>rocksdbffm-native-windows-aarch64</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>

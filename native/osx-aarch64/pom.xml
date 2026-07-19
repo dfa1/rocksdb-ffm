@@ -33,8 +33,12 @@
 							<goal>exec</goal>
 						</goals>
 						<configuration>
-							<executable>${maven.multiModuleProjectDirectory}/scripts/build-rocksdb.sh</executable>
+							<!-- exec-maven-plugin cannot launch a .sh directly on native Windows
+								 (CreateProcess error=193); invoke it through bash (Git Bash on
+								 windows-latest runners) instead. -->
+							<executable>bash</executable>
 							<arguments>
+								<argument>${maven.multiModuleProjectDirectory}/scripts/build-rocksdb.sh</argument>
 								<argument>${project.basedir}/src/main/resources</argument>
 								<argument>osx-aarch64</argument>
 							</arguments>

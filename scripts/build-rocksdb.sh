@@ -26,7 +26,7 @@ ROCKSDB_DIR="$PROJECT_DIR/rocksdb"
 mkdir -p "$1"
 OUTPUT_RESOURCES="$(cd "$1" && pwd)"
 CLASSIFIER="$2"
-JOBS="${ROCKSDB_BUILD_JOBS:-$(sysctl -n hw.logicalcpu 2>/dev/null || nproc)}"
+JOBS="${ROCKSDB_BUILD_JOBS:-$(sysctl -n hw.logicalcpu 2>/dev/null || nproc 2>/dev/null || echo "${NUMBER_OF_PROCESSORS:-4}")}"
 
 # ---------------------------------------------------------------------------
 # Map classifier → (zig target triple, library name, RocksDB platform)
@@ -72,9 +72,30 @@ fi
 # ---------------------------------------------------------------------------
 HOST_OS=$(uname -s)
 HOST_ARCH=$(uname -m)
-case "$HOST_OS" in Darwin) HOST_OS_NAME="osx"   ;; Linux) HOST_OS_NAME="linux" ;; esac
-case "$HOST_ARCH" in arm64|aarch64) HOST_ARCH_NAME="aarch64" ;; x86_64) HOST_ARCH_NAME="x86_64" ;; esac
+case "$HOST_OS" in
+    Darwin) HOST_OS_NAME="osx" ;;
+    Linux) HOST_OS_NAME="linux" ;;
+    MINGW* | MSYS* | CYGWIN*) HOST_OS_NAME="windows" ;;
+    *) HOST_OS_NAME="unknown" ;;
+esac
+case "$HOST_ARCH" in
+    arm64 | aarch64) HOST_ARCH_NAME="aarch64" ;;
+    x86_64) HOST_ARCH_NAME="x86_64" ;;
+    *) HOST_ARCH_NAME="unknown" ;;
+esac
 HOST_CLASSIFIER="${HOST_OS_NAME}-${HOST_ARCH_NAME}"
+
+# RocksDB's POSIX Makefile has no Windows target at all (see
+# build-rocksdb-windows.sh), so this script cannot build ANY classifier —
+# not even a macOS/Linux one — from a native Windows host: RocksDB's own
+# build_detect_platform relies on POSIX uname/shell semantics, and
+# windows-latest CI runners additionally have no GNU Make on PATH. Skip
+# cleanly rather than fail the whole `mvn verify`; other CI matrix legs
+# (macOS/Linux hosts) still build and validate this classifier normally.
+if [ "$HOST_OS_NAME" = "windows" ]; then
+    echo "[build-rocksdb] Skipping $CLASSIFIER on a Windows host: RocksDB's POSIX Makefile has no Windows build path. Use build-rocksdb-windows.sh for windows-* classifiers." >&2
+    exit 0
+fi
 
 CROSS=""
 if [ "$CLASSIFIER" != "$HOST_CLASSIFIER" ]; then
