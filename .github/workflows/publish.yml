@@ -34,6 +34,26 @@ jobs:
         with:
           version: 0.15.2
 
+      # Same cache ci.yml's ubuntu-latest leg populates for this exact rocksdb
+      # submodule commit; a release commit only bumps pom.xml versions, so the
+      # key (keyed off rocksdb/CMakeLists.txt) matches whatever the PR/main CI
+      # run already built, turning a ~15 min-per-classifier native rebuild
+      # into a cache hit. Without this, publishing rebuilds RocksDB for all 5
+      # classifiers from scratch on a single host — the slow build is also
+      # what's suspected to have caused the v0.6 attempt's late 401 (one
+      # combined upload happens only after everything else finishes, so a
+      # long build means a long-lived, late network call).
+      - name: Cache RocksDB native builds
+        uses: actions/cache@v4
+        with:
+          path: |
+            native/osx-aarch64/src/main/resources/native
+            native/linux-x86_64/src/main/resources/native
+            native/linux-aarch64/src/main/resources/native
+            native/windows-x86_64/src/main/resources/native
+            native/windows-aarch64/src/main/resources/native
+          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt') }}-ubuntu-latest-${{ runner.arch }}
+
       - name: Publish to Maven Central
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
