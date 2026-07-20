@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref (tag) to check out and publish. Leave blank to use the ref that triggered this run.'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -15,6 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.ref || github.ref }}
           submodules: recursive
 
       - name: Set up JDK 25 with Maven Central publishing
