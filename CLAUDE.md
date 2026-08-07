@@ -13,7 +13,7 @@ This project is heavily AI-driven. As an agent, your goal is to:
 - **Language:** Java 25+.
 - **Core API:** `java.lang.foreign` (Foreign Function & Memory API).
 - **Native Library:** RocksDB (C API via `include/rocksdb/c.h`), built from the `rocksdb/` git submodule (pinned to
-  v10.10.1).
+  v11.0.4).
 - **Native Compiler:** `zig cc` / `zig c++` — used as a drop-in C/C++ compiler via
   `CC="zig cc" CXX="zig c++" PORTABLE=1 make shared_lib`. Zig bundles clang + libc++ for every target, enabling
   cross-compilation without a separate sysroot.
@@ -31,7 +31,7 @@ Every class wrapping a native pointer **must** implement `AutoCloseable`.
 
 - **Zero Leaks:** Native resources must be destroyed in `close()`.
 - **Ownership Transfer:** When one native object takes ownership of another (e.g., `FilterPolicy` →
-  `BlockBasedTableConfig`), the transferring object must mark the ownership as transferred using a boolean flag. Its
+  `BlockBasedTableOptions`), the transferring object must mark the ownership as transferred using a boolean flag. Its
   `close()` method should then become a no-op to prevent double-frees.
 - **Transfer Marker:** Use a method like `transferOwnership()` inside the setter that takes ownership.
 
@@ -42,7 +42,7 @@ To ensure type safety and consistent units across the API:
 - **C API Only:** We use the RocksDB C interface (`rocksdb/c.h`). Do not attempt to link directly to C++ symbols.
 - **Read-only headers:** NEVER modify system include files (e.g. `/opt/homebrew/...`, `/usr/include/...`). They are
   read-only references; all mappings live in Java source.
-- **Library loading:** `RocksDB.java` loads the native library from the classpath resource
+- **Library loading:** `NativeLibrary.java` loads the native library from the classpath resource
   `/native/<os>-<arch>/librocksdb.<ext>` (bundled by the `native-build` Maven profile). There is no brew/system
   fallback. NEVER add hardcoded system paths back.
 - **Paths:** Never use raw `String` for file system paths. Always use `java.nio.file.Path` for any API surface that
@@ -65,15 +65,18 @@ For every feature, provide three tiers of access:
 
 ### 1. Centralized Error Handling
 
-**NEVER use ThreadLocals for error pointers.** Use the centralized `Native` utility with the caller's `Arena`:
+**NEVER use ThreadLocals for error pointers.** Use the shared helpers on `RocksDB` with the caller's `Arena`:
 
 ```java
 try (Arena arena = Arena.ofConfined()) {
-    MemorySegment err = Native.errHolder(arena);
+    MemorySegment err = RocksDB.errHolder(arena);
     MH_DO_SOMETHING.invokeExact(handle, ..., err);
-    Native.checkError(err);
+    RocksDB.checkError(err);
 }
 ```
+
+`RocksDB.errHolder`, `RocksDB.checkError`, and `RocksDB.toNative` are the shared FFM plumbing used by every wrapper
+class.
 
 ### 2. Zero-Copy Patterns
 
@@ -149,15 +152,22 @@ For the full feature status and roadmap see `README.md`.
 | Transactions            | `Transaction.java`, `TransactionDB.java`, `TransactionDBOptions.java`, `TransactionOptions.java`                          |
 | Optimistic Transactions | `OptimisticTransactionDB.java`, `OptimisticTransactionOptions.java`                                                       |
 | Checkpoints             | `Checkpoint.java`                                                                                                         |
-| Table Options           | `BlockBasedTableConfig.java`, `LRUCache.java`, `FilterPolicy.java`                                                        |
+| Table Options           | `BlockBasedTableOptions.java`, `Cache.java`, `LRUCache.java`, `HyperClockCache.java`, `FilterPolicy.java`                 |
+| Compression             | `CompressionType.java`; `Options.setCompression`; `CompressionType.getSupportedTypes()` runtime probe                     |
 | Iterators               | `RocksIterator.java`                                                                                                      |
 | Snapshots               | `Snapshot.java`; `ReadOptions.setSnapshot`; `RocksDB.getSnapshot`, `TransactionDB.getSnapshot`, `Transaction.getSnapshot` |
 | Flush                   | `FlushOptions.java`; `RocksDB.flush`, `RocksDB.flushWal`, `TransactionDB.flush`, `TransactionDB.flushWal`                 |
 | KeyMayExist             | `RocksDB.keyMayExist` — byte[], ByteBuffer, MemorySegment, ReadOptions overload                                           |
-| DB Properties           | `DBProperty.java` (enum of well-known names); `RocksDB.getProperty`, `RocksDB.getLongProperty`, same on `TransactionDB`   |
+| DB Properties           | `Property.java` (enum of well-known names); `RocksDB.getProperty`, `RocksDB.getLongProperty`, same on `TransactionDB`     |
 | Statistics              | `HistogramType.java`, `TickerType.java`, `StatsLevel.java`, `StatisticsHistogramData.java`                                |
-| Shared utilities        | `Native.java` (`errHolder`, `checkError`, `toNative`), `MemorySize.java`, `RocksDBException.java`                         |
-| Compaction control      | `CompactOptions.java`; `RocksDB.compactRange`, `suggestCompactRange`, `disableFileDeletions`, `enableFileDeletions`       |
+| Shared utilities        | `RocksDB.java` statics (`errHolder`, `checkError`, `toNative`), `NativeObject.java`, `NativeLibrary.java`, `MemorySize.java`, `SequenceNumber.java`, `RocksDBException.java` |
+| Compaction control      | `CompactOptions.java`, `WaitForCompactOptions.java`; `RocksDB.compactRange`, `suggestCompactRange`, `disableFileDeletions`, `enableFileDeletions`, `ReadWriteDB.waitForCompact` |
+| DeleteRange             | `ReadWriteDB.deleteRange` (all three tiers), `WriteBatch.deleteRange`                                                     |
+| SST File Ingest         | `SstFileWriter.java`, `IngestExternalFileOptions.java`; `RocksDB.ingestExternalFile`                                     |
+| WAL Iterator            | `WalIterator.java`, `WalBatchResult.java`; `RocksDB.getUpdatesSince`, `getLatestSequenceNumber`                          |
+| Read-only DB            | `ReadOnlyDB.java`                                                                                                         |
+| TTL DB                  | `TtlDB.java`; `RocksDB.openWithTtl(Path, Duration)`                                                                       |
+| Logger                  | `Logger.java`, `LogLevel.java`; `Logger.newStderrLogger`, `Logger.newCallbackLogger`                                      |
 | Secondary DB            | `SecondaryDB.java`                                                                                                        |
 | Blob DB                 | `BlobDB.java`; blob options in `Options.java`; `PrepopulateBlobCache.java`; `RocksDB.openWithBlobFiles`                   |
 | Rate Limiter            | `RateLimiter.java`; `Options.setRateLimiter`                                                                              |
@@ -165,6 +175,7 @@ For the full feature status and roadmap see `README.md`.
 | Backup Engine           | `BackupEngine.java`, `BackupEngineOptions.java`, `RestoreOptions.java`, `BackupInfo.java`, `BackupId.java`                |
 | Column Families         | `ColumnFamilyHandle.java`, `ColumnFamilyDescriptor.java`; `RocksDB.openWithColumnFamilies`, `listColumnFamilies`; CF overloads on `ReadWriteDB` and `WriteBatch`; CF overloads on `ReadOnlyDB`, `TtlDB`, `TransactionDB`, `OptimisticTransactionDB`; `Transaction` CF put/delete/get/getForUpdate/newIterator; multi-CF open for all DB types |
 | Perf Context            | `PerfContext.java`, `PerfLevel.java`, `PerfMetric.java`; thread-local; `setPerfLevel`, `reset`, `metric`, `report`       |
+| Pooling (unused)        | `pool/Pool.java`, `pool/BlockingPool.java`, `pool/CachedBlockingPool.java`, `pool/UnpooledPool.java` — see `docs/pool-design.md`; **not wired into any call path and untested** |
 
 ## Documentation
 
@@ -179,7 +190,7 @@ For the full feature status and roadmap see `README.md`.
 - every `MH_` field must have a `/// \`<c prototype>\`` comment on the line immediately above it, copied verbatim from `rocksdb/include/rocksdb/c.h` (strip the `extern ROCKSDB_LIBRARY_API` prefix); no duplicate comment in the `static` block
 - don't map multiple times the same symbol from C library of rocksdb
     - try to create always a java wrapper for that (i.e. PinnableSlice)
-- use NativePointer as base class for all managed objects
+- use NativeObject as base class for all managed objects
     - this is needed to avoid double close() crashing the JVM
 - don't expose public constructors, like CompactOptions.newCompactOptions(), CompactOptions.newCompactOptions()
     - why? to be able to call super in the private constructor and to have more freedom in the static factory method

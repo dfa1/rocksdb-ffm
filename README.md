@@ -1,7 +1,7 @@
 # RocksDB FFM
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.dfa1/rocksdbffm-core.svg)](https://central.sonatype.com/artifact/io.github.dfa1/rocksdbffm-core)
-![PURL](https://img.shields.io/badge/purl-pkg%3Amaven%2Fio.github.dfa1%2Frocksdbffm--core%400.5-blue)
+![PURL](https://img.shields.io/badge/purl-pkg%3Amaven%2Fio.github.dfa1%2Frocksdbffm--core%400.6-blue)
 ![RocksDB](https://img.shields.io/badge/RocksDB-11.0.4-green.svg)
 ![MacOS](https://img.shields.io/badge/macOS-fully_supported-green.svg)
 ![Linux](https://img.shields.io/badge/linux-fully_supported-green.svg)
@@ -95,9 +95,9 @@ implementation("io.github.dfa1:rocksdbffm-native-windows-aarch64")
 
 This project publishes a Software Bill of Materials (SBOM) using the CycloneDX format.
 
-- Package URL (PURL): `pkg:maven/io.github.dfa1/rocksdbffm-core@0.5`
+- Package URL (PURL): `pkg:maven/io.github.dfa1/rocksdbffm-core@0.6`
 - Ecosystem: Maven
-- Coordinates: `io.github.dfa1:rocksdbffm-core:0.4`
+- Coordinates: `io.github.dfa1:rocksdbffm-core:0.6`
 
 PURLs allow SCA tools (Syft, Grype, Trivy, osv.dev, GitHub Advisory DB) to uniquely identify this artifact.
 
@@ -192,8 +192,13 @@ rules out accidentally passing non-path strings.
 
 ## Performance Results
 
-Benchmarks performed on JDK 25 (Apple M5), RocksDB v11.0.4. Each tier uses the same pre-seeded key so the
-numbers reflect pure call overhead, not cache miss variance.
+Benchmarks performed on JDK 25 (Apple M5). Each tier uses the same pre-seeded key so the numbers reflect pure call
+overhead, not cache miss variance.
+
+> **Note:** the two sides do not run the same RocksDB build. The FFM column uses the bundled native library built from
+> the `rocksdb/` submodule (**v11.0.4**); the JNI column uses `org.rocksdb:rocksdbjni` (**10.10.1.1**), the latest
+> published release. Treat the deltas as indicative of binding overhead rather than a controlled like-for-like
+> comparison.
 
 | Operation              | API tier           | FFM (ops/s) | JNI (ops/s) |   Gain    |
 |:-----------------------|:-------------------|:-----------:|:-----------:|:---------:|
@@ -229,22 +234,22 @@ This project is currently experimental. The table below tracks parity with `rock
 | WriteBatch                 |   ✅    | Atomic multi-op writes                                                                                                                           |
 | Transactions (pessimistic) |   ✅    | TransactionDB, savepoints, get-for-update                                                                                                        |
 | Checkpoints                |   ✅    | Point-in-time on-disk snapshot                                                                                                                   |
-| Table Options              |   ✅    | BlockBasedTableConfig, LRUCache, FilterPolicy (Bloom)                                                                                            |
+| Table Options              |   ✅    | `BlockBasedTableOptions`, `Cache`, `LRUCache`, `HyperClockCache`, `FilterPolicy` (Bloom)                                                         |
 | Iterators                  |   ✅    | seekToFirst/Last, seek, seekForPrev, next/prev; all three access tiers                                                                           |
 | Snapshots                  |   ✅    | Point-in-time consistent reads; `ReadOptions.setSnapshot`, sequence numbers                                                                      |
 | Flush                      |   ✅    | `flush(FlushOptions)`, `flushWal(boolean sync)`; sync/async modes                                                                                |
-| DB Properties              |   ✅    | `getProperty(DBProperty)` → `Optional<String>`, `getLongProperty(DBProperty)` → `OptionalLong`                                                   |
+| DB Properties              |   ✅    | `getProperty(Property)` → `Optional<String>`, `getLongProperty(Property)` → `OptionalLong`                                                       |
 | Statistics                 |   ✅    | TickerType, HistogramType, StatsLevel                                                                                                            |
 | Compression                |   ✅    | `CompressionType` enum (NO/Snappy/zlib/bz2/LZ4/LZ4HC/Xpress/Zstd); `Options.setCompression`; `CompressionType.getSupportedTypes()` runtime probe |
 | Column Families            |   ✅    | `openWithColumnFamilies`, `listColumnFamilies`, `createColumnFamily`, `dropColumnFamily`; `ColumnFamilyHandle`, `ColumnFamilyDescriptor`; put/get/delete/deleteRange/keyMayExist/flush/getProperty/newIterator all three tiers; `WriteBatch` CF overloads; CF overloads on `ReadOnlyDB`, `TtlDB`, `TransactionDB`, `OptimisticTransactionDB`; `Transaction` put/delete/get/getForUpdate/newIterator per-CF; multi-CF open for all DB types |
 | MultiGet                   |   ❌    | Bulk reads                                                                                                                                       |
 | DeleteRange                |   ✅    | Range tombstones; `deleteRange` on `RocksDB` and `WriteBatch`; all three access tiers                                                            |
 | Compaction control         |   ✅    | `compactRange` (all three tiers + `CompactOptions`), `suggestCompactRange`, `disableFileDeletions`, `enableFileDeletions`                        |
-| SST File Ingest            |   ✅    | `SstFileWriter` (put/delete/deleteRange/merge), `RocksDB.ingestExternalFile`; `IngestExternalFileOptions`                                        |
+| SST File Ingest            |   ✅    | `SstFileWriter` (put/delete/deleteRange), `RocksDB.ingestExternalFile`; `IngestExternalFileOptions`                                             |
 | Backup Engine              |   ✅    | `BackupEngine`, `BackupEngineOptions`, `RestoreOptions`, `BackupInfo`, `BackupId`; incremental backup/restore; purge; verify                     |
 | TTL DB                     |   ✅    | `openWithTtl(path, Duration)`; lazy expiry via compaction; full API available                                                                    |
 | Optimistic Transactions    |   ✅    | `OptimisticTransactionDB`; conflict detection at commit; `OptimisticTransactionOptions`                                                          |
-| Merge / MergeOperator      |   🚧    | `merge` on `RocksDB`, `WriteBatch`, `SstFileWriter`; `setUInt64AddMergeOperator` on `Options`; custom `MergeOperator` via FFM upcall stubs       |
+| Merge / MergeOperator      |   ❌    | Not implemented. `rocksdb_merge*` and `rocksdb_mergeoperator_create()` exist in the C API; see [#8](https://github.com/dfa1/rocksdbffm/issues/8) |
 | CompactionFilter           |   ❌    | Custom compaction logic                                                                                                                          |
 | WAL Iterator               |   ✅    | `WalIterator`, `WalBatchResult`; `getUpdatesSince(SequenceNumber)`, `getLatestSequenceNumber`; CDC/replication/auditing                          |
 | Rate Limiter               |   ✅    | `RateLimiter`; writes-only, reads-only, all-IO modes; auto-tuned variant; `Options.setRateLimiter`                                               |

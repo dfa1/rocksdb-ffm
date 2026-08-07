@@ -17,7 +17,7 @@ A third category covers features that are C++-only with no viable C shim path.
 | CompactionFilter | `rocksdb_compactionfilter_create()`, `rocksdb_compactionfilterfactory_create()` | High | Callback-based; enables custom retention/deletion policies during compaction |
 | EventListener | `rocksdb_eventlistener_create()` (~12 callbacks) | High | Flush, compaction, file creation/deletion events; needed for monitoring |
 | Custom Comparator | `rocksdb_comparator_create()`, `rocksdb_comparator_with_ts_create()` | High | Custom key ordering; note: key shortening not exposed in C API |
-| Custom MergeOperator | `rocksdb_mergeoperator_create()` | Medium | C API exists; Java side partially started per roadmap |
+| Custom MergeOperator | `rocksdb_mergeoperator_create()` | Medium | C API exists; no Java side yet — `merge` itself is also unimplemented |
 | JemallocNodumpAllocator | `rocksdb_jemalloc_nodump_allocator_create()` | Medium | Jemalloc allocator for caches; avoids coredump leaking sensitive data |
 | CuckooTable options | `rocksdb_cuckoo_table_options_t` + setters | Medium | Hash-based SST format; efficient for fixed-size keys |
 | Advanced memtable config | Various `rocksdb_options_set_*` memtable setters | Low | SkipList tuning, hash-memtable variants |
@@ -54,6 +54,6 @@ These features have no C API and cannot be bridged without forking RocksDB to ad
 
 ## Contributing
 
-For **Type A**: add a Java wrapper class following the `NativePointer` pattern, wire FFM upcall stubs for callback-based APIs.
+For **Type A**: add a Java wrapper class following the `NativeObject` pattern, wire FFM upcall stubs for callback-based APIs.
 
 For **Type B**: open a PR to `facebook/rocksdb` adding the C shim, then add the Java wrapper. The secondary cache PR is a good starting point and was discussed in the project issue tracker.
