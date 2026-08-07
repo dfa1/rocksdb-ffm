@@ -195,10 +195,11 @@ rules out accidentally passing non-path strings.
 Benchmarks performed on JDK 25 (Apple M5). Each tier uses the same pre-seeded key so the numbers reflect pure call
 overhead, not cache miss variance.
 
-> **Note:** the two sides do not run the same RocksDB build. The FFM column uses the bundled native library built from
-> the `rocksdb/` submodule (**v11.0.4**); the JNI column uses `org.rocksdb:rocksdbjni` (**10.10.1.1**), the latest
-> published release. Treat the deltas as indicative of binding overhead rather than a controlled like-for-like
-> comparison.
+> **Note:** the two sides do not run the same RocksDB build, and cannot be made to. The FFM column uses the bundled
+> native library built from the `rocksdb/` submodule (**v11.0.4**). The JNI column uses `org.rocksdb:rocksdbjni`
+> **10.10.1.1** — the newest release that exists, since `rocksdbjni` has published no 11.x at all. Treat the deltas as
+> indicative of binding overhead rather than a controlled like-for-like comparison; part of any difference may come
+> from the engine rather than the binding.
 
 | Operation              | API tier           | FFM (ops/s) | JNI (ops/s) |   Gain    |
 |:-----------------------|:-------------------|:-----------:|:-----------:|:---------:|
