@@ -108,11 +108,6 @@
 				<artifactId>jmh-generator-annprocess</artifactId>
 				<version>1.37</version>
 			</dependency>
-			<dependency>
-				<groupId>net.jqwik</groupId>
-				<artifactId>jqwik</artifactId>
-				<version>1.10.1</version>
-			</dependency>
 		</dependencies>
 	</dependencyManagement>
 

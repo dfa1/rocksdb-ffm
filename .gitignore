@@ -10,7 +10,6 @@ native/*/src/main/resources/native/
 
 # Build artifacts
 .flattened-pom.xml
-.jqwik-database
 
 # Maven Release Plugin artifacts
 release.properties
