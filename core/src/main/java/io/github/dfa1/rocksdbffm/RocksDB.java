@@ -1207,7 +1207,7 @@ public final class RocksDB {
 			for (int i = 0; i < n; i++) {
 				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
 			}
-			Duration globalTtl = ttls.isEmpty() ? Duration.ZERO : ttls.get(0);
+			Duration globalTtl = ttls.isEmpty() ? Duration.ZERO : ttls.getFirst();
 			return new TtlDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions(), globalTtl);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("openWithColumnFamiliesAndTtl failed", t);
