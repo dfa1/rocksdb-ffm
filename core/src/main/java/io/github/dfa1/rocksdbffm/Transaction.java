@@ -21,6 +21,8 @@ public final class Transaction extends NativeObject {
 
 	/// `rocksdb_pinnableslice_t* rocksdb_transaction_get_pinned_cf(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED_CF;
+	/// `char* rocksdb_transaction_get(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, const char* key, size_t klen, size_t* vlen, char** errptr);`
+	private static final MethodHandle MH_GET;
 	/// `char* rocksdb_transaction_get_for_update_cf(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, size_t* vlen, unsigned char exclusive, char** errptr);`
 	private static final MethodHandle MH_GET_FOR_UPDATE_CF;
 	/// `void rocksdb_transaction_put_cf(rocksdb_transaction_t* txn, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, const char* val, size_t vlen, char** errptr);`
@@ -45,8 +47,6 @@ public final class Transaction extends NativeObject {
 	private static final MethodHandle MH_PUT;
 	/// `void rocksdb_transaction_delete(rocksdb_transaction_t* txn, const char* key, size_t klen, char** errptr);`
 	private static final MethodHandle MH_DELETE;
-	/// `rocksdb_pinnableslice_t* rocksdb_transaction_get_pinned(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, const char* key, size_t klen, char** errptr);`
-	private static final MethodHandle MH_GET_PINNED;
 	/// `char* rocksdb_transaction_get_for_update(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, const char* key, size_t klen, size_t* vlen, unsigned char exclusive, char** errptr);`
 	private static final MethodHandle MH_GET_FOR_UPDATE;
 	/// `const char* rocksdb_pinnableslice_value(const rocksdb_pinnableslice_t* t, size_t* vlen);`
@@ -83,11 +83,11 @@ public final class Transaction extends NativeObject {
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS));
 
-		MH_GET_PINNED = NativeLibrary.lookup("rocksdb_transaction_get_pinned",
+		MH_GET = NativeLibrary.lookup("rocksdb_transaction_get",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS));
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_GET_FOR_UPDATE = NativeLibrary.lookup("rocksdb_transaction_get_for_update",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -182,8 +182,7 @@ public final class Transaction extends NativeObject {
 	// Read operations
 	// -----------------------------------------------------------------------
 
-	/// Reads the value for `key` within this transaction, using PinnableSlice
-	/// to avoid an intermediate copy. Returns `null` if not found.
+	/// Reads the value for `key` within this transaction. Returns `null` if not found.
 	///
 	/// Slow path: allocates native memory for the key.
 	///
@@ -194,21 +193,20 @@ public final class Transaction extends NativeObject {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment k = RocksDB.toNative(arena, key);
+			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 
-			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
-					ptr(), readOptions.ptr(), k, (long) key.length, err);
+			MemorySegment valPtr = (MemorySegment) MH_GET.invokeExact(
+					ptr(), readOptions.ptr(), k, (long) key.length, valLenSeg, err);
 
 			RocksDB.checkError(err);
 
-			if (MemorySegment.NULL.equals(pin)) {
+			if (MemorySegment.NULL.equals(valPtr)) {
 				return null;
 			}
 
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
 			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
 			byte[] result = valPtr.reinterpret(valLen).toArray(ValueLayout.JAVA_BYTE);
-			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+			RocksDB.free(valPtr);
 			return result;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
