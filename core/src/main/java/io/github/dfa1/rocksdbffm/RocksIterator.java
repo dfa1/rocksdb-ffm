@@ -100,6 +100,13 @@ public final class RocksIterator extends NativeObject {
 	private final Arena lenArena;
 	private final MemorySegment lenSegment;
 
+	/// Scopes the segments handed out by [#keySegment()] and [#valueSegment()].
+	/// Created on demand and closed by the next positioning call, so a segment
+	/// used after the iterator moves throws [IllegalStateException] instead of
+	/// silently reading the new position. Callers that never touch the segment
+	/// tier never allocate one.
+	private Arena segmentArena;
+
 	/// Package-private: created via [#create].
 	private RocksIterator(MemorySegment ptr) {
 		super(ptr);
@@ -123,11 +130,39 @@ public final class RocksIterator extends NativeObject {
 	}
 
 	// -----------------------------------------------------------------------
+	// Segment lifetime
+	// -----------------------------------------------------------------------
+
+	/// Invalidates every segment previously returned by [#keySegment()] and
+	/// [#valueSegment()].
+	///
+	/// `rocksdb_iter_key` and `rocksdb_iter_value` hand back a pointer into a
+	/// buffer the iterator reuses in place, so the address does not change when
+	/// the iterator moves — only its contents do. A segment that outlived a move
+	/// would therefore keep reading, and silently report the new position's
+	/// bytes. Closing the scope turns that into an [IllegalStateException].
+	private void invalidateSegments() {
+		if (segmentArena != null) {
+			segmentArena.close();
+			segmentArena = null;
+		}
+	}
+
+	/// Wraps `data` in a segment of `length` bytes scoped to the current position.
+	private MemorySegment scopedToPosition(MemorySegment data, long length) {
+		if (segmentArena == null) {
+			segmentArena = Arena.ofConfined();
+		}
+		return data.reinterpret(length, segmentArena, null);
+	}
+
+	// -----------------------------------------------------------------------
 	// Positioning
 	// -----------------------------------------------------------------------
 
 	/// Positions the iterator at the first key in the database.
 	public void seekToFirst() {
+		invalidateSegments();
 		try {
 			MH_SEEK_TO_FIRST.invokeExact(ptr());
 		} catch (Throwable t) {
@@ -137,6 +172,7 @@ public final class RocksIterator extends NativeObject {
 
 	/// Positions the iterator at the last key in the database.
 	public void seekToLast() {
+		invalidateSegments();
 		try {
 			MH_SEEK_TO_LAST.invokeExact(ptr());
 		} catch (Throwable t) {
@@ -148,6 +184,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param target the seek target key
 	public void seek(byte[] target) {
+		invalidateSegments();
 		try (Arena arena = Arena.ofConfined()) {
 			MH_SEEK.invokeExact(ptr(), RocksDB.toNative(arena, target), (long) target.length);
 		} catch (Throwable t) {
@@ -159,6 +196,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param target direct [ByteBuffer] containing the seek target key
 	public void seek(ByteBuffer target) {
+		invalidateSegments();
 		try {
 			MH_SEEK.invokeExact(ptr(), MemorySegment.ofBuffer(target), (long) target.remaining());
 		} catch (Throwable t) {
@@ -170,6 +208,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param target native segment containing the seek target key
 	public void seek(MemorySegment target) {
+		invalidateSegments();
 		try {
 			MH_SEEK.invokeExact(ptr(), target, target.byteSize());
 		} catch (Throwable t) {
@@ -181,6 +220,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param target the seek target key
 	public void seekForPrev(byte[] target) {
+		invalidateSegments();
 		try (Arena arena = Arena.ofConfined()) {
 			MH_SEEK_FOR_PREV.invokeExact(ptr(), RocksDB.toNative(arena, target), (long) target.length);
 		} catch (Throwable t) {
@@ -192,6 +232,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param target direct [ByteBuffer] containing the seek target key
 	public void seekForPrev(ByteBuffer target) {
+		invalidateSegments();
 		try {
 			MH_SEEK_FOR_PREV.invokeExact(ptr(), MemorySegment.ofBuffer(target), (long) target.remaining());
 		} catch (Throwable t) {
@@ -203,6 +244,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param target native segment containing the seek target key
 	public void seekForPrev(MemorySegment target) {
+		invalidateSegments();
 		try {
 			MH_SEEK_FOR_PREV.invokeExact(ptr(), target, target.byteSize());
 		} catch (Throwable t) {
@@ -212,6 +254,7 @@ public final class RocksIterator extends NativeObject {
 
 	/// Moves to the next key. Only call when [#isValid()] is true.
 	public void next() {
+		invalidateSegments();
 		try {
 			MH_NEXT.invokeExact(ptr());
 		} catch (Throwable t) {
@@ -221,6 +264,7 @@ public final class RocksIterator extends NativeObject {
 
 	/// Moves to the previous key. Only call when [#isValid()] is true.
 	public void prev() {
+		invalidateSegments();
 		try {
 			MH_PREV.invokeExact(ptr());
 		} catch (Throwable t) {
@@ -281,6 +325,7 @@ public final class RocksIterator extends NativeObject {
 	/// Refreshes the iterator to reflect the latest DB state after mutations.
 	/// Repositions to the same key if it still exists.
 	public void refresh() {
+		invalidateSegments();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MH_REFRESH.invokeExact(ptr(), err);
@@ -295,28 +340,40 @@ public final class RocksIterator extends NativeObject {
 	// -----------------------------------------------------------------------
 
 	/// Returns a zero-copy view of the current key.
-	/// The returned segment is only valid until the next positioning call.
+	///
+	/// The returned segment is scoped to the current position: the next
+	/// positioning call ([#next()], [#seek(byte[])], …) and [#close()] both
+	/// invalidate it, after which any access throws [IllegalStateException].
+	/// Copy the bytes out with [#key()] if you need them to outlive the
+	/// position.
+	///
 	/// Only call when [#isValid()] is true.
 	///
-	/// @return native segment pointing to the current key
+	/// @return native segment pointing to the current key, valid until the iterator moves
 	public MemorySegment keySegment() {
 		try {
 			MemorySegment data = (MemorySegment) MH_KEY.invokeExact(ptr(), lenSegment);
-			return data.reinterpret(lenSegment.get(ValueLayout.JAVA_LONG, 0));
+			return scopedToPosition(data, lenSegment.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("key failed", t);
 		}
 	}
 
 	/// Returns a zero-copy view of the current value.
-	/// The returned segment is only valid until the next positioning call.
+	///
+	/// The returned segment is scoped to the current position: the next
+	/// positioning call ([#next()], [#seek(byte[])], …) and [#close()] both
+	/// invalidate it, after which any access throws [IllegalStateException].
+	/// Copy the bytes out with [#value()] if you need them to outlive the
+	/// position.
+	///
 	/// Only call when [#isValid()] is true.
 	///
-	/// @return native segment pointing to the current value
+	/// @return native segment pointing to the current value, valid until the iterator moves
 	public MemorySegment valueSegment() {
 		try {
 			MemorySegment data = (MemorySegment) MH_VALUE.invokeExact(ptr(), lenSegment);
-			return data.reinterpret(lenSegment.get(ValueLayout.JAVA_LONG, 0));
+			return scopedToPosition(data, lenSegment.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("value failed", t);
 		}
@@ -400,6 +457,9 @@ public final class RocksIterator extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
+		// Invalidate before destroying: the segments point into the iterator's
+		// own buffer, which rocksdb_iter_destroy frees.
+		invalidateSegments();
 		MH_DESTROY.invokeExact(ptr);
 		lenArena.close();
 	}
