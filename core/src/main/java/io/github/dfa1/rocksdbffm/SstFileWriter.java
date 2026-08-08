@@ -224,14 +224,14 @@ public final class SstFileWriter extends NativeObject {
 		}
 	}
 
-	/// Returns the size of the current (or most recently finished) SST file in bytes.
+	/// Returns the size of the current (or most recently finished) SST file.
 	///
-	/// @return SST file size in bytes
-	public long fileSize() {
+	/// @return SST file size
+	public MemorySize fileSize() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MH_FILE_SIZE.invokeExact(ptr(), sizeSeg);
-			return sizeSeg.get(ValueLayout.JAVA_LONG, 0);
+			return MemorySize.ofBytes(sizeSeg.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("sstfilewriter fileSize failed", t);
 		}

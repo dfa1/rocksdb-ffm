@@ -202,6 +202,7 @@ public final class SstFileManager extends NativeObject {
 	/// A value of `-1` means delete as fast as possible (no rate limit).
 	///
 	/// @return deletion rate in bytes per second, or `-1` for unlimited
+	// TODO: see setDeleteRateBytesPerSecond — same Optional<MemorySize> migration applies here
 	public long getDeleteRateBytesPerSecond() {
 		try {
 			return (long) MH_GET_DELETE_RATE_BYTES_PER_SECOND.invokeExact(ptr());
@@ -217,6 +218,9 @@ public final class SstFileManager extends NativeObject {
 	///
 	/// @param deleteRate deletion rate in bytes per second; `-1` for unlimited, `0` for synchronous
 	/// @return this instance for chaining
+	// TODO: switch to Optional<MemorySize> (empty = unlimited/-1, MemorySize.ZERO = synchronous/0);
+	//  left as raw long because MemorySize rejects negative values and this is the only
+	//  rate-style API in the codebase with a negative sentinel, so it doesn't warrant a new type.
 	public SstFileManager setDeleteRateBytesPerSecond(long deleteRate) {
 		try {
 			MH_SET_DELETE_RATE_BYTES_PER_SECOND.invokeExact(ptr(), deleteRate);

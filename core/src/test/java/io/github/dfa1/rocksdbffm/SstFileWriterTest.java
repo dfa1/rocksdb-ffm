@@ -134,7 +134,7 @@ class SstFileWriterTest {
 			writer.finish();
 
 			// Then
-			assertThat(writer.fileSize()).isPositive();
+			assertThat(writer.fileSize()).isGreaterThan(MemorySize.ZERO);
 		}
 	}
 

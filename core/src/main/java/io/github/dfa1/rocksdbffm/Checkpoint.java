@@ -115,16 +115,15 @@ public final class Checkpoint extends NativeObject {
 	/// [RocksDB#openReadOnly(Path)] for read-only access.
 	///
 	/// @param checkpointDir   target directory (must not exist)
-	/// @param logSizeForFlush if the WAL is larger than this threshold (in bytes),
+	/// @param logSizeForFlush if the WAL is larger than this threshold,
 	///                        it is flushed to SST files before the checkpoint is taken.
-	///                        Pass `0` to always flush; pass `Long.MAX_VALUE`
-	///                        to never flush (use WAL as-is).
-	// TODO: expose MemorySize for logSizeForFlush
-	public void exportTo(Path checkpointDir, long logSizeForFlush) {
+	///                        Pass [MemorySize#ZERO] to always flush; pass
+	///                        `MemorySize.ofBytes(Long.MAX_VALUE)` to never flush (use WAL as-is).
+	public void exportTo(Path checkpointDir, MemorySize logSizeForFlush) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
 			var dirSeg = arena.allocateFrom(checkpointDir.toString());
-			MH_EXPORT.invokeExact(ptr(), dirSeg, logSizeForFlush, err);
+			MH_EXPORT.invokeExact(ptr(), dirSeg, logSizeForFlush.toBytes(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
@@ -132,11 +131,11 @@ public final class Checkpoint extends NativeObject {
 	}
 
 	/// Exports a consistent snapshot to `checkpointDir`, flushing the WAL
-	/// first (equivalent to `exportTo(dir, 0)`).
+	/// first (equivalent to `exportTo(dir, MemorySize.ZERO)`).
 	///
 	/// @param checkpointDir target directory (must not exist)
 	public void exportTo(Path checkpointDir) {
-		exportTo(checkpointDir, 0L);
+		exportTo(checkpointDir, MemorySize.ZERO);
 	}
 
 	@Override
