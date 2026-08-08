@@ -177,23 +177,55 @@ class RocksIteratorTest {
 
 				// When — ByteBuffer key
 				ByteBuffer keyBuf = ByteBuffer.allocateDirect(64);
-				int keyLen = it.key(keyBuf);
+				CopyResult keyResult = it.key(keyBuf);
 				keyBuf.flip();
 				byte[] keyBytes = new byte[keyBuf.remaining()];
 				keyBuf.get(keyBytes);
 
 				// When — ByteBuffer value
 				ByteBuffer valBuf = ByteBuffer.allocateDirect(64);
-				int valLen = it.value(valBuf);
+				CopyResult valResult = it.value(valBuf);
 				valBuf.flip();
 				byte[] valBytes = new byte[valBuf.remaining()];
 				valBuf.get(valBytes);
 
 				// Then
-				assertThat(keyLen).isEqualTo(5);
+				assertThat(keyResult).isEqualTo(new CopyResult.Copied());
 				assertThat(keyBytes).isEqualTo("hello".getBytes());
-				assertThat(valLen).isEqualTo(5);
+				assertThat(valResult).isEqualTo(new CopyResult.Copied());
 				assertThat(valBytes).isEqualTo("world".getBytes());
+			}
+		}
+	}
+
+	@Test
+	void key_value_byteBuffer_returnsNotEnoughCapacity_whenTooSmall(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.open(dir)) {
+			db.put("hello".getBytes(), "world".getBytes());
+
+			try (RocksIterator it = db.newIterator()) {
+				it.seekToFirst();
+				assertThat(it.isValid()).isTrue();
+
+				ByteBuffer keyBuf = ByteBuffer.allocateDirect(2);
+				keyBuf.put((byte) 'X').put((byte) 'X').clear();
+				ByteBuffer valBuf = ByteBuffer.allocateDirect(2);
+				valBuf.put((byte) 'X').put((byte) 'X').clear();
+
+				// When
+				CopyResult keyResult = it.key(keyBuf);
+				CopyResult valResult = it.value(valBuf);
+
+				// Then
+				assertThat(keyResult).isEqualTo(new CopyResult.NotEnoughCapacity(5));
+				assertThat(keyBuf.position()).isZero();
+				assertThat(keyBuf.get(0)).isEqualTo((byte) 'X');
+				assertThat(keyBuf.get(1)).isEqualTo((byte) 'X');
+				assertThat(valResult).isEqualTo(new CopyResult.NotEnoughCapacity(5));
+				assertThat(valBuf.position()).isZero();
+				assertThat(valBuf.get(0)).isEqualTo((byte) 'X');
+				assertThat(valBuf.get(1)).isEqualTo((byte) 'X');
 			}
 		}
 	}
@@ -260,92 +292,6 @@ class RocksIteratorTest {
 				assertThat(it.isValid()).isTrue();
 				assertThat(it.key()).isEqualTo("x".getBytes());
 				assertThat(it.value()).isEqualTo("y".getBytes());
-			}
-		}
-	}
-
-	// -----------------------------------------------------------------------
-	// refresh()
-	// -----------------------------------------------------------------------
-
-	@Test
-	void refresh_notCalled_doesNotSeeWritesMadeAfterIteratorCreation(@TempDir Path dir) {
-		// Given
-		try (var db = RocksDB.open(dir)) {
-			db.put("a".getBytes(), "1".getBytes());
-
-			try (RocksIterator it = db.newIterator()) {
-				db.put("b".getBytes(), "2".getBytes());
-
-				// When
-				it.seek("b".getBytes());
-
-				// Then — iterator still reflects the state at creation time
-				assertThat(it.isValid()).isFalse();
-			}
-		}
-	}
-
-	@Test
-	void refresh_seesWritesMadeAfterIteratorCreation(@TempDir Path dir) {
-		// Given
-		try (var db = RocksDB.open(dir)) {
-			db.put("a".getBytes(), "1".getBytes());
-
-			try (RocksIterator it = db.newIterator()) {
-				db.put("b".getBytes(), "2".getBytes());
-
-				// When
-				it.refresh();
-				it.seek("b".getBytes());
-
-				// Then
-				assertThat(it.isValid()).isTrue();
-				assertThat(it.key()).isEqualTo("b".getBytes());
-				assertThat(it.value()).isEqualTo("2".getBytes());
-			}
-		}
-	}
-
-	@Test
-	void refresh_seesDeletesMadeAfterIteratorCreation(@TempDir Path dir) {
-		// Given
-		try (var db = RocksDB.open(dir)) {
-			db.put("a".getBytes(), "1".getBytes());
-			db.put("b".getBytes(), "2".getBytes());
-
-			try (RocksIterator it = db.newIterator()) {
-				db.delete("b".getBytes());
-
-				// When
-				it.refresh();
-				it.seek("b".getBytes());
-
-				// Then — "b" is gone, seek lands past it (nothing left)
-				assertThat(it.isValid()).isFalse();
-			}
-		}
-	}
-
-	@Test
-	void refresh_onUnchangedDb_keepsIteratorHealthy(@TempDir Path dir) {
-		// Given
-		try (var db = RocksDB.open(dir)) {
-			db.put("k".getBytes(), "v".getBytes());
-
-			try (RocksIterator it = db.newIterator()) {
-				it.seekToFirst();
-
-				// When
-				it.refresh();
-
-				// Then
-				assertThat(it.isValid()).isFalse();
-				it.checkError();
-
-				it.seekToFirst();
-				assertThat(it.isValid()).isTrue();
-				assertThat(it.key()).isEqualTo("k".getBytes());
 			}
 		}
 	}

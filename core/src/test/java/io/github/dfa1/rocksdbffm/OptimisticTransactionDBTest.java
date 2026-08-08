@@ -108,10 +108,12 @@ class OptimisticTransactionDBTest {
 			var out = ByteBuffer.allocateDirect(32);
 
 			// When
-			int len = db.get(key, out);
+			CopyResult result = db.get(key, out);
 
 			// Then
-			assertThat(len).isEqualTo(1);
+			assertThat(result).isEqualTo(new CopyResult.Copied());
+			out.flip();
+			assertThat(out.remaining()).isEqualTo(1);
 		}
 	}
 

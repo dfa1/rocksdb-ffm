@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm.benchmark;
 
+import io.github.dfa1.rocksdbffm.CopyResult;
 import io.github.dfa1.rocksdbffm.ReadWriteDB;
 import io.github.dfa1.rocksdbffm.RocksDB;
 import io.github.dfa1.rocksdbffm.WriteBatch;
@@ -130,10 +131,26 @@ public class FfmBenchmark {
 	}
 
 	@Benchmark
-	public int readsDirectByteBuffer() {
+	public CopyResult readsDirectByteBuffer() {
 		readKeyByteBuffer.rewind();
 		readValByteBuffer.clear();
 		return db.get(readKeyByteBuffer, readValByteBuffer);
+	}
+
+	// ---- byte[] via rocksdb_get_into_buffer, for comparison against readsBytes ---------
+
+	@Benchmark
+	public byte[] getViaCopy() {
+		readKeyByteBuffer.rewind();
+		readValByteBuffer.clear();
+		CopyResult result = db.get(readKeyByteBuffer, readValByteBuffer);
+		if (!(result instanceof CopyResult.Copied)) {
+			throw new IllegalStateException("unexpected: " + result);
+		}
+		readValByteBuffer.flip();
+		byte[] bytes = new byte[readValByteBuffer.remaining()];
+		readValByteBuffer.get(bytes);
+		return bytes;
 	}
 
 	// ---- MemorySegment tier (FFM-only) ------------------------------------

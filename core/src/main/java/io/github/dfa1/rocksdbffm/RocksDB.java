@@ -58,6 +58,8 @@ public final class RocksDB {
 	private static final MethodHandle MH_CLOSE;
 	/// `rocksdb_pinnableslice_t* rocksdb_get_pinned(rocksdb_t* db, const rocksdb_readoptions_t* options, const char* key, size_t keylen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED;
+	/// `unsigned char rocksdb_get_into_buffer(rocksdb_t* db, const rocksdb_readoptions_t* options, const char* key, size_t keylen, char* buffer, size_t buffer_size, size_t* vallen, unsigned char* found, char** errptr);`
+	private static final MethodHandle MH_GET_INTO_BUFFER;
 	/// `const char* rocksdb_pinnableslice_value(const rocksdb_pinnableslice_t* t, size_t* vlen);`
 	private static final MethodHandle MH_PINNABLESLICE_VALUE;
 	/// `void rocksdb_pinnableslice_destroy(rocksdb_pinnableslice_t* v);`
@@ -127,6 +129,8 @@ public final class RocksDB {
 	private static final MethodHandle MH_PUT_CF;
 	/// `rocksdb_pinnableslice_t* rocksdb_get_pinned_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED_CF;
+	/// `unsigned char rocksdb_get_into_buffer_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char* buffer, size_t buffer_size, size_t* vallen, unsigned char* found, char** errptr);`
+	private static final MethodHandle MH_GET_INTO_BUFFER_CF;
 	/// `void rocksdb_delete_cf(rocksdb_t* db, const rocksdb_writeoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char** errptr);`
 	private static final MethodHandle MH_DELETE_CF;
 	/// `unsigned char rocksdb_key_may_exist_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t key_len, char** value, size_t* val_len, const char* timestamp, size_t timestamp_len, unsigned char* value_found);`
@@ -192,6 +196,14 @@ public final class RocksDB {
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS));
+
+		MH_GET_INTO_BUFFER = NativeLibrary.lookup("rocksdb_get_into_buffer",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS));
 
 		MH_PINNABLESLICE_VALUE = NativeLibrary.lookup("rocksdb_pinnableslice_value",
@@ -336,6 +348,14 @@ public final class RocksDB {
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS));
+
+		MH_GET_INTO_BUFFER_CF = NativeLibrary.lookup("rocksdb_get_into_buffer_cf",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS));
 
 		MH_DELETE_CF = NativeLibrary.lookup("rocksdb_delete_cf",
@@ -644,24 +664,25 @@ public final class RocksDB {
 		}
 	}
 
-	/// ByteBuffer get via PinnableSlice — copies once into the caller's buffer.
-	/// Returns actual value length, or -1 if not found.
-	static int getIntoBuffer(MemorySegment db, MemorySegment readOpts, MemorySegment key, long keyLen, ByteBuffer value) {
+	/// ByteBuffer get via `rocksdb_get_into_buffer` — copies directly into the caller's buffer,
+	/// with no intermediate PinnableSlice. Copies nothing when the buffer is too small.
+	static CopyResult getIntoBuffer(MemorySegment db, MemorySegment readOpts, MemorySegment key, long keyLen, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(db, readOpts, key, keyLen, err);
-			checkError(err);
-			if (MemorySegment.NULL.equals(pin)) {
-				return -1;
-			}
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
+			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
+			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db, readOpts, key, keyLen,
+					MemorySegment.ofBuffer(value), (long) value.remaining(), valLenSeg, foundSeg, err);
+			checkError(err);
+			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
+				return new CopyResult.NotFound();
+			}
 			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			int toCopy = (int) Math.min(valLen, value.remaining());
-			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(toCopy));
-			value.position(value.position() + toCopy);
-			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
-			return (int) valLen;
+			if (fit == 0) {
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			value.position(value.position() + (int) valLen);
+			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
@@ -1435,26 +1456,26 @@ public final class RocksDB {
 		}
 	}
 
-	/// ByteBuffer get with explicit column family via PinnableSlice.
-	/// Returns actual value length, or -1 if not found.
-	static int getCfIntoBuffer(MemorySegment db, MemorySegment readOpts, ColumnFamilyHandle cf,
-	                           MemorySegment key, long keyLen, ByteBuffer value) {
+	/// ByteBuffer get with explicit column family via `rocksdb_get_into_buffer_cf`.
+	/// Copies nothing when the buffer is too small.
+	static CopyResult getCfIntoBuffer(MemorySegment db, MemorySegment readOpts, ColumnFamilyHandle cf,
+	                                  MemorySegment key, long keyLen, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
-					db, readOpts, cf.ptr(), key, keyLen, err);
-			checkError(err);
-			if (MemorySegment.NULL.equals(pin)) {
-				return -1;
-			}
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
+			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
+			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db, readOpts, cf.ptr(), key, keyLen,
+					MemorySegment.ofBuffer(value), (long) value.remaining(), valLenSeg, foundSeg, err);
+			checkError(err);
+			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
+				return new CopyResult.NotFound();
+			}
 			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			int toCopy = (int) Math.min(valLen, value.remaining());
-			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(toCopy));
-			value.position(value.position() + toCopy);
-			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
-			return (int) valLen;
+			if (fit == 0) {
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			value.position(value.position() + (int) valLen);
+			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}

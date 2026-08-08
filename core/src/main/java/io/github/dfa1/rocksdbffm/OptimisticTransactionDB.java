@@ -152,13 +152,14 @@ public final class OptimisticTransactionDB extends NativeObject {
 		return RocksDB.getBytes(baseDb, readOptions.ptr(), key);
 	}
 
-	/// Single-copy get via PinnableSlice + direct output [ByteBuffer].
-	/// Returns the actual value length, or -1 if not found.
+	/// Single-copy get via `rocksdb_get_into_buffer` + direct output [ByteBuffer].
+	/// Copies nothing into `value` when its remaining capacity is too small.
 	///
 	/// @param key   direct [ByteBuffer] containing the key
 	/// @param value direct [ByteBuffer] to write the value into
-	/// @return actual value length in bytes, or -1 if the key does not exist
-	public int get(ByteBuffer key, ByteBuffer value) {
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(ByteBuffer key, ByteBuffer value) {
 		return RocksDB.getIntoBuffer(baseDb, readOpts.ptr(),
 				MemorySegment.ofBuffer(key), key.remaining(), value);
 	}
@@ -273,14 +274,15 @@ public final class OptimisticTransactionDB extends NativeObject {
 		return RocksDB.getCfBytes(baseDb, readOptions.ptr(), cf, key);
 	}
 
-	/// Single-copy get from `cf` via PinnableSlice + direct output [ByteBuffer].
-	/// Returns the actual value length, or -1 if not found.
+	/// Single-copy get from `cf` via `rocksdb_get_into_buffer_cf` + direct output [ByteBuffer].
+	/// Copies nothing into `value` when its remaining capacity is too small.
 	///
 	/// @param cf    column family to read from
 	/// @param key   direct [ByteBuffer] containing the key
 	/// @param value direct [ByteBuffer] to write the value into
-	/// @return actual value length in bytes, or -1 if the key does not exist
-	public int get(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
 		return RocksDB.getCfIntoBuffer(baseDb, readOpts.ptr(), cf,
 				MemorySegment.ofBuffer(key), key.remaining(), value);
 	}
