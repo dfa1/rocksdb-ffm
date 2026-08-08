@@ -100,12 +100,14 @@ public final class BlobDB extends NativeObject {
 		return RocksDB.getBytes(ptr(), readOptions.ptr(), key);
 	}
 
-	/// Single-copy get via PinnableSlice + direct output [ByteBuffer].
+	/// Single-copy get via `rocksdb_get_into_buffer` + direct output [ByteBuffer].
+	/// Copies nothing into `value` when its remaining capacity is too small.
 	///
 	/// @param key direct [ByteBuffer] containing the key
 	/// @param value direct [ByteBuffer] to write the value into
-	/// @return the actual value length, or `-1` if not found
-	public int get(ByteBuffer key, ByteBuffer value) {
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(ByteBuffer key, ByteBuffer value) {
 		return RocksDB.getIntoBuffer(ptr(), readOpts.ptr(),
 				MemorySegment.ofBuffer(key), key.remaining(), value);
 	}

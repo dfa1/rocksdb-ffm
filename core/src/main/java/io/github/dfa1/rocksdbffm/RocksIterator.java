@@ -326,37 +326,41 @@ public final class RocksIterator extends NativeObject {
 	// Key/Value access — ByteBuffer (single copy into caller's buffer)
 	// -----------------------------------------------------------------------
 
-	/// Copies the current key into `dst`. Returns the actual key length.
-	/// Only call when [#isValid()] is true.
+	/// Copies the current key into `dst`. Copies nothing when `dst`'s remaining capacity is
+	/// too small. Only call when [#isValid()] is true.
 	///
 	/// @param dst destination buffer to copy the key into
-	/// @return actual key length in bytes
-	public int key(ByteBuffer dst) {
+	/// @return [CopyResult.Copied] if copied, or [CopyResult.NotEnoughCapacity] if `dst` is too small
+	public CopyResult key(ByteBuffer dst) {
 		try {
 			MemorySegment data = (MemorySegment) MH_KEY.invokeExact(ptr(), lenSegment);
 			long len = lenSegment.get(ValueLayout.JAVA_LONG, 0);
-			int toCopy = (int) Math.min(len, dst.remaining());
-			MemorySegment.ofBuffer(dst).copyFrom(data.reinterpret(toCopy));
-			dst.position(dst.position() + toCopy);
-			return (int) len;
+			if (len > dst.remaining()) {
+				return new CopyResult.NotEnoughCapacity(len);
+			}
+			MemorySegment.ofBuffer(dst).copyFrom(data.reinterpret(len));
+			dst.position(dst.position() + (int) len);
+			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("key failed", t);
 		}
 	}
 
-	/// Copies the current value into `dst`. Returns the actual value length.
-	/// Only call when [#isValid()] is true.
+	/// Copies the current value into `dst`. Copies nothing when `dst`'s remaining capacity is
+	/// too small. Only call when [#isValid()] is true.
 	///
 	/// @param dst destination buffer to copy the value into
-	/// @return actual value length in bytes
-	public int value(ByteBuffer dst) {
+	/// @return [CopyResult.Copied] if copied, or [CopyResult.NotEnoughCapacity] if `dst` is too small
+	public CopyResult value(ByteBuffer dst) {
 		try {
 			MemorySegment data = (MemorySegment) MH_VALUE.invokeExact(ptr(), lenSegment);
 			long len = lenSegment.get(ValueLayout.JAVA_LONG, 0);
-			int toCopy = (int) Math.min(len, dst.remaining());
-			MemorySegment.ofBuffer(dst).copyFrom(data.reinterpret(toCopy));
-			dst.position(dst.position() + toCopy);
-			return (int) len;
+			if (len > dst.remaining()) {
+				return new CopyResult.NotEnoughCapacity(len);
+			}
+			MemorySegment.ofBuffer(dst).copyFrom(data.reinterpret(len));
+			dst.position(dst.position() + (int) len);
+			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("value failed", t);
 		}

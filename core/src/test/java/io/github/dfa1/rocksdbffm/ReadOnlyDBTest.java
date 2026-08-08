@@ -84,10 +84,10 @@ class ReadOnlyDBTest {
 			var out = ByteBuffer.allocateDirect(32);
 
 			// When
-			int len = ro.get(key, out);
+			CopyResult result = ro.get(key, out);
 
 			// Then
-			assertThat(len).isEqualTo(5);
+			assertThat(result).isEqualTo(new CopyResult.Copied());
 			out.flip();
 			var bytes = new byte[out.remaining()];
 			out.get(bytes);
@@ -96,7 +96,7 @@ class ReadOnlyDBTest {
 	}
 
 	@Test
-	void get_byteBuffer_returnsMinusOne_whenKeyAbsent(@TempDir Path dir) {
+	void get_byteBuffer_returnsNotFound_whenKeyAbsent(@TempDir Path dir) {
 		// Given
 		try (var rw = RocksDB.open(dir)) {
 			rw.put("seed".getBytes(), "val".getBytes());
@@ -108,10 +108,31 @@ class ReadOnlyDBTest {
 			var out = ByteBuffer.allocateDirect(32);
 
 			// When
-			int len = ro.get(key, out);
+			CopyResult result = ro.get(key, out);
 
 			// Then
-			assertThat(len).isEqualTo(-1);
+			assertThat(result).isEqualTo(new CopyResult.NotFound());
+		}
+	}
+
+	@Test
+	void get_byteBuffer_returnsNotEnoughCapacity_whenValueDoesNotFit(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.open(dir)) {
+			rw.put("key".getBytes(), "value".getBytes());
+		}
+
+		try (var ro = RocksDB.openReadOnly(dir)) {
+			var key = ByteBuffer.allocateDirect(3);
+			key.put("key".getBytes()).flip();
+			var out = ByteBuffer.allocateDirect(2);
+
+			// When
+			CopyResult result = ro.get(key, out);
+
+			// Then
+			assertThat(result).isEqualTo(new CopyResult.NotEnoughCapacity(5));
+			assertThat(out.position()).isZero();
 		}
 	}
 

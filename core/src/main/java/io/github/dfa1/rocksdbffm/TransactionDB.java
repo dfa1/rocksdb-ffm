@@ -349,12 +349,15 @@ public final class TransactionDB extends NativeObject {
 	}
 
 	/// Single-copy get + direct output [java.nio.ByteBuffer].
-	/// Returns the actual value length, or -1 if not found.
+	/// Copies nothing into `value` when its remaining capacity is too small. `rocksdb_transactiondb_get`
+	/// has no fixed-capacity C variant, so the capacity check happens on the Java side after the
+	/// native call, rather than inside a single native round trip like [ReadWriteDB#get(java.nio.ByteBuffer, java.nio.ByteBuffer)].
 	///
 	/// @param key   direct [java.nio.ByteBuffer] containing the key
 	/// @param value direct [java.nio.ByteBuffer] to write the value into
-	/// @return actual value length, or -1 if not found
-	public int get(java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
@@ -364,14 +367,17 @@ public final class TransactionDB extends NativeObject {
 					valLenSeg, err);
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(valPtr)) {
-				return -1;
+				return new CopyResult.NotFound();
 			}
 			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			int toCopy = (int) Math.min(valLen, value.remaining());
-			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(toCopy));
-			value.position(value.position() + toCopy);
+			if (valLen > value.remaining()) {
+				RocksDB.free(valPtr);
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(valLen));
+			value.position(value.position() + (int) valLen);
 			RocksDB.free(valPtr);
-			return (int) valLen;
+			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}

@@ -153,10 +153,10 @@ class SecondaryDBTest {
 			var out = ByteBuffer.allocateDirect(32);
 
 			// When
-			int len = secondary.get(key, out);
+			CopyResult result = secondary.get(key, out);
 
 			// Then
-			assertThat(len).isEqualTo(1);
+			assertThat(result).isEqualTo(new CopyResult.Copied());
 			out.flip();
 			var bytes = new byte[out.remaining()];
 			out.get(bytes);

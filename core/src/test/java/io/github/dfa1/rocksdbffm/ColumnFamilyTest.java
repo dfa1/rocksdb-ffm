@@ -250,7 +250,28 @@ class ColumnFamilyTest {
 			ByteBuffer getVal = ByteBuffer.allocateDirect(64);
 
 			// Then
-			assertThat(db.get(cf, getKey, getVal)).isEqualTo(1);
+			assertThat(db.get(cf, getKey, getVal)).isEqualTo(new CopyResult.Copied());
+		}
+	}
+
+	@Test
+	void get_byteBuffer_returnsNotEnoughCapacity_whenValueDoesNotFit(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.open(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			ByteBuffer val = ByteBuffer.allocateDirect(5).put("value".getBytes()).flip();
+			db.put(cf, key, val);
+
+			ByteBuffer getKey = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			ByteBuffer getVal = ByteBuffer.allocateDirect(2);
+
+			// When
+			CopyResult result = db.get(cf, getKey, getVal);
+
+			// Then
+			assertThat(result).isEqualTo(new CopyResult.NotEnoughCapacity(5));
+			assertThat(getVal.position()).isZero();
 		}
 	}
 
