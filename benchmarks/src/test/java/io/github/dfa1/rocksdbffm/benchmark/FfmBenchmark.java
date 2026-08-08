@@ -11,7 +11,6 @@ import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
@@ -29,7 +28,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @BenchmarkMode(Mode.Throughput)
@@ -73,17 +71,6 @@ public class FfmBenchmark {
 	private byte[] instantKeyBytes;
 	private MemorySegment instantKeyMemorySegment;
 
-	// Blob tier — same byte[] get vs get(key, Mapper) comparison, swept across value sizes to
-	// see whether the zero-copy gain grows with the amount of data that would otherwise
-	// be copied. JMH requires @Param fields to be public.
-	@Param({"8", "16", "1024", "4096", "65536", "1048576"})
-	public int blobValueSize;
-	private byte[] blobKeyBytes;
-	private MemorySegment blobKeyMemorySegment;
-	// Pre-allocated exactly once at trial size, reused across all invocations — models a
-	// caller who already knows the value size and sizes their buffer accordingly.
-	private MemorySegment blobValueMemorySegment;
-
 	@Setup(Level.Trial)
 	public void setup() throws Exception {
 		dbPath = Files.createTempDirectory("bench-ffm-");
@@ -119,14 +106,6 @@ public class FfmBenchmark {
 		ByteBuffer instantValue = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.nativeOrder());
 		instantValue.putLong(Instant.now().getEpochSecond());
 		db.put(instantKeyBytes, instantValue.array());
-
-		// --- blob tier ---
-		blobKeyBytes = "blob-key".getBytes();
-		blobKeyMemorySegment = arenaMemorySegment.allocateFrom(ValueLayout.JAVA_BYTE, blobKeyBytes);
-		byte[] blobValue = new byte[blobValueSize];
-		new Random(42).nextBytes(blobValue);
-		db.put(blobKeyBytes, blobValue);
-		blobValueMemorySegment = arenaMemorySegment.allocate(blobValueSize);
 
 		// --- batch: byte[] tier ---
 		batchKeys = TestData.batchKeys();
@@ -239,26 +218,6 @@ public class FfmBenchmark {
 	public Instant readsInstantViaPinned() {
 		return db.get(instantKeyMemorySegment,
 				value -> Instant.ofEpochSecond(value.get(ValueLayout.JAVA_LONG, 0))).orElseThrow();
-	}
-
-	// ---- Blob read, value size swept via @Param: three tiers -----------------
-	// byte[] get (allocates a new array every call), get(MemorySegment,MemorySegment)
-	// (caller-preallocated buffer, still a native memcpy into it), and get(key, Mapper)
-	// (zero-copy, no allocation and no copy at all).
-
-	@Benchmark
-	public int readsBlobViaByteArray() {
-		return db.get(blobKeyBytes).length;
-	}
-
-	@Benchmark
-	public CopyResult readsBlobViaMemorySegment() {
-		return db.get(blobKeyMemorySegment, blobValueMemorySegment);
-	}
-
-	@Benchmark
-	public long readsBlobViaPinned() {
-		return db.get(blobKeyMemorySegment, MemorySegment::byteSize).orElseThrow();
 	}
 
 	// ---- batch (byte[] keys, same as JNI) ---------------------------------
