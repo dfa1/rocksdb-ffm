@@ -3,9 +3,7 @@
 rocksdbffm wraps `rocksdb/c.h` — the official RocksDB C API — not C++ directly. This has two consequences:
 
 - **Type A gaps**: the C API exposes the feature but rocksdbffm has no Java wrapper yet. Actionable now.
-- **Type B gaps**: the C API does not expose the feature at all. Requires an upstream PR to `facebook/rocksdb` (`include/rocksdb/c.h` + `db/c.cc` + `db/c_test.c`) before a Java wrapper is possible.
-
-A third category covers features that are C++-only with no viable C shim path.
+- **Type B gaps**: the C API does not expose the feature at all. Requires an upstream PR to `facebook/rocksdb` (`include/rocksdb/c.h` + `db/c.cc` + `db/c_test.c`) before a Java wrapper is possible. Every entry below only touches types that already have a C-API analogue (`Slice`, `Env`, `Logger`, flat parallel arrays as used by `rocksdb_multi_get()`), so a shim is mechanical, not architecturally blocked.
 
 ---
 
@@ -38,17 +36,8 @@ Each entry requires adding an opaque type, factory function(s), and option sette
 | PlainTable | `rocksdb/table.h` | `rocksdb_plain_table_options_t` + factory setter on options | Memory-mapped hash-index format; good for read-heavy in-memory use |
 | WAL Filter | `rocksdb/wal_filter.h` | `rocksdb_wal_filter_t`, callback create, options setter | Selective WAL replay at recovery time |
 | Trace reader/writer | `rocksdb/trace_reader_writer.h` | File-based factory functions, read/write/close wrappers | Operation tracing and replay for debugging |
-
----
-
-## C++-only — blocked
-
-These features have no C API and cannot be bridged without forking RocksDB to add custom shims:
-
-| Feature | C++ entry point | Reason |
-|:---|:---|:---|
-| Persistent Cache | `NewPersistentCache()` | C++ only; not in `c.h` |
-| Wide Columns | `DB::PutEntity()`, `DB::GetEntity()` | C++ only; not in `c.h` |
+| Persistent Cache | `rocksdb/persistent_cache.h` | `rocksdb_persistent_cache_t`, `rocksdb_persistent_cache_create(env, path, size, log, optimized_for_nvm)` | `NewPersistentCache()` only takes `Env*`/`Logger` (both already have `rocksdb_env_t`/`rocksdb_logger_t` shims) plus scalars — same shape as `rocksdb_rate_limiter_create()` |
+| Wide Columns | `rocksdb/wide_columns.h` | `rocksdb_put_entity()`, `rocksdb_get_entity()`, `rocksdb_pinnablewidecolumns_t` | `WideColumn` is a name/value `Slice` pair; `WideColumns` is a vector of those — expressible as parallel `char**`/`size_t*` arrays exactly like `rocksdb_multi_get()` already does |
 
 ---
 
