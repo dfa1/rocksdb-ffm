@@ -237,9 +237,6 @@ public final class BlobDB extends NativeObject {
 	/// @param files paths to SST files to ingest
 	/// @param options options controlling the ingest behavior
 	public void ingestExternalFile(List<Path> files, IngestExternalFileOptions options) {
-		if (files.isEmpty()) {
-			return;
-		}
 		RocksDB.ingestExternalFile(ptr(), files, options);
 	}
 

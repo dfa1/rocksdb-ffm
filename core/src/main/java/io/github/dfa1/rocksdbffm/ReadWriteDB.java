@@ -442,9 +442,6 @@ public final class ReadWriteDB extends NativeObject {
 	/// @param files   list of SST file paths to ingest
 	/// @param options ingest options controlling move vs copy, error handling, etc.
 	public void ingestExternalFile(List<Path> files, IngestExternalFileOptions options) {
-		if (files.isEmpty()) {
-			return;
-		}
 		RocksDB.ingestExternalFile(ptr(), files, options);
 	}
 
@@ -452,12 +449,9 @@ public final class ReadWriteDB extends NativeObject {
 	///
 	/// @param files list of SST file paths to ingest
 	public void ingestExternalFile(List<Path> files) {
-		try (IngestExternalFileOptions opts = IngestExternalFileOptions.newIngestExternalFileOptions()) {
-			ingestExternalFile(files, opts);
-		}
+		RocksDB.ingestExternalFileWithDefaults(ptr(), files);
 	}
 
-	// TODO: drop, too many variants
 	/// Convenience overload for ingesting a single file with explicit options.
 	///
 	/// @param file    SST file path to ingest
@@ -466,7 +460,6 @@ public final class ReadWriteDB extends NativeObject {
 		ingestExternalFile(List.of(file), options);
 	}
 
-	// TODO: drop, too many variants
 	/// Convenience overload for ingesting a single file with default options.
 	///
 	/// @param file SST file path to ingest

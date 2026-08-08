@@ -1051,6 +1051,9 @@ public final class RocksDB {
 	}
 
 	static void ingestExternalFile(MemorySegment db, List<Path> files, IngestExternalFileOptions options) {
+		if (files.isEmpty()) {
+			return;
+		}
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment fileArray = arena.allocate(ValueLayout.ADDRESS, files.size());
@@ -1061,6 +1064,12 @@ public final class RocksDB {
 			checkError(err);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("ingestExternalFile failed", t);
+		}
+	}
+
+	static void ingestExternalFileWithDefaults(MemorySegment db, List<Path> files) {
+		try (IngestExternalFileOptions opts = IngestExternalFileOptions.newIngestExternalFileOptions()) {
+			ingestExternalFile(db, files, opts);
 		}
 	}
 

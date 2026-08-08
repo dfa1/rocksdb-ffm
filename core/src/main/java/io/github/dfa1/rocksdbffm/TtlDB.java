@@ -677,9 +677,6 @@ public final class TtlDB extends NativeObject {
 	/// @param files   list of SST file paths to ingest
 	/// @param options ingest options controlling behavior on conflicts
 	public void ingestExternalFile(List<Path> files, IngestExternalFileOptions options) {
-		if (files.isEmpty()) {
-			return;
-		}
 		RocksDB.ingestExternalFile(ptr(), files, options);
 	}
 
@@ -687,9 +684,7 @@ public final class TtlDB extends NativeObject {
 	///
 	/// @param files list of SST file paths to ingest
 	public void ingestExternalFile(List<Path> files) {
-		try (IngestExternalFileOptions opts = IngestExternalFileOptions.newIngestExternalFileOptions()) {
-			ingestExternalFile(files, opts);
-		}
+		RocksDB.ingestExternalFileWithDefaults(ptr(), files);
 	}
 
 	/// Ingests a single SST file with explicit [IngestExternalFileOptions].
