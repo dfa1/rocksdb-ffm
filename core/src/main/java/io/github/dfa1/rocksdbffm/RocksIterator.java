@@ -279,7 +279,8 @@ public final class RocksIterator extends NativeObject {
 	}
 
 	/// Refreshes the iterator to reflect the latest DB state after mutations.
-	/// Repositions to the same key if it still exists.
+	/// The iterator is invalidated by this call regardless of the outcome; a subsequent
+	/// `seek*` call is required to reposition it before further navigation.
 	public void refresh() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);

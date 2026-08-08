@@ -19,7 +19,6 @@ import java.lang.invoke.MethodHandle;
 ///     ...
 /// }
 /// ```
-// TODO: not tested
 public final class HyperClockCache extends Cache {
 
 	/// `rocksdb_hyper_clock_cache_options_t* rocksdb_hyper_clock_cache_options_create(size_t capacity, size_t estimated_entry_charge);`

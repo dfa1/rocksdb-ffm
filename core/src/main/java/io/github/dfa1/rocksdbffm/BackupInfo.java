@@ -19,13 +19,9 @@ package io.github.dfa1.rocksdbffm;
 /// @param size total size of all files belonging to this backup
 /// @param numberOfFiles number of SST/WAL/MANIFEST files in this backup
 public record BackupInfo(
-		/// Unique identifier for this backup, assigned by the engine.
 		BackupId backupId,
-		/// Unix timestamp (seconds since epoch) when the backup was created.
 		long timestamp,
-		/// Total size of all files belonging to this backup.
 		MemorySize size,
-		/// Number of SST/WAL/MANIFEST files in this backup.
 		long numberOfFiles
 ) {
 }

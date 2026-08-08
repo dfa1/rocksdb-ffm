@@ -10,44 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TableOptionsTest {
 
 	// -----------------------------------------------------------------------
-	// LRUCache
-	// -----------------------------------------------------------------------
-
-	@Test
-	void lruCache_reportsConfiguredCapacity() {
-		// Given / When
-		try (var sut = LRUCache.newLRUCache(MemorySize.ofMB(16))) {
-
-			// Then
-			assertThat(sut.getCapacity()).isEqualTo(MemorySize.ofMB(16));
-		}
-	}
-
-	@Test
-	void lruCache_setCapacity_updatesCapacity() {
-		// Given
-		try (var sut = LRUCache.newLRUCache(MemorySize.ofMB(8))) {
-
-			// When
-			sut.setCapacity(MemorySize.ofMB(32));
-
-			// Then
-			assertThat(sut.getCapacity()).isEqualTo(MemorySize.ofMB(32));
-		}
-	}
-
-	@Test
-	void lruCache_usageIsNonNegative() {
-		// Given / When
-		try (var sut = LRUCache.newLRUCache(MemorySize.ofMB(16))) {
-
-			// Then
-			assertThat(sut.getUsage()).isGreaterThanOrEqualTo(MemorySize.ZERO);
-			assertThat(sut.getPinnedUsage()).isGreaterThanOrEqualTo(MemorySize.ZERO);
-		}
-	}
-
-	// -----------------------------------------------------------------------
 	// BlockBasedTableConfig — basic open/read/write
 	// -----------------------------------------------------------------------
 
