@@ -5,6 +5,9 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 
@@ -41,6 +44,8 @@ public final class TransactionDB extends NativeObject {
 	private static final MethodHandle MH_PROPERTY_VALUE;
 	/// `int rocksdb_transactiondb_property_int(rocksdb_transactiondb_t* db, const char* propname, uint64_t* out_val);`
 	private static final MethodHandle MH_PROPERTY_INT;
+	/// `rocksdb_column_family_handle_t* rocksdb_transactiondb_create_column_family(rocksdb_transactiondb_t* txn_db, const rocksdb_options_t* column_family_options, const char* column_family_name, char** errptr);`
+	private static final MethodHandle MH_CREATE_CF;
 
 	// Direct (non-transactional) operations on the TransactionDB
 	/// `void rocksdb_transactiondb_put(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* options, const char* key, size_t klen, const char* val, size_t vlen, char** errptr);`
@@ -132,6 +137,11 @@ public final class TransactionDB extends NativeObject {
 
 		MH_CREATE_SNAPSHOT = NativeLibrary.lookup("rocksdb_transactiondb_create_snapshot",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_CREATE_CF = NativeLibrary.lookup("rocksdb_transactiondb_create_column_family",
+				FunctionDescriptor.of(ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_FLUSH = NativeLibrary.lookup("rocksdb_transactiondb_flush",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
@@ -502,11 +512,34 @@ public final class TransactionDB extends NativeObject {
 	// -----------------------------------------------------------------------
 
 	/// Creates a new column family described by `descriptor` and returns its handle.
+	/// Uses `rocksdb_transactiondb_create_column_family` so the handle is registered
+	/// with this `txn_db`'s own column-family lookup — creating it via the base `rocksdb_t*`
+	/// instead would leave every `*_cf` transaction operation unable to find it.
 	///
 	/// @param descriptor name and options for the new column family
 	/// @return handle to the newly created column family; caller must close it
 	public ColumnFamilyHandle createColumnFamily(ColumnFamilyDescriptor descriptor) {
-		return RocksDB.createCf(baseDb, descriptor);
+		List<Options> tempOptions = new ArrayList<>(1);
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			Options cfOpts = descriptor.options();
+			if (cfOpts == null) {
+				cfOpts = Options.newOptions();
+				tempOptions.add(cfOpts);
+			}
+			MemorySegment nameSeg = arena.allocateFrom(
+					new String(descriptor.name(), StandardCharsets.UTF_8));
+			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
+					ptr(), cfOpts.ptr(), nameSeg, err);
+			RocksDB.checkError(err);
+			return ColumnFamilyHandle.wrap(handle);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("createColumnFamily failed", t);
+		} finally {
+			for (Options o : tempOptions) {
+				o.close();
+			}
+		}
 	}
 
 	/// Drops the column family identified by `handle`.

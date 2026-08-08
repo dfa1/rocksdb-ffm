@@ -186,25 +186,12 @@ class TransactionDBTest {
 
 	// -----------------------------------------------------------------------
 	// Transaction — column family overloads
-	//
-	// NOTE: TransactionDB.createColumnFamily() creates the CF via the base-db
-	// pointer, which the txn_db-scoped *_cf calls below don't recognize
-	// (https://github.com/dfa1/rocksdbffm/issues/61). As a workaround, these
-	// tests create the CF through a plain RocksDB.open() first, then reopen
-	// via openTransactionWithColumnFamilies() to get a handle the txn_db
-	// operations actually accept.
 	// -----------------------------------------------------------------------
 
 	private static TransactionDB openDbWithCf(Path path, List<ColumnFamilyHandle> handles) {
-		try (var rw = RocksDB.open(path)) {
-			rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1")).close();
-		}
-		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions()) {
-			return RocksDB.openTransactionWithColumnFamilies(opts, txnDbOpts, path,
-					List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
-					handles);
-		}
+		var db = openDb(path);
+		handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of("cf1")));
+		return db;
 	}
 
 	@Test
@@ -215,7 +202,7 @@ class TransactionDBTest {
 		     var wo = WriteOptions.newWriteOptions();
 		     var ro = ReadOptions.newReadOptions();
 		     var txn = db.beginTransaction(wo)) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 
 			// When
 			txn.put(cf, "k".getBytes(), "v".getBytes());
@@ -235,7 +222,7 @@ class TransactionDBTest {
 		     var wo = WriteOptions.newWriteOptions();
 		     var ro = ReadOptions.newReadOptions();
 		     var txn = db.beginTransaction(wo)) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 			txn.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
@@ -255,7 +242,7 @@ class TransactionDBTest {
 		try (var db = openDbWithCf(dir, handles);
 		     var wo = WriteOptions.newWriteOptions();
 		     var ro = ReadOptions.newReadOptions()) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 
 			try (var seedTxn = db.beginTransaction(wo)) {
 				seedTxn.put(cf, "k".getBytes(), "original".getBytes());
@@ -282,7 +269,7 @@ class TransactionDBTest {
 		     var wo = WriteOptions.newWriteOptions();
 		     var ro = ReadOptions.newReadOptions();
 		     var txn = db.beginTransaction(wo)) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 			txn.put(cf, "a".getBytes(), "1".getBytes());
 			txn.put(cf, "b".getBytes(), "2".getBytes());
 
@@ -454,7 +441,7 @@ class TransactionDBTest {
 		// Given
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var db = openDbWithCf(dir, handles)) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 
 			// When
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -471,7 +458,7 @@ class TransactionDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var db = openDbWithCf(dir, handles);
 		     var ro = ReadOptions.newReadOptions()) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
@@ -488,7 +475,7 @@ class TransactionDBTest {
 		// Given
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var db = openDbWithCf(dir, handles)) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 			var key = ByteBuffer.allocateDirect(3);
 			key.put("key".getBytes()).flip();
 			var value = ByteBuffer.allocateDirect(5);
@@ -508,7 +495,7 @@ class TransactionDBTest {
 		// Given
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var db = openDbWithCf(dir, handles)) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 			db.put(cf, "k".getBytes(), "v".getBytes());
 			var key = ByteBuffer.allocateDirect(1);
 			key.put("k".getBytes()).flip();
@@ -528,7 +515,7 @@ class TransactionDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var db = openDbWithCf(dir, handles);
 		     Arena arena = Arena.ofConfined()) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 			var key = arena.allocateFrom("seg-k");
 			var value = arena.allocateFrom("seg-v");
 
@@ -547,7 +534,7 @@ class TransactionDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var db = openDbWithCf(dir, handles);
 		     Arena arena = Arena.ofConfined()) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 			db.put(cf, "k".getBytes(), "v".getBytes());
 			var key = arena.allocateFrom("k");
 
@@ -565,7 +552,7 @@ class TransactionDBTest {
 		// Given
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var db = openDbWithCf(dir, handles)) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
 
@@ -589,7 +576,7 @@ class TransactionDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var db = openDbWithCf(dir, handles);
 		     var ro = ReadOptions.newReadOptions()) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 			db.put(cf, "x".getBytes(), "y".getBytes());
 
 			// When
@@ -610,7 +597,7 @@ class TransactionDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var db = openDbWithCf(dir, handles);
 		     var fo = FlushOptions.newFlushOptions().setWait(true)) {
-			var cf = handles.get(1);
+			var cf = handles.get(0);
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
