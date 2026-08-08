@@ -8,6 +8,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 /// Runs FFM and JNI benchmarks back-to-back and prints a comparison table.
 /// ```
@@ -20,6 +21,10 @@ import java.util.Map;
 ///   - ByteBuffer   — FFM vs JNI
 ///   - MemorySegment — FFM only (no JNI equivalent)
 ///   - Instant deserialize: byte[] get vs zero-copy get(key, Mapper) — FFM only (no JNI equivalent)
+///   - Blob read, size-swept: byte[] vs MemorySegment vs get(key, Mapper), 8 B..1 MB (FFM only) —
+///     [FfmBlobSizeBenchmark], printed as its own per-size table since it has no single mean
+///     to fold into the row above (folding it in either drops five of the six sizes measured,
+///     or silently keeps only the last one, which is what happened before this table existed)
 public class BenchmarkRunner {
 
 	// Display order drives LABELS iteration — ROW_ORDER is unused (LABELS is LinkedHashMap)
@@ -47,6 +52,8 @@ public class BenchmarkRunner {
 		run(JniBenchmark.class, "JNI", scores, 1);
 
 		printTable(scores);
+
+		runBlobSizeSweep();
 	}
 
 	private static void run(Class<?> benchClass, String label, Map<String, double[]> scores, int col)
@@ -94,6 +101,54 @@ public class BenchmarkRunner {
 		String jniStr = jniAvail ? String.format("%,14.0f", jni) : "           N/A";
 		String gainStr = jniAvail ? String.format("%+7.1f%%", (ffm - jni) / jni * 100) : "    N/A";
 		System.out.printf("%-32s %,14.0f %s %s%n", label, ffm, jniStr, gainStr);
+	}
+
+	private static void runBlobSizeSweep() throws Exception {
+		System.out.printf("%n=== FFM: blob read, size sweep ===%n%n");
+		Options opt = new OptionsBuilder()
+				.include(FfmBlobSizeBenchmark.class.getSimpleName())
+				.build();
+		Collection<RunResult> results = new Runner(opt).run();
+
+		// blobValueSize -> [byte[], MemorySegment, Pinned (Mapper)]
+		Map<Long, double[]> bySize = new TreeMap<>();
+		for (RunResult r : results) {
+			String name = r.getPrimaryResult().getLabel();
+			long size = Long.parseLong(r.getParams().getParam("blobValueSize"));
+			double mean = r.getPrimaryResult().getStatistics().getMean();
+			double[] row = bySize.computeIfAbsent(size, k -> new double[3]);
+			switch (name) {
+				case "readsBlobViaByteArray" -> row[0] = mean;
+				case "readsBlobViaMemorySegment" -> row[1] = mean;
+				case "readsBlobViaPinned" -> row[2] = mean;
+				default -> throw new IllegalStateException("unexpected benchmark: " + name);
+			}
+		}
+
+		System.out.println();
+		System.out.println("=".repeat(88));
+		System.out.printf("%-12s %16s %16s %18s %10s%n",
+				"Value size", "byte[]", "MemorySegment", "Pinned (Mapper)", "Gain*");
+		System.out.println("-".repeat(88));
+		for (Map.Entry<Long, double[]> e : bySize.entrySet()) {
+			double[] v = e.getValue();
+			double gain = (v[2] - v[0]) / v[0] * 100;
+			System.out.printf("%-12s %,16.0f %,16.0f %,18.0f %+9.1f%%%n",
+					formatSize(e.getKey()), v[0], v[1], v[2], gain);
+		}
+		System.out.println("-".repeat(88));
+		System.out.println("* Pinned (Mapper) vs byte[]");
+		System.out.println("=".repeat(88));
+	}
+
+	private static String formatSize(long bytes) {
+		if (bytes >= 1024 * 1024) {
+			return (bytes / (1024 * 1024)) + " MB";
+		}
+		if (bytes >= 1024) {
+			return (bytes / 1024) + " KB";
+		}
+		return bytes + " B";
 	}
 
 	private BenchmarkRunner() {
