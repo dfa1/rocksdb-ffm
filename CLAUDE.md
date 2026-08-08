@@ -175,7 +175,6 @@ For the full feature status and roadmap see `README.md`.
 | Backup Engine           | `BackupEngine.java`, `BackupEngineOptions.java`, `RestoreOptions.java`, `BackupInfo.java`, `BackupId.java`                |
 | Column Families         | `ColumnFamilyHandle.java`, `ColumnFamilyDescriptor.java`; `RocksDB.openWithColumnFamilies`, `listColumnFamilies`; CF overloads on `ReadWriteDB` and `WriteBatch`; CF overloads on `ReadOnlyDB`, `TtlDB`, `TransactionDB`, `OptimisticTransactionDB`; `Transaction` CF put/delete/get/getForUpdate/newIterator; multi-CF open for all DB types |
 | Perf Context            | `PerfContext.java`, `PerfLevel.java`, `PerfMetric.java`; thread-local; `setPerfLevel`, `reset`, `metric`, `report`       |
-| Pooling (unused)        | `pool/Pool.java`, `pool/BlockingPool.java`, `pool/CachedBlockingPool.java`, `pool/UnpooledPool.java` — see `docs/pool-design.md`; **not wired into any call path and untested** |
 
 ## Documentation
 
