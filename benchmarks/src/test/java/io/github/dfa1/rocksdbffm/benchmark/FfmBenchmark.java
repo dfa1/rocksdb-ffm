@@ -166,7 +166,7 @@ public class FfmBenchmark {
 	}
 
 	@Benchmark
-	public long readsMemorySegment() {
+	public CopyResult readsMemorySegment() {
 		return db.get(readKeyMemorySegment, readValMemorySegment);
 	}
 

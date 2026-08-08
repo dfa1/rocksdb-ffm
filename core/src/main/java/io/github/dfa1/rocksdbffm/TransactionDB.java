@@ -383,13 +383,16 @@ public final class TransactionDB extends NativeObject {
 		}
 	}
 
-	/// Zero-copy get into a caller-supplied native segment.
-	/// Returns the actual value length, or -1 if not found.
+	/// Single-copy get into a caller-supplied native segment. Copies nothing into `value`
+	/// when its capacity is too small. `rocksdb_transactiondb_get` has no fixed-capacity C
+	/// variant, so the capacity check happens on the Java side after the native call, rather
+	/// than inside a single native round trip like [ReadWriteDB#get(MemorySegment, MemorySegment)].
 	///
 	/// @param key   native segment containing the key
 	/// @param value native segment to write the value into
-	/// @return actual value length in bytes, or -1 if not found
-	public long get(MemorySegment key, MemorySegment value) {
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
@@ -397,13 +400,16 @@ public final class TransactionDB extends NativeObject {
 					ptr(), readOpts.ptr(), key, key.byteSize(), valLenSeg, err);
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(valPtr)) {
-				return -1L;
+				return new CopyResult.NotFound();
 			}
 			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			long toCopy = Math.min(valLen, value.byteSize());
-			value.copyFrom(valPtr.reinterpret(toCopy));
+			if (valLen > value.byteSize()) {
+				RocksDB.free(valPtr);
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			value.copyFrom(valPtr.reinterpret(valLen));
 			RocksDB.free(valPtr);
-			return valLen;
+			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
