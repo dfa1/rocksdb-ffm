@@ -103,13 +103,14 @@ public final class SecondaryDB extends NativeObject {
 				MemorySegment.ofBuffer(key), key.remaining(), value);
 	}
 
-	/// Zero-copy get via PinnableSlice into a caller-supplied native segment.
-	/// Returns the actual value length.
+	/// Single-copy get into a caller-supplied native segment via `rocksdb_get_into_buffer`.
+	/// Copies nothing into `value` when its capacity is too small.
 	///
 	/// @param key   native segment containing the key
 	/// @param value native segment to write the value into
-	/// @return actual value length in bytes
-	public long get(MemorySegment key, MemorySegment value) {
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(MemorySegment key, MemorySegment value) {
 		return RocksDB.getIntoSegment(ptr(), readOpts.ptr(), key, key.byteSize(), value);
 	}
 

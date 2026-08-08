@@ -169,10 +169,10 @@ class OptimisticTransactionDBTest {
 			var out = arena.allocate(32);
 
 			// When
-			long len = db.get(key.asSlice(0, 1), out);
+			CopyResult result = db.get(key.asSlice(0, 1), out);
 
 			// Then
-			assertThat(len).isEqualTo(1);
+			assertThat(result).isEqualTo(new CopyResult.Copied());
 			assertThat(out.asSlice(0, 1).toArray(ValueLayout.JAVA_BYTE)).isEqualTo("v".getBytes());
 		}
 	}

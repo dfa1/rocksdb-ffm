@@ -172,10 +172,10 @@ class RocksDBInvariantTest {
 			MemorySegment readBuffer = arena.allocate(testCase.value().length);
 
 			// When
-			long length = db.get(key, readBuffer);
+			CopyResult result = db.get(key, readBuffer);
 
 			// Then
-			assertThat(length).as(testCase.name()).isEqualTo(testCase.value().length);
+			assertThat(result).as(testCase.name()).isEqualTo(new CopyResult.Copied());
 			assertThat(readBuffer.toArray(ValueLayout.JAVA_BYTE)).as(testCase.name()).isEqualTo(testCase.value());
 		}
 	}

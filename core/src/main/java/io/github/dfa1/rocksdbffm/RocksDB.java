@@ -688,20 +688,24 @@ public final class RocksDB {
 		}
 	}
 
-	/// MemorySegment get via PinnableSlice — copies once into the caller's segment.
-	/// Returns actual value length.
-	static long getIntoSegment(MemorySegment db, MemorySegment readOpts, MemorySegment key, long keyLen, MemorySegment value) {
+	/// MemorySegment get via `rocksdb_get_into_buffer` — copies directly into the caller's
+	/// segment, with no intermediate PinnableSlice. Copies nothing when `value` is too small.
+	static CopyResult getIntoSegment(MemorySegment db, MemorySegment readOpts, MemorySegment key, long keyLen, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(db, readOpts, key, keyLen, err);
-			checkError(err);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
+			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
+			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db, readOpts, key, keyLen,
+					value, value.byteSize(), valLenSeg, foundSeg, err);
+			checkError(err);
+			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
+				return new CopyResult.NotFound();
+			}
 			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			long toCopy = Math.min(valLen, value.byteSize());
-			value.copyFrom(valPtr.reinterpret(toCopy));
-			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
-			return valLen;
+			if (fit == 0) {
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
@@ -1481,22 +1485,25 @@ public final class RocksDB {
 		}
 	}
 
-	/// MemorySegment get with explicit column family via PinnableSlice.
-	/// Returns actual value length.
-	static long getCfIntoSegment(MemorySegment db, MemorySegment readOpts, ColumnFamilyHandle cf,
-	                             MemorySegment key, long keyLen, MemorySegment value) {
+	/// MemorySegment get with explicit column family via `rocksdb_get_into_buffer_cf` —
+	/// copies directly into the caller's segment. Copies nothing when `value` is too small.
+	static CopyResult getCfIntoSegment(MemorySegment db, MemorySegment readOpts, ColumnFamilyHandle cf,
+	                                   MemorySegment key, long keyLen, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
-					db, readOpts, cf.ptr(), key, keyLen, err);
-			checkError(err);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
+			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
+			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db, readOpts, cf.ptr(), key, keyLen,
+					value, value.byteSize(), valLenSeg, foundSeg, err);
+			checkError(err);
+			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
+				return new CopyResult.NotFound();
+			}
 			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			long toCopy = Math.min(valLen, value.byteSize());
-			value.copyFrom(valPtr.reinterpret(toCopy));
-			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
-			return valLen;
+			if (fit == 0) {
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}

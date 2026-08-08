@@ -153,10 +153,10 @@ class ReadOnlyDBTest {
 			var value = arena.allocate(32);
 
 			// When
-			long len = ro.get(key.asSlice(0, 3), value);
+			CopyResult result = ro.get(key.asSlice(0, 3), value);
 
 			// Then
-			assertThat(len).isEqualTo(5);
+			assertThat(result).isEqualTo(new CopyResult.Copied());
 			assertThat(value.asSlice(0, 5).toArray(ValueLayout.JAVA_BYTE))
 					.isEqualTo("value".getBytes());
 		}
