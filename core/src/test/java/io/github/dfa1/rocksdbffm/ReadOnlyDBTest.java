@@ -165,6 +165,76 @@ class ReadOnlyDBTest {
 	}
 
 	// -----------------------------------------------------------------------
+	// get — scoped zero-copy (Mapper)
+	// -----------------------------------------------------------------------
+
+	@Test
+	void get_zeroCopy_returnsValue(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.openReadWrite(dir)) {
+			rw.put("key".getBytes(), "value".getBytes());
+		}
+
+		try (var ro = RocksDB.openReadOnly(dir);
+		     Arena arena = Arena.ofConfined()) {
+			var key = arena.allocateFrom("key").asSlice(0, 3);
+
+			// When
+			var result = ro.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
+
+			// Then
+			assertThat(result).isPresent();
+			assertThat(result.get()).isEqualTo("value".getBytes());
+		}
+	}
+
+	@Test
+	void get_zeroCopy_returnsEmpty_whenKeyAbsent(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.openReadWrite(dir)) {
+			rw.put("seed".getBytes(), "val".getBytes());
+		}
+
+		try (var ro = RocksDB.openReadOnly(dir);
+		     Arena arena = Arena.ofConfined()) {
+			var key = arena.allocateFrom("missing").asSlice(0, 7);
+
+			// When
+			var result = ro.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
+
+			// Then
+			assertThat(result).isEmpty();
+		}
+	}
+
+	@Test
+	void get_zeroCopy_fromColumnFamily(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.openReadWrite(dir);
+		     var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			rw.put(cf, "key".getBytes(), "value".getBytes());
+		}
+
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var ro = RocksDB.openReadOnly(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")), handles);
+		     Arena arena = Arena.ofConfined()) {
+			var cf1 = handles.get(1);
+			var key = arena.allocateFrom("key").asSlice(0, 3);
+
+			// When
+			var result = ro.get(cf1, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
+
+			// Then
+			assertThat(result).isPresent();
+			assertThat(result.get()).isEqualTo("value".getBytes());
+
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	// -----------------------------------------------------------------------
 	// get — column family overloads
 	// -----------------------------------------------------------------------
 
