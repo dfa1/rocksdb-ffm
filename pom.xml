@@ -51,7 +51,7 @@
 		<!--
 			JNI baseline used only by the benchmarks module to compare against.
 			This is NOT the version of the native library we ship: that is built
-			from the rocksdb/ submodule (v11.0.4). rocksdbjni has no 11.x release
+			from the rocksdb/ submodule (v11.8.1). rocksdbjni has no 11.x release
 			at all (10.10.1.1 is the newest published), so the two versions cannot
 			be aligned. See the note above the benchmark table in README.md.
 		-->

@@ -2,7 +2,7 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.dfa1/rocksdbffm-core.svg)](https://central.sonatype.com/artifact/io.github.dfa1/rocksdbffm-core)
 ![PURL](https://img.shields.io/badge/purl-pkg%3Amaven%2Fio.github.dfa1%2Frocksdbffm--core%400.6-blue)
-![RocksDB](https://img.shields.io/badge/RocksDB-11.0.4-green.svg)
+![RocksDB](https://img.shields.io/badge/RocksDB-11.8.1-green.svg)
 ![MacOS](https://img.shields.io/badge/macOS-fully_supported-green.svg)
 ![Linux](https://img.shields.io/badge/linux-fully_supported-green.svg)
 ![Linux aarch64](https://img.shields.io/badge/linux_aarch64-fully_supported-green.svg)
@@ -196,7 +196,7 @@ Benchmarks performed on JDK 25 (Apple M5). Each tier uses the same pre-seeded ke
 overhead, not cache miss variance.
 
 > **Note:** the two sides do not run the same RocksDB build, and cannot be made to. The FFM column uses the bundled
-> native library built from the `rocksdb/` submodule (**v11.0.4**). The JNI column uses `org.rocksdb:rocksdbjni`
+> native library built from the `rocksdb/` submodule (**v11.8.1**). The JNI column uses `org.rocksdb:rocksdbjni`
 > **10.10.1.1** — the newest release that exists, since `rocksdbjni` has published no 11.x at all. Treat the deltas as
 > indicative of binding overhead rather than a controlled like-for-like comparison; part of any difference may come
 > from the engine rather than the binding.
