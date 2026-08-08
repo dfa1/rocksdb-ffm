@@ -68,10 +68,6 @@ public final class TransactionDB extends NativeObject {
 	private static final MethodHandle MH_CREATE_ITERATOR_CF;
 	/// `void rocksdb_transactiondb_flush_cf(rocksdb_transactiondb_t* txn_db, const rocksdb_flushoptions_t* options, rocksdb_column_family_handle_t* column_family, char** errptr);`
 	private static final MethodHandle MH_FLUSH_CF;
-	/// `const char* rocksdb_pinnableslice_value(const rocksdb_pinnableslice_t* t, size_t* vlen);`
-	private static final MethodHandle MH_PINNABLESLICE_VALUE;
-	/// `void rocksdb_pinnableslice_destroy(rocksdb_pinnableslice_t* v);`
-	private static final MethodHandle MH_PINNABLESLICE_DESTROY;
 
 
 	static {
@@ -134,14 +130,6 @@ public final class TransactionDB extends NativeObject {
 		MH_FLUSH_CF = NativeLibrary.lookup("rocksdb_transactiondb_flush_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_PINNABLESLICE_VALUE = NativeLibrary.lookup("rocksdb_pinnableslice_value",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_PINNABLESLICE_DESTROY = NativeLibrary.lookup("rocksdb_pinnableslice_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
 
 		MH_CREATE_SNAPSHOT = NativeLibrary.lookup("rocksdb_transactiondb_create_snapshot",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
@@ -455,7 +443,7 @@ public final class TransactionDB extends NativeObject {
 			} catch (Throwable t) {
 				throw RocksDBException.wrap("get_pinned failed", t);
 			}
-			return RocksDB.withPinnedCore(arena, err, pin, MH_PINNABLESLICE_VALUE, MH_PINNABLESLICE_DESTROY, fn);
+			return RocksDB.withPinnableSlice(arena, err, pin, fn);
 		}
 	}
 
@@ -663,15 +651,15 @@ public final class TransactionDB extends NativeObject {
 					ptr(), readOptions.ptr(), cf.ptr(),
 					RocksDB.toNative(arena, key), (long) key.length, err);
 			RocksDB.checkError(err);
-			if (MemorySegment.NULL.equals(pin)) {
-				return null;
+			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
+				if (slice == null) {
+					return null;
+				}
+				MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+				MemorySegment valPtr = slice.value(valLenSeg);
+				long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+				return valPtr.reinterpret(valLen).toArray(ValueLayout.JAVA_BYTE);
 			}
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			byte[] result = valPtr.reinterpret(valLen).toArray(ValueLayout.JAVA_BYTE);
-			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
-			return result;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
@@ -692,20 +680,20 @@ public final class TransactionDB extends NativeObject {
 					ptr(), readOpts.ptr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
-			if (MemorySegment.NULL.equals(pin)) {
-				return new CopyResult.NotFound();
+			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
+				if (slice == null) {
+					return new CopyResult.NotFound();
+				}
+				MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+				MemorySegment valPtr = slice.value(valLenSeg);
+				long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+				if (valLen > value.remaining()) {
+					return new CopyResult.NotEnoughCapacity(valLen);
+				}
+				MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(valLen));
+				value.position(value.position() + (int) valLen);
+				return new CopyResult.Copied();
 			}
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			if (valLen > value.remaining()) {
-				MH_PINNABLESLICE_DESTROY.invokeExact(pin);
-				return new CopyResult.NotEnoughCapacity(valLen);
-			}
-			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(valLen));
-			value.position(value.position() + (int) valLen);
-			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
-			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
@@ -725,19 +713,19 @@ public final class TransactionDB extends NativeObject {
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
 					ptr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
-			if (MemorySegment.NULL.equals(pin)) {
-				return new CopyResult.NotFound();
+			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
+				if (slice == null) {
+					return new CopyResult.NotFound();
+				}
+				MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+				MemorySegment valPtr = slice.value(valLenSeg);
+				long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+				if (valLen > value.byteSize()) {
+					return new CopyResult.NotEnoughCapacity(valLen);
+				}
+				value.copyFrom(valPtr.reinterpret(valLen));
+				return new CopyResult.Copied();
 			}
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			if (valLen > value.byteSize()) {
-				MH_PINNABLESLICE_DESTROY.invokeExact(pin);
-				return new CopyResult.NotEnoughCapacity(valLen);
-			}
-			value.copyFrom(valPtr.reinterpret(valLen));
-			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
-			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
@@ -761,7 +749,7 @@ public final class TransactionDB extends NativeObject {
 			} catch (Throwable t) {
 				throw RocksDBException.wrap("get_pinned failed", t);
 			}
-			return RocksDB.withPinnedCore(arena, err, pin, MH_PINNABLESLICE_VALUE, MH_PINNABLESLICE_DESTROY, fn);
+			return RocksDB.withPinnableSlice(arena, err, pin, fn);
 		}
 	}
 
