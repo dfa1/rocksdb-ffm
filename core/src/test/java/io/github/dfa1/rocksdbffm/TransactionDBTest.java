@@ -6,7 +6,10 @@ import org.junit.jupiter.api.io.TempDir;
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -182,6 +185,123 @@ class TransactionDBTest {
 	}
 
 	// -----------------------------------------------------------------------
+	// Transaction — column family overloads
+	//
+	// NOTE: TransactionDB.createColumnFamily() creates the CF via the base-db
+	// pointer, which the txn_db-scoped *_cf calls below don't recognize
+	// (https://github.com/dfa1/rocksdbffm/issues/61). As a workaround, these
+	// tests create the CF through a plain RocksDB.open() first, then reopen
+	// via openTransactionWithColumnFamilies() to get a handle the txn_db
+	// operations actually accept.
+	// -----------------------------------------------------------------------
+
+	private static TransactionDB openDbWithCf(Path path, List<ColumnFamilyHandle> handles) {
+		try (var rw = RocksDB.open(path)) {
+			rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1")).close();
+		}
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions()) {
+			return RocksDB.openTransactionWithColumnFamilies(opts, txnDbOpts, path,
+					List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+					handles);
+		}
+	}
+
+	@Test
+	void transaction_put_get_columnFamily(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles);
+		     var wo = WriteOptions.newWriteOptions();
+		     var ro = ReadOptions.newReadOptions();
+		     var txn = db.beginTransaction(wo)) {
+			var cf = handles.get(1);
+
+			// When
+			txn.put(cf, "k".getBytes(), "v".getBytes());
+
+			// Then
+			assertThat(txn.get(cf, ro, "k".getBytes())).isEqualTo("v".getBytes());
+			txn.commit();
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void transaction_delete_columnFamily_removesKey(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles);
+		     var wo = WriteOptions.newWriteOptions();
+		     var ro = ReadOptions.newReadOptions();
+		     var txn = db.beginTransaction(wo)) {
+			var cf = handles.get(1);
+			txn.put(cf, "k".getBytes(), "v".getBytes());
+
+			// When
+			txn.delete(cf, "k".getBytes());
+
+			// Then
+			assertThat(txn.get(cf, ro, "k".getBytes())).isNull();
+			txn.commit();
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void transaction_getForUpdate_columnFamily_locksAndReturnsValue(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles);
+		     var wo = WriteOptions.newWriteOptions();
+		     var ro = ReadOptions.newReadOptions()) {
+			var cf = handles.get(1);
+
+			try (var seedTxn = db.beginTransaction(wo)) {
+				seedTxn.put(cf, "k".getBytes(), "original".getBytes());
+				seedTxn.commit();
+			}
+
+			try (var txn = db.beginTransaction(wo)) {
+				// When
+				var val = txn.getForUpdate(cf, ro, "k".getBytes(), true);
+
+				// Then
+				assertThat(val).isEqualTo("original".getBytes());
+				txn.commit();
+			}
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void transaction_newIterator_columnFamily_scansKeys(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles);
+		     var wo = WriteOptions.newWriteOptions();
+		     var ro = ReadOptions.newReadOptions();
+		     var txn = db.beginTransaction(wo)) {
+			var cf = handles.get(1);
+			txn.put(cf, "a".getBytes(), "1".getBytes());
+			txn.put(cf, "b".getBytes(), "2".getBytes());
+
+			// When
+			List<String> keys = new ArrayList<>();
+			try (var it = txn.newIterator(cf, ro)) {
+				for (it.seekToFirst(); it.isValid(); it.next()) {
+					keys.add(new String(it.key(), StandardCharsets.UTF_8));
+				}
+			}
+
+			// Then
+			assertThat(keys).containsExactly("a", "b");
+			txn.commit();
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	// -----------------------------------------------------------------------
 	// direct (non-transactional) operations
 	// -----------------------------------------------------------------------
 
@@ -322,6 +442,231 @@ class TransactionDBTest {
 
 			// Then
 			assertThat(db.get("k".getBytes())).isNull();
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// direct operations — column family overloads
+	// -----------------------------------------------------------------------
+
+	@Test
+	void directPut_get_columnFamily(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles)) {
+			var cf = handles.get(1);
+
+			// When
+			db.put(cf, "k".getBytes(), "v".getBytes());
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isEqualTo("v".getBytes());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void directGet_columnFamily_withReadOptions(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles);
+		     var ro = ReadOptions.newReadOptions()) {
+			var cf = handles.get(1);
+			db.put(cf, "k".getBytes(), "v".getBytes());
+
+			// When
+			var result = db.get(cf, ro, "k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void directPut_get_columnFamily_byteBuffer(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles)) {
+			var cf = handles.get(1);
+			var key = ByteBuffer.allocateDirect(3);
+			key.put("key".getBytes()).flip();
+			var value = ByteBuffer.allocateDirect(5);
+			value.put("value".getBytes()).flip();
+
+			// When
+			db.put(cf, key, value);
+
+			// Then
+			assertThat(db.get(cf, "key".getBytes())).isEqualTo("value".getBytes());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void directDelete_columnFamily_byteBuffer_removesKey(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles)) {
+			var cf = handles.get(1);
+			db.put(cf, "k".getBytes(), "v".getBytes());
+			var key = ByteBuffer.allocateDirect(1);
+			key.put("k".getBytes()).flip();
+
+			// When
+			db.delete(cf, key);
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isNull();
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void directPut_get_columnFamily_memorySegment(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles);
+		     Arena arena = Arena.ofConfined()) {
+			var cf = handles.get(1);
+			var key = arena.allocateFrom("seg-k");
+			var value = arena.allocateFrom("seg-v");
+
+			// When
+			db.put(cf, key.asSlice(0, 5), value.asSlice(0, 5));
+
+			// Then
+			assertThat(db.get(cf, "seg-k".getBytes())).isEqualTo("seg-v".getBytes());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void directDelete_columnFamily_memorySegment_removesKey(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles);
+		     Arena arena = Arena.ofConfined()) {
+			var cf = handles.get(1);
+			db.put(cf, "k".getBytes(), "v".getBytes());
+			var key = arena.allocateFrom("k");
+
+			// When
+			db.delete(cf, key.asSlice(0, 1));
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isNull();
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void newIterator_columnFamily_scansKeys(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles)) {
+			var cf = handles.get(1);
+			db.put(cf, "a".getBytes(), "1".getBytes());
+			db.put(cf, "b".getBytes(), "2".getBytes());
+
+			// When
+			List<String> keys = new ArrayList<>();
+			try (var it = db.newIterator(cf)) {
+				for (it.seekToFirst(); it.isValid(); it.next()) {
+					keys.add(new String(it.key(), StandardCharsets.UTF_8));
+				}
+			}
+
+			// Then
+			assertThat(keys).containsExactly("a", "b");
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void newIterator_columnFamily_withReadOptions(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles);
+		     var ro = ReadOptions.newReadOptions()) {
+			var cf = handles.get(1);
+			db.put(cf, "x".getBytes(), "y".getBytes());
+
+			// When
+			try (var it = db.newIterator(cf, ro)) {
+				it.seekToFirst();
+
+				// Then
+				assertThat(it.isValid()).isTrue();
+				assertThat(it.key()).isEqualTo("x".getBytes());
+			}
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void flush_columnFamily_doesNotThrow(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles);
+		     var fo = FlushOptions.newFlushOptions().setWait(true)) {
+			var cf = handles.get(1);
+			db.put(cf, "k".getBytes(), "v".getBytes());
+
+			// When
+			db.flush(cf, fo);
+
+			// Then — no exception means flush succeeded
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void getProperty_columnFamily_returnsValue(@TempDir Path dir) {
+		// Given
+		try (var db = openDb(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+
+			// When
+			var result = db.getProperty(cf, Property.NUM_ENTRIES_ACTIVE_MEM_TABLE);
+
+			// Then
+			assertThat(result).isPresent();
+		}
+	}
+
+	@Test
+	void getLongProperty_columnFamily_returnsValue(@TempDir Path dir) {
+		// Given
+		try (var db = openDb(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+
+			// When
+			var result = db.getLongProperty(cf, Property.ESTIMATE_NUM_KEYS);
+
+			// Then
+			assertThat(result).isPresent();
+		}
+	}
+
+	@Test
+	void dropColumnFamily_removesFamily(@TempDir Path dir) {
+		// Given
+		try (var db = openDb(dir)) {
+			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("to-drop"));
+
+			// When
+			db.dropColumnFamily(cf);
+			cf.close();
+
+			// Then — family list should only contain default
+			try (var opts = Options.newOptions()) {
+				List<byte[]> families = RocksDB.listColumnFamilies(opts, dir);
+				List<String> names = families.stream()
+						.map(b -> new String(b, StandardCharsets.UTF_8))
+						.toList();
+				assertThat(names).containsExactly("default");
+			}
 		}
 	}
 

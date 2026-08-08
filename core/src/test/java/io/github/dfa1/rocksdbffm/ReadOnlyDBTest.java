@@ -7,6 +7,8 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -159,6 +161,235 @@ class ReadOnlyDBTest {
 			assertThat(result).isEqualTo(new CopyResult.Copied());
 			assertThat(value.asSlice(0, 5).toArray(ValueLayout.JAVA_BYTE))
 					.isEqualTo("value".getBytes());
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// get — column family overloads
+	// -----------------------------------------------------------------------
+
+	@Test
+	void get_columnFamily_returnsStoredValue(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.open(dir)) {
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			rw.put(cf, "k".getBytes(), "v".getBytes());
+			cf.close();
+		}
+
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     handles)) {
+			var cf = handles.get(1);
+
+			// When
+			var result = ro.get(cf, "k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void get_columnFamily_withReadOptions(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.open(dir)) {
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			rw.put(cf, "k".getBytes(), "v".getBytes());
+			cf.close();
+		}
+
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     handles);
+		     var readOpts = ReadOptions.newReadOptions()) {
+			var cf = handles.get(1);
+
+			// When
+			var result = ro.get(cf, readOpts, "k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void get_columnFamily_byteBuffer_returnsValue(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.open(dir)) {
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			rw.put(cf, "key".getBytes(), "value".getBytes());
+			cf.close();
+		}
+
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     handles)) {
+			var cf = handles.get(1);
+			var key = ByteBuffer.allocateDirect(3);
+			key.put("key".getBytes()).flip();
+			var out = ByteBuffer.allocateDirect(32);
+
+			// When
+			CopyResult result = ro.get(cf, key, out);
+
+			// Then
+			assertThat(result).isEqualTo(new CopyResult.Copied());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void get_columnFamily_memorySegment_returnsValue(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.open(dir)) {
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			rw.put(cf, "key".getBytes(), "value".getBytes());
+			cf.close();
+		}
+
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     handles);
+		     Arena arena = Arena.ofConfined()) {
+			var cf = handles.get(1);
+			var key = arena.allocateFrom("key");
+			var value = arena.allocate(32);
+
+			// When
+			CopyResult result = ro.get(cf, key.asSlice(0, 3), value);
+
+			// Then
+			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(value.asSlice(0, 5).toArray(ValueLayout.JAVA_BYTE))
+					.isEqualTo("value".getBytes());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Iterator — column family overloads
+	// -----------------------------------------------------------------------
+
+	@Test
+	void newIterator_columnFamily_scansKeys(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.open(dir)) {
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			rw.put(cf, "a".getBytes(), "1".getBytes());
+			rw.put(cf, "b".getBytes(), "2".getBytes());
+			cf.close();
+		}
+
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     handles)) {
+			var cf = handles.get(1);
+
+			// When
+			try (var it = ro.newIterator(cf)) {
+				it.seekToFirst();
+
+				// Then
+				assertThat(it.isValid()).isTrue();
+				assertThat(it.key()).isEqualTo("a".getBytes());
+			}
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void newIterator_columnFamily_withReadOptions(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.open(dir)) {
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			rw.put(cf, "x".getBytes(), "y".getBytes());
+			cf.close();
+		}
+
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     handles);
+		     var readOpts = ReadOptions.newReadOptions()) {
+			var cf = handles.get(1);
+
+			// When
+			try (var it = ro.newIterator(cf, readOpts)) {
+				it.seekToFirst();
+
+				// Then
+				assertThat(it.isValid()).isTrue();
+				assertThat(it.key()).isEqualTo("x".getBytes());
+			}
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// DB Properties — column family overloads
+	// -----------------------------------------------------------------------
+
+	@Test
+	void getProperty_columnFamily_returnsValue(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.open(dir)) {
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			rw.put(cf, "k".getBytes(), "v".getBytes());
+			cf.close();
+		}
+
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     handles)) {
+			var cf = handles.get(1);
+
+			// When
+			var result = ro.getProperty(cf, Property.STATS);
+
+			// Then
+			assertThat(result).isPresent();
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void getLongProperty_columnFamily_returnsValue(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.open(dir)) {
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			rw.put(cf, "k".getBytes(), "v".getBytes());
+			cf.close();
+		}
+
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     handles)) {
+			var cf = handles.get(1);
+
+			// When
+			var result = ro.getLongProperty(cf, Property.ESTIMATE_NUM_KEYS);
+
+			// Then
+			assertThat(result).isPresent();
+			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 

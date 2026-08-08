@@ -6,7 +6,10 @@ import org.junit.jupiter.api.io.TempDir;
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -192,6 +195,282 @@ class OptimisticTransactionDBTest {
 
 			// Then
 			assertThat(db.get("k".getBytes())).isNull();
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Direct (non-transactional) operations — column family overloads
+	// -----------------------------------------------------------------------
+
+	@Test
+	void put_get_columnFamily(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+
+			// When
+			db.put(cf, "k".getBytes(), "v".getBytes());
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void get_columnFamily_withReadOptions(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var ro = ReadOptions.newReadOptions()) {
+			db.put(cf, "k".getBytes(), "v".getBytes());
+
+			// When
+			var result = db.get(cf, ro, "k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void put_get_columnFamily_byteBuffer(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			var key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			var value = ByteBuffer.allocateDirect(1).put((byte) 'v').flip();
+
+			// When
+			db.put(cf, key, value);
+
+			var getKey = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			var getVal = ByteBuffer.allocateDirect(32);
+
+			// Then
+			assertThat(db.get(cf, getKey, getVal)).isEqualTo(new CopyResult.Copied());
+		}
+	}
+
+	@Test
+	void delete_columnFamily_byteBuffer_removesKey(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			db.put(cf, "k".getBytes(), "v".getBytes());
+			var key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+
+			// When
+			db.delete(cf, key);
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isNull();
+		}
+	}
+
+	@Test
+	void put_get_columnFamily_memorySegment(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     Arena arena = Arena.ofConfined()) {
+			var key = arena.allocateFrom("seg-k");
+			var value = arena.allocateFrom("seg-v");
+
+			// When
+			db.put(cf, key.asSlice(0, 5), value.asSlice(0, 5));
+
+			// Then
+			assertThat(db.get(cf, "seg-k".getBytes())).isEqualTo("seg-v".getBytes());
+		}
+	}
+
+	@Test
+	void delete_columnFamily_memorySegment_removesKey(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     Arena arena = Arena.ofConfined()) {
+			db.put(cf, "k".getBytes(), "v".getBytes());
+			var key = arena.allocateFrom("k");
+
+			// When
+			db.delete(cf, key.asSlice(0, 1));
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isNull();
+		}
+	}
+
+	@Test
+	void deleteRange_columnFamily_removesKeyRange(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			db.put(cf, "a".getBytes(), "1".getBytes());
+			db.put(cf, "b".getBytes(), "2".getBytes());
+			db.put(cf, "c".getBytes(), "3".getBytes());
+
+			// When
+			db.deleteRange(cf, "a".getBytes(), "c".getBytes());
+
+			// Then
+			assertThat(db.get(cf, "a".getBytes())).isNull();
+			assertThat(db.get(cf, "b".getBytes())).isNull();
+			assertThat(db.get(cf, "c".getBytes())).isEqualTo("3".getBytes());
+		}
+	}
+
+	@Test
+	void deleteRange_columnFamily_byteBuffer_removesKeyRange(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			db.put(cf, "a".getBytes(), "1".getBytes());
+			db.put(cf, "b".getBytes(), "2".getBytes());
+			var start = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
+			var end = ByteBuffer.allocateDirect(1).put((byte) 'b').flip();
+
+			// When
+			db.deleteRange(cf, start, end);
+
+			// Then
+			assertThat(db.get(cf, "a".getBytes())).isNull();
+			assertThat(db.get(cf, "b".getBytes())).isEqualTo("2".getBytes());
+		}
+	}
+
+	@Test
+	void deleteRange_columnFamily_memorySegment_removesKeyRange(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     Arena arena = Arena.ofConfined()) {
+			db.put(cf, "a".getBytes(), "1".getBytes());
+			db.put(cf, "b".getBytes(), "2".getBytes());
+			var start = arena.allocateFrom("a");
+			var end = arena.allocateFrom("b");
+
+			// When
+			db.deleteRange(cf, start.asSlice(0, 1), end.asSlice(0, 1));
+
+			// Then
+			assertThat(db.get(cf, "a".getBytes())).isNull();
+			assertThat(db.get(cf, "b".getBytes())).isEqualTo("2".getBytes());
+		}
+	}
+
+	@Test
+	void newIterator_columnFamily_scansKeys(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			db.put(cf, "a".getBytes(), "1".getBytes());
+			db.put(cf, "b".getBytes(), "2".getBytes());
+
+			// When
+			List<String> keys = new ArrayList<>();
+			try (var it = db.newIterator(cf)) {
+				for (it.seekToFirst(); it.isValid(); it.next()) {
+					keys.add(new String(it.key(), StandardCharsets.UTF_8));
+				}
+			}
+
+			// Then
+			assertThat(keys).containsExactly("a", "b");
+		}
+	}
+
+	@Test
+	void newIterator_columnFamily_withReadOptions(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var ro = ReadOptions.newReadOptions()) {
+			db.put(cf, "x".getBytes(), "y".getBytes());
+
+			// When
+			try (var it = db.newIterator(cf, ro)) {
+				it.seekToFirst();
+
+				// Then
+				assertThat(it.isValid()).isTrue();
+				assertThat(it.key()).isEqualTo("x".getBytes());
+			}
+		}
+	}
+
+	@Test
+	void flush_columnFamily_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var fo = FlushOptions.newFlushOptions()) {
+			db.put(cf, "k".getBytes(), "v".getBytes());
+
+			// When
+			db.flush(cf, fo);
+
+			// Then — no exception
+		}
+	}
+
+	@Test
+	void getProperty_columnFamily_returnsValue(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			db.put(cf, "k".getBytes(), "v".getBytes());
+
+			// When
+			var result = db.getProperty(cf, Property.NUM_ENTRIES_ACTIVE_MEM_TABLE);
+
+			// Then
+			assertThat(result).isPresent();
+		}
+	}
+
+	@Test
+	void getLongProperty_columnFamily_returnsValue(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			db.put(cf, "k".getBytes(), "v".getBytes());
+
+			// When
+			var result = db.getLongProperty(cf, Property.ESTIMATE_NUM_KEYS);
+
+			// Then
+			assertThat(result).isPresent();
+		}
+	}
+
+	@Test
+	void dropColumnFamily_removesFamily(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir)) {
+			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("to-drop"));
+			db.put(cf, "k".getBytes(), "v".getBytes());
+
+			// When
+			db.dropColumnFamily(cf);
+			cf.close();
+
+			// Then — no exception means drop succeeded
 		}
 	}
 
