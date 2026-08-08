@@ -1,43 +1,13 @@
 package io.github.dfa1.rocksdbffm;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CompressionTypeTest {
-
-	// -----------------------------------------------------------------------
-	// getSupportedCompressions
-	// -----------------------------------------------------------------------
-
-	@Test
-	void getSupportedCompressions_alwaysContainsNoCompression(@TempDir Path dir) {
-		try (ReadWriteDB db = RocksDB.open(dir)) {
-			assertThat(db.getSupportedCompressions()).contains(CompressionType.NO_COMPRESSION);
-		}
-	}
-
-	@Test
-	void getSupportedCompressions_isNonEmpty(@TempDir Path dir) {
-		try (ReadWriteDB db = RocksDB.open(dir)) {
-			assertThat(db.getSupportedCompressions()).isNotEmpty();
-		}
-	}
-
-	@Test
-	void getSupportedCompressions_isUnmodifiable(@TempDir Path dir) {
-		try (ReadWriteDB db = RocksDB.open(dir)) {
-			Set<CompressionType> supported = db.getSupportedCompressions();
-			assertThatThrownBy(() -> supported.add(CompressionType.SNAPPY))
-					.isInstanceOf(UnsupportedOperationException.class);
-		}
-	}
 
 	// -----------------------------------------------------------------------
 	// Options integration
@@ -68,35 +38,6 @@ class CompressionTypeTest {
 		     ReadWriteDB db = RocksDB.open(opts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
-		}
-	}
-
-	@Disabled("not working on CI yet")
-	@Test
-	void openDb_withEachSupportedCompression_writesAndReadsBack(@TempDir Path dir) {
-		// Given — use a reference DB just to probe support
-		Set<CompressionType> supported;
-		try (ReadWriteDB probe = RocksDB.open(dir.resolve("probe"))) {
-			supported = probe.getSupportedCompressions();
-		}
-
-		// When — open a separate DB per compression type and verify round-trip
-		int i = 0;
-		for (CompressionType type : supported) {
-			Path dbPath = dir.resolve("db-" + i++);
-			try (Options opts = Options.newOptions()
-					.setCreateIfMissing(true)
-					.setCompression(type);
-			     ReadWriteDB db = RocksDB.open(opts, dbPath)) {
-				// When
-				db.put("key".getBytes(), "val".getBytes());
-				var result = db.get("key".getBytes());
-
-				// Then
-				assertThat(result)
-						.as("compression=%s", type)
-						.isEqualTo("val".getBytes());
-			}
 		}
 	}
 }

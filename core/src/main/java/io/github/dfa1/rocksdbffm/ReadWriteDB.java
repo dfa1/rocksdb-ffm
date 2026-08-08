@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
-import java.util.Set;
 
 /// FFM wrapper for a read-write `rocksdb_t*` instance.
 ///
@@ -465,51 +464,6 @@ public final class ReadWriteDB extends NativeObject {
 	/// @param file SST file path to ingest
 	public void ingestExternalFile(Path file) {
 		ingestExternalFile(List.of(file));
-	}
-
-	// -----------------------------------------------------------------------
-	// Compression probe
-	// -----------------------------------------------------------------------
-
-	// TODO: move to rocksdb or just delete it
-	/// Returns the set of compression types compiled into the loaded RocksDB library.
-	///
-	/// @return set of supported [CompressionType] values (always includes [CompressionType#NO_COMPRESSION])
-	public Set<CompressionType> getSupportedCompressions() {
-		Set<CompressionType> result = java.util.EnumSet.of(CompressionType.NO_COMPRESSION);
-		java.nio.file.Path tmpDir = null;
-		try {
-			tmpDir = java.nio.file.Files.createTempDirectory("rocksdbffm-compress-probe-");
-			boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
-			for (CompressionType type : CompressionType.values()) {
-				if (type == CompressionType.NO_COMPRESSION) {
-					continue;
-				}
-				if (type == CompressionType.XPRESS && !isWindows) {
-					continue;
-				}
-				java.nio.file.Path sstFile = tmpDir.resolve(type.name().toLowerCase() + ".sst");
-				try (Options opts = Options.newOptions().setCompression(type);
-				     SstFileWriter writer = SstFileWriter.newSstFileWriter(opts)) {
-					writer.open(sstFile);
-					writer.put(new byte[]{0}, new byte[]{0});
-					writer.finish();
-					result.add(type);
-				} catch (RocksDBException ignored) {
-				} finally {
-					java.nio.file.Files.deleteIfExists(sstFile);
-				}
-			}
-		} catch (java.io.IOException ignored) {
-		} finally {
-			if (tmpDir != null) {
-				try {
-					java.nio.file.Files.deleteIfExists(tmpDir);
-				} catch (java.io.IOException ignored) {
-				}
-			}
-		}
-		return java.util.Collections.unmodifiableSet(result);
 	}
 
 	// -----------------------------------------------------------------------
