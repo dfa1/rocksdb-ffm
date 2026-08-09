@@ -13,29 +13,22 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=dfa1_rocksdbffm&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=dfa1_rocksdbffm)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=dfa1_rocksdbffm&metric=coverage)](https://sonarcloud.io/summary/new_code?id=dfa1_rocksdbffm)
 
-**rocksdbffm** is an experimental Java wrapper for [RocksDB](https://rocksdb.org/) using the **Foreign
-Function & Memory (FFM) API**.
+**rocksdbffm** is an experimental Java wrapper for [RocksDB](https://rocksdb.org/) built on the
+**Foreign Function & Memory (FFM) API**, targeting JDK 25+.
 
-The project aims to provide a more maintainable alternative to the traditional JNI-based `rocksdbjni`.
-The target is JDK 25+ because of `java.lang.foreign`.
+It aims to be a more maintainable alternative to the JNI-based `rocksdbjni`: mappings are plain Java
+against `rocksdb/c.h`, so new RocksDB features need no C++ glue. Reads are roughly **2× faster** than
+JNI — see [docs/benchmarks.md](docs/benchmarks.md) for the numbers and their caveats, and
+[docs/explanation.md](docs/explanation.md) for why.
 
-> **AI-assisted development:** This project uses [Claude Code](https://claude.ai/code) heavily for implementation
-> work — C header mapping, test generation, and documentation. **Architecture, API design, and all decisions are
-> human-driven.**
+> **AI-assisted development:** This project uses [Claude Code](https://claude.ai/code) heavily for
+> implementation work — C header mapping, test generation, and documentation. **Architecture, API
+> design, and all decisions are human-driven.**
 
-The native library is built from the RocksDB source via **`zig cc` / `zig c++`** as a drop-in C/C++ compiler.
-macOS and Linux go through RocksDB's POSIX `Makefile` (`PORTABLE=1 make shared_lib`); Windows goes through RocksDB's
-CMake build instead (`CMAKE_SYSTEM_NAME=Windows` with zig cc/c++ acting as a MinGW-w64-compatible cross compiler),
-since the Makefile has no Windows target. Zig bundles clang and libc++ for every target, enabling hermetic
-cross-compilation without a separate sysroot or system toolchain.
+## Quickstart
 
-## 📦 Coordinates
-
-The library comes with core (pure `Java`) and one additional native artifact per OS/Architecture.
-
-### Maven (BOM — recommended)
-
-Import the BOM once; all artifact versions are managed automatically:
+Import the BOM, then depend on `rocksdbffm-core` plus one native artifact per platform you ship to
+(full classifier list in [docs/reference.md#artifacts](docs/reference.md#artifacts)):
 
 ```xml
 <dependencyManagement>
@@ -43,231 +36,63 @@ Import the BOM once; all artifact versions are managed automatically:
     <dependency>
       <groupId>io.github.dfa1</groupId>
       <artifactId>rocksdbffm-bom</artifactId>
-      <version>x.y.z</version>
+      <version>0.6</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
   </dependencies>
 </dependencyManagement>
 
-<!-- No version needed — managed by the BOM -->
 <dependencies>
   <dependency>
     <groupId>io.github.dfa1</groupId>
     <artifactId>rocksdbffm-core</artifactId>
   </dependency>
-  <!-- choose 1 or more native package -->
   <dependency>
     <groupId>io.github.dfa1</groupId>
     <artifactId>rocksdbffm-native-osx-aarch64</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>io.github.dfa1</groupId>
-    <artifactId>rocksdbffm-native-linux-x86_64</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>io.github.dfa1</groupId>
-    <artifactId>rocksdbffm-native-linux-aarch64</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>io.github.dfa1</groupId>
-    <artifactId>rocksdbffm-native-windows-x86_64</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>io.github.dfa1</groupId>
-    <artifactId>rocksdbffm-native-windows-aarch64</artifactId>
+    <scope>runtime</scope>
   </dependency>
 </dependencies>
 ```
 
-### Gradle
-
-```kotlin
-implementation(platform("io.github.dfa1:rocksdbffm-bom:x.y.z"))
-implementation("io.github.dfa1:rocksdbffm-core")
-// choose 1 or more native package
-implementation("io.github.dfa1:rocksdbffm-native-osx-aarch64")
-implementation("io.github.dfa1:rocksdbffm-native-linux-x86_64")
-implementation("io.github.dfa1:rocksdbffm-native-linux-aarch64")
-implementation("io.github.dfa1:rocksdbffm-native-windows-x86_64")
-implementation("io.github.dfa1:rocksdbffm-native-windows-aarch64")
+```java
+try (var db = RocksDB.open(Path.of("/tmp/demo-db"))) {
+    db.put("user:1".getBytes(), "alice".getBytes());
+    byte[] value = db.get("user:1".getBytes());   // null if absent
+    db.delete("user:1".getBytes());
+}
 ```
 
-### 🔐 Supply‑chain & SBOM
+Run with `--enable-native-access=ALL-UNNAMED`. Step-by-step setup — including batches, iterators, and
+options — is in the [tutorial](docs/tutorial.md).
 
-This project publishes a Software Bill of Materials (SBOM) using the CycloneDX format.
+## Documentation
 
-- Package URL (PURL): `pkg:maven/io.github.dfa1/rocksdbffm-core@0.6`
-- Ecosystem: Maven
-- Coordinates: `io.github.dfa1:rocksdbffm-core:0.6`
+Docs follow the [Diátaxis](https://diataxis.fr/) framework.
 
-PURLs allow SCA tools (Syft, Grype, Trivy, osv.dev, GitHub Advisory DB) to uniquely identify this artifact.
+| Document                                       | Mode        | Contents                                                                        |
+|:-----------------------------------------------|:------------|:---------------------------------------------------------------------------------|
+| [docs/tutorial.md](docs/tutorial.md)           | Tutorial    | Start to finish: project setup, open a DB, put/get/delete, batch, iterate        |
+| [docs/how-to.md](docs/how-to.md)               | How-to      | Recipes: column families, snapshots, transactions, backups, TTL, WAL tailing, …  |
+| [docs/reference.md](docs/reference.md)         | Reference   | Artifacts, API surface by area, options, enums, feature status                   |
+| [docs/explanation.md](docs/explanation.md)     | Explanation | Why FFM over JNI, ownership model, domain types, native library loading          |
+| [docs/benchmarks.md](docs/benchmarks.md)       | Explanation | FFM vs JNI throughput, methodology, how to reproduce                             |
+| [docs/c-api-gaps.md](docs/c-api-gaps.md)       | Reference   | What `rocksdb/c.h` exposes but is unwrapped, and what needs an upstream PR       |
 
 ## Contributing
 
-### Requirements
-
-- JDK 25+.
-- [Zig](https://ziglang.org/) (any 0.15.x build).
-- [CMake](https://cmake.org/) (needed only for the Windows native builds), plus `make` or
-  [Ninja](https://ninja-build.org/) as its backing generator.
-
-### Build and Test
+**Requirements:** JDK 25+, [Zig](https://ziglang.org/) 0.15.x, and — for the Windows native builds
+only — [CMake](https://cmake.org/) plus `make` or [Ninja](https://ninja-build.org/).
 
 ```bash
-# Clone the rocksdb submodule (first time)
-git submodule update --init --recursive
-
-# Build RocksDB from the submodule (first time or after a clean)
-./mvnw generate-resources -Pnative-build
-
-# Run unit tests
+git submodule update --init --recursive     # clone the rocksdb submodule (first time)
+./mvnw generate-resources -Pnative-build    # build the native library (first time or after clean)
 ./mvnw test
 ```
 
-## Why This Project Exists
-
-### 1. Reducing JNI Maintenance Lag
-
-There is often a significant delay between new features appearing in the RocksDB C++ core and their availability in
-the Java JNI wrappers. This is largely due to the complexity of maintaining C++ glue code. By using FFM, we can map
-C headers directly in Java, simplifying the process of supporting new C++ features.
-
-### 2. Safety
-
-FFM improves safety over JNI on the Java side: accessing a closed or out-of-bounds `MemorySegment`
-throws an exception rather than silently corrupting memory. However, a bad pointer passed into a
-native call can still crash the JVM — FFM does not sandbox native execution.
-
-## Design Choices
-
-Several deliberate decisions set this library apart from `rocksdbjni`.
-
-### Modern Java
-
-The API uses `java.lang.foreign` (FFM), records, sealed types, and pattern matching where they reduce
-boilerplate or improve safety. There is no legacy compatibility shim.
-
-### Expose only valid operations
-
-Every type of RocksDB instance exposes only relevant operations in Java.
-For example, `rocksdb_open_for_read_only` is exposed as `ReadOnlyDB`, which
-does not expose any `put` or `delete` method.
-
-In `rocksdbjni`, the same `RocksDB` type is used for both read-write and read-only opens.
-Calling `put()` on a read-only instance compiles and runs, but fails at runtime:
-
-1. `RocksDB.put(byte[], byte[])` calls through JNI into `db->Put(...)`.
-2. The underlying C++ object is a `DBImplReadOnly`, which overrides every write method to return `Status::NotSupported("Not supported operation in read only mode.")`.
-3. The JNI layer converts that status into a thrown `RocksDBException`.
-
-Here the constraint is enforced at compile time — `ReadOnlyDB` simply has no `put`, `delete`, `merge`, or `write` method, so an invalid call is a build error rather than a runtime failure.
-
-### Exceptions for all errors
-
-Every operation that can fail throws `RocksDBException` (an unchecked exception). `rocksdbjni` historically returned
-`null`, `-1`, or relied on status objects that callers could silently ignore. Here a failure is always loud.
-
-### Domain primitives instead of raw scalars
-
-Raw numeric types carry no unit information and cannot be validated at construction time.
-
-| Concept              | rocksdbjni               | rocksdbffm            |
-|:---------------------|:-------------------------|:----------------------|
-| Cache / buffer sizes | `long` (bytes, silently) | `MemorySize.ofMB(64)` |
-| Snapshot position    | `long`                   | `SequenceNumber`      |
-
-Both types are immutable, `Comparable`, and reject invalid values at construction — an illegal value cannot be created
-and therefore cannot be passed anywhere.
-
-### `Path` for filesystem operations
-
-All methods that accept a filesystem location (open, checkpoint, backup, …) take `java.nio.file.Path` instead of
-`String`. This prevents confusion between absolute and relative paths, integrates naturally with the NIO file API, and
-rules out accidentally passing non-path strings.
-
-### Performance through Zero-Copy
-
-- **Pinnable Slices:** Uses `rocksdb_get_pinned` to avoid intermediate copies from the block cache.
-- **MemorySegment & ByteBuffer:** Support for `java.lang.foreign.MemorySegment` and direct `ByteBuffer` for data
-  transfer between Java and native code.
-
-## Performance Results
-
-Benchmarks performed on JDK 25 (Apple M5). Each tier uses the same pre-seeded key so the numbers reflect pure call
-overhead, not cache miss variance.
-
-> **Note:** the two sides do not run the same RocksDB build, and cannot be made to. The FFM column uses the bundled
-> native library built from the `rocksdb/` submodule (**v11.8.1**). The JNI column uses `org.rocksdb:rocksdbjni`
-> **10.10.1.1** — the newest release that exists, since `rocksdbjni` has published no 11.x at all. Treat the deltas as
-> indicative of binding overhead rather than a controlled like-for-like comparison; part of any difference may come
-> from the engine rather than the binding.
-
-| Operation              | API tier           | FFM (ops/s) | JNI (ops/s) |   Gain    |
-|:-----------------------|:-------------------|:-----------:|:-----------:|:---------:|
-| Reads                  | `byte[]`           |  7,196,554  |  3,619,125  | **+99%**  |
-| Reads                  | `DirectByteBuffer` |  8,077,135  |  3,656,113  | **+121%** |
-| Reads                  | `MemorySegment`    |  8,149,510  |      —      |     —     |
-| Writes                 | `byte[]`           |   671,213   |   608,496   | **+10%**  |
-| Writes                 | `DirectByteBuffer` |   694,166   |   590,923   | **+17%**  |
-| Writes                 | `MemorySegment`    |   686,889   |      —      |     —     |
-| Batch writes (100 ops) | `byte[]`           |   23,936    |   16,813    | **+42%**  |
-
-*Both libraries use `PinnableSlice` for reads. Read gains (~2×) come from the absence of JNI frame setup and
-thread-state transitions — FFM downcall stubs are JIT-compiled directly. `MemorySegment` is the fastest read tier
-because segments backed by a confined arena carry no GC scope-check overhead on the hot path. Write gains are smaller
-because WAL/memtable I/O dominates. Batch write gains multiply because per-call overhead is paid 100× per iteration.*
-
-### Running benchmarks
-
-```bash
-./scripts/benchmark.sh
-```
-
-Builds everything, runs both FFM and JNI suites, and prints a side-by-side comparison table.
-
-## Roadmap
-
-This project is currently experimental. The table below tracks parity with `rocksdbjni`.
-
-| Feature                    | Status | Notes                                                                                                                                            |
-|:---------------------------|:------:|:-------------------------------------------------------------------------------------------------------------------------------------------------|
-| DB Open/Create             |   ✅    | Options, CreateIfMissing, ReadOnly                                                                                                               |
-| Put/Get/Delete             |   ✅    | byte[], ByteBuffer, MemorySegment; zero-copy via PinnableSlice                                                                                   |
-| WriteBatch                 |   ✅    | Atomic multi-op writes                                                                                                                           |
-| Transactions (pessimistic) |   ✅    | TransactionDB, savepoints, get-for-update                                                                                                        |
-| Checkpoints                |   ✅    | Point-in-time on-disk snapshot                                                                                                                   |
-| Table Options              |   ✅    | `BlockBasedTableOptions`, `Cache`, `LRUCache`, `HyperClockCache`, `FilterPolicy` (Bloom)                                                         |
-| Iterators                  |   ✅    | seekToFirst/Last, seek, seekForPrev, next/prev; all three access tiers                                                                           |
-| Snapshots                  |   ✅    | Point-in-time consistent reads; `ReadOptions.setSnapshot`, sequence numbers                                                                      |
-| Flush                      |   ✅    | `flush(FlushOptions)`, `flushWal(boolean sync)`; sync/async modes                                                                                |
-| DB Properties              |   ✅    | `getProperty(Property)` → `Optional<String>`, `getLongProperty(Property)` → `OptionalLong`                                                       |
-| Statistics                 |   ✅    | TickerType, HistogramType, StatsLevel                                                                                                            |
-| Compression                |   ✅    | `CompressionType` enum (NO/Snappy/zlib/bz2/LZ4/LZ4HC/Xpress/Zstd); `Options.setCompression`; `CompressionType.getSupportedTypes()` runtime probe |
-| Column Families            |   ✅    | `openWithColumnFamilies`, `listColumnFamilies`, `createColumnFamily`, `dropColumnFamily`; `ColumnFamilyHandle`, `ColumnFamilyDescriptor`; put/get/delete/deleteRange/keyMayExist/flush/getProperty/newIterator all three tiers; `WriteBatch` CF overloads; CF overloads on `ReadOnlyDB`, `TtlDB`, `TransactionDB`, `OptimisticTransactionDB`; `Transaction` put/delete/get/getForUpdate/newIterator per-CF; multi-CF open for all DB types |
-| MultiGet                   |   ❌    | Bulk reads                                                                                                                                       |
-| DeleteRange                |   ✅    | Range tombstones; `deleteRange` on `RocksDB` and `WriteBatch`; all three access tiers                                                            |
-| Compaction control         |   ✅    | `compactRange` (all three tiers + `CompactOptions`), `suggestCompactRange`, `disableFileDeletions`, `enableFileDeletions`                        |
-| SST File Ingest            |   ✅    | `SstFileWriter` (put/delete/deleteRange), `RocksDB.ingestExternalFile`; `IngestExternalFileOptions`                                             |
-| Backup Engine              |   ✅    | `BackupEngine`, `BackupEngineOptions`, `RestoreOptions`, `BackupInfo`, `BackupId`; incremental backup/restore; purge; verify                     |
-| TTL DB                     |   ✅    | `openWithTtl(path, Duration)`; lazy expiry via compaction; full API available                                                                    |
-| Optimistic Transactions    |   ✅    | `OptimisticTransactionDB`; conflict detection at commit; `OptimisticTransactionOptions`                                                          |
-| Merge / MergeOperator      |   ❌    | Not implemented. `rocksdb_merge*` and `rocksdb_mergeoperator_create()` exist in the C API; see [#8](https://github.com/dfa1/rocksdbffm/issues/8) |
-| CompactionFilter           |   ❌    | Custom compaction logic                                                                                                                          |
-| WAL Iterator               |   ✅    | `WalIterator`, `WalBatchResult`; `getUpdatesSince(SequenceNumber)`, `getLatestSequenceNumber`; CDC/replication/auditing                          |
-| Rate Limiter               |   ✅    | `RateLimiter`; writes-only, reads-only, all-IO modes; auto-tuned variant; `Options.setRateLimiter`                                               |
-| Env                        |   ✅    | `Env.defaultEnv()`, `Env.memEnv()`; background thread pools (`setBackgroundThreads`, `setHighPriorityBackgroundThreads`); `Options.setEnv`       |
-| SST File Manager           |   ✅    | `SstFileManager`; disk-space limits, trash-deletion rate, compaction buffer; `Options.setSstFileManager`                                         |
-| Secondary DB               |   ✅    | `SecondaryDB`; `tryCatchUpWithPrimary`, get, iterator, snapshot, properties                                                                      |
-| Blob DB                    |   ✅    | `BlobDB`; blob options on `Options`; blob properties (`BLOB_STATS`, `NUM_BLOB_FILES`, …); `PrepopulateBlobCache`                                 |
-| Logger                     |   ✅    | Logger + callback                                                                                                                                |
-| Custom Comparators         |   ❌    | Custom comparators                                                                                                                               |
-| Advanced column family     |   ❌    |                                                                                                                                                  |
-| Advanced memtable config   |   ❌    |                                                                                                                                                  |
-| Perf Context               |   ✅    | `PerfContext`, `PerfLevel`, `PerfMetric`; `setPerfLevel`, `reset`, `metric`, `report`                                                            |
-| Persistent Cache           |   🚫    | Not exposed in `rocksdb/c.h` — C++ only (`NewPersistentCache`); requires a custom C shim to bridge                                               |
-| Wide Columns               |   🚫    | Not exposed in `rocksdb/c.h` — C++ only (`PutEntity`, `GetEntity`, `WideColumns`); requires a custom C shim to bridge                            |
-| Background Jobs            |   🚧    | Tier 1: `cancelAllBackgroundWork`, `disableManualCompaction`, `enableManualCompaction`, `waitForCompact(WaitForCompactOptions)`; Tier 3–5 (Options tuning, FIFO/Universal options) pending                  |
+Never run `./mvnw install` — it pollutes `~/.m2` with local artifacts. Use `compile`, `test`, or
+`package`.
 
 ## Releasing
 
@@ -280,9 +105,9 @@ GitHub Actions picks up the tag and deploys to Maven Central.
 
 ## License
 
-This project is licensed under the same terms as RocksDB (LevelDB/Apache 2.0).
+Licensed under the same terms as RocksDB (LevelDB/Apache 2.0).
 
-## See Also
+## See also
 
 - [Expanding RocksDB's Java FFI](https://rocksdb.org/blog/2024/02/20/foreign-function-interface.html)
 - [Rocksjava: present and future](https://evolvedbinary.slides.com/adamretter/rocksjava-present-and-future#/1)

@@ -1,5 +1,9 @@
 # RocksDB C API Gaps
 
+Supplement to [explanation.md](explanation.md), which explains
+[why the C API is the whole contract](explanation.md#the-c-api-is-the-whole-contract). For what is
+implemented today see [reference.md#feature-status](reference.md#feature-status).
+
 rocksdbffm wraps `rocksdb/c.h` — the official RocksDB C API — not C++ directly. This has two consequences:
 
 - **Type A gaps**: the C API exposes the feature but rocksdbffm has no Java wrapper yet. Actionable now.
