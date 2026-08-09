@@ -502,4 +502,51 @@ class ReadOnlyDBTest {
 			assertThat(result).isPresent();
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// openReadOnly — errorIfWalFileExists overload
+	// -----------------------------------------------------------------------
+
+	@Test
+	void openReadOnly_errorIfWalFileExistsFalse_allowsOpenWithWal(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.openReadWrite(dir)) {
+			rw.put("k".getBytes(), "v".getBytes());
+		}
+
+		// When
+		try (var opts = Options.newOptions();
+		     var ro = RocksDB.openReadOnly(opts, dir, false)) {
+			var result = ro.get("k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// openReadOnly — column families with errorIfWalFileExists overload
+	// -----------------------------------------------------------------------
+
+	@Test
+	void openReadOnly_columnFamilies_errorIfWalFileExistsFalse(@TempDir Path dir) {
+		// Given — create a DB with a custom CF, then close it
+		try (var rw = RocksDB.openReadWrite(dir);
+		     var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			rw.put(cf, "k".getBytes(), "v".getBytes());
+		}
+
+		// When — reopen read-only with both CFs via the 5-arg factory overload
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var ro = RocksDB.openReadOnly(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     handles, false)) {
+			var cf = handles.get(1);
+
+			// Then
+			assertThat(ro.get(cf, "k".getBytes())).isEqualTo("v".getBytes());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
 }

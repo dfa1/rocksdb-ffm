@@ -658,6 +658,33 @@ class TransactionDBTest {
 	}
 
 	// -----------------------------------------------------------------------
+	// openTransaction — column families (opened at startup, not created later)
+	// -----------------------------------------------------------------------
+
+	@Test
+	void openTransaction_withColumnFamilies_reopensExistingFamily(@TempDir Path dir) {
+		// Given — create a DB with a custom CF, then close it
+		try (var db = openDb(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			db.put(cf, "k".getBytes(), "v".getBytes());
+		}
+
+		// When — reopen with both CFs via the CF-aware factory overload
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
+		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     handles)) {
+			var cf = handles.get(1);
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isEqualTo("v".getBytes());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	// -----------------------------------------------------------------------
 	// TransactionOptions
 	// -----------------------------------------------------------------------
 
