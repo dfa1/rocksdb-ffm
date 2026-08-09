@@ -643,6 +643,72 @@ public final class TransactionDB extends NativeObject {
 		}
 	}
 
+	/// Single-copy get from `cf` into a direct [java.nio.ByteBuffer], via PinnableSlice.
+	/// Copies nothing into `value` when its remaining capacity is too small.
+	///
+	/// @param cf    target column family
+	/// @param key   direct [java.nio.ByteBuffer] containing the key
+	/// @param value direct [java.nio.ByteBuffer] to write the value into
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(ColumnFamilyHandle cf, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
+					ptr(), readOpts.ptr(), cf.ptr(),
+					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
+			RocksDB.checkError(err);
+			if (MemorySegment.NULL.equals(pin)) {
+				return new CopyResult.NotFound();
+			}
+			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
+			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			if (valLen > value.remaining()) {
+				MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(valLen));
+			value.position(value.position() + (int) valLen);
+			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+			return new CopyResult.Copied();
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("get failed", t);
+		}
+	}
+
+	/// Single-copy get from `cf` into a caller-supplied native segment, via PinnableSlice.
+	/// Copies nothing into `value` when its capacity is too small.
+	///
+	/// @param cf    target column family
+	/// @param key   native segment containing the key
+	/// @param value native segment to write the value into
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
+					ptr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
+			RocksDB.checkError(err);
+			if (MemorySegment.NULL.equals(pin)) {
+				return new CopyResult.NotFound();
+			}
+			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
+			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			if (valLen > value.byteSize()) {
+				MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			value.copyFrom(valPtr.reinterpret(valLen));
+			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+			return new CopyResult.Copied();
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("get failed", t);
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// Delete — column family overloads
 	// -----------------------------------------------------------------------

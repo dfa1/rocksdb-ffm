@@ -471,6 +471,63 @@ class TransactionDBTest {
 	}
 
 	@Test
+	void directGet_columnFamily_byteBuffer_returnsValue(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles)) {
+			var cf = handles.get(0);
+			db.put(cf, "k".getBytes(), "v".getBytes());
+			var key = ByteBuffer.allocateDirect(1).put("k".getBytes()).flip();
+			var value = ByteBuffer.allocateDirect(64);
+
+			// When
+			CopyResult result = db.get(cf, key, value);
+
+			// Then
+			assertThat(result).isEqualTo(new CopyResult.Copied());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void directGet_columnFamily_byteBuffer_returnsNotFound_whenKeyAbsent(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles)) {
+			var cf = handles.get(0);
+			var key = ByteBuffer.allocateDirect(1).put("k".getBytes()).flip();
+			var value = ByteBuffer.allocateDirect(64);
+
+			// When
+			CopyResult result = db.get(cf, key, value);
+
+			// Then
+			assertThat(result).isEqualTo(new CopyResult.NotFound());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void directGet_columnFamily_memorySegment_returnsValue(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles);
+		     Arena arena = Arena.ofConfined()) {
+			var cf = handles.get(0);
+			db.put(cf, "k".getBytes(), "v".getBytes());
+			var key = arena.allocateFrom("k");
+			var value = arena.allocate(64);
+
+			// When
+			CopyResult result = db.get(cf, key.asSlice(0, 1), value);
+
+			// Then
+			assertThat(result).isEqualTo(new CopyResult.Copied());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
 	void directPut_get_columnFamily_byteBuffer(@TempDir Path dir) {
 		// Given
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
