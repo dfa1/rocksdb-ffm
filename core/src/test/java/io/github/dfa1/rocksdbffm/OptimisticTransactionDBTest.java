@@ -308,6 +308,64 @@ class OptimisticTransactionDBTest {
 	}
 
 	@Test
+	void deleteRange_removesKeyRange(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir)) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("b".getBytes(), "2".getBytes());
+			db.put("c".getBytes(), "3".getBytes());
+
+			// When
+			db.deleteRange("a".getBytes(), "c".getBytes());
+
+			// Then
+			assertThat(db.get("a".getBytes())).isNull();
+			assertThat(db.get("b".getBytes())).isNull();
+			assertThat(db.get("c".getBytes())).isEqualTo("3".getBytes());
+		}
+	}
+
+	@Test
+	void deleteRange_byteBuffer_removesKeyRange(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir)) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("b".getBytes(), "2".getBytes());
+			var start = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
+			var end = ByteBuffer.allocateDirect(1).put((byte) 'b').flip();
+
+			// When
+			db.deleteRange(start, end);
+
+			// Then
+			assertThat(db.get("a".getBytes())).isNull();
+			assertThat(db.get("b".getBytes())).isEqualTo("2".getBytes());
+		}
+	}
+
+	@Test
+	void deleteRange_memorySegment_removesKeyRange(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     Arena arena = Arena.ofConfined()) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("b".getBytes(), "2".getBytes());
+			var start = arena.allocateFrom("a");
+			var end = arena.allocateFrom("b");
+
+			// When
+			db.deleteRange(start.asSlice(0, 1), end.asSlice(0, 1));
+
+			// Then
+			assertThat(db.get("a".getBytes())).isNull();
+			assertThat(db.get("b".getBytes())).isEqualTo("2".getBytes());
+		}
+	}
+
+	@Test
 	void deleteRange_columnFamily_removesKeyRange(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
