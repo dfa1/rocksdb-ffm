@@ -200,6 +200,30 @@ public final class OptimisticTransactionDB extends NativeObject {
 		RocksDB.deleteSegment(baseDb, writeOpts.ptr(), key, key.byteSize());
 	}
 
+	/// Direct range delete [`startKey`, `endKey`), bypassing any active transaction. Slow path.
+	///
+	/// @param startKey inclusive start of the deleted range
+	/// @param endKey   exclusive end of the deleted range
+	public void deleteRange(byte[] startKey, byte[] endKey) {
+		RocksDB.deleteRangeCfBytes(baseDb, writeOpts.ptr(), startKey, endKey);
+	}
+
+	/// Zero-copy deleteRange for direct [ByteBuffer]s.
+	///
+	/// @param startKey direct [ByteBuffer] with the inclusive start key
+	/// @param endKey   direct [ByteBuffer] with the exclusive end key
+	public void deleteRange(ByteBuffer startKey, ByteBuffer endKey) {
+		RocksDB.deleteRangeCfBuffer(baseDb, writeOpts.ptr(), startKey, endKey);
+	}
+
+	/// Zero-copy deleteRange for [MemorySegment]s.
+	///
+	/// @param startKey native segment with the inclusive start key
+	/// @param endKey   native segment with the exclusive end key
+	public void deleteRange(MemorySegment startKey, MemorySegment endKey) {
+		RocksDB.deleteRangeCfSegment(baseDb, writeOpts.ptr(), startKey, endKey);
+	}
+
 	// -----------------------------------------------------------------------
 	// Column family management
 	// -----------------------------------------------------------------------
