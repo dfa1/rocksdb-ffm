@@ -3,6 +3,9 @@ package io.github.dfa1.rocksdbffm;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.ValueLayout;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -135,6 +138,239 @@ class SstFileWriterTest {
 
 			// Then
 			assertThat(writer.fileSize()).isGreaterThan(MemorySize.ZERO);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// SstFileWriter — put tiers
+	// -----------------------------------------------------------------------
+
+	@Test
+	void put_byteBuffer_valueIsIngestable(@TempDir Path dir) {
+		// Given
+		Path sstPath = dir.resolve("data.sst");
+		Path dbPath = dir.resolve("db");
+
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var writer = SstFileWriter.newSstFileWriter(opts)) {
+			writer.open(sstPath);
+			var key = ByteBuffer.allocateDirect(3).put("key".getBytes()).flip();
+			var value = ByteBuffer.allocateDirect(5).put("value".getBytes()).flip();
+			writer.put(key, value);
+			writer.finish();
+		}
+
+		// When
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.ingestExternalFile(sstPath);
+
+			// Then
+			assertThat(db.get("key".getBytes())).isEqualTo("value".getBytes());
+		}
+	}
+
+	@Test
+	void put_memorySegment_valueIsIngestable(@TempDir Path dir) {
+		// Given
+		Path sstPath = dir.resolve("data.sst");
+		Path dbPath = dir.resolve("db");
+
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var writer = SstFileWriter.newSstFileWriter(opts);
+		     var arena = Arena.ofConfined()) {
+			writer.open(sstPath);
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "key".getBytes());
+			var value = arena.allocateFrom(ValueLayout.JAVA_BYTE, "value".getBytes());
+			writer.put(key, value);
+			writer.finish();
+		}
+
+		// When
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.ingestExternalFile(sstPath);
+
+			// Then
+			assertThat(db.get("key".getBytes())).isEqualTo("value".getBytes());
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// SstFileWriter — delete tiers
+	// -----------------------------------------------------------------------
+
+	@Test
+	void delete_removesKeyAfterIngest(@TempDir Path dir) {
+		// Given — key already present in the DB
+		Path sstPath = dir.resolve("data.sst");
+		Path dbPath = dir.resolve("db");
+
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.put("key".getBytes(), "value".getBytes());
+		}
+
+		try (var opts = Options.newOptions();
+		     var writer = SstFileWriter.newSstFileWriter(opts)) {
+			writer.open(sstPath);
+			writer.delete("key".getBytes());
+			writer.finish();
+		}
+
+		// When
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.ingestExternalFile(sstPath);
+
+			// Then
+			assertThat(db.get("key".getBytes())).isNull();
+		}
+	}
+
+	@Test
+	void delete_byteBuffer_removesKeyAfterIngest(@TempDir Path dir) {
+		// Given — key already present in the DB
+		Path sstPath = dir.resolve("data.sst");
+		Path dbPath = dir.resolve("db");
+
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.put("key".getBytes(), "value".getBytes());
+		}
+
+		try (var opts = Options.newOptions();
+		     var writer = SstFileWriter.newSstFileWriter(opts)) {
+			writer.open(sstPath);
+			var key = ByteBuffer.allocateDirect(3).put("key".getBytes()).flip();
+			writer.delete(key);
+			writer.finish();
+		}
+
+		// When
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.ingestExternalFile(sstPath);
+
+			// Then
+			assertThat(db.get("key".getBytes())).isNull();
+		}
+	}
+
+	@Test
+	void delete_memorySegment_removesKeyAfterIngest(@TempDir Path dir) {
+		// Given — key already present in the DB
+		Path sstPath = dir.resolve("data.sst");
+		Path dbPath = dir.resolve("db");
+
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.put("key".getBytes(), "value".getBytes());
+		}
+
+		try (var opts = Options.newOptions();
+		     var writer = SstFileWriter.newSstFileWriter(opts);
+		     var arena = Arena.ofConfined()) {
+			writer.open(sstPath);
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "key".getBytes());
+			writer.delete(key);
+			writer.finish();
+		}
+
+		// When
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.ingestExternalFile(sstPath);
+
+			// Then
+			assertThat(db.get("key".getBytes())).isNull();
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// SstFileWriter — deleteRange tiers
+	// -----------------------------------------------------------------------
+
+	@Test
+	void deleteRange_removesKeyRangeAfterIngest(@TempDir Path dir) {
+		// Given — keys a, b, c already present in the DB
+		Path sstPath = dir.resolve("data.sst");
+		Path dbPath = dir.resolve("db");
+
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("b".getBytes(), "2".getBytes());
+			db.put("c".getBytes(), "3".getBytes());
+		}
+
+		try (var opts = Options.newOptions();
+		     var writer = SstFileWriter.newSstFileWriter(opts)) {
+			writer.open(sstPath);
+			writer.deleteRange("a".getBytes(), "c".getBytes());
+			writer.finish();
+		}
+
+		// When
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.ingestExternalFile(sstPath);
+
+			// Then — [a, c) is gone, c survives
+			assertThat(db.get("a".getBytes())).isNull();
+			assertThat(db.get("b".getBytes())).isNull();
+			assertThat(db.get("c".getBytes())).isEqualTo("3".getBytes());
+		}
+	}
+
+	@Test
+	void deleteRange_byteBuffer_removesKeyRangeAfterIngest(@TempDir Path dir) {
+		// Given — keys a, b already present in the DB
+		Path sstPath = dir.resolve("data.sst");
+		Path dbPath = dir.resolve("db");
+
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("b".getBytes(), "2".getBytes());
+		}
+
+		try (var opts = Options.newOptions();
+		     var writer = SstFileWriter.newSstFileWriter(opts)) {
+			writer.open(sstPath);
+			var start = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
+			var end = ByteBuffer.allocateDirect(1).put((byte) 'b').flip();
+			writer.deleteRange(start, end);
+			writer.finish();
+		}
+
+		// When
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.ingestExternalFile(sstPath);
+
+			// Then
+			assertThat(db.get("a".getBytes())).isNull();
+			assertThat(db.get("b".getBytes())).isEqualTo("2".getBytes());
+		}
+	}
+
+	@Test
+	void deleteRange_memorySegment_removesKeyRangeAfterIngest(@TempDir Path dir) {
+		// Given — keys a, b already present in the DB
+		Path sstPath = dir.resolve("data.sst");
+		Path dbPath = dir.resolve("db");
+
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("b".getBytes(), "2".getBytes());
+		}
+
+		try (var opts = Options.newOptions();
+		     var writer = SstFileWriter.newSstFileWriter(opts);
+		     var arena = Arena.ofConfined()) {
+			writer.open(sstPath);
+			var start = arena.allocateFrom(ValueLayout.JAVA_BYTE, "a".getBytes());
+			var end = arena.allocateFrom(ValueLayout.JAVA_BYTE, "b".getBytes());
+			writer.deleteRange(start, end);
+			writer.finish();
+		}
+
+		// When
+		try (var db = RocksDB.openReadWrite(dbPath)) {
+			db.ingestExternalFile(sstPath);
+
+			// Then
+			assertThat(db.get("a".getBytes())).isNull();
+			assertThat(db.get("b".getBytes())).isEqualTo("2".getBytes());
 		}
 	}
 

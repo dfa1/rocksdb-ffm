@@ -5,6 +5,7 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 /// FFM wrapper for `rocksdb_sstfilewriter_t`.
@@ -165,6 +166,23 @@ public final class SstFileWriter extends NativeObject {
 		}
 	}
 
+	/// Zero-copy [ByteBuffer] overload of [#put(byte\[\], byte\[\])].
+	///
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the value
+	public void put(ByteBuffer key, ByteBuffer value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_PUT.invokeExact(ptr(),
+					MemorySegment.ofBuffer(key), (long) key.remaining(),
+					MemorySegment.ofBuffer(value), (long) value.remaining(),
+					err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("sstfilewriter put failed", t);
+		}
+	}
+
 	/// Appends a delete tombstone entry. Keys must be added in strictly ascending order.
 	///
 	/// @param key key bytes to delete
@@ -192,6 +210,19 @@ public final class SstFileWriter extends NativeObject {
 		}
 	}
 
+	/// Zero-copy [ByteBuffer] overload of [#delete(byte\[\])].
+	///
+	/// @param key direct [ByteBuffer] containing the key to delete
+	public void delete(ByteBuffer key) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_DELETE.invokeExact(ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("sstfilewriter delete failed", t);
+		}
+	}
+
 	/// Appends a delete-range tombstone covering `[beginKey, endKey)`.
 	/// Keys must be added in strictly ascending order.
 	///
@@ -205,6 +236,40 @@ public final class SstFileWriter extends NativeObject {
 			MH_DELETE_RANGE.invokeExact(ptr(),
 					beginNative, (long) beginKey.length,
 					endNative, (long) endKey.length,
+					err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("sstfilewriter deleteRange failed", t);
+		}
+	}
+
+	/// Zero-copy [ByteBuffer] overload of [#deleteRange(byte\[\], byte\[\])].
+	///
+	/// @param beginKey direct [ByteBuffer] with the inclusive start of the deleted range
+	/// @param endKey   direct [ByteBuffer] with the exclusive end of the deleted range
+	public void deleteRange(ByteBuffer beginKey, ByteBuffer endKey) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_DELETE_RANGE.invokeExact(ptr(),
+					MemorySegment.ofBuffer(beginKey), (long) beginKey.remaining(),
+					MemorySegment.ofBuffer(endKey), (long) endKey.remaining(),
+					err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("sstfilewriter deleteRange failed", t);
+		}
+	}
+
+	/// Zero-copy [MemorySegment] overload of [#deleteRange(byte\[\], byte\[\])].
+	///
+	/// @param beginKey native segment with the inclusive start of the deleted range
+	/// @param endKey   native segment with the exclusive end of the deleted range
+	public void deleteRange(MemorySegment beginKey, MemorySegment endKey) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_DELETE_RANGE.invokeExact(ptr(),
+					beginKey, beginKey.byteSize(),
+					endKey, endKey.byteSize(),
 					err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
