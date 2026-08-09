@@ -30,6 +30,17 @@ jobs:
         with:
           version: 0.15.2
 
+      - name: Cache RocksDB native builds
+        uses: actions/cache@v4
+        with:
+          path: |
+            native/osx-aarch64/src/main/resources/native
+            native/linux-x86_64/src/main/resources/native
+            native/linux-aarch64/src/main/resources/native
+            native/windows-x86_64/src/main/resources/native
+            native/windows-aarch64/src/main/resources/native
+          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt') }}-ubuntu-latest-${{ runner.arch }}
+
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
