@@ -3,6 +3,9 @@ package io.github.dfa1.rocksdbffm;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.ValueLayout;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -125,6 +128,80 @@ class RocksDBTest {
 			// Then
 			assertThat(db.get("k1".getBytes())).isNull();
 			assertThat(db.get("k2".getBytes())).isNull();
+		}
+	}
+
+	@Test
+	void write_commitsBatchedPuts_byteBuffer(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var batch = WriteBatch.create()) {
+
+			var key = ByteBuffer.allocateDirect(2).put("k1".getBytes()).flip();
+			var value = ByteBuffer.allocateDirect(2).put("v1".getBytes()).flip();
+			batch.put(key, value);
+
+			// When
+			db.write(batch);
+
+			// Then
+			assertThat(db.get("k1".getBytes())).isEqualTo("v1".getBytes());
+		}
+	}
+
+	@Test
+	void write_commitsBatchedPuts_memorySegment(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var batch = WriteBatch.create();
+		     var arena = Arena.ofConfined()) {
+
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "k1".getBytes());
+			var value = arena.allocateFrom(ValueLayout.JAVA_BYTE, "v1".getBytes());
+			batch.put(key, value);
+
+			// When
+			db.write(batch);
+
+			// Then
+			assertThat(db.get("k1".getBytes())).isEqualTo("v1".getBytes());
+		}
+	}
+
+	@Test
+	void write_commitsBatchedDeletes_byteBuffer(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var batch = WriteBatch.create()) {
+
+			db.put("k1".getBytes(), "v1".getBytes());
+			var key = ByteBuffer.allocateDirect(2).put("k1".getBytes()).flip();
+			batch.delete(key);
+
+			// When
+			db.write(batch);
+
+			// Then
+			assertThat(db.get("k1".getBytes())).isNull();
+		}
+	}
+
+	@Test
+	void write_commitsBatchedDeletes_memorySegment(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var batch = WriteBatch.create();
+		     var arena = Arena.ofConfined()) {
+
+			db.put("k1".getBytes(), "v1".getBytes());
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "k1".getBytes());
+			batch.delete(key);
+
+			// When
+			db.write(batch);
+
+			// Then
+			assertThat(db.get("k1".getBytes())).isNull();
 		}
 	}
 

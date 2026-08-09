@@ -59,6 +59,10 @@ public class FfmBenchmark {
 
 	private WriteBatch batch;
 	private byte[][] batchKeys;
+	private ByteBuffer[] batchKeysByteBuffer;
+	private ByteBuffer batchValueByteBuffer;
+	private MemorySegment[] batchKeysMemorySegment;
+	private MemorySegment batchValueMemorySegment;
 
 	@Setup(Level.Trial)
 	public void setup() throws Exception {
@@ -89,9 +93,23 @@ public class FfmBenchmark {
 		// Seed the read key
 		db.put(TestData.READ_KEY_BYTES, TestData.READ_VALUE_BYTES);
 
-		// --- batch ---
+		// --- batch: byte[] tier ---
 		batchKeys = TestData.batchKeys();
 		batch = WriteBatch.create();
+
+		// --- batch: ByteBuffer tier ---
+		batchKeysByteBuffer = new ByteBuffer[TestData.WRITE_BATCH_SIZE];
+		for (int i = 0; i < TestData.WRITE_BATCH_SIZE; i++) {
+			batchKeysByteBuffer[i] = ByteBuffer.allocateDirect(batchKeys[i].length).put(batchKeys[i]).flip();
+		}
+		batchValueByteBuffer = ByteBuffer.allocateDirect(TestData.BATCH_VALUE.length).put(TestData.BATCH_VALUE).flip();
+
+		// --- batch: MemorySegment tier ---
+		batchKeysMemorySegment = new MemorySegment[TestData.WRITE_BATCH_SIZE];
+		for (int i = 0; i < TestData.WRITE_BATCH_SIZE; i++) {
+			batchKeysMemorySegment[i] = arenaMemorySegment.allocateFrom(ValueLayout.JAVA_BYTE, batchKeys[i]);
+		}
+		batchValueMemorySegment = arenaMemorySegment.allocateFrom(ValueLayout.JAVA_BYTE, TestData.BATCH_VALUE);
 	}
 
 	@TearDown(Level.Trial)
@@ -190,6 +208,30 @@ public class FfmBenchmark {
 			}
 			db.write(arena, batch);
 		}
+	}
+
+	// ---- batch (ByteBuffer keys, zero-copy) --------------------------------
+
+	@Benchmark
+	public void batchWritesByteBuffer() {
+		batch.clear();
+		for (int i = 0; i < TestData.WRITE_BATCH_SIZE; i++) {
+			batchKeysByteBuffer[i].rewind();
+			batchValueByteBuffer.rewind();
+			batch.put(batchKeysByteBuffer[i], batchValueByteBuffer);
+		}
+		db.write(batch);
+	}
+
+	// ---- batch (MemorySegment keys, zero-copy) -----------------------------
+
+	@Benchmark
+	public void batchWritesMemorySegment() {
+		batch.clear();
+		for (int i = 0; i < TestData.WRITE_BATCH_SIZE; i++) {
+			batch.put(batchKeysMemorySegment[i], batchValueMemorySegment);
+		}
+		db.write(batch);
 	}
 
 	static void main() throws Exception {

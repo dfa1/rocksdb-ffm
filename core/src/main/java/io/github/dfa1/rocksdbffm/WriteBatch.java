@@ -134,6 +134,32 @@ public final class WriteBatch extends NativeObject {
 		}
 	}
 
+	/// Queues a put. Zero-copy for direct [ByteBuffer]s.
+	///
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the value
+	public void put(ByteBuffer key, ByteBuffer value) {
+		try {
+			MH_PUT.invokeExact(ptr(),
+					MemorySegment.ofBuffer(key), (long) key.remaining(),
+					MemorySegment.ofBuffer(value), (long) value.remaining());
+		} catch (Throwable t) {
+			throw new RocksDBException("writebatch put failed", t);
+		}
+	}
+
+	/// Queues a put. Zero-copy for [MemorySegment]s.
+	///
+	/// @param key   native segment containing the key
+	/// @param value native segment containing the value
+	public void put(MemorySegment key, MemorySegment value) {
+		try {
+			MH_PUT.invokeExact(ptr(), key, key.byteSize(), value, value.byteSize());
+		} catch (Throwable t) {
+			throw new RocksDBException("writebatch put failed", t);
+		}
+	}
+
 	/// Queues a delete tombstone. Slow path: copies the key into native memory.
 	///
 	/// @param key key bytes to delete
@@ -141,6 +167,28 @@ public final class WriteBatch extends NativeObject {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment k = RocksDB.toNative(arena, key);
 			MH_DELETE.invokeExact(ptr(), k, (long) key.length);
+		} catch (Throwable t) {
+			throw new RocksDBException("writebatch delete failed", t);
+		}
+	}
+
+	/// Queues a delete tombstone. Zero-copy for direct [ByteBuffer]s.
+	///
+	/// @param key direct [ByteBuffer] containing the key to delete
+	public void delete(ByteBuffer key) {
+		try {
+			MH_DELETE.invokeExact(ptr(), MemorySegment.ofBuffer(key), (long) key.remaining());
+		} catch (Throwable t) {
+			throw new RocksDBException("writebatch delete failed", t);
+		}
+	}
+
+	/// Queues a delete tombstone. Zero-copy for [MemorySegment]s.
+	///
+	/// @param key native segment containing the key to delete
+	public void delete(MemorySegment key) {
+		try {
+			MH_DELETE.invokeExact(ptr(), key, key.byteSize());
 		} catch (Throwable t) {
 			throw new RocksDBException("writebatch delete failed", t);
 		}
