@@ -5,6 +5,7 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.nio.ByteBuffer;
 
 /// FFM wrapper for `rocksdb_transaction_t`.
 ///
@@ -164,6 +165,36 @@ public final class Transaction extends NativeObject {
 		}
 	}
 
+	/// Stages a put inside this transaction. Zero-copy for direct [ByteBuffer]s.
+	///
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the value
+	public void put(ByteBuffer key, ByteBuffer value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_PUT.invokeExact(ptr(),
+					MemorySegment.ofBuffer(key), (long) key.remaining(),
+					MemorySegment.ofBuffer(value), (long) value.remaining(), err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
+	/// Stages a put inside this transaction. Zero-copy for [MemorySegment]s.
+	///
+	/// @param key   native segment containing the key
+	/// @param value native segment containing the value
+	public void put(MemorySegment key, MemorySegment value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_PUT.invokeExact(ptr(), key, key.byteSize(), value, value.byteSize(), err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
 	/// Stages a delete inside this transaction. Slow path: allocates native memory for key.
 	///
 	/// @param key key bytes to delete
@@ -172,6 +203,32 @@ public final class Transaction extends NativeObject {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment k = RocksDB.toNative(arena, key);
 			MH_DELETE.invokeExact(ptr(), k, (long) key.length, err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
+	/// Stages a delete inside this transaction. Zero-copy for direct [ByteBuffer]s.
+	///
+	/// @param key direct [ByteBuffer] containing the key to delete
+	public void delete(ByteBuffer key) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_DELETE.invokeExact(ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
+	/// Stages a delete inside this transaction. Zero-copy for [MemorySegment]s.
+	///
+	/// @param key native segment containing the key to delete
+	public void delete(MemorySegment key) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_DELETE.invokeExact(ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
@@ -215,6 +272,71 @@ public final class Transaction extends NativeObject {
 		}
 	}
 
+	/// Single-copy get within this transaction into a direct [ByteBuffer], via PinnableSlice.
+	/// Copies nothing into `value` when its remaining capacity is too small.
+	///
+	/// @param readOptions read options for this read
+	/// @param key         direct [ByteBuffer] containing the key
+	/// @param value       direct [ByteBuffer] to write the value into
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(ReadOptions readOptions, ByteBuffer key, ByteBuffer value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
+					ptr(), readOptions.ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
+			RocksDB.checkError(err);
+			if (MemorySegment.NULL.equals(pin)) {
+				return new CopyResult.NotFound();
+			}
+			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
+			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			if (valLen > value.remaining()) {
+				MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(valLen));
+			value.position(value.position() + (int) valLen);
+			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+			return new CopyResult.Copied();
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
+	/// Single-copy get within this transaction into a caller-supplied native segment, via
+	/// PinnableSlice. Copies nothing into `value` when its capacity is too small.
+	///
+	/// @param readOptions read options for this read
+	/// @param key         native segment containing the key
+	/// @param value       native segment to write the value into
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(ReadOptions readOptions, MemorySegment key, MemorySegment value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
+					ptr(), readOptions.ptr(), key, key.byteSize(), err);
+			RocksDB.checkError(err);
+			if (MemorySegment.NULL.equals(pin)) {
+				return new CopyResult.NotFound();
+			}
+			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
+			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			if (valLen > value.byteSize()) {
+				MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			value.copyFrom(valPtr.reinterpret(valLen));
+			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+			return new CopyResult.Copied();
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
 	/// Reads the value for `key` and acquires a pessimistic lock on it for
 	/// the duration of this transaction. Returns `null` if not found.
 	///
@@ -247,6 +369,75 @@ public final class Transaction extends NativeObject {
 		}
 	}
 
+	/// Reads `key` into a direct [ByteBuffer] and acquires a pessimistic lock on it for the
+	/// duration of this transaction. Copies nothing into `value` when its remaining capacity
+	/// is too small.
+	///
+	/// @param readOptions read options for this read
+	/// @param key         direct [ByteBuffer] containing the key
+	/// @param value       direct [ByteBuffer] to write the value into
+	/// @param exclusive   if `true`, acquires an exclusive (write) lock; otherwise a shared (read) lock
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult getForUpdate(ReadOptions readOptions, ByteBuffer key, ByteBuffer value, boolean exclusive) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valPtr = (MemorySegment) MH_GET_FOR_UPDATE.invokeExact(
+					ptr(), readOptions.ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(),
+					valLenSeg, exclusive ? (byte) 1 : (byte) 0, err);
+			RocksDB.checkError(err);
+			if (MemorySegment.NULL.equals(valPtr)) {
+				return new CopyResult.NotFound();
+			}
+			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			if (valLen > value.remaining()) {
+				RocksDB.free(valPtr);
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(valLen));
+			value.position(value.position() + (int) valLen);
+			RocksDB.free(valPtr);
+			return new CopyResult.Copied();
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
+	/// Reads `key` into a caller-supplied native segment and acquires a pessimistic lock on it
+	/// for the duration of this transaction. Copies nothing into `value` when its capacity is
+	/// too small.
+	///
+	/// @param readOptions read options for this read
+	/// @param key         native segment containing the key
+	/// @param value       native segment to write the value into
+	/// @param exclusive   if `true`, acquires an exclusive (write) lock; otherwise a shared (read) lock
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult getForUpdate(ReadOptions readOptions, MemorySegment key, MemorySegment value, boolean exclusive) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valPtr = (MemorySegment) MH_GET_FOR_UPDATE.invokeExact(
+					ptr(), readOptions.ptr(), key, key.byteSize(),
+					valLenSeg, exclusive ? (byte) 1 : (byte) 0, err);
+			RocksDB.checkError(err);
+			if (MemorySegment.NULL.equals(valPtr)) {
+				return new CopyResult.NotFound();
+			}
+			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			if (valLen > value.byteSize()) {
+				RocksDB.free(valPtr);
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			value.copyFrom(valPtr.reinterpret(valLen));
+			RocksDB.free(valPtr);
+			return new CopyResult.Copied();
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// Write operations — column family overloads
 	// -----------------------------------------------------------------------
@@ -268,6 +459,38 @@ public final class Transaction extends NativeObject {
 		}
 	}
 
+	/// Stages a put into `cf` inside this transaction. Zero-copy for direct [ByteBuffer]s.
+	///
+	/// @param cf    target column family
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the value
+	public void put(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_PUT_CF.invokeExact(ptr(), cf.ptr(),
+					MemorySegment.ofBuffer(key), (long) key.remaining(),
+					MemorySegment.ofBuffer(value), (long) value.remaining(), err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
+	/// Stages a put into `cf` inside this transaction. Zero-copy for [MemorySegment]s.
+	///
+	/// @param cf    target column family
+	/// @param key   native segment containing the key
+	/// @param value native segment containing the value
+	public void put(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_PUT_CF.invokeExact(ptr(), cf.ptr(), key, key.byteSize(), value, value.byteSize(), err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
 	/// Stages a delete of `key` from `cf` inside this transaction. Slow path.
 	///
 	/// @param cf  target column family
@@ -277,6 +500,35 @@ public final class Transaction extends NativeObject {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(),
 					RocksDB.toNative(arena, key), (long) key.length, err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
+	/// Stages a delete of `key` from `cf` inside this transaction. Zero-copy for direct
+	/// [ByteBuffer]s.
+	///
+	/// @param cf  target column family
+	/// @param key direct [ByteBuffer] containing the key to delete
+	public void delete(ColumnFamilyHandle cf, ByteBuffer key) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
+	/// Stages a delete of `key` from `cf` inside this transaction. Zero-copy for [MemorySegment]s.
+	///
+	/// @param cf  target column family
+	/// @param key native segment containing the key to delete
+	public void delete(ColumnFamilyHandle cf, MemorySegment key) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
@@ -314,6 +566,74 @@ public final class Transaction extends NativeObject {
 		}
 	}
 
+	/// Single-copy get from `cf` within this transaction into a direct [ByteBuffer], via
+	/// PinnableSlice. Copies nothing into `value` when its remaining capacity is too small.
+	///
+	/// @param cf          column family to read from
+	/// @param readOptions read options for this read
+	/// @param key         direct [ByteBuffer] containing the key
+	/// @param value       direct [ByteBuffer] to write the value into
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(ColumnFamilyHandle cf, ReadOptions readOptions, ByteBuffer key, ByteBuffer value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
+					ptr(), readOptions.ptr(), cf.ptr(),
+					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
+			RocksDB.checkError(err);
+			if (MemorySegment.NULL.equals(pin)) {
+				return new CopyResult.NotFound();
+			}
+			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
+			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			if (valLen > value.remaining()) {
+				MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(valLen));
+			value.position(value.position() + (int) valLen);
+			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+			return new CopyResult.Copied();
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
+	/// Single-copy get from `cf` within this transaction into a caller-supplied native segment,
+	/// via PinnableSlice. Copies nothing into `value` when its capacity is too small.
+	///
+	/// @param cf          column family to read from
+	/// @param readOptions read options for this read
+	/// @param key         native segment containing the key
+	/// @param value       native segment to write the value into
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(ColumnFamilyHandle cf, ReadOptions readOptions, MemorySegment key, MemorySegment value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
+					ptr(), readOptions.ptr(), cf.ptr(), key, key.byteSize(), err);
+			RocksDB.checkError(err);
+			if (MemorySegment.NULL.equals(pin)) {
+				return new CopyResult.NotFound();
+			}
+			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valPtr = (MemorySegment) MH_PINNABLESLICE_VALUE.invokeExact(pin, valLenSeg);
+			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			if (valLen > value.byteSize()) {
+				MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			value.copyFrom(valPtr.reinterpret(valLen));
+			MH_PINNABLESLICE_DESTROY.invokeExact(pin);
+			return new CopyResult.Copied();
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
 	/// Reads `key` from `cf` and acquires a lock for the duration of this transaction.
 	/// Returns `null` if not found.
 	///
@@ -338,6 +658,80 @@ public final class Transaction extends NativeObject {
 			byte[] result = valPtr.reinterpret(valLen).toArray(ValueLayout.JAVA_BYTE);
 			RocksDB.free(valPtr);
 			return result;
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
+	/// Reads `key` from `cf` into a direct [ByteBuffer] and acquires a pessimistic lock on it
+	/// for the duration of this transaction. Copies nothing into `value` when its remaining
+	/// capacity is too small.
+	///
+	/// @param cf          column family to read from
+	/// @param readOptions read options for this read
+	/// @param key         direct [ByteBuffer] containing the key
+	/// @param value       direct [ByteBuffer] to write the value into
+	/// @param exclusive   if `true`, acquires an exclusive (write) lock; otherwise a shared (read) lock
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult getForUpdate(ColumnFamilyHandle cf, ReadOptions readOptions,
+	                                ByteBuffer key, ByteBuffer value, boolean exclusive) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valPtr = (MemorySegment) MH_GET_FOR_UPDATE_CF.invokeExact(
+					ptr(), readOptions.ptr(), cf.ptr(),
+					MemorySegment.ofBuffer(key), (long) key.remaining(),
+					valLenSeg, exclusive ? (byte) 1 : (byte) 0, err);
+			RocksDB.checkError(err);
+			if (MemorySegment.NULL.equals(valPtr)) {
+				return new CopyResult.NotFound();
+			}
+			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			if (valLen > value.remaining()) {
+				RocksDB.free(valPtr);
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(valLen));
+			value.position(value.position() + (int) valLen);
+			RocksDB.free(valPtr);
+			return new CopyResult.Copied();
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("Native call failed", t);
+		}
+	}
+
+	/// Reads `key` from `cf` into a caller-supplied native segment and acquires a pessimistic
+	/// lock on it for the duration of this transaction. Copies nothing into `value` when its
+	/// capacity is too small.
+	///
+	/// @param cf          column family to read from
+	/// @param readOptions read options for this read
+	/// @param key         native segment containing the key
+	/// @param value       native segment to write the value into
+	/// @param exclusive   if `true`, acquires an exclusive (write) lock; otherwise a shared (read) lock
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult getForUpdate(ColumnFamilyHandle cf, ReadOptions readOptions,
+	                                MemorySegment key, MemorySegment value, boolean exclusive) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valPtr = (MemorySegment) MH_GET_FOR_UPDATE_CF.invokeExact(
+					ptr(), readOptions.ptr(), cf.ptr(), key, key.byteSize(),
+					valLenSeg, exclusive ? (byte) 1 : (byte) 0, err);
+			RocksDB.checkError(err);
+			if (MemorySegment.NULL.equals(valPtr)) {
+				return new CopyResult.NotFound();
+			}
+			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			if (valLen > value.byteSize()) {
+				RocksDB.free(valPtr);
+				return new CopyResult.NotEnoughCapacity(valLen);
+			}
+			value.copyFrom(valPtr.reinterpret(valLen));
+			RocksDB.free(valPtr);
+			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
 		}
