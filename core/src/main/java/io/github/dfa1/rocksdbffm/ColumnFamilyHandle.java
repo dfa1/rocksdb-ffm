@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 
 /// FFM wrapper for `rocksdb_column_family_handle_t`.
 ///
-/// Obtained via [RocksDB#openWithColumnFamilies] or [ReadWriteDB#createColumnFamily].
+/// Obtained via [RocksDB#open] or [ReadWriteDB#createColumnFamily].
 /// Must be closed after use to release the native handle.
 ///
 /// ```

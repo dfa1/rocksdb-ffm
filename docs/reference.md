@@ -65,22 +65,19 @@ GitHub Advisory DB) use to identify the artifact.
 Every database is opened through a static factory on `RocksDB`. There is no public constructor
 anywhere in the library.
 
-| Factory                                                                       | Returns                   |
-|:------------------------------------------------------------------------------|:--------------------------|
-| `open(Path)`                                                                   | `ReadWriteDB` (creates if missing) |
-| `open(Options, Path)`                                                          | `ReadWriteDB`             |
-| `openReadOnly(Path)` / `(Options, Path)` / `(Options, Path, boolean errorIfWalFileExists)` | `ReadOnlyDB`  |
-| `openWithTtl(Path, Duration)` / `(Options, Path, Duration)`                    | `TtlDB`                   |
-| `openWithBlobFiles(Path)` / `(Options, Path)`                                  | `BlobDB`                  |
-| `openSecondary(Options, Path primary, Path secondary)`                         | `SecondaryDB`             |
-| `openTransaction(Options, TransactionDBOptions, Path)`                         | `TransactionDB`           |
-| `openOptimistic(Options, Path)`                                                | `OptimisticTransactionDB` |
-| `openWithColumnFamilies(Options, Path, List<ColumnFamilyDescriptor>, List<ColumnFamilyHandle> out)` | `ReadWriteDB` |
-| `openReadOnlyWithColumnFamilies(...)`                                          | `ReadOnlyDB`              |
-| `openWithColumnFamiliesAndTtl(...)`                                            | `TtlDB`                   |
-| `openTransactionWithColumnFamilies(...)`                                       | `TransactionDB`           |
-| `openOptimisticWithColumnFamilies(...)`                                        | `OptimisticTransactionDB` |
-| `listColumnFamilies(Options, Path)`                                            | `List<byte[]>`            |
+Column families are not a separate method name — every factory that supports them takes
+`List<ColumnFamilyDescriptor>` / `List<ColumnFamilyHandle> out` as an overload of the plain form.
+
+| Factory                                                                       | Column families? | Returns                   |
+|:------------------------------------------------------------------------------|:-----------------|:--------------------------|
+| `open(Path)` / `(Options, Path)`                                               | yes               | `ReadWriteDB` (creates if missing) |
+| `openReadOnly(Path)` / `(Options, Path)` / `(Options, Path, boolean errorIfWalFileExists)` | yes  | `ReadOnlyDB`  |
+| `openTtl(Path, Duration)` / `(Options, Path, Duration)`                        | yes               | `TtlDB`                   |
+| `openBlob(Path)` / `(Options, Path)`                                           | no                | `BlobDB`                  |
+| `openSecondary(Options, Path primary, Path secondary)`                         | no                | `SecondaryDB`             |
+| `openTransaction(Options, TransactionDBOptions, Path)`                         | yes               | `TransactionDB`           |
+| `openOptimistic(Options, Path)`                                                | yes               | `OptimisticTransactionDB` |
+| `listColumnFamilies(Options, Path)`                                            | —                 | `List<byte[]>`            |
 
 `RocksDB` also exposes the FFM plumbing shared by every wrapper: `errHolder(Arena)`,
 `checkError(MemorySegment)`, `toNative(Arena, byte[])`, `free(MemorySegment)`.
@@ -140,7 +137,7 @@ Other read/write methods on the read-write types:
 | `setRateLimiter`                            | `RateLimiter`           |
 | `setSstFileManager`                         | `SstFileManager`        |
 
-Blob options (used with `RocksDB.openWithBlobFiles`, each with a matching getter):
+Blob options (used with `RocksDB.openBlob`, each with a matching getter):
 
 | Method                         | Type                    |
 |:-------------------------------|:------------------------|
@@ -362,7 +359,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Compaction control         |   ✅    | `compactRange` (+`CompactOptions`), `suggestCompactRange`, file-deletion toggles            |
 | SST file ingest            |   ✅    | `SstFileWriter`, `ingestExternalFile`, `IngestExternalFileOptions`                          |
 | Backup engine              |   ✅    | Incremental backup/restore, purge, verify                                                   |
-| TTL DB                     |   ✅    | `openWithTtl(path, Duration)`; lazy expiry via compaction                                   |
+| TTL DB                     |   ✅    | `openTtl(path, Duration)`; lazy expiry via compaction                                   |
 | WAL iterator               |   ✅    | `getUpdatesSince`, `getLatestSequenceNumber` — CDC, replication, auditing                   |
 | Rate limiter               |   ✅    | Writes-only, reads-only, all-IO; auto-tuned variant                                         |
 | Env                        |   ✅    | `defaultEnv()`, `memEnv()`, background thread pools                                         |

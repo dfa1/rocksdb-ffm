@@ -90,11 +90,11 @@ class ColumnFamilyTest {
 	}
 
 	// -----------------------------------------------------------------------
-	// openWithColumnFamilies
+	// open
 	// -----------------------------------------------------------------------
 
 	@Test
-	void openWithColumnFamilies_persistsAndReadsAcrossReopens(@TempDir Path dir) {
+	void open_persistsAndReadsAcrossReopens(@TempDir Path dir) {
 		// Given — create a DB with a non-default CF and write data
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.open(opts, dir);
@@ -105,7 +105,7 @@ class ColumnFamilyTest {
 		// When — reopen with both CFs
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(false);
-		     var db = RocksDB.openWithColumnFamilies(opts, dir,
+		     var db = RocksDB.open(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"),
 						     ColumnFamilyDescriptor.of("users")),
 				     handles)) {
@@ -143,7 +143,7 @@ class ColumnFamilyTest {
 		// Given
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openWithColumnFamilies(opts, dir,
+		     var db = RocksDB.open(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default")),
 				     handles)) {
 

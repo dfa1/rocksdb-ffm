@@ -14,14 +14,14 @@ import java.util.OptionalLong;
 /// Large values (≥ [Options#setMinBlobSize]) are stored in separate blob files
 /// rather than inline in SSTs, reducing write amplification for value-heavy workloads.
 ///
-/// Obtain via [RocksDB#openWithBlobFiles]:
+/// Obtain via [RocksDB#openBlob]:
 ///
 /// ```
 /// try (Options opts = Options.newOptions()
 ///         .setCreateIfMissing(true)
 ///         .setEnableBlobFiles(true)
 ///         .setMinBlobSize(MemorySize.ofKB(4))) {
-///     try (var db = RocksDB.openWithBlobFiles(opts, path)) {
+///     try (var db = RocksDB.openBlob(opts, path)) {
 ///         db.put("key".getBytes(), largeValue);
 ///     }
 /// }
