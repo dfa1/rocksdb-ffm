@@ -1038,4 +1038,54 @@ class TtlDBTest {
 			assertThat(result).isPresent();
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// openTtl — column families with per-CF TTL
+	// -----------------------------------------------------------------------
+
+	@Test
+	void openTtl_withColumnFamilies_reopensWithPerCfTtl(@TempDir Path dir) {
+		// Given — create a DB with a custom CF, then close it
+		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			db.put(cf, "k".getBytes(), "v".getBytes());
+		}
+
+		// When — reopen with both CFs, each given its own TTL
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var db = RocksDB.openTtl(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(Duration.ofSeconds(60), Duration.ZERO),
+				     handles)) {
+			var cf = handles.get(1);
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isEqualTo("v".getBytes());
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void openTtl_withColumnFamilies_populatesHandlesInDescriptorOrder(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+			db.createColumnFamily(ColumnFamilyDescriptor.of("cf1")).close();
+		}
+
+		// When
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var db = RocksDB.openTtl(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(Duration.ZERO, Duration.ZERO),
+				     handles)) {
+
+			// Then
+			assertThat(handles).hasSize(2);
+			assertThat(handles.get(0).getName()).isEqualTo("default");
+			assertThat(handles.get(1).getName()).isEqualTo("cf1");
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
 }
