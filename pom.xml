@@ -56,6 +56,18 @@
 			be aligned. See the note above the benchmark table in README.md.
 		-->
 		<rocksdbjni.version>10.10.1.1</rocksdbjni.version>
+		<!-- rocksdb/ is a git submodule (upstream C++ checkout) — not our code.
+		     benchmarks/ is JMH benchmark harness code with no tests by design. -->
+		<sonar.exclusions>rocksdb/**</sonar.exclusions>
+		<sonar.coverage.exclusions>rocksdb/**,benchmarks/**</sonar.coverage.exclusions>
+		<sonar.coverage.jacoco.xmlReportPaths>
+			${maven.multiModuleProjectDirectory}/core/target/site/jacoco/jacoco.xml
+		</sonar.coverage.jacoco.xmlReportPaths>
+		<!-- Default for the @{argLine} placeholder in the surefire config below. jacoco:prepare-agent
+		     overwrites this with the agent arguments when the coverage profile is active; without this
+		     default, a plain build (no coverage profile) would pass the literal token "@{argLine}" to
+		     the JVM instead of resolving it to nothing. -->
+		<argLine />
 	</properties>
 
 	<dependencyManagement>
@@ -134,7 +146,9 @@
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>3.5.6</version>
 					<configuration>
-						<argLine>--enable-native-access=ALL-UNNAMED</argLine>
+						<!-- @{argLine} expands to the JaCoCo agent arguments set by jacoco:prepare-agent
+						     when the coverage profile is active; empty otherwise. -->
+						<argLine>@{argLine} --enable-native-access=ALL-UNNAMED</argLine>
 						<reuseForks>false</reuseForks>
 					</configuration>
 				</plugin>
@@ -201,6 +215,11 @@
 						<pushChanges>false</pushChanges>
 						<localCheckout>true</localCheckout>
 					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>0.8.13</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -287,6 +306,33 @@
 							<autoPublish>true</autoPublish>
 							<waitUntil>published</waitUntil>
 						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<!-- Activated in CI: mvn verify -P coverage -->
+			<id>coverage</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>prepare-agent</id>
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>report</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>report</goal>
+								</goals>
+							</execution>
+						</executions>
 					</plugin>
 				</plugins>
 			</build>

@@ -10,6 +10,8 @@
 ![Windows aarch64](https://img.shields.io/badge/windows_aarch64-fully_supported-green.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/dfa1/rocksdbffm/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dfa1/rocksdbffm/actions/workflows/ci.yml?query=branch%3Amain)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=dfa1_rocksdbffm&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=dfa1_rocksdbffm)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=dfa1_rocksdbffm&metric=coverage)](https://sonarcloud.io/summary/new_code?id=dfa1_rocksdbffm)
 
 **rocksdbffm** is an experimental Java wrapper for [RocksDB](https://rocksdb.org/) using the **Foreign
 Function & Memory (FFM) API**.
