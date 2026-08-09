@@ -14,7 +14,7 @@ class TtlDBIntegrationTest {
 	void putGet_withinTtl(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openWithTtl(opts, dir, Duration.ofSeconds(60))) {
+		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60))) {
 
 			// When
 			db.put("k".getBytes(), "v".getBytes());
@@ -31,7 +31,7 @@ class TtlDBIntegrationTest {
 
 		// When
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openWithTtl(opts, dir, ttl)) {
+		     var db = RocksDB.openTtl(opts, dir, ttl)) {
 
 			// Then
 			assertThat(db.getTtl()).isEqualTo(ttl);
@@ -42,7 +42,7 @@ class TtlDBIntegrationTest {
 	void zeroTtl_disablesExpiry(@TempDir Path dir) {
 		// Given — Duration.ZERO disables expiry entirely
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openWithTtl(opts, dir, Duration.ZERO)) {
+		     var db = RocksDB.openTtl(opts, dir, Duration.ZERO)) {
 
 			// When
 			db.put("k".getBytes(), "v".getBytes());

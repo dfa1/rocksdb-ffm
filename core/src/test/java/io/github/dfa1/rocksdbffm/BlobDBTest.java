@@ -20,7 +20,7 @@ class BlobDBTest {
 	@Test
 	void put_get_roundtrip(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 
 			// When
 			db.put("key".getBytes(), "value".getBytes());
@@ -33,7 +33,7 @@ class BlobDBTest {
 	@Test
 	void put_withArena_isVisibleViaGet(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir);
+		try (var db = RocksDB.openBlob(dir);
 		     Arena arena = Arena.ofConfined()) {
 
 			// When
@@ -47,7 +47,7 @@ class BlobDBTest {
 	@Test
 	void get_withReadOptions_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir);
+		try (var db = RocksDB.openBlob(dir);
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -62,7 +62,7 @@ class BlobDBTest {
 	@Test
 	void delete_removesKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -80,7 +80,7 @@ class BlobDBTest {
 	@Test
 	void put_get_memorySegment_roundtrip(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir);
+		try (var db = RocksDB.openBlob(dir);
 		     Arena arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom("seg-k");
 			var value = arena.allocateFrom("seg-v");
@@ -96,7 +96,7 @@ class BlobDBTest {
 	@Test
 	void get_memorySegment_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir);
+		try (var db = RocksDB.openBlob(dir);
 		     Arena arena = Arena.ofConfined()) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = arena.allocateFrom("k");
@@ -114,7 +114,7 @@ class BlobDBTest {
 	@Test
 	void delete_memorySegment_removesKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir);
+		try (var db = RocksDB.openBlob(dir);
 		     Arena arena = Arena.ofConfined()) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = arena.allocateFrom("k");
@@ -134,7 +134,7 @@ class BlobDBTest {
 	@Test
 	void delete_byteBuffer_removesKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = ByteBuffer.allocateDirect(1);
 			key.put("k".getBytes()).flip();
@@ -154,7 +154,7 @@ class BlobDBTest {
 	@Test
 	void write_appliesBatchAtomically(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir);
+		try (var db = RocksDB.openBlob(dir);
 		     var batch = WriteBatch.create()) {
 			batch.put("k1".getBytes(), "v1".getBytes());
 			batch.put("k2".getBytes(), "v2".getBytes());
@@ -175,7 +175,7 @@ class BlobDBTest {
 	@Test
 	void getSnapshot_isolatesReads(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 			db.put("k".getBytes(), "v1".getBytes());
 
 			// When — take snapshot, then overwrite
@@ -199,7 +199,7 @@ class BlobDBTest {
 	@Test
 	void newIterator_iteratesData(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -217,7 +217,7 @@ class BlobDBTest {
 	@Test
 	void newIterator_withReadOptions(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir);
+		try (var db = RocksDB.openBlob(dir);
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put("x".getBytes(), "y".getBytes());
 
@@ -239,7 +239,7 @@ class BlobDBTest {
 	@Test
 	void flush_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir);
+		try (var db = RocksDB.openBlob(dir);
 		     var fo = FlushOptions.newFlushOptions().setWait(true)) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -253,7 +253,7 @@ class BlobDBTest {
 	@Test
 	void flushWal_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -270,7 +270,7 @@ class BlobDBTest {
 	@Test
 	void getProperty_blobStats_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -284,7 +284,7 @@ class BlobDBTest {
 	@Test
 	void getLongProperty_numBlobFiles_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -314,7 +314,7 @@ class BlobDBTest {
 		}
 
 		// When
-		try (var db = RocksDB.openWithBlobFiles(dbPath);
+		try (var db = RocksDB.openBlob(dbPath);
 		     var ingestOpts = IngestExternalFileOptions.newIngestExternalFileOptions()) {
 			db.ingestExternalFile(List.of(sstPath), ingestOpts);
 
@@ -327,7 +327,7 @@ class BlobDBTest {
 	@Test
 	void ingestExternalFile_emptyFileList_isNoOp(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir);
+		try (var db = RocksDB.openBlob(dir);
 		     var ingestOpts = IngestExternalFileOptions.newIngestExternalFileOptions()) {
 
 			// When
@@ -344,7 +344,7 @@ class BlobDBTest {
 	@Test
 	void get_byteBuffer_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 			db.put("key".getBytes(), "value".getBytes());
 
 			var key = ByteBuffer.allocateDirect(3);
@@ -366,7 +366,7 @@ class BlobDBTest {
 	@Test
 	void get_byteBuffer_returnsNotFound_whenKeyAbsent(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 			db.put("seed".getBytes(), "val".getBytes());
 
 			var key = ByteBuffer.allocateDirect(7);
@@ -384,7 +384,7 @@ class BlobDBTest {
 	@Test
 	void get_byteBuffer_returnsNotEnoughCapacity_whenValueDoesNotFit(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 			db.put("key".getBytes(), "value".getBytes());
 
 			var key = ByteBuffer.allocateDirect(3);

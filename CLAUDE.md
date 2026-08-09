@@ -171,14 +171,14 @@ instance method listed below lives on the DB type (`ReadWriteDB`, `TtlDB`, …),
 | SST File Ingest         | `SstFileWriter.java`, `IngestExternalFileOptions.java`; `ReadWriteDB.ingestExternalFile`                                     |
 | WAL Iterator            | `WalIterator.java`, `WalBatchResult.java`; `ReadWriteDB.getUpdatesSince`, `getLatestSequenceNumber`                          |
 | Read-only DB            | `ReadOnlyDB.java`                                                                                                         |
-| TTL DB                  | `TtlDB.java`; `RocksDB.openWithTtl(Path, Duration)`                                                                       |
+| TTL DB                  | `TtlDB.java`; `RocksDB.openTtl(Path, Duration)`                                                                       |
 | Logger                  | `Logger.java`, `LogLevel.java`; `Logger.newStderrLogger`, `Logger.newCallbackLogger`                                      |
 | Secondary DB            | `SecondaryDB.java`                                                                                                        |
-| Blob DB                 | `BlobDB.java`; blob options in `Options.java`; `PrepopulateBlobCache.java`; `RocksDB.openWithBlobFiles`                   |
+| Blob DB                 | `BlobDB.java`; blob options in `Options.java`; `PrepopulateBlobCache.java`; `RocksDB.openBlob`                   |
 | Rate Limiter            | `RateLimiter.java`; `Options.setRateLimiter`                                                                              |
 | SST File Manager        | `SstFileManager.java`, `Env.java`; `Options.setSstFileManager`, `Options.setEnv`                                          |
 | Backup Engine           | `BackupEngine.java`, `BackupEngineOptions.java`, `RestoreOptions.java`, `BackupInfo.java`, `BackupId.java`                |
-| Column Families         | `ColumnFamilyHandle.java`, `ColumnFamilyDescriptor.java`; `RocksDB.openWithColumnFamilies`, `listColumnFamilies`; CF overloads on `ReadWriteDB` and `WriteBatch`; CF overloads on `ReadOnlyDB`, `TtlDB`, `TransactionDB`, `OptimisticTransactionDB`; `Transaction` CF put/delete/get/getForUpdate/newIterator; multi-CF open for all DB types |
+| Column Families         | `ColumnFamilyHandle.java`, `ColumnFamilyDescriptor.java`; `RocksDB.open`, `listColumnFamilies`; CF overloads on `ReadWriteDB` and `WriteBatch`; CF overloads on `ReadOnlyDB`, `TtlDB`, `TransactionDB`, `OptimisticTransactionDB`; `Transaction` CF put/delete/get/getForUpdate/newIterator; multi-CF open for all DB types |
 | Perf Context            | `PerfContext.java`, `PerfLevel.java`, `PerfMetric.java`; thread-local; `setPerfLevel`, `reset`, `metric`, `report`       |
 
 ## Documentation

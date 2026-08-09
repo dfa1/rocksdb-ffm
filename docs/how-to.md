@@ -106,7 +106,7 @@ or the open fails. Handles come back in the same order as the descriptors:
 ```java
 List<ColumnFamilyHandle> handles = new ArrayList<>();
 try (var options = Options.newOptions();
-     var db = RocksDB.openWithColumnFamilies(options, dbPath,
+     var db = RocksDB.open(options, dbPath,
 		     List.of(ColumnFamilyDescriptor.of("default"),
 				     ColumnFamilyDescriptor.of("accounts")),
 		     handles)) {
@@ -263,7 +263,7 @@ try (var options = Options.newOptions().setCreateIfMissing(true);
 `TtlDB` stamps each value with a write timestamp and drops expired entries during compaction.
 
 ```java
-try (var db = RocksDB.openWithTtl(dbPath, Duration.ofHours(24))) {
+try (var db = RocksDB.openTtl(dbPath, Duration.ofHours(24))) {
 	db.put("session:1".getBytes(), "...".getBytes());
 }
 ```
@@ -405,7 +405,7 @@ try (var options = Options.newOptions()
 		.setBlobFileSize(MemorySize.ofMB(256))
 		.setBlobCompressionType(CompressionType.ZSTD)
 		.setEnableBlobGc(true);
-     var db = RocksDB.openWithBlobFiles(options, dbPath)) {
+     var db = RocksDB.openBlob(options, dbPath)) {
 	db.put("k".getBytes(), largeValue);
 }
 ```

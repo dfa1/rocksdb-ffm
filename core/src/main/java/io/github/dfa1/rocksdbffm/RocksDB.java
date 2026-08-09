@@ -22,7 +22,7 @@ import java.util.OptionalLong;
 /// |---|---|
 /// | [#open] | [ReadWriteDB] |
 /// | [#openReadOnly] | [ReadOnlyDB] |
-/// | [#openWithTtl] | [TtlDB] |
+/// | [#openTtl] | [TtlDB] |
 /// | [#openSecondary] | [SecondaryDB] |
 /// | [#openTransaction] | [TransactionDB] |
 /// | [#openOptimistic] | [OptimisticTransactionDB] |
@@ -467,7 +467,7 @@ public final class RocksDB {
 	/// @param path directory where the database files are stored
 	/// @param ttl time-to-live for keys; [Duration#ZERO] disables expiry
 	/// @return a new [TtlDB] instance
-	public static TtlDB openWithTtl(Options options, Path path, Duration ttl) {
+	public static TtlDB openTtl(Options options, Path path, Duration ttl) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
@@ -476,18 +476,18 @@ public final class RocksDB {
 			checkError(err);
 			return new TtlDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions(), ttl);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openWithTtl failed", t);
+			throw RocksDBException.wrap("openTtl failed", t);
 		}
 	}
 
-	/// Equivalent to `openWithTtl(options, path, ttl)` with `createIfMissing = true`.
+	/// Equivalent to `openTtl(options, path, ttl)` with `createIfMissing = true`.
 	///
 	/// @param path directory where the database files are stored
 	/// @param ttl time-to-live for keys; [Duration#ZERO] disables expiry
 	/// @return a new [TtlDB] instance
-	public static TtlDB openWithTtl(Path path, Duration ttl) {
+	public static TtlDB openTtl(Path path, Duration ttl) {
 		try (Options opts = Options.newOptions().setCreateIfMissing(true)) {
-			return openWithTtl(opts, path, ttl);
+			return openTtl(opts, path, ttl);
 		}
 	}
 
@@ -501,7 +501,7 @@ public final class RocksDB {
 	/// @param options the database options (must have blob files enabled)
 	/// @param path directory where the database files are stored
 	/// @return a new [BlobDB] instance
-	public static BlobDB openWithBlobFiles(Options options, Path path) {
+	public static BlobDB openBlob(Options options, Path path) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
@@ -509,18 +509,18 @@ public final class RocksDB {
 			checkError(err);
 			return new BlobDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openWithBlobFiles failed", t);
+			throw RocksDBException.wrap("openBlob failed", t);
 		}
 	}
 
-	/// Equivalent to `openWithBlobFiles(options, path)` with `createIfMissing = true`
+	/// Equivalent to `openBlob(options, path)` with `createIfMissing = true`
 	/// and `enableBlobFiles = true`.
 	///
 	/// @param path directory where the database files are stored
 	/// @return a new [BlobDB] instance
-	public static BlobDB openWithBlobFiles(Path path) {
+	public static BlobDB openBlob(Path path) {
 		try (Options opts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true)) {
-			return openWithBlobFiles(opts, path);
+			return openBlob(opts, path);
 		}
 	}
 
@@ -1089,9 +1089,9 @@ public final class RocksDB {
 	/// @param descriptors one descriptor per column family (must include `"default"`)
 	/// @param handles output list populated with one handle per descriptor
 	/// @return a new [ReadWriteDB] instance
-	public static ReadWriteDB openWithColumnFamilies(Options options, Path path,
-	                                                 List<ColumnFamilyDescriptor> descriptors,
-	                                                 List<ColumnFamilyHandle> handles) {
+	public static ReadWriteDB open(Options options, Path path,
+	                                List<ColumnFamilyDescriptor> descriptors,
+	                                List<ColumnFamilyHandle> handles) {
 		int n = descriptors.size();
 		List<Options> tempOptions = new ArrayList<>();
 		try (Arena arena = Arena.ofConfined()) {
@@ -1125,7 +1125,7 @@ public final class RocksDB {
 
 			return new ReadWriteDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openWithColumnFamilies failed", t);
+			throw RocksDBException.wrap("open failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();
@@ -1142,10 +1142,10 @@ public final class RocksDB {
 	/// @param descriptors one descriptor per column family (must include `"default"`)
 	/// @param handles output list populated with one handle per descriptor
 	/// @return a new [ReadOnlyDB] instance
-	public static ReadOnlyDB openReadOnlyWithColumnFamilies(Options options, Path path,
-	                                                        List<ColumnFamilyDescriptor> descriptors,
-	                                                        List<ColumnFamilyHandle> handles) {
-		return openReadOnlyWithColumnFamilies(options, path, descriptors, handles, false);
+	public static ReadOnlyDB openReadOnly(Options options, Path path,
+	                                      List<ColumnFamilyDescriptor> descriptors,
+	                                      List<ColumnFamilyHandle> handles) {
+		return openReadOnly(options, path, descriptors, handles, false);
 	}
 
 	/// Opens a read-only database at `path` with multiple column families.
@@ -1156,10 +1156,10 @@ public final class RocksDB {
 	/// @param handles output list populated with one handle per descriptor
 	/// @param errorIfWalFileExists if `true`, fails when unrecovered WAL files are present
 	/// @return a new [ReadOnlyDB] instance
-	public static ReadOnlyDB openReadOnlyWithColumnFamilies(Options options, Path path,
-	                                                        List<ColumnFamilyDescriptor> descriptors,
-	                                                        List<ColumnFamilyHandle> handles,
-	                                                        boolean errorIfWalFileExists) {
+	public static ReadOnlyDB openReadOnly(Options options, Path path,
+	                                      List<ColumnFamilyDescriptor> descriptors,
+	                                      List<ColumnFamilyHandle> handles,
+	                                      boolean errorIfWalFileExists) {
 		int n = descriptors.size();
 		List<Options> tempOptions = new ArrayList<>();
 		try (Arena arena = Arena.ofConfined()) {
@@ -1189,7 +1189,7 @@ public final class RocksDB {
 			}
 			return new ReadOnlyDB(ptr, ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openReadOnlyWithColumnFamilies failed", t);
+			throw RocksDBException.wrap("openReadOnly failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();
@@ -1209,10 +1209,10 @@ public final class RocksDB {
 	/// @param ttls        per-column-family TTLs, index-aligned with `descriptors`
 	/// @param handles     output list; cleared and filled with one handle per descriptor
 	/// @return an open [TtlDB] instance; caller must close it
-	public static TtlDB openWithColumnFamiliesAndTtl(Options options, Path path,
-	                                                  List<ColumnFamilyDescriptor> descriptors,
-	                                                  List<Duration> ttls,
-	                                                  List<ColumnFamilyHandle> handles) {
+	public static TtlDB openTtl(Options options, Path path,
+	                            List<ColumnFamilyDescriptor> descriptors,
+	                            List<Duration> ttls,
+	                            List<ColumnFamilyHandle> handles) {
 		int n = descriptors.size();
 		List<Options> tempOptions = new ArrayList<>();
 		try (Arena arena = Arena.ofConfined()) {
@@ -1244,7 +1244,7 @@ public final class RocksDB {
 			Duration globalTtl = ttls.isEmpty() ? Duration.ZERO : ttls.getFirst();
 			return new TtlDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions(), globalTtl);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openWithColumnFamiliesAndTtl failed", t);
+			throw RocksDBException.wrap("openTtl failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();
@@ -1262,11 +1262,11 @@ public final class RocksDB {
 	/// @param descriptors   column family descriptors (name + optional per-CF options)
 	/// @param handles       output list; cleared and filled with one handle per descriptor
 	/// @return an open [TransactionDB] instance; caller must close it
-	public static TransactionDB openTransactionWithColumnFamilies(Options options,
-	                                                               TransactionDBOptions txnDbOptions,
-	                                                               Path path,
-	                                                               List<ColumnFamilyDescriptor> descriptors,
-	                                                               List<ColumnFamilyHandle> handles) {
+	public static TransactionDB openTransaction(Options options,
+	                                            TransactionDBOptions txnDbOptions,
+	                                            Path path,
+	                                            List<ColumnFamilyDescriptor> descriptors,
+	                                            List<ColumnFamilyHandle> handles) {
 		int n = descriptors.size();
 		List<Options> tempOptions = new ArrayList<>();
 		try (Arena arena = Arena.ofConfined()) {
@@ -1296,7 +1296,7 @@ public final class RocksDB {
 			MemorySegment baseDb = (MemorySegment) MH_TRANSACTION_GET_BASE_DB.invokeExact(ptr);
 			return new TransactionDB(ptr, baseDb, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openTransactionWithColumnFamilies failed", t);
+			throw RocksDBException.wrap("openTransaction failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();
@@ -1313,9 +1313,9 @@ public final class RocksDB {
 	/// @param descriptors column family descriptors (name + optional per-CF options)
 	/// @param handles     output list; cleared and filled with one handle per descriptor
 	/// @return an open [OptimisticTransactionDB] instance; caller must close it
-	public static OptimisticTransactionDB openOptimisticWithColumnFamilies(Options options, Path path,
-	                                                                        List<ColumnFamilyDescriptor> descriptors,
-	                                                                        List<ColumnFamilyHandle> handles) {
+	public static OptimisticTransactionDB openOptimistic(Options options, Path path,
+	                                                     List<ColumnFamilyDescriptor> descriptors,
+	                                                     List<ColumnFamilyHandle> handles) {
 		int n = descriptors.size();
 		List<Options> tempOptions = new ArrayList<>();
 		try (Arena arena = Arena.ofConfined()) {
@@ -1345,7 +1345,7 @@ public final class RocksDB {
 			MemorySegment baseDb = (MemorySegment) MH_GET_BASE_DB.invokeExact(ptr);
 			return new OptimisticTransactionDB(ptr, baseDb, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openOptimisticWithColumnFamilies failed", t);
+			throw RocksDBException.wrap("openOptimistic failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();

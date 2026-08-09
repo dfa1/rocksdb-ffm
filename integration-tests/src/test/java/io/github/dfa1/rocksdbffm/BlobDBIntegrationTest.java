@@ -19,7 +19,7 @@ class BlobDBIntegrationTest {
 				.setCreateIfMissing(true)
 				.setEnableBlobFiles(true)
 				.setMinBlobSize(MemorySize.ofBytes(0));
-		     var db = RocksDB.openWithBlobFiles(opts, dir)) {
+		     var db = RocksDB.openBlob(opts, dir)) {
 
 			// When
 			db.put("k".getBytes(), VALUE_64KB);
@@ -30,9 +30,9 @@ class BlobDBIntegrationTest {
 	}
 
 	@Test
-	void openWithBlobFiles_convenienceFactory(@TempDir Path dir) {
+	void openBlob_convenienceFactory(@TempDir Path dir) {
 		// Given — convenience overload sets createIfMissing=true and enableBlobFiles=true
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 
 			// When
 			db.put("hello".getBytes(), VALUE_64KB);
@@ -45,7 +45,7 @@ class BlobDBIntegrationTest {
 	@Test
 	void delete_removesKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openWithBlobFiles(dir)) {
+		try (var db = RocksDB.openBlob(dir)) {
 			db.put("k".getBytes(), VALUE_64KB);
 
 			// When
@@ -90,7 +90,7 @@ class BlobDBIntegrationTest {
 			assertThat(blobGcForceThreshold).isEqualTo(0.8);
 			assertThat(blobFileStartingLevel).isEqualTo(0);
 
-			try (var db = RocksDB.openWithBlobFiles(opts, dir)) {
+			try (var db = RocksDB.openBlob(opts, dir)) {
 				db.put("k".getBytes(), VALUE_64KB);
 				assertThat(db.get("k".getBytes())).isEqualTo(VALUE_64KB);
 			}
@@ -107,7 +107,7 @@ class BlobDBIntegrationTest {
 				.setCreateIfMissing(true)
 				.setEnableBlobFiles(true)
 				.setMinBlobSize(MemorySize.ofKB(64));
-		     var db = RocksDB.openWithBlobFiles(opts, dbDir)) {
+		     var db = RocksDB.openBlob(opts, dbDir)) {
 			db.put("before".getBytes(), "snap".getBytes());
 
 			// When — take a checkpoint
@@ -132,7 +132,7 @@ class BlobDBIntegrationTest {
 				.setCreateIfMissing(true)
 				.setEnableBlobFiles(true)
 				.setMinBlobSize(MemorySize.ofBytes(0));
-		     var db = RocksDB.openWithBlobFiles(opts, dir)) {
+		     var db = RocksDB.openBlob(opts, dir)) {
 
 			db.put("k".getBytes(), VALUE_64KB);
 			db.flush(FlushOptions.newFlushOptions());

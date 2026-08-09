@@ -292,7 +292,7 @@ class KeyMayExistTest {
 		// Given — TtlDB Bloom filter configuration does not guarantee false for absent keys;
 		// the contract is that false means "definitely absent", true means "may exist".
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openWithTtl(opts, dir, Duration.ofSeconds(60))) {
+		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60))) {
 
 			// When
 			var result = db.keyMayExist("ghost".getBytes());
@@ -306,7 +306,7 @@ class KeyMayExistTest {
 	void keyMayExist_ttlDb_byteArray_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openWithTtl(opts, dir, Duration.ofSeconds(60))) {
+		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -321,7 +321,7 @@ class KeyMayExistTest {
 	void keyMayExist_ttlDb_byteBuffer_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openWithTtl(opts, dir, Duration.ofSeconds(60))) {
+		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60))) {
 			db.put("hello".getBytes(), "world".getBytes());
 			ByteBuffer key = ByteBuffer.allocateDirect(5);
 			key.put("hello".getBytes()).flip();
@@ -338,7 +338,7 @@ class KeyMayExistTest {
 	void keyMayExist_ttlDb_memorySegment_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openWithTtl(opts, dir, Duration.ofSeconds(60));
+		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60));
 		     Arena arena = Arena.ofConfined()) {
 			db.put("hi".getBytes(), "there".getBytes());
 			MemorySegment key = arena.allocate(2);
@@ -361,7 +361,7 @@ class KeyMayExistTest {
 	void keyMayExist_ttlDb_cf_doesNotThrow_forAbsentKey(@TempDir Path dir) {
 		// Given — same Bloom filter caveat as non-CF TtlDB variant
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openWithTtl(opts, dir, Duration.ofSeconds(60));
+		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
 
 			// When
@@ -376,7 +376,7 @@ class KeyMayExistTest {
 	void keyMayExist_ttlDb_cf_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openWithTtl(opts, dir, Duration.ofSeconds(60));
+		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -392,7 +392,7 @@ class KeyMayExistTest {
 	void keyMayExist_ttlDb_cf_byteBuffer_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openWithTtl(opts, dir, Duration.ofSeconds(60));
+		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
 			db.put(cf, "hello".getBytes(), "world".getBytes());
 			ByteBuffer key = ByteBuffer.allocateDirect(5);
@@ -410,7 +410,7 @@ class KeyMayExistTest {
 	void keyMayExist_ttlDb_cf_memorySegment_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openWithTtl(opts, dir, Duration.ofSeconds(60));
+		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "hi".getBytes(), "there".getBytes());

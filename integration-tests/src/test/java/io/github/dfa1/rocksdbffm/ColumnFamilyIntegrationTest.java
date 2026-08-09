@@ -31,7 +31,7 @@ class ColumnFamilyIntegrationTest {
 		// When — reopen with both column families
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.openWithColumnFamilies(opts, dir,
+		     var db = RocksDB.open(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"),
 						     ColumnFamilyDescriptor.of("accounts")),
 				     handles)) {
@@ -61,7 +61,7 @@ class ColumnFamilyIntegrationTest {
 		// When — reopen all three CFs
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.openWithColumnFamilies(opts, dir,
+		     var db = RocksDB.open(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"),
 						     ColumnFamilyDescriptor.of("users"),
 						     ColumnFamilyDescriptor.of("orders")),
@@ -152,7 +152,7 @@ class ColumnFamilyIntegrationTest {
 		// When — reopen
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.openWithColumnFamilies(opts, dir,
+		     var db = RocksDB.open(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"),
 						     ColumnFamilyDescriptor.of("logs")),
 				     handles)) {
@@ -189,7 +189,7 @@ class ColumnFamilyIntegrationTest {
 		List<String> values = new ArrayList<>();
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.openWithColumnFamilies(opts, dir,
+		     var db = RocksDB.open(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"),
 						     ColumnFamilyDescriptor.of("sorted")),
 				     handles)) {

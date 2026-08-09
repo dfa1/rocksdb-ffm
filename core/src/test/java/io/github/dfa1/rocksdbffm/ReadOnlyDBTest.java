@@ -179,7 +179,7 @@ class ReadOnlyDBTest {
 
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+		     var ro = RocksDB.openReadOnly(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
 				     handles)) {
 			var cf = handles.get(1);
@@ -204,7 +204,7 @@ class ReadOnlyDBTest {
 
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+		     var ro = RocksDB.openReadOnly(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
 				     handles);
 		     var readOpts = ReadOptions.newReadOptions()) {
@@ -230,7 +230,7 @@ class ReadOnlyDBTest {
 
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+		     var ro = RocksDB.openReadOnly(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
 				     handles)) {
 			var cf = handles.get(1);
@@ -258,7 +258,7 @@ class ReadOnlyDBTest {
 
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+		     var ro = RocksDB.openReadOnly(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
 				     handles);
 		     Arena arena = Arena.ofConfined()) {
@@ -293,7 +293,7 @@ class ReadOnlyDBTest {
 
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+		     var ro = RocksDB.openReadOnly(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
 				     handles)) {
 			var cf = handles.get(1);
@@ -321,7 +321,7 @@ class ReadOnlyDBTest {
 
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+		     var ro = RocksDB.openReadOnly(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
 				     handles);
 		     var readOpts = ReadOptions.newReadOptions()) {
@@ -354,7 +354,7 @@ class ReadOnlyDBTest {
 
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+		     var ro = RocksDB.openReadOnly(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
 				     handles)) {
 			var cf = handles.get(1);
@@ -379,7 +379,7 @@ class ReadOnlyDBTest {
 
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var ro = RocksDB.openReadOnlyWithColumnFamilies(opts, dir,
+		     var ro = RocksDB.openReadOnly(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
 				     handles)) {
 			var cf = handles.get(1);

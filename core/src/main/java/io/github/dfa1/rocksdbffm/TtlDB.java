@@ -11,13 +11,13 @@ import java.util.OptionalLong;
 
 /// FFM wrapper for a TTL-aware read-write `rocksdb_t*` instance.
 ///
-/// Obtain via [RocksDB#openWithTtl].
+/// Obtain via [RocksDB#openTtl].
 ///
 /// Keys are lazily expired during the next compaction that covers their range.
 /// A [Duration#ZERO] TTL disables expiry entirely.
 ///
 /// ```
-/// try (var db = RocksDB.openWithTtl(path, Duration.ofSeconds(60))) {
+/// try (var db = RocksDB.openTtl(path, Duration.ofSeconds(60))) {
 ///     db.put("key".getBytes(), "value".getBytes());
 ///     byte[] value = db.get("key".getBytes());
 /// }
