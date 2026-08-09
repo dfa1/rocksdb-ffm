@@ -31,9 +31,11 @@ Every class wrapping a native pointer **must** implement `AutoCloseable`.
 
 - **Zero Leaks:** Native resources must be destroyed in `close()`.
 - **Ownership Transfer:** When one native object takes ownership of another (e.g., `FilterPolicy` →
-  `BlockBasedTableOptions`), the transferring object must mark the ownership as transferred using a boolean flag. Its
-  `close()` method should then become a no-op to prevent double-frees.
-- **Transfer Marker:** Use a method like `transferOwnership()` inside the setter that takes ownership.
+  `BlockBasedTableOptions`), the transferred object must be marked so its `close()` becomes a no-op and cannot
+  double-free.
+- **Transfer Marker:** Call `transferOwnership()` (package-private on `NativeObject`) inside the setter that takes
+  ownership. It sets the held pointer to `MemorySegment.NULL`, which makes `close()` a no-op and any later `ptr()`
+  throw `IllegalStateException`.
 
 ### 2. Data Types & Path Handling
 
@@ -142,7 +144,10 @@ Performance gains are a primary goal. Use `JMH` to validate changes.
 
 ## 🗺 Source Map
 
-For the full feature status and roadmap see `README.md`.
+For the full feature status and roadmap see `docs/reference.md#feature-status`.
+
+`RocksDB.java` holds **only** the static open/list factories plus the shared FFM helpers; every
+instance method listed below lives on the DB type (`ReadWriteDB`, `TtlDB`, …), not on `RocksDB`.
 
 | Feature                 | Java source files                                                                                                         |
 |:------------------------|:--------------------------------------------------------------------------------------------------------------------------|
@@ -153,18 +158,18 @@ For the full feature status and roadmap see `README.md`.
 | Optimistic Transactions | `OptimisticTransactionDB.java`, `OptimisticTransactionOptions.java`                                                       |
 | Checkpoints             | `Checkpoint.java`                                                                                                         |
 | Table Options           | `BlockBasedTableOptions.java`, `Cache.java`, `LRUCache.java`, `HyperClockCache.java`, `FilterPolicy.java`                 |
-| Compression             | `CompressionType.java`; `Options.setCompression`; `CompressionType.getSupportedTypes()` runtime probe                     |
+| Compression             | `CompressionType.java`; `Options.setCompression`, `Options.getCompression`                                                |
 | Iterators               | `RocksIterator.java`                                                                                                      |
-| Snapshots               | `Snapshot.java`; `ReadOptions.setSnapshot`; `RocksDB.getSnapshot`, `TransactionDB.getSnapshot`, `Transaction.getSnapshot` |
-| Flush                   | `FlushOptions.java`; `RocksDB.flush`, `RocksDB.flushWal`, `TransactionDB.flush`, `TransactionDB.flushWal`                 |
-| KeyMayExist             | `RocksDB.keyMayExist` — byte[], ByteBuffer, MemorySegment, ReadOptions overload                                           |
-| DB Properties           | `Property.java` (enum of well-known names); `RocksDB.getProperty`, `RocksDB.getLongProperty`, same on `TransactionDB`     |
+| Snapshots               | `Snapshot.java`; `ReadOptions.setSnapshot`; `ReadWriteDB.getSnapshot`, `TransactionDB.getSnapshot`, `Transaction.getSnapshot` |
+| Flush                   | `FlushOptions.java`; `ReadWriteDB.flush`, `ReadWriteDB.flushWal`, `TransactionDB.flush`, `TransactionDB.flushWal`                 |
+| KeyMayExist             | `ReadWriteDB.keyMayExist` — byte[], ByteBuffer, MemorySegment, ReadOptions overload                                           |
+| DB Properties           | `Property.java` (enum of well-known names); `ReadWriteDB.getProperty`, `ReadWriteDB.getLongProperty`, same on `TransactionDB`     |
 | Statistics              | `HistogramType.java`, `TickerType.java`, `StatsLevel.java`, `StatisticsHistogramData.java`                                |
 | Shared utilities        | `RocksDB.java` statics (`errHolder`, `checkError`, `toNative`), `NativeObject.java`, `NativeLibrary.java`, `MemorySize.java`, `SequenceNumber.java`, `RocksDBException.java` |
-| Compaction control      | `CompactOptions.java`, `WaitForCompactOptions.java`; `RocksDB.compactRange`, `suggestCompactRange`, `disableFileDeletions`, `enableFileDeletions`, `ReadWriteDB.waitForCompact` |
+| Compaction control      | `CompactOptions.java`, `WaitForCompactOptions.java`; `ReadWriteDB.compactRange`, `suggestCompactRange`, `disableFileDeletions`, `enableFileDeletions`, `ReadWriteDB.waitForCompact` |
 | DeleteRange             | `ReadWriteDB.deleteRange` (all three tiers), `WriteBatch.deleteRange`                                                     |
-| SST File Ingest         | `SstFileWriter.java`, `IngestExternalFileOptions.java`; `RocksDB.ingestExternalFile`                                     |
-| WAL Iterator            | `WalIterator.java`, `WalBatchResult.java`; `RocksDB.getUpdatesSince`, `getLatestSequenceNumber`                          |
+| SST File Ingest         | `SstFileWriter.java`, `IngestExternalFileOptions.java`; `ReadWriteDB.ingestExternalFile`                                     |
+| WAL Iterator            | `WalIterator.java`, `WalBatchResult.java`; `ReadWriteDB.getUpdatesSince`, `getLatestSequenceNumber`                          |
 | Read-only DB            | `ReadOnlyDB.java`                                                                                                         |
 | TTL DB                  | `TtlDB.java`; `RocksDB.openWithTtl(Path, Duration)`                                                                       |
 | Logger                  | `Logger.java`, `LogLevel.java`; `Logger.newStderrLogger`, `Logger.newCallbackLogger`                                      |
@@ -179,7 +184,21 @@ For the full feature status and roadmap see `README.md`.
 ## Documentation
 
 - Javadoc is written in the Markdown format to keep same format everywhere
-- some documentation lives in docs/; the intent is to document decisions there
+- `docs/` follows [Diataxis](https://diataxis.fr/) — put new prose in the page matching its mode, and cross-link
+  rather than repeat:
+
+  | File                   | Put here                                                                |
+  |:-----------------------|:------------------------------------------------------------------------|
+  | `docs/tutorial.md`     | The single linear newcomer walkthrough                                  |
+  | `docs/how-to.md`       | Task recipes ("how do I take a backup?")                                |
+  | `docs/reference.md`    | Artifacts, API surface by area, options/enum tables, feature status     |
+  | `docs/explanation.md`  | Design rationale, ownership model, native loading, build decisions      |
+  | `docs/benchmarks.md`   | Benchmark numbers and methodology                                        |
+  | `docs/c-api-gaps.md`   | Type A/B gap catalogue against `rocksdb/c.h`                            |
+
+- `README.md` links to `docs/` and must not duplicate their content: it holds badges, a minimal quickstart, the docs
+  index, contributing, and releasing only
+- Java snippets in `docs/` must compile against `core` before being committed
 
 ## Code
 
