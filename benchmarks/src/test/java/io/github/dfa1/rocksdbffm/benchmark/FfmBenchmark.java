@@ -59,10 +59,11 @@ public class FfmBenchmark {
 
 	private WriteBatch batch;
 	private byte[][] batchKeys;
+	private byte[][] batchValues;
 	private ByteBuffer[] batchKeysByteBuffer;
-	private ByteBuffer batchValueByteBuffer;
+	private ByteBuffer[] batchValuesByteBuffer;
 	private MemorySegment[] batchKeysMemorySegment;
-	private MemorySegment batchValueMemorySegment;
+	private MemorySegment[] batchValuesMemorySegment;
 
 	@Setup(Level.Trial)
 	public void setup() throws Exception {
@@ -95,21 +96,24 @@ public class FfmBenchmark {
 
 		// --- batch: byte[] tier ---
 		batchKeys = TestData.batchKeys();
+		batchValues = TestData.batchValues();
 		batch = WriteBatch.create();
 
 		// --- batch: ByteBuffer tier ---
 		batchKeysByteBuffer = new ByteBuffer[TestData.WRITE_BATCH_SIZE];
+		batchValuesByteBuffer = new ByteBuffer[TestData.WRITE_BATCH_SIZE];
 		for (int i = 0; i < TestData.WRITE_BATCH_SIZE; i++) {
 			batchKeysByteBuffer[i] = ByteBuffer.allocateDirect(batchKeys[i].length).put(batchKeys[i]).flip();
+			batchValuesByteBuffer[i] = ByteBuffer.allocateDirect(batchValues[i].length).put(batchValues[i]).flip();
 		}
-		batchValueByteBuffer = ByteBuffer.allocateDirect(TestData.BATCH_VALUE.length).put(TestData.BATCH_VALUE).flip();
 
 		// --- batch: MemorySegment tier ---
 		batchKeysMemorySegment = new MemorySegment[TestData.WRITE_BATCH_SIZE];
+		batchValuesMemorySegment = new MemorySegment[TestData.WRITE_BATCH_SIZE];
 		for (int i = 0; i < TestData.WRITE_BATCH_SIZE; i++) {
 			batchKeysMemorySegment[i] = arenaMemorySegment.allocateFrom(ValueLayout.JAVA_BYTE, batchKeys[i]);
+			batchValuesMemorySegment[i] = arenaMemorySegment.allocateFrom(ValueLayout.JAVA_BYTE, batchValues[i]);
 		}
-		batchValueMemorySegment = arenaMemorySegment.allocateFrom(ValueLayout.JAVA_BYTE, TestData.BATCH_VALUE);
 	}
 
 	@TearDown(Level.Trial)
@@ -194,7 +198,7 @@ public class FfmBenchmark {
 	public void batchWrites() {
 		batch.clear();
 		for (int i = 0; i < TestData.WRITE_BATCH_SIZE; i++) {
-			batch.put(batchKeys[i], TestData.BATCH_VALUE);
+			batch.put(batchKeys[i], batchValues[i]);
 		}
 		db.write(batch);
 	}
@@ -204,7 +208,7 @@ public class FfmBenchmark {
 		batch.clear();
 		try (Arena arena = Arena.ofConfined()) {
 			for (int i = 0; i < TestData.WRITE_BATCH_SIZE; i++) {
-				batch.put(arena, batchKeys[i], TestData.BATCH_VALUE);
+				batch.put(arena, batchKeys[i], batchValues[i]);
 			}
 			db.write(arena, batch);
 		}
@@ -217,8 +221,8 @@ public class FfmBenchmark {
 		batch.clear();
 		for (int i = 0; i < TestData.WRITE_BATCH_SIZE; i++) {
 			batchKeysByteBuffer[i].rewind();
-			batchValueByteBuffer.rewind();
-			batch.put(batchKeysByteBuffer[i], batchValueByteBuffer);
+			batchValuesByteBuffer[i].rewind();
+			batch.put(batchKeysByteBuffer[i], batchValuesByteBuffer[i]);
 		}
 		db.write(batch);
 	}
@@ -229,7 +233,7 @@ public class FfmBenchmark {
 	public void batchWritesMemorySegment() {
 		batch.clear();
 		for (int i = 0; i < TestData.WRITE_BATCH_SIZE; i++) {
-			batch.put(batchKeysMemorySegment[i], batchValueMemorySegment);
+			batch.put(batchKeysMemorySegment[i], batchValuesMemorySegment[i]);
 		}
 		db.write(batch);
 	}

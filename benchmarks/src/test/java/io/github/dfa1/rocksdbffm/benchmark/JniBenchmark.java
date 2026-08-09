@@ -54,6 +54,7 @@ public class JniBenchmark {
 
 	private WriteBatch batch;
 	private byte[][] batchKeys;
+	private byte[][] batchValues;
 
 	@Setup(Level.Trial)
 	public void setup() throws Exception {
@@ -81,6 +82,7 @@ public class JniBenchmark {
 		db.put(TestData.READ_KEY_BYTES, TestData.READ_VALUE_BYTES);
 
 		batchKeys = TestData.batchKeys();
+		batchValues = TestData.batchValues();
 		batch = new WriteBatch();
 	}
 
@@ -128,7 +130,7 @@ public class JniBenchmark {
 	public void batchWrites() throws Exception {
 		batch.clear();
 		for (int i = 0; i < TestData.WRITE_BATCH_SIZE; i++) {
-			batch.put(batchKeys[i], TestData.BATCH_VALUE);
+			batch.put(batchKeys[i], batchValues[i]);
 		}
 		db.write(writeOptions, batch);
 	}
