@@ -78,14 +78,6 @@ public final class MemorySize implements Comparable<MemorySize> {
 		return bytes;
 	}
 
-	/// Returns the sum of this size and `other`.
-	///
-	/// @param other the size to add
-	/// @return a new [MemorySize] representing the combined byte count
-	public MemorySize add(MemorySize other) {
-		return new MemorySize(Math.addExact(this.bytes, other.bytes));
-	}
-
 	// -----------------------------------------------------------------------
 	// Value semantics
 	// -----------------------------------------------------------------------

@@ -94,19 +94,6 @@ class MemorySizeTest {
 	}
 
 	@Test
-	void add_returnsSumInBytes() {
-		// Given
-		var a = MemorySize.ofMB(1);
-		var b = MemorySize.ofMB(2);
-
-		// When
-		var result = a.add(b);
-
-		// Then
-		assertThat(result).isEqualTo(MemorySize.ofMB(3));
-	}
-
-	@Test
 	void toString_showsLargestEvenUnit() {
 		assertThat(MemorySize.ofGB(1).toString()).isEqualTo("1 GB");
 		assertThat(MemorySize.ofMB(64).toString()).isEqualTo("64 MB");

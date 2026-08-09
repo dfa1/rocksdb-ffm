@@ -61,7 +61,8 @@
 		<sonar.exclusions>rocksdb/**</sonar.exclusions>
 		<sonar.coverage.exclusions>rocksdb/**,benchmarks/**</sonar.coverage.exclusions>
 		<sonar.coverage.jacoco.xmlReportPaths>
-			${maven.multiModuleProjectDirectory}/core/target/site/jacoco/jacoco.xml
+			${maven.multiModuleProjectDirectory}/core/target/site/jacoco/jacoco.xml,
+			${maven.multiModuleProjectDirectory}/integration-tests/target/site/jacoco-aggregate/jacoco.xml
 		</sonar.coverage.jacoco.xmlReportPaths>
 		<!-- Default for the @{argLine} placeholder in the surefire config below. jacoco:prepare-agent
 		     overwrites this with the agent arguments when the coverage profile is active; without this
