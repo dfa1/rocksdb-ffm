@@ -15,7 +15,7 @@ class ReadOnlyDBIntegrationTest {
 	void readsDataWrittenByPrimary(@TempDir Path dir) {
 		// Given — write data with a read-write db, then close it
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 		}
 
@@ -32,7 +32,7 @@ class ReadOnlyDBIntegrationTest {
 	void iterator_scansAllKeys(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());

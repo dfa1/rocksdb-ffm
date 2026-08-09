@@ -14,7 +14,7 @@ class WalIteratorTest {
 	@Test
 	void getLatestSequenceNumber_advancesAfterWrites(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			SequenceNumber before = db.getLatestSequenceNumber();
 
 			// When
@@ -29,7 +29,7 @@ class WalIteratorTest {
 	@Test
 	void getUpdatesSince_yieldsWrittenBatches(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
@@ -58,7 +58,7 @@ class WalIteratorTest {
 	@Test
 	void getUpdatesSince_batchContainsExpectedCount(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
 
 			WriteBatch batch = WriteBatch.create();
@@ -86,7 +86,7 @@ class WalIteratorTest {
 	@Test
 	void getUpdatesSince_emptyWhenNoWritesAfterSequence(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			SequenceNumber after = db.getLatestSequenceNumber();
 
@@ -110,7 +110,7 @@ class WalIteratorTest {
 	@Test
 	void walIterator_isClosedSafely(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			SequenceNumber start = SequenceNumber.of(0);
 

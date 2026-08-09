@@ -15,7 +15,7 @@ class SstFileManagerTest {
 		try (var env = Env.defaultEnv();
 		     var sut = SstFileManager.create(env);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 			try (var flushOptions = FlushOptions.newFlushOptions().setWait(true)) {
@@ -38,7 +38,7 @@ class SstFileManagerTest {
 				     .setMaxAllowedSpaceUsage(MemorySize.ofGB(10))
 				     .setCompactionBufferSize(MemorySize.ofMB(512));
 		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			// When
 			db.put("k".getBytes(), "v".getBytes());
@@ -55,7 +55,7 @@ class SstFileManagerTest {
 		try (var env = Env.defaultEnv();
 		     var sut = SstFileManager.create(env).setMaxAllowedSpaceUsage(MemorySize.ZERO);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			// When
 			db.put("k".getBytes(), "v".getBytes());
@@ -75,7 +75,7 @@ class SstFileManagerTest {
 		     var sut = SstFileManager.create(env)
 				     .setDeleteRateBytesPerSecond(MemorySize.ofMB(64).toBytes());
 		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			// When
 			var result = sut.getDeleteRateBytesPerSecond();
@@ -91,7 +91,7 @@ class SstFileManagerTest {
 		try (var env = Env.defaultEnv();
 		     var sut = SstFileManager.create(env).setMaxTrashDbRatio(0.5);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			// When
 			var result = sut.getMaxTrashDbRatio();
@@ -107,7 +107,7 @@ class SstFileManagerTest {
 		try (var env = Env.defaultEnv();
 		     var sut = SstFileManager.create(env);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -130,7 +130,7 @@ class SstFileManagerTest {
 			sut.close();
 
 			// Then — Options (and the underlying shared_ptr) is still valid
-			try (var db = RocksDB.open(opts, dir)) {
+			try (var db = RocksDB.openReadWrite(opts, dir)) {
 				db.put("k".getBytes(), "v".getBytes());
 				assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
 			}

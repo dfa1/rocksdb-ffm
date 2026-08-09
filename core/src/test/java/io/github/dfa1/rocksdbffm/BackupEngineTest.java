@@ -15,7 +15,7 @@ class BackupEngineTest {
 	void createNewBackup_isVisibleInGetBackupInfo(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir.resolve("db"));
+		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
 		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
 
 			db.put("k".getBytes(), "v".getBytes());
@@ -35,7 +35,7 @@ class BackupEngineTest {
 	void getBackupInfo_isEmptyForFreshEngine(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir.resolve("db"));
+		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
 		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
 
 			// When
@@ -50,7 +50,7 @@ class BackupEngineTest {
 	void verifyBackup_succeedsForValidBackup(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir.resolve("db"));
+		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
 		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
 
 			db.put("k".getBytes(), "v".getBytes());
@@ -65,7 +65,7 @@ class BackupEngineTest {
 	void verifyBackup_throwsForUnknownBackupId(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir.resolve("db"));
+		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
 		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
 
 			engine.createNewBackup(db);
@@ -82,7 +82,7 @@ class BackupEngineTest {
 	void purgeOldBackups_keepsOnlyMostRecent(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir.resolve("db"));
+		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
 		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
 
 			engine.createNewBackup(db);
@@ -107,7 +107,7 @@ class BackupEngineTest {
 
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dbDir);
+		     var db = RocksDB.openReadWrite(opts, dbDir);
 		     var engine = BackupEngine.open(opts, backupDir)) {
 
 			db.put("k".getBytes(), "v".getBytes());
@@ -121,7 +121,7 @@ class BackupEngineTest {
 
 		// Then
 		try (var opts = Options.newOptions();
-		     var restored = RocksDB.open(opts, restoreDir)) {
+		     var restored = RocksDB.openReadWrite(opts, restoreDir)) {
 			assertThat(restored.get("k".getBytes())).isEqualTo("v".getBytes());
 		}
 	}
@@ -135,7 +135,7 @@ class BackupEngineTest {
 
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dbDir);
+		     var db = RocksDB.openReadWrite(opts, dbDir);
 		     var engine = BackupEngine.open(opts, backupDir)) {
 
 			// flushBeforeBackup=true: the value must land in an SST file rather than
@@ -152,7 +152,7 @@ class BackupEngineTest {
 
 		// Then
 		try (var opts = Options.newOptions();
-		     var restored = RocksDB.open(opts, restoreDir)) {
+		     var restored = RocksDB.openReadWrite(opts, restoreDir)) {
 			assertThat(restored.get("k".getBytes())).isEqualTo("v".getBytes());
 		}
 	}
@@ -165,7 +165,7 @@ class BackupEngineTest {
 
 		// Given — two backups with different content
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dbDir);
+		     var db = RocksDB.openReadWrite(opts, dbDir);
 		     var engine = BackupEngine.open(opts, backupDir)) {
 
 			db.put("k".getBytes(), "first".getBytes());
@@ -182,7 +182,7 @@ class BackupEngineTest {
 
 		// Then
 		try (var opts = Options.newOptions();
-		     var restored = RocksDB.open(opts, restoreDir)) {
+		     var restored = RocksDB.openReadWrite(opts, restoreDir)) {
 			assertThat(restored.get("k".getBytes())).isEqualTo("first".getBytes());
 		}
 	}
@@ -194,7 +194,7 @@ class BackupEngineTest {
 
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dbDir);
+		     var db = RocksDB.openReadWrite(opts, dbDir);
 		     var env = Env.defaultEnv();
 		     var beOpts = BackupEngineOptions.create(backupDir)) {
 
@@ -214,7 +214,7 @@ class BackupEngineTest {
 	void close_isIdempotent(@TempDir Path dir) {
 		// Given
 		var opts = Options.newOptions().setCreateIfMissing(true);
-		var db = RocksDB.open(opts, dir.resolve("db"));
+		var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
 		var engine = BackupEngine.open(opts, dir.resolve("backup"));
 
 		// When

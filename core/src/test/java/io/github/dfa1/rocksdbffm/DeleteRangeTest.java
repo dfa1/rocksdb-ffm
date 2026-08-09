@@ -19,7 +19,7 @@ class DeleteRangeTest {
 	@Test
 	void deleteRange_removesKeysInRange(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -39,7 +39,7 @@ class DeleteRangeTest {
 	@Test
 	void deleteRange_emptyRange_deletesNothing(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 
 			// When — start == end is an empty range
@@ -53,7 +53,7 @@ class DeleteRangeTest {
 	@Test
 	void deleteRange_rangeExceedsExistingKeys_deletesOnlyPresent(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("b".getBytes(), "2".getBytes());
 
 			// When — range extends beyond existing keys
@@ -71,7 +71,7 @@ class DeleteRangeTest {
 	@Test
 	void deleteRange_byteBuffer_removesKeysInRange(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -96,7 +96,7 @@ class DeleteRangeTest {
 	@Test
 	void deleteRange_memorySegment_removesKeysInRange(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var arena = Arena.ofConfined()) {
 
 			db.put("a".getBytes(), "1".getBytes());
@@ -123,7 +123,7 @@ class DeleteRangeTest {
 	@Test
 	void writeBatch_deleteRange_removesKeysInRange(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var batch = WriteBatch.create()) {
 
 			db.put("a".getBytes(), "1".getBytes());
@@ -147,7 +147,7 @@ class DeleteRangeTest {
 	@Test
 	void writeBatch_deleteRange_combinedWithPuts(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var batch = WriteBatch.create()) {
 
 			db.put("b".getBytes(), "old".getBytes());
@@ -172,7 +172,7 @@ class DeleteRangeTest {
 	@Test
 	void writeBatch_deleteRange_byteBuffer(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var batch = WriteBatch.create()) {
 
 			db.put("b".getBytes(), "2".getBytes());
@@ -199,7 +199,7 @@ class DeleteRangeTest {
 	@Test
 	void writeBatch_deleteRange_memorySegment(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var batch = WriteBatch.create();
 		     var arena = Arena.ofConfined()) {
 

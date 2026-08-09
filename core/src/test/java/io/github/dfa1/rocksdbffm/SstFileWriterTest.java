@@ -31,7 +31,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (var db = RocksDB.open(dbPath)) {
+		try (var db = RocksDB.openReadWrite(dbPath)) {
 			db.ingestExternalFile(sstPath);
 
 			// Then
@@ -62,7 +62,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (var db = RocksDB.open(dbPath)) {
+		try (var db = RocksDB.openReadWrite(dbPath)) {
 			db.ingestExternalFile(List.of(sst1, sst2));
 
 			// Then
@@ -87,7 +87,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (var db = RocksDB.open(dbPath);
+		try (var db = RocksDB.openReadWrite(dbPath);
 		     var ingestOpts = IngestExternalFileOptions.newIngestExternalFileOptions().setMoveFiles(true)) {
 			db.ingestExternalFile(sstPath, ingestOpts);
 
@@ -110,7 +110,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (var db = RocksDB.open(dbPath)) {
+		try (var db = RocksDB.openReadWrite(dbPath)) {
 			db.put("existing".getBytes(), "original".getBytes());
 			db.ingestExternalFile(sstPath);
 
@@ -172,7 +172,7 @@ class SstFileWriterTest {
 	@Test
 	void ingest_emptyFileList_isNoOp(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			// When
 			db.ingestExternalFile(List.of());
 

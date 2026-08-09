@@ -35,7 +35,7 @@ class CompressionTypeTest {
 		try (Options opts = Options.newOptions()
 				.setCreateIfMissing(true)
 				.setCompression(CompressionType.NO_COMPRESSION);
-		     ReadWriteDB db = RocksDB.open(opts, dir)) {
+		     ReadWriteDB db = RocksDB.openReadWrite(opts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
 		}

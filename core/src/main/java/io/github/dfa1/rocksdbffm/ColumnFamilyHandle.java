@@ -9,11 +9,11 @@ import java.nio.charset.StandardCharsets;
 
 /// FFM wrapper for `rocksdb_column_family_handle_t`.
 ///
-/// Obtained via [RocksDB#open] or [ReadWriteDB#createColumnFamily].
+/// Obtained via [RocksDB#openReadWrite] or [ReadWriteDB#createColumnFamily].
 /// Must be closed after use to release the native handle.
 ///
 /// ```
-/// try (var db = RocksDB.open(path);
+/// try (var db = RocksDB.openReadWrite(path);
 ///      var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 ///     db.put(cf, "key".getBytes(), "value".getBytes());
 /// }

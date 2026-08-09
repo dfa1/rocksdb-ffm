@@ -21,7 +21,7 @@ class KeyMayExistTest {
 	@Test
 	void keyMayExist_returnsFalse_forAbsentKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 
 			// When
 			var result = db.keyMayExist("ghost".getBytes());
@@ -34,7 +34,7 @@ class KeyMayExistTest {
 	@Test
 	void keyMayExist_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -49,7 +49,7 @@ class KeyMayExistTest {
 	void keyMayExist_mayReturnTrue_afterDelete(@TempDir Path dir) {
 		// Given — Bloom filters are additive; a deleted key may still pass the filter.
 		// This test just asserts no exception is thrown and the result is a boolean.
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			db.delete("k".getBytes());
 
@@ -67,7 +67,7 @@ class KeyMayExistTest {
 	@Test
 	void keyMayExist_withReadOptions_snapshot(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			try (Snapshot snap = db.getSnapshot();
 			     ReadOptions ro = ReadOptions.newReadOptions().setSnapshot(snap)) {
 
@@ -91,7 +91,7 @@ class KeyMayExistTest {
 	@Test
 	void keyMayExist_byteBuffer_returnsFalse_forAbsentKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			ByteBuffer key = ByteBuffer.allocateDirect(5);
 			key.put("ghost".getBytes()).flip();
 
@@ -106,7 +106,7 @@ class KeyMayExistTest {
 	@Test
 	void keyMayExist_byteBuffer_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("hello".getBytes(), "world".getBytes());
 			ByteBuffer key = ByteBuffer.allocateDirect(5);
 			key.put("hello".getBytes()).flip();
@@ -126,7 +126,7 @@ class KeyMayExistTest {
 	@Test
 	void keyMayExist_memorySegment_returnsFalse_forAbsentKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     Arena arena = Arena.ofConfined()) {
 			MemorySegment key = arena.allocateFrom("ghost");
 			// allocateFrom adds a null terminator — use reinterpret to strip it
@@ -143,7 +143,7 @@ class KeyMayExistTest {
 	@Test
 	void keyMayExist_memorySegment_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     Arena arena = Arena.ofConfined()) {
 			db.put("hi".getBytes(), "there".getBytes());
 			MemorySegment key = arena.allocate(2);
@@ -166,7 +166,7 @@ class KeyMayExistTest {
 	void keyMayExist_cf_byteArray_returnsFalse_forAbsentKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
 
 			// When
@@ -181,7 +181,7 @@ class KeyMayExistTest {
 	void keyMayExist_cf_byteArray_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -197,7 +197,7 @@ class KeyMayExistTest {
 	void keyMayExist_cf_withReadOptions_doesNotThrow(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"));
 		     var snap = db.getSnapshot();
 		     var ro = ReadOptions.newReadOptions().setSnapshot(snap)) {
@@ -215,7 +215,7 @@ class KeyMayExistTest {
 	void keyMayExist_cf_byteBuffer_returnsFalse_forAbsentKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
 			ByteBuffer key = ByteBuffer.allocateDirect(5);
 			key.put("ghost".getBytes()).flip();
@@ -232,7 +232,7 @@ class KeyMayExistTest {
 	void keyMayExist_cf_byteBuffer_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
 			db.put(cf, "hello".getBytes(), "world".getBytes());
 			ByteBuffer key = ByteBuffer.allocateDirect(5);
@@ -250,7 +250,7 @@ class KeyMayExistTest {
 	void keyMayExist_cf_memorySegment_returnsFalse_forAbsentKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"));
 		     Arena arena = Arena.ofConfined()) {
 			MemorySegment key = arena.allocateFrom("ghost").reinterpret(5);
@@ -267,7 +267,7 @@ class KeyMayExistTest {
 	void keyMayExist_cf_memorySegment_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "hi".getBytes(), "there".getBytes());

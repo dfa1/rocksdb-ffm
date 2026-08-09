@@ -184,7 +184,7 @@ Nothing in the library has a public constructor; objects come from named statics
 Two reasons. A constructor must call `super(...)` before anything else, which is impossible when the
 pointer has to be obtained from a native call that can fail and needs error handling — a static
 factory can do the work, check the error holder, and only then construct. And a named factory says
-which *kind* of thing you are getting: `RocksDB.open` versus `openReadOnly` versus `openTtl`
+which *kind* of thing you are getting: `RocksDB.openReadWrite` versus `openReadOnly` versus `openTtl`
 would otherwise all be constructor overloads distinguished only by argument types.
 
 ## Native library loading

@@ -38,7 +38,7 @@ class LoggerTest {
 			System.out.println(level + ": " + msg);
 		});
 		     var opts = Options.newOptions().setCreateIfMissing(true).setInfoLog(logger);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			// When — trigger at least one internal log message via a flush
 			db.put("k".getBytes(), "v".getBytes());
@@ -72,7 +72,7 @@ class LoggerTest {
 			logger.close(); // safe: RocksDB still holds a shared_ptr reference
 
 			// When
-			try (var db = RocksDB.open(opts, dir)) {
+			try (var db = RocksDB.openReadWrite(opts, dir)) {
 				db.put("k".getBytes(), "v".getBytes());
 			}
 		}

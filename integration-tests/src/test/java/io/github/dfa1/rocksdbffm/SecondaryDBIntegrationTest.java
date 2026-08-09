@@ -14,7 +14,7 @@ class SecondaryDBIntegrationTest {
 			@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given — write and flush so the secondary can read from SSTs
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, primaryDir);
+		     var db = RocksDB.openReadWrite(opts, primaryDir);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("k1".getBytes(), "v1".getBytes());
 			db.flush(fo);
@@ -35,7 +35,7 @@ class SecondaryDBIntegrationTest {
 			@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given — seed the primary so the secondary can open
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, primaryDir);
+		     var db = RocksDB.openReadWrite(opts, primaryDir);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("k1".getBytes(), "v1".getBytes());
 			db.flush(fo);
@@ -47,7 +47,7 @@ class SecondaryDBIntegrationTest {
 
 			// When — primary adds more data and flushes
 			try (var popts = Options.newOptions();
-			     var primary = RocksDB.open(popts, primaryDir);
+			     var primary = RocksDB.openReadWrite(popts, primaryDir);
 			     var fo = FlushOptions.newFlushOptions()) {
 				primary.put("k2".getBytes(), "v2".getBytes());
 				primary.flush(fo);

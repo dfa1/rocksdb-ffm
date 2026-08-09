@@ -37,7 +37,7 @@ class PerfMetricTest {
 		// Given
 		PerfContext.setPerfLevel(PerfLevel.ENABLE_TIME);
 		try (Options options = Options.newOptions().setCreateIfMissing(true);
-		     ReadWriteDB db = RocksDB.open(options, dir);
+		     ReadWriteDB db = RocksDB.openReadWrite(options, dir);
 		     PerfContext ctx = PerfContext.newPerfContext()) {
 
 			db.put("key".getBytes(), "value".getBytes());

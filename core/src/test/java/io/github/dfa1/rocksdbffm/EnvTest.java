@@ -118,7 +118,7 @@ class EnvTest {
 
 			// When
 			assertThatNoException().isThrownBy(() -> {
-				try (var db = RocksDB.open(opts, dir)) {
+				try (var db = RocksDB.openReadWrite(opts, dir)) {
 					db.put("k".getBytes(), "v".getBytes());
 					byte[] result = db.get("k".getBytes());
 					assertThat(result).isEqualTo("v".getBytes());
@@ -142,7 +142,7 @@ class EnvTest {
 
 			// When
 			assertThatNoException().isThrownBy(() -> {
-				try (var db = RocksDB.open(opts, dir)) {
+				try (var db = RocksDB.openReadWrite(opts, dir)) {
 					db.put("key".getBytes(), "value".getBytes());
 					byte[] result = db.get("key".getBytes());
 					assertThat(result).isEqualTo("value".getBytes());

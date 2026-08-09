@@ -436,7 +436,7 @@ public final class RocksDB {
 	/// @param options the database options
 	/// @param path directory where the database files are stored
 	/// @return a new [ReadWriteDB] instance
-	public static ReadWriteDB open(Options options, Path path) {
+	public static ReadWriteDB openReadWrite(Options options, Path path) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
@@ -444,17 +444,17 @@ public final class RocksDB {
 			checkError(err);
 			return new ReadWriteDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("open failed", t);
+			throw RocksDBException.wrap("openReadWrite failed", t);
 		}
 	}
 
-	/// Equivalent to `open(options, path)` with `createIfMissing = true`.
+	/// Equivalent to `openReadWrite(options, path)` with `createIfMissing = true`.
 	///
 	/// @param path directory where the database files are stored
 	/// @return a new [ReadWriteDB] instance
-	public static ReadWriteDB open(Path path) {
+	public static ReadWriteDB openReadWrite(Path path) {
 		try (Options opts = Options.newOptions().setCreateIfMissing(true)) {
-			return open(opts, path);
+			return openReadWrite(opts, path);
 		}
 	}
 
@@ -1089,9 +1089,9 @@ public final class RocksDB {
 	/// @param descriptors one descriptor per column family (must include `"default"`)
 	/// @param handles output list populated with one handle per descriptor
 	/// @return a new [ReadWriteDB] instance
-	public static ReadWriteDB open(Options options, Path path,
-	                                List<ColumnFamilyDescriptor> descriptors,
-	                                List<ColumnFamilyHandle> handles) {
+	public static ReadWriteDB openReadWrite(Options options, Path path,
+	                                        List<ColumnFamilyDescriptor> descriptors,
+	                                        List<ColumnFamilyHandle> handles) {
 		int n = descriptors.size();
 		List<Options> tempOptions = new ArrayList<>();
 		try (Arena arena = Arena.ofConfined()) {
@@ -1125,7 +1125,7 @@ public final class RocksDB {
 
 			return new ReadWriteDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("open failed", t);
+			throw RocksDBException.wrap("openReadWrite failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();

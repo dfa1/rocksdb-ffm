@@ -17,7 +17,7 @@ class SstFileManagerIntegrationTest {
 		     var opts = Options.newOptions()
 				     .setCreateIfMissing(true)
 				     .setSstFileManager(sfm);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			// When
 			db.put("key".getBytes(), "value".getBytes());
@@ -38,7 +38,7 @@ class SstFileManagerIntegrationTest {
 		     var opts = Options.newOptions()
 				     .setCreateIfMissing(true)
 				     .setSstFileManager(sfm);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			// When
 			db.put("k".getBytes(), "v".getBytes());
@@ -59,7 +59,7 @@ class SstFileManagerIntegrationTest {
 		     var opts = Options.newOptions()
 				     .setCreateIfMissing(true)
 				     .setSstFileManager(sfm);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			// When
 			db.put("key".getBytes(), "value".getBytes());
@@ -97,7 +97,7 @@ class SstFileManagerIntegrationTest {
 			sfm.close();
 
 			// When — Options (and the underlying shared_ptr) still valid
-			try (var db = RocksDB.open(opts, dir)) {
+			try (var db = RocksDB.openReadWrite(opts, dir)) {
 				db.put("key".getBytes(), "value".getBytes());
 				var result = db.get("key".getBytes());
 

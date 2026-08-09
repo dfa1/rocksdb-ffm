@@ -18,7 +18,7 @@ class TableOptionsTest {
 		// Given
 		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig();
 		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -35,7 +35,7 @@ class TableOptionsTest {
 		// Given
 		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setBlockSize(MemorySize.ofKB(16));
 		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			db.put("key".getBytes(), "value".getBytes());
 
@@ -57,7 +57,7 @@ class TableOptionsTest {
 		try (var filter = FilterPolicy.newBloom(10);
 		     var tbl = BlockBasedTableOptions.newBlockBasedConfig().setFilterPolicy(filter);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			db.put("bloom-key".getBytes(), "bloom-value".getBytes());
 
@@ -81,7 +81,7 @@ class TableOptionsTest {
 		try (var filter = FilterPolicy.newRibbon(10);
 		     var tbl = BlockBasedTableOptions.newBlockBasedConfig().setFilterPolicy(filter);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			db.put("ribbon-key".getBytes(), "ribbon-value".getBytes());
 
@@ -109,7 +109,7 @@ class TableOptionsTest {
 					 .setCacheIndexAndFilterBlocks(true)
 					 .setFilterPolicy(filter);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			for (int i = 0; i < 100; i++) {
 				db.put(("key-" + i).getBytes(), ("val-" + i).getBytes());
@@ -130,7 +130,7 @@ class TableOptionsTest {
 		// Given
 		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setNoBlockCache(true);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -155,7 +155,7 @@ class TableOptionsTest {
 					 .setPartitionFilters(true)
 					 .setFilterPolicy(filter);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -176,7 +176,7 @@ class TableOptionsTest {
 		// Given
 		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setFormatVersion(5);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 

@@ -97,7 +97,7 @@ class RocksDBInvariantTest {
 	@MethodSource("cases")
 	void put_thenGet_roundTripsUnchanged(Case testCase, @TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put(testCase.key(), testCase.value());
 
 			// When
@@ -112,7 +112,7 @@ class RocksDBInvariantTest {
 	@MethodSource("cases")
 	void put_thenGet_roundTripsUnchanged_afterFlush(Case testCase, @TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put(testCase.key(), testCase.value());
 			flush(db);
 
@@ -128,7 +128,7 @@ class RocksDBInvariantTest {
 	@MethodSource("cases")
 	void get_returnsNull_afterDelete(Case testCase, @TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put(testCase.key(), testCase.value());
 			db.delete(testCase.key());
 
@@ -145,7 +145,7 @@ class RocksDBInvariantTest {
 	void put_overwritesExistingKey(Case testCase, @TempDir Path dir) {
 		// Given
 		byte[] replacement = filled(testCase.value().length + 1, 'z');
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put(testCase.key(), testCase.value());
 
 			// When
@@ -165,7 +165,7 @@ class RocksDBInvariantTest {
 	@MethodSource("cases")
 	void putSegment_thenGetSegment_roundTripsUnchanged(Case testCase, @TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir); Arena arena = Arena.ofConfined()) {
+		try (var db = RocksDB.openReadWrite(dir); Arena arena = Arena.ofConfined()) {
 			MemorySegment key = arena.allocateFrom(ValueLayout.JAVA_BYTE, testCase.key());
 			MemorySegment value = arena.allocateFrom(ValueLayout.JAVA_BYTE, testCase.value());
 			db.put(key, value);
@@ -207,7 +207,7 @@ class RocksDBInvariantTest {
 		var expected = new TreeSet<byte[]>(Arrays::compareUnsigned);
 		expected.addAll(keys);
 
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			for (byte[] key : keys) {
 				db.put(key, "v".getBytes());
 			}

@@ -22,7 +22,7 @@ class ColumnFamilyIntegrationTest {
 	void data_survivesCloseAndReopen(@TempDir Path dir) {
 		// Given — write to a custom CF, then close the DB
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("accounts"))) {
 			db.put(cf, "alice".getBytes(), "100".getBytes());
 			db.put(cf, "bob".getBytes(), "200".getBytes());
@@ -31,7 +31,7 @@ class ColumnFamilyIntegrationTest {
 		// When — reopen with both column families
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.open(opts, dir,
+		     var db = RocksDB.openReadWrite(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"),
 						     ColumnFamilyDescriptor.of("accounts")),
 				     handles)) {
@@ -50,7 +50,7 @@ class ColumnFamilyIntegrationTest {
 	void multipleColumnFamilies_persistIndependently(@TempDir Path dir) {
 		// Given — create two CFs and write distinct data to each
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var usersCf = db.createColumnFamily(ColumnFamilyDescriptor.of("users"));
 		     var ordersCf = db.createColumnFamily(ColumnFamilyDescriptor.of("orders"))) {
 			db.put(usersCf, "u1".getBytes(), "alice".getBytes());
@@ -61,7 +61,7 @@ class ColumnFamilyIntegrationTest {
 		// When — reopen all three CFs
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.open(opts, dir,
+		     var db = RocksDB.openReadWrite(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"),
 						     ColumnFamilyDescriptor.of("users"),
 						     ColumnFamilyDescriptor.of("orders")),
@@ -90,7 +90,7 @@ class ColumnFamilyIntegrationTest {
 	void listColumnFamilies_reflectsCreatedAndDroppedFamilies(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 			var cf1 = db.createColumnFamily(ColumnFamilyDescriptor.of("keep"));
 			var cf2 = db.createColumnFamily(ColumnFamilyDescriptor.of("drop-me"));
 			db.dropColumnFamily(cf2);
@@ -118,7 +118,7 @@ class ColumnFamilyIntegrationTest {
 	void writeBatch_appliesAcrossColumnFamiliesAtomically(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var inventoryCf = db.createColumnFamily(ColumnFamilyDescriptor.of("inventory"));
 		     var auditCf = db.createColumnFamily(ColumnFamilyDescriptor.of("audit"));
 		     var batch = WriteBatch.create()) {
@@ -138,7 +138,7 @@ class ColumnFamilyIntegrationTest {
 	void writeBatch_deleteRange_acrossCfsSurvivesReopen(@TempDir Path dir) {
 		// Given — populate a CF and delete a range via WriteBatch
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var logsCf = db.createColumnFamily(ColumnFamilyDescriptor.of("logs"))) {
 			for (int i = 1; i <= 5; i++) {
 				db.put(logsCf, ("log-" + i).getBytes(), ("entry-" + i).getBytes());
@@ -152,7 +152,7 @@ class ColumnFamilyIntegrationTest {
 		// When — reopen
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.open(opts, dir,
+		     var db = RocksDB.openReadWrite(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"),
 						     ColumnFamilyDescriptor.of("logs")),
 				     handles)) {
@@ -177,7 +177,7 @@ class ColumnFamilyIntegrationTest {
 	void iterator_scansPersistedKeysInOrder(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("sorted"))) {
 			db.put(cf, "c".getBytes(), "3".getBytes());
 			db.put(cf, "a".getBytes(), "1".getBytes());
@@ -189,7 +189,7 @@ class ColumnFamilyIntegrationTest {
 		List<String> values = new ArrayList<>();
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.open(opts, dir,
+		     var db = RocksDB.openReadWrite(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"),
 						     ColumnFamilyDescriptor.of("sorted")),
 				     handles)) {
@@ -216,7 +216,7 @@ class ColumnFamilyIntegrationTest {
 	void snapshot_seesConsistentViewWithinCf(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("events"))) {
 			db.put(cf, "e1".getBytes(), "v1".getBytes());
 
@@ -240,7 +240,7 @@ class ColumnFamilyIntegrationTest {
 	void flush_movesDataToSst_reflectedInProperties(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("metrics"));
 		     var flushOpts = FlushOptions.newFlushOptions().setWait(true)) {
 
@@ -267,7 +267,7 @@ class ColumnFamilyIntegrationTest {
 		// Given
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf1 = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var cf2 = db.createColumnFamily(ColumnFamilyDescriptor.of("cf2"))) {
 

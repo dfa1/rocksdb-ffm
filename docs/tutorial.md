@@ -89,7 +89,7 @@ public class App {
 	public static void main(String[] args) {
 		Path dbPath = Path.of("target/demo-db");
 
-		try (var db = RocksDB.open(dbPath)) {
+		try (var db = RocksDB.openReadWrite(dbPath)) {
 			db.put("user:1".getBytes(), "alice".getBytes());
 
 			byte[] value = db.get("user:1".getBytes());
@@ -104,7 +104,7 @@ public class App {
 
 Three things are happening here.
 
-`RocksDB.open(Path)` creates the database if the directory does not exist. It returns a
+`RocksDB.openReadWrite(Path)` creates the database if the directory does not exist. It returns a
 `ReadWriteDB`, which is `AutoCloseable` — the try-with-resources block is what releases the native
 handle. **Every** type in this library that owns native memory works that way; see
 [explanation.md#lifecycle-and-ownership](explanation.md#lifecycle-and-ownership).
@@ -140,14 +140,14 @@ null
 
 ## 5. Control how the database is opened
 
-`RocksDB.open(Path)` is a shorthand for "create if missing". Anything beyond that goes through
+`RocksDB.openReadWrite(Path)` is a shorthand for "create if missing". Anything beyond that goes through
 `Options`, which is itself a native object and must be closed:
 
 ```java
 try (var options = Options.newOptions()
 		.setCreateIfMissing(true)
 		.setCompression(CompressionType.ZSTD);
-     var db = RocksDB.open(options, dbPath)) {
+     var db = RocksDB.openReadWrite(options, dbPath)) {
 	db.put("user:1".getBytes(), "alice".getBytes());
 }
 ```
@@ -165,7 +165,7 @@ try (var cache = LRUCache.newLRUCache(MemorySize.ofMB(64));
      var options = Options.newOptions()
 		     .setCreateIfMissing(true)
 		     .setTableFormatConfig(tableConfig);
-     var db = RocksDB.open(options, dbPath)) {
+     var db = RocksDB.openReadWrite(options, dbPath)) {
 	// ...
 }
 ```
@@ -181,7 +181,7 @@ way is covered in [explanation.md#lifecycle-and-ownership](explanation.md#lifecy
 A `WriteBatch` collects operations and applies them in a single atomic write:
 
 ```java
-try (var db = RocksDB.open(dbPath);
+try (var db = RocksDB.openReadWrite(dbPath);
      var batch = WriteBatch.create()) {
 	batch.put("user:1".getBytes(), "alice".getBytes());
 	batch.put("user:2".getBytes(), "bob".getBytes());

@@ -70,7 +70,7 @@ Column families are not a separate method name — every factory that supports t
 
 | Factory                                                                       | Column families? | Returns                   |
 |:------------------------------------------------------------------------------|:-----------------|:--------------------------|
-| `open(Path)` / `(Options, Path)`                                               | yes               | `ReadWriteDB` (creates if missing) |
+| `openReadWrite(Path)` / `(Options, Path)`                                      | yes               | `ReadWriteDB` (creates if missing) |
 | `openReadOnly(Path)` / `(Options, Path)` / `(Options, Path, boolean errorIfWalFileExists)` | yes  | `ReadOnlyDB`  |
 | `openTtl(Path, Duration)` / `(Options, Path, Duration)`                        | yes               | `TtlDB`                   |
 | `openBlob(Path)` / `(Options, Path)`                                           | no                | `BlobDB`                  |
