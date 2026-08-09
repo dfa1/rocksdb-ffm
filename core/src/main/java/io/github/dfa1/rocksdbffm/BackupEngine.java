@@ -20,7 +20,7 @@ import java.util.List;
 ///
 /// // Create a backup
 /// try (var opts   = Options.newOptions().setCreateIfMissing(true);
-///      var db     = RocksDB.open(opts, dbDir);
+///      var db     = RocksDB.openReadWrite(opts, dbDir);
 ///      var engine = BackupEngine.open(opts, backupDir)) {
 ///     db.put("k".getBytes(), "v".getBytes());
 ///     engine.createNewBackup(db);

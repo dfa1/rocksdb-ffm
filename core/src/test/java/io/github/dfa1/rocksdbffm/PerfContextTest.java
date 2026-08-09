@@ -20,7 +20,7 @@ class PerfContextTest {
 		// Given — accumulate some activity, then start a fresh measurement window
 		PerfContext.setPerfLevel(PerfLevel.ENABLE_COUNT);
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 			try (var warmup = PerfContext.newPerfContext()) {
@@ -41,7 +41,7 @@ class PerfContextTest {
 		// Given
 		PerfContext.setPerfLevel(PerfLevel.ENABLE_COUNT);
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			try (var warmup = PerfContext.newPerfContext()) {
 				db.put("k".getBytes(), "v".getBytes());
@@ -62,7 +62,7 @@ class PerfContextTest {
 		// Given
 		PerfContext.setPerfLevel(PerfLevel.ENABLE_COUNT);
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var sut = PerfContext.newPerfContext()) {
 
 			db.put("k".getBytes(), "v".getBytes());
@@ -82,7 +82,7 @@ class PerfContextTest {
 		// Given
 		PerfContext.setPerfLevel(PerfLevel.ENABLE_COUNT);
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var sut = PerfContext.newPerfContext()) {
 
 			db.put("k".getBytes(), "v".getBytes());
@@ -101,7 +101,7 @@ class PerfContextTest {
 		// Given
 		PerfContext.setPerfLevel(PerfLevel.ENABLE_COUNT);
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dir);
+		     var db = RocksDB.openReadWrite(opts, dir);
 		     var sut = PerfContext.newPerfContext()) {
 
 			db.put("k".getBytes(), "v".getBytes());

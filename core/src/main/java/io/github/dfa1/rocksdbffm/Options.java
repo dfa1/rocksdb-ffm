@@ -11,11 +11,11 @@ import java.lang.invoke.MethodHandle;
 ///
 /// ```
 /// try (Options opts = Options.newOptions().setCreateIfMissing(true)) {
-///     RocksDB db = RocksDB.open(opts, path);
+///     RocksDB db = RocksDB.openReadWrite(opts, path);
 /// }
 /// ```
 ///
-/// Note: the Options object must remain open until after RocksDB.open() returns;
+/// Note: the Options object must remain open until after RocksDB.openReadWrite() returns;
 /// it can be closed immediately after that call.
 public final class Options extends NativeObject {
 

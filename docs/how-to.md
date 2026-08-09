@@ -93,7 +93,7 @@ try (var options = Options.newOptions();
 Create a column family on an open database:
 
 ```java
-try (var db = RocksDB.open(dbPath);
+try (var db = RocksDB.openReadWrite(dbPath);
      var accounts = db.createColumnFamily(ColumnFamilyDescriptor.of("accounts"))) {
 	db.put(accounts, "alice".getBytes(), "100".getBytes());
 	byte[] balance = db.get(accounts, "alice".getBytes());
@@ -106,7 +106,7 @@ or the open fails. Handles come back in the same order as the descriptors:
 ```java
 List<ColumnFamilyHandle> handles = new ArrayList<>();
 try (var options = Options.newOptions();
-     var db = RocksDB.open(options, dbPath,
+     var db = RocksDB.openReadWrite(options, dbPath,
 		     List.of(ColumnFamilyDescriptor.of("default"),
 				     ColumnFamilyDescriptor.of("accounts")),
 		     handles)) {
@@ -133,7 +133,7 @@ Every DB type has the same column-family overloads — see
 A snapshot pins a sequence number; reads through it ignore everything written afterwards.
 
 ```java
-try (var db = RocksDB.open(dbPath)) {
+try (var db = RocksDB.openReadWrite(dbPath)) {
 	db.put("k".getBytes(), "before".getBytes());
 
 	try (var snapshot = db.getSnapshot();
@@ -277,7 +277,7 @@ A checkpoint is a point-in-time directory of hard links — near-instant and che
 filesystem.
 
 ```java
-try (var db = RocksDB.open(dbPath);
+try (var db = RocksDB.openReadWrite(dbPath);
      var checkpoint = Checkpoint.newCheckpoint(db)) {
 	checkpoint.exportTo(checkpointDir);   // directory must not already exist
 }
@@ -297,7 +297,7 @@ Backups are incremental across calls: unchanged SST files are shared, not recopi
 
 ```java
 try (var options = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.open(options, dbPath);
+     var db = RocksDB.openReadWrite(options, dbPath);
      var engine = BackupEngine.open(options, backupDir)) {
 
 	db.put("k".getBytes(), "v".getBytes());
@@ -342,7 +342,7 @@ try (var options = Options.newOptions().setCreateIfMissing(true);
 	writer.finish();
 }
 
-try (var db = RocksDB.open(dbPath)) {
+try (var db = RocksDB.openReadWrite(dbPath)) {
 	db.ingestExternalFile(sstPath);
 	// or db.ingestExternalFile(List.of(sst1, sst2));
 }
@@ -357,7 +357,7 @@ Useful for change-data-capture, replication, and auditing: read every batch writ
 sequence number.
 
 ```java
-try (var db = RocksDB.open(dbPath)) {
+try (var db = RocksDB.openReadWrite(dbPath)) {
 	SequenceNumber from = db.getLatestSequenceNumber();
 
 	db.put("a".getBytes(), "1".getBytes());
@@ -425,7 +425,7 @@ try (var cache = LRUCache.newLRUCache(MemorySize.ofMB(512));
      var options = Options.newOptions()
 		     .setCreateIfMissing(true)
 		     .setTableFormatConfig(tableConfig);
-     var db = RocksDB.open(options, dbPath)) {
+     var db = RocksDB.openReadWrite(options, dbPath)) {
 	// ...
 }
 ```
@@ -446,7 +446,7 @@ try (var rateLimiter = RateLimiter.create(MemorySize.ofMB(10));   // 10 MB/s
      var options = Options.newOptions()
 		     .setCreateIfMissing(true)
 		     .setRateLimiter(rateLimiter);
-     var db = RocksDB.open(options, dbPath)) {
+     var db = RocksDB.openReadWrite(options, dbPath)) {
 	// ...
 }
 ```
@@ -464,7 +464,7 @@ try (var env = Env.defaultEnv();
      var options = Options.newOptions()
 		     .setCreateIfMissing(true)
 		     .setSstFileManager(sstFileManager);
-     var db = RocksDB.open(options, dbPath)) {
+     var db = RocksDB.openReadWrite(options, dbPath)) {
 
 	if (sstFileManager.isMaxAllowedSpaceReached()) {
 		// writes are now failing with RocksDBException
@@ -490,7 +490,7 @@ try (var options = Options.newOptions()
 		.setCreateIfMissing(true)
 		.enableStatistics()
 		.setStatisticsLevel(StatsLevel.ALL);
-     var db = RocksDB.open(options, dbPath);
+     var db = RocksDB.openReadWrite(options, dbPath);
      var histogram = StatisticsHistogramData.newStatisticsHistogramData()) {
 
 	db.get("k".getBytes());
@@ -530,7 +530,7 @@ try (var logger = Logger.newCallbackLogger(LogLevel.INFO,
 		     .setCreateIfMissing(true)
 		     .setInfoLog(logger)
 		     .setInfoLogLevel(LogLevel.INFO);
-     var db = RocksDB.open(options, dbPath)) {
+     var db = RocksDB.openReadWrite(options, dbPath)) {
 	// ...
 }
 ```

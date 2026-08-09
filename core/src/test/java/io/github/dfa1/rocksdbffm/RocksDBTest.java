@@ -17,7 +17,7 @@ class RocksDBTest {
 	@Test
 	void get_returnsStoredValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("hello".getBytes(), "world".getBytes());
 
 			// When
@@ -31,7 +31,7 @@ class RocksDBTest {
 	@Test
 	void get_returnsNull_whenKeyAbsent(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 
 			// When
 			var result = db.get("nonexistent".getBytes());
@@ -44,7 +44,7 @@ class RocksDBTest {
 	@Test
 	void get_returnsNull_afterDelete(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -58,7 +58,7 @@ class RocksDBTest {
 	@Test
 	void put_overwritesExistingKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("k".getBytes(), "v1".getBytes());
 
 			// When
@@ -75,7 +75,7 @@ class RocksDBTest {
 		var key = new byte[]{0x00, 0x01, (byte) 0xFF};
 		var value = new byte[]{0x42, 0x00, 0x43};
 
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			// When
 			db.put(key, value);
 
@@ -91,7 +91,7 @@ class RocksDBTest {
 	@Test
 	void write_commitsBatchedPuts(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var batch = WriteBatch.create()) {
 
 			batch.put("k1".getBytes(), "v1".getBytes());
@@ -111,7 +111,7 @@ class RocksDBTest {
 	@Test
 	void write_commitsBatchedDeletes(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var batch = WriteBatch.create()) {
 
 			db.put("k1".getBytes(), "v1".getBytes());
@@ -131,7 +131,7 @@ class RocksDBTest {
 	@Test
 	void writeBatch_countReflectsQueuedOperations(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var batch = WriteBatch.create()) {
 
 			for (int i = 0; i < 50; i++) {
@@ -165,7 +165,7 @@ class RocksDBTest {
 
 		try (var opts = Options.newOptions().setCreateIfMissing(false)) {
 			// When
-			var thrown = assertThatThrownBy(() -> RocksDB.open(opts, dbPath));
+			var thrown = assertThatThrownBy(() -> RocksDB.openReadWrite(opts, dbPath));
 
 			// Then
 			thrown.isInstanceOf(RocksDBException.class);
@@ -178,7 +178,7 @@ class RocksDBTest {
 		var dbPath = dir.resolve("newdb");
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dbPath)) {
+		     var db = RocksDB.openReadWrite(opts, dbPath)) {
 
 			// When
 			db.put("k".getBytes(), "v".getBytes());
@@ -213,7 +213,7 @@ class RocksDBTest {
 	@Test
 	void openReadOnly_allowsReads(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.open(dir)) {
+		try (var rw = RocksDB.openReadWrite(dir)) {
 			rw.put("k".getBytes(), "v".getBytes());
 		}
 
@@ -229,7 +229,7 @@ class RocksDBTest {
 	@Test
 	void openReadOnly_withExplicitOptions(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.open(dir)) {
+		try (var rw = RocksDB.openReadWrite(dir)) {
 			rw.put("hello".getBytes(), "world".getBytes());
 		}
 

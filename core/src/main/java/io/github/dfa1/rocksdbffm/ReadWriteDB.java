@@ -10,10 +10,10 @@ import java.util.OptionalLong;
 
 /// FFM wrapper for a read-write `rocksdb_t*` instance.
 ///
-/// Obtain via [RocksDB#open] or [RocksDB#openTtl].
+/// Obtain via [RocksDB#openReadWrite] or [RocksDB#openTtl].
 ///
 /// ```
-/// try (var db = RocksDB.open(path)) {
+/// try (var db = RocksDB.openReadWrite(path)) {
 ///     db.put("key".getBytes(), "value".getBytes());
 ///     byte[] value = db.get("key".getBytes());
 /// }

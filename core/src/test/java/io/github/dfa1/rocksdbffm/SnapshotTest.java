@@ -16,7 +16,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_readsDoNotSeeWritesAfterSnapshot(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("key".getBytes(), "before".getBytes());
 
 			// When — take snapshot, then overwrite the key
@@ -36,7 +36,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_readsDoNotSeeDeletesAfterSnapshot(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("key".getBytes(), "value".getBytes());
 
 			// When
@@ -55,7 +55,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_sequenceNumberIsNonNegative(@TempDir Path dir) {
 		// Given / When
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			try (Snapshot snap = db.getSnapshot()) {
 
@@ -68,7 +68,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_sequenceNumberIncreasesWithWrites(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			try (Snapshot snap1 = db.getSnapshot()) {
 				db.put("k".getBytes(), "v".getBytes());
 				try (Snapshot snap2 = db.getSnapshot()) {
@@ -87,7 +87,7 @@ class SnapshotTest {
 	@Test
 	void setSnapshot_null_clearsSnapshot(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     ReadOptions ro = ReadOptions.newReadOptions()) {
 			db.put("key".getBytes(), "v1".getBytes());
 
@@ -114,7 +114,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_iteratorDoesNotSeeWritesAfterSnapshot(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -169,7 +169,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_double_close(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			final Snapshot snap = db.getSnapshot();
 			snap.close();
 			// normally this would trigger a JVM crash

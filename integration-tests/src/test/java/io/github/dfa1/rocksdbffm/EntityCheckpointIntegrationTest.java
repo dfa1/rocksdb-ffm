@@ -48,7 +48,7 @@ class EntityCheckpointIntegrationTest {
 		var dbDir = sharedDir.resolve("db");
 		cpDir = sharedDir.resolve("checkpoint");
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dbDir);
+		     var db = RocksDB.openReadWrite(opts, dbDir);
 		     var batch = WriteBatch.create()) {
 			for (int i = 0; i < ENTITY_COUNT; i++) {
 				var e = new Entity(i, "entity-" + i, Status.values()[i % Status.values().length]);
@@ -157,7 +157,7 @@ class EntityCheckpointIntegrationTest {
 		var dbDir = dir.resolve("db");
 		var isolatedCpDir = dir.resolve("checkpoint");
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.open(opts, dbDir);
+		     var db = RocksDB.openReadWrite(opts, dbDir);
 		     var batch = WriteBatch.create()) {
 			for (int i = 0; i < ENTITY_COUNT; i++) {
 				var e = new Entity(i, "entity-" + i, Status.values()[i % Status.values().length]);

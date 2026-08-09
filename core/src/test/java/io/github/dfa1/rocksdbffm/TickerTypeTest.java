@@ -38,7 +38,7 @@ class TickerTypeTest {
 				.setCreateIfMissing(true)
 				.enableStatistics()
 				.setStatisticsLevel(StatsLevel.ALL);
-		     ReadWriteDB db = RocksDB.open(options, dir)) {
+		     ReadWriteDB db = RocksDB.openReadWrite(options, dir)) {
 
 			db.put("key".getBytes(), "value".getBytes());
 			db.get("key".getBytes());
@@ -60,7 +60,7 @@ class TickerTypeTest {
 		try (Options options = Options.newOptions()
 				.setCreateIfMissing(true)
 				.enableStatistics();
-		     ReadWriteDB db = RocksDB.open(options, dir)) {
+		     ReadWriteDB db = RocksDB.openReadWrite(options, dir)) {
 
 			db.put("key".getBytes(), "value".getBytes());
 

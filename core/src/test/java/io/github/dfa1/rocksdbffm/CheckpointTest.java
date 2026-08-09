@@ -17,7 +17,7 @@ class CheckpointTest {
 	void exportTo_createsReadableSnapshot(@TempDir Path dir) {
 		// Given
 		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.open(dir.resolve("db"))) {
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -36,7 +36,7 @@ class CheckpointTest {
 	void snapshot_isIsolatedFromSubsequentWrites(@TempDir Path dir) {
 		// Given
 		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.open(dir.resolve("db"))) {
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"))) {
 			db.put("k".getBytes(), "before".getBytes());
 
 			try (var cp = Checkpoint.newCheckpoint(db)) {
@@ -63,7 +63,7 @@ class CheckpointTest {
 		var cp1Dir = dir.resolve("checkpoint-1");
 		var cp2Dir = dir.resolve("checkpoint-2");
 
-		try (var db = RocksDB.open(dir.resolve("db"));
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"));
 		     var cp = Checkpoint.newCheckpoint(db)) {
 
 			db.put("k".getBytes(), "v1".getBytes());
@@ -91,7 +91,7 @@ class CheckpointTest {
 	void snapshot_returnsNull_forKeyAbsentAtCheckpointTime(@TempDir Path dir) {
 		// Given
 		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.open(dir.resolve("db"))) {
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"))) {
 			// checkpoint taken before any write
 			try (var cp = Checkpoint.newCheckpoint(db)) {
 				cp.exportTo(cpDir);
@@ -115,7 +115,7 @@ class CheckpointTest {
 	void snapshot_preservesDeletedKey_thatWasDeletedAfterCheckpoint(@TempDir Path dir) {
 		// Given
 		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.open(dir.resolve("db"))) {
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (var cp = Checkpoint.newCheckpoint(db)) {

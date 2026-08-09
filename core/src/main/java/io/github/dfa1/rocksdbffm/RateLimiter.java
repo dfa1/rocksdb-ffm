@@ -14,7 +14,7 @@ import java.lang.invoke.MethodHandle;
 ///      var opts = Options.newOptions()
 ///          .setCreateIfMissing(true)
 ///          .setRateLimiter(limiter)) {
-///     var db = RocksDB.open(opts, path);
+///     var db = RocksDB.openReadWrite(opts, path);
 /// }
 /// ```
 ///

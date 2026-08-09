@@ -63,7 +63,7 @@ public class FfmBenchmark {
 	@Setup(Level.Trial)
 	public void setup() throws Exception {
 		dbPath = Files.createTempDirectory("bench-ffm-");
-		db = RocksDB.open(dbPath);
+		db = RocksDB.openReadWrite(dbPath);
 
 		// --- byte[] tier ---
 		writeKeyBytes = TestData.WRITE_KEY_BYTES.clone();

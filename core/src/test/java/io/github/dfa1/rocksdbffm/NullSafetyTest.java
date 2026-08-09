@@ -22,14 +22,14 @@ class NullSafetyTest {
 
 	@Test
 	void open_nullOptions(@TempDir Path dir) {
-		assertThatThrownBy(() -> RocksDB.open(null, dir))
+		assertThatThrownBy(() -> RocksDB.openReadWrite(null, dir))
 				.isInstanceOf(RuntimeException.class);
 	}
 
 	@Test
 	void open_nullPath() {
 		try (var opts = Options.newOptions()) {
-			assertThatThrownBy(() -> RocksDB.open(opts, null))
+			assertThatThrownBy(() -> RocksDB.openReadWrite(opts, null))
 					.isInstanceOf(RuntimeException.class);
 		}
 	}
@@ -54,7 +54,7 @@ class NullSafetyTest {
 
 	@Test
 	void put_nullKey(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.put(null, "v".getBytes()))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -62,7 +62,7 @@ class NullSafetyTest {
 
 	@Test
 	void put_nullValue(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.put("k".getBytes(), null))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -70,7 +70,7 @@ class NullSafetyTest {
 
 	@Test
 	void get_nullKey(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.get((byte[]) null))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -78,7 +78,7 @@ class NullSafetyTest {
 
 	@Test
 	void get_nullReadOptions(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.get((ReadOptions) null, "k".getBytes()))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -86,7 +86,7 @@ class NullSafetyTest {
 
 	@Test
 	void get_nullKeyWithReadOptions(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var ro = ReadOptions.newReadOptions()) {
 			assertThatThrownBy(() -> db.get(ro, null))
 					.isInstanceOf(RuntimeException.class);
@@ -95,7 +95,7 @@ class NullSafetyTest {
 
 	@Test
 	void delete_nullKey(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.delete((byte[]) null))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -107,7 +107,7 @@ class NullSafetyTest {
 
 	@Test
 	void put_nullKeyBuffer(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			var value = ByteBuffer.allocateDirect(4).put("v".getBytes()).flip();
 			assertThatThrownBy(() -> db.put((ByteBuffer) null, value))
 					.isInstanceOf(RuntimeException.class);
@@ -116,7 +116,7 @@ class NullSafetyTest {
 
 	@Test
 	void put_nullValueBuffer(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			var key = ByteBuffer.allocateDirect(4).put("k".getBytes()).flip();
 			assertThatThrownBy(() -> db.put(key, (ByteBuffer) null))
 					.isInstanceOf(RuntimeException.class);
@@ -125,7 +125,7 @@ class NullSafetyTest {
 
 	@Test
 	void get_nullKeyBuffer(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			var value = ByteBuffer.allocateDirect(128);
 			assertThatThrownBy(() -> db.get((ByteBuffer) null, value))
 					.isInstanceOf(RuntimeException.class);
@@ -134,7 +134,7 @@ class NullSafetyTest {
 
 	@Test
 	void get_nullValueBuffer(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = ByteBuffer.allocateDirect(4).put("k".getBytes()).flip();
 			assertThatThrownBy(() -> db.get(key, (ByteBuffer) null))
@@ -148,7 +148,7 @@ class NullSafetyTest {
 
 	@Test
 	void keyMayExist_nullByteArray(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.keyMayExist((byte[]) null))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -156,7 +156,7 @@ class NullSafetyTest {
 
 	@Test
 	void keyMayExist_nullReadOptions(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.keyMayExist((ReadOptions) null, "k".getBytes()))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -164,7 +164,7 @@ class NullSafetyTest {
 
 	@Test
 	void keyMayExist_nullKeyWithReadOptions(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var ro = ReadOptions.newReadOptions()) {
 			assertThatThrownBy(() -> db.keyMayExist(ro, null))
 					.isInstanceOf(RuntimeException.class);
@@ -173,7 +173,7 @@ class NullSafetyTest {
 
 	@Test
 	void keyMayExist_nullByteBuffer(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.keyMayExist((ByteBuffer) null))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -181,7 +181,7 @@ class NullSafetyTest {
 
 	@Test
 	void keyMayExist_nullMemorySegment(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.keyMayExist((MemorySegment) null))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -193,7 +193,7 @@ class NullSafetyTest {
 
 	@Test
 	void newIterator_nullReadOptions(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.newIterator((ReadOptions) null))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -201,7 +201,7 @@ class NullSafetyTest {
 
 	@Test
 	void flush_nullFlushOptions(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.flush(null))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -209,7 +209,7 @@ class NullSafetyTest {
 
 	@Test
 	void write_nullBatch(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.write(null))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -217,7 +217,7 @@ class NullSafetyTest {
 
 	@Test
 	void getProperty_null(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.getProperty(null))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -225,7 +225,7 @@ class NullSafetyTest {
 
 	@Test
 	void getLongProperty_null(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir)) {
+		try (var db = RocksDB.openReadWrite(dir)) {
 			assertThatThrownBy(() -> db.getLongProperty(null))
 					.isInstanceOf(RuntimeException.class);
 		}
@@ -265,7 +265,7 @@ class NullSafetyTest {
 
 	@Test
 	void iterator_seek_nullByteArray(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var it = db.newIterator()) {
 			assertThatThrownBy(() -> it.seek((byte[]) null))
 					.isInstanceOf(RuntimeException.class);
@@ -274,7 +274,7 @@ class NullSafetyTest {
 
 	@Test
 	void iterator_seek_nullByteBuffer(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var it = db.newIterator()) {
 			assertThatThrownBy(() -> it.seek((ByteBuffer) null))
 					.isInstanceOf(RuntimeException.class);
@@ -283,7 +283,7 @@ class NullSafetyTest {
 
 	@Test
 	void iterator_seek_nullMemorySegment(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var it = db.newIterator()) {
 			assertThatThrownBy(() -> it.seek((MemorySegment) null))
 					.isInstanceOf(RuntimeException.class);
@@ -292,7 +292,7 @@ class NullSafetyTest {
 
 	@Test
 	void iterator_seekForPrev_nullByteArray(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var it = db.newIterator()) {
 			assertThatThrownBy(() -> it.seekForPrev((byte[]) null))
 					.isInstanceOf(RuntimeException.class);
@@ -301,7 +301,7 @@ class NullSafetyTest {
 
 	@Test
 	void iterator_seekForPrev_nullByteBuffer(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var it = db.newIterator()) {
 			assertThatThrownBy(() -> it.seekForPrev((ByteBuffer) null))
 					.isInstanceOf(RuntimeException.class);
@@ -310,7 +310,7 @@ class NullSafetyTest {
 
 	@Test
 	void iterator_seekForPrev_nullMemorySegment(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var it = db.newIterator()) {
 			assertThatThrownBy(() -> it.seekForPrev((MemorySegment) null))
 					.isInstanceOf(RuntimeException.class);
@@ -323,7 +323,7 @@ class NullSafetyTest {
 
 	@Test
 	void iterator_key_nullBuffer(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var it = db.newIterator()) {
 			db.put("k".getBytes(), "v".getBytes());
 			it.seekToFirst();
@@ -334,7 +334,7 @@ class NullSafetyTest {
 
 	@Test
 	void iterator_value_nullBuffer(@TempDir Path dir) {
-		try (var db = RocksDB.open(dir);
+		try (var db = RocksDB.openReadWrite(dir);
 		     var it = db.newIterator()) {
 			db.put("k".getBytes(), "v".getBytes());
 			it.seekToFirst();
