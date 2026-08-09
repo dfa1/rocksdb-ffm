@@ -254,7 +254,7 @@ class NullSafetyTest {
 	@Test
 	void writeBatch_delete_nullKey() {
 		try (var batch = WriteBatch.create()) {
-			assertThatThrownBy(() -> batch.delete(null))
+			assertThatThrownBy(() -> batch.delete((byte[]) null))
 					.isInstanceOf(RuntimeException.class);
 		}
 	}
