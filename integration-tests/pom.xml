@@ -18,10 +18,16 @@
 	</properties>
 
 	<dependencies>
+		<!-- compile (not test) scope: this module has no main sources of its own — its
+		     "compile" classpath is otherwise unused — but jacoco:report-aggregate only pulls
+		     a reactor dependency's classes/sources into the coverage report for
+		     compile/runtime/provided scope, using test-scoped deps for their exec data alone.
+		     Without this, core's classes exercised only by these integration tests would
+		     never show up as covered. -->
 		<dependency>
 			<groupId>io.github.dfa1</groupId>
 			<artifactId>rocksdbffm-core</artifactId>
-			<scope>test</scope>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.github.dfa1</groupId>
@@ -82,7 +88,11 @@
 					<includes>
 						<include>**/*IntegrationTest.java</include>
 					</includes>
-					<argLine>--enable-native-access=ALL-UNNAMED</argLine>
+					<!-- @{argLine} expands to the JaCoCo agent arguments set by
+					     jacoco:prepare-agent-integration (default propertyName is "argLine", same
+					     as prepare-agent's — not a separate "failsafeArgLine") when the coverage
+					     profile is active; empty otherwise (default from the root pom). -->
+					<argLine>@{argLine} --enable-native-access=ALL-UNNAMED</argLine>
 				</configuration>
 				<executions>
 					<execution>
@@ -96,4 +106,39 @@
 		</plugins>
 	</build>
 
+	<profiles>
+		<profile>
+			<!-- Overrides (not merges with) the root coverage profile: this module has no
+			     unit tests, only failsafe-driven integration tests, so it needs
+			     prepare-agent-integration + report-aggregate instead of prepare-agent + report.
+			     report-aggregate pulls in core's classes/sources (declared as a reactor
+			     dependency above) plus both core's own jacoco.exec and this module's
+			     jacoco-it.exec, crediting core's classes with what integration tests exercise
+			     that unit tests don't. -->
+			<id>coverage</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>prepare-agent-integration</id>
+								<goals>
+									<goal>prepare-agent-integration</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>report-aggregate</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>report-aggregate</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
