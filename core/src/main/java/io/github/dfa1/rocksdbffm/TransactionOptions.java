@@ -5,8 +5,9 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 
-/// FFM wrapper for `rocksdb_transaction_options_t`.
-// TODO: add more description + methods
+/// FFM wrapper for `rocksdb_transaction_options_t` — per-transaction settings passed to
+/// [TransactionDB#beginTransaction]. Database-wide settings (lock manager sizing, write
+/// policy) live on [TransactionDBOptions] instead.
 public final class TransactionOptions extends NativeObject {
 
 	/// `rocksdb_transaction_options_t* rocksdb_transaction_options_create(void);`
@@ -15,10 +16,64 @@ public final class TransactionOptions extends NativeObject {
 	private static final MethodHandle MH_DESTROY;
 	/// `void rocksdb_transaction_options_set_set_snapshot(rocksdb_transaction_options_t* opt, unsigned char v);`
 	private static final MethodHandle MH_SET_SET_SNAPSHOT;
+	/// `unsigned char rocksdb_transaction_options_get_set_snapshot(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_SET_SNAPSHOT;
 	/// `void rocksdb_transaction_options_set_deadlock_detect(rocksdb_transaction_options_t* opt, unsigned char v);`
 	private static final MethodHandle MH_SET_DEADLOCK_DETECT;
-	/// `void rocksdb_transaction_options_set_lock_timeout(rocksdb_transaction_options_t* opt, int64_t lock_timeout);`
+	/// `unsigned char rocksdb_transaction_options_get_deadlock_detect(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_DEADLOCK_DETECT;
+	/// `void rocksdb_transaction_options_set_use_only_the_last_commit_time_batch_for_recovery(rocksdb_transaction_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY;
+	/// `unsigned char rocksdb_transaction_options_get_use_only_the_last_commit_time_batch_for_recovery(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY;
+	/// `void rocksdb_transaction_options_set_lock_timeout(rocksdb_transaction_options_t* opt, int64_t v);`
 	private static final MethodHandle MH_SET_LOCK_TIMEOUT;
+	/// `int64_t rocksdb_transaction_options_get_lock_timeout(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_LOCK_TIMEOUT;
+	/// `void rocksdb_transaction_options_set_deadlock_timeout_us(rocksdb_transaction_options_t* opt, int64_t v);`
+	private static final MethodHandle MH_SET_DEADLOCK_TIMEOUT_US;
+	/// `int64_t rocksdb_transaction_options_get_deadlock_timeout_us(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_DEADLOCK_TIMEOUT_US;
+	/// `void rocksdb_transaction_options_set_expiration(rocksdb_transaction_options_t* opt, int64_t v);`
+	private static final MethodHandle MH_SET_EXPIRATION;
+	/// `int64_t rocksdb_transaction_options_get_expiration(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_EXPIRATION;
+	/// `void rocksdb_transaction_options_set_deadlock_detect_depth(rocksdb_transaction_options_t* opt, int64_t v);`
+	private static final MethodHandle MH_SET_DEADLOCK_DETECT_DEPTH;
+	/// `int64_t rocksdb_transaction_options_get_deadlock_detect_depth(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_DEADLOCK_DETECT_DEPTH;
+	/// `void rocksdb_transaction_options_set_max_write_batch_size(rocksdb_transaction_options_t* opt, size_t v);`
+	private static final MethodHandle MH_SET_MAX_WRITE_BATCH_SIZE;
+	/// `size_t rocksdb_transaction_options_get_max_write_batch_size(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_MAX_WRITE_BATCH_SIZE;
+	/// `void rocksdb_transaction_options_set_skip_concurrency_control(rocksdb_transaction_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_SKIP_CONCURRENCY_CONTROL;
+	/// `unsigned char rocksdb_transaction_options_get_skip_concurrency_control(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_SKIP_CONCURRENCY_CONTROL;
+	/// `void rocksdb_transaction_options_set_skip_prepare(rocksdb_transaction_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_SKIP_PREPARE;
+	/// `unsigned char rocksdb_transaction_options_get_skip_prepare(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_SKIP_PREPARE;
+	/// `void rocksdb_transaction_options_set_write_batch_flush_threshold(rocksdb_transaction_options_t* opt, int64_t v);`
+	private static final MethodHandle MH_SET_WRITE_BATCH_FLUSH_THRESHOLD;
+	/// `int64_t rocksdb_transaction_options_get_write_batch_flush_threshold(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_WRITE_BATCH_FLUSH_THRESHOLD;
+	/// `void rocksdb_transaction_options_set_write_batch_track_timestamp_size(rocksdb_transaction_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE;
+	/// `unsigned char rocksdb_transaction_options_get_write_batch_track_timestamp_size(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE;
+	/// `void rocksdb_transaction_options_set_commit_bypass_memtable(rocksdb_transaction_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_COMMIT_BYPASS_MEMTABLE;
+	/// `unsigned char rocksdb_transaction_options_get_commit_bypass_memtable(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_COMMIT_BYPASS_MEMTABLE;
+	/// `void rocksdb_transaction_options_set_large_txn_commit_optimize_threshold(rocksdb_transaction_options_t* opt, uint32_t v);`
+	private static final MethodHandle MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD;
+	/// `uint32_t rocksdb_transaction_options_get_large_txn_commit_optimize_threshold(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD;
+	/// `void rocksdb_transaction_options_set_large_txn_commit_optimize_byte_threshold(rocksdb_transaction_options_t* opt, uint64_t v);`
+	private static final MethodHandle MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD;
+	/// `uint64_t rocksdb_transaction_options_get_large_txn_commit_optimize_byte_threshold(rocksdb_transaction_options_t* opt);`
+	private static final MethodHandle MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD;
 
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_transaction_options_create",
@@ -30,11 +85,106 @@ public final class TransactionOptions extends NativeObject {
 		MH_SET_SET_SNAPSHOT = NativeLibrary.lookup("rocksdb_transaction_options_set_set_snapshot",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
+		MH_GET_SET_SNAPSHOT = NativeLibrary.lookup("rocksdb_transaction_options_get_set_snapshot",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
 		MH_SET_DEADLOCK_DETECT = NativeLibrary.lookup("rocksdb_transaction_options_set_deadlock_detect",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
+		MH_GET_DEADLOCK_DETECT = NativeLibrary.lookup("rocksdb_transaction_options_get_deadlock_detect",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY = NativeLibrary.lookup(
+				"rocksdb_transaction_options_set_use_only_the_last_commit_time_batch_for_recovery",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY = NativeLibrary.lookup(
+				"rocksdb_transaction_options_get_use_only_the_last_commit_time_batch_for_recovery",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
 		MH_SET_LOCK_TIMEOUT = NativeLibrary.lookup("rocksdb_transaction_options_set_lock_timeout",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_LOCK_TIMEOUT = NativeLibrary.lookup("rocksdb_transaction_options_get_lock_timeout",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_DEADLOCK_TIMEOUT_US = NativeLibrary.lookup("rocksdb_transaction_options_set_deadlock_timeout_us",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_DEADLOCK_TIMEOUT_US = NativeLibrary.lookup("rocksdb_transaction_options_get_deadlock_timeout_us",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_EXPIRATION = NativeLibrary.lookup("rocksdb_transaction_options_set_expiration",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_EXPIRATION = NativeLibrary.lookup("rocksdb_transaction_options_get_expiration",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_DEADLOCK_DETECT_DEPTH = NativeLibrary.lookup("rocksdb_transaction_options_set_deadlock_detect_depth",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_DEADLOCK_DETECT_DEPTH = NativeLibrary.lookup("rocksdb_transaction_options_get_deadlock_detect_depth",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_MAX_WRITE_BATCH_SIZE = NativeLibrary.lookup("rocksdb_transaction_options_set_max_write_batch_size",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_MAX_WRITE_BATCH_SIZE = NativeLibrary.lookup("rocksdb_transaction_options_get_max_write_batch_size",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_SKIP_CONCURRENCY_CONTROL = NativeLibrary.lookup(
+				"rocksdb_transaction_options_set_skip_concurrency_control",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_SKIP_CONCURRENCY_CONTROL = NativeLibrary.lookup(
+				"rocksdb_transaction_options_get_skip_concurrency_control",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_SKIP_PREPARE = NativeLibrary.lookup("rocksdb_transaction_options_set_skip_prepare",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_SKIP_PREPARE = NativeLibrary.lookup("rocksdb_transaction_options_get_skip_prepare",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_WRITE_BATCH_FLUSH_THRESHOLD = NativeLibrary.lookup(
+				"rocksdb_transaction_options_set_write_batch_flush_threshold",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_WRITE_BATCH_FLUSH_THRESHOLD = NativeLibrary.lookup(
+				"rocksdb_transaction_options_get_write_batch_flush_threshold",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE = NativeLibrary.lookup(
+				"rocksdb_transaction_options_set_write_batch_track_timestamp_size",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE = NativeLibrary.lookup(
+				"rocksdb_transaction_options_get_write_batch_track_timestamp_size",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_COMMIT_BYPASS_MEMTABLE = NativeLibrary.lookup(
+				"rocksdb_transaction_options_set_commit_bypass_memtable",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_COMMIT_BYPASS_MEMTABLE = NativeLibrary.lookup(
+				"rocksdb_transaction_options_get_commit_bypass_memtable",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD = NativeLibrary.lookup(
+				"rocksdb_transaction_options_set_large_txn_commit_optimize_threshold",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD = NativeLibrary.lookup(
+				"rocksdb_transaction_options_get_large_txn_commit_optimize_threshold",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD = NativeLibrary.lookup(
+				"rocksdb_transaction_options_set_large_txn_commit_optimize_byte_threshold",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD = NativeLibrary.lookup(
+				"rocksdb_transaction_options_get_large_txn_commit_optimize_byte_threshold",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 	}
 
 	private TransactionOptions(MemorySegment ptr) {
@@ -66,6 +216,17 @@ public final class TransactionOptions extends NativeObject {
 		return this;
 	}
 
+	/// Returns whether a snapshot is taken at the start of each transaction.
+	///
+	/// @return `true` if a snapshot is taken at transaction start
+	public boolean getSetSnapshot() {
+		try {
+			return (byte) MH_GET_SET_SNAPSHOT.invokeExact(ptr()) != 0;
+		} catch (Throwable t) {
+			throw new RocksDBException("getSetSnapshot failed", t);
+		}
+	}
+
 	/// If true, the transaction will detect deadlocks and return an error
 	/// instead of waiting. Default: false.
 	///
@@ -80,6 +241,43 @@ public final class TransactionOptions extends NativeObject {
 		return this;
 	}
 
+	/// Returns whether deadlock detection is enabled.
+	///
+	/// @return `true` if deadlock detection is enabled
+	public boolean getDeadlockDetect() {
+		try {
+			return (byte) MH_GET_DEADLOCK_DETECT.invokeExact(ptr()) != 0;
+		} catch (Throwable t) {
+			throw new RocksDBException("getDeadlockDetect failed", t);
+		}
+	}
+
+	/// If `true`, recovery replays only the most recent commit-time write batch for each key,
+	/// instead of all of them. Only meaningful with [TxnDBWritePolicy#WRITE_PREPARED] or
+	/// [TxnDBWritePolicy#WRITE_UNPREPARED]. Default: `false`.
+	///
+	/// @param value `true` to use only the last commit-time write batch during recovery
+	/// @return this instance for chaining
+	public TransactionOptions setUseOnlyTheLastCommitTimeBatchForRecovery(boolean value) {
+		try {
+			MH_SET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+		} catch (Throwable t) {
+			throw new RocksDBException("setUseOnlyTheLastCommitTimeBatchForRecovery failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether recovery uses only the last commit-time write batch per key.
+	///
+	/// @return `true` if only the last commit-time write batch is used during recovery
+	public boolean getUseOnlyTheLastCommitTimeBatchForRecovery() {
+		try {
+			return (byte) MH_GET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY.invokeExact(ptr()) != 0;
+		} catch (Throwable t) {
+			throw new RocksDBException("getUseOnlyTheLastCommitTimeBatchForRecovery failed", t);
+		}
+	}
+
 	/// Timeout (in milliseconds) to wait for a lock. `-1` means wait forever,
 	/// `0` means fail immediately if a lock is not available. Default: -1.
 	///
@@ -92,6 +290,294 @@ public final class TransactionOptions extends NativeObject {
 			throw new RocksDBException("setLockTimeout failed", t);
 		}
 		return this;
+	}
+
+	/// Returns the lock wait timeout in milliseconds.
+	///
+	/// @return lock timeout in milliseconds; `-1` means wait forever, `0` means fail immediately
+	public long getLockTimeout() {
+		try {
+			return (long) MH_GET_LOCK_TIMEOUT.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw new RocksDBException("getLockTimeout failed", t);
+		}
+	}
+
+	/// Timeout (in microseconds) for detecting deadlocks between waiting transactions. `-1`
+	/// falls back to [TransactionOptions#setLockTimeout(long)]. Default: -1.
+	///
+	/// @param deadlockTimeoutUs deadlock detection timeout in microseconds
+	/// @return this instance for chaining
+	public TransactionOptions setDeadlockTimeoutUs(long deadlockTimeoutUs) {
+		try {
+			MH_SET_DEADLOCK_TIMEOUT_US.invokeExact(ptr(), deadlockTimeoutUs);
+		} catch (Throwable t) {
+			throw new RocksDBException("setDeadlockTimeoutUs failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the deadlock detection timeout in microseconds.
+	///
+	/// @return deadlock detection timeout in microseconds
+	public long getDeadlockTimeoutUs() {
+		try {
+			return (long) MH_GET_DEADLOCK_TIMEOUT_US.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw new RocksDBException("getDeadlockTimeoutUs failed", t);
+		}
+	}
+
+	/// Number of seconds after which this transaction, if it has not been committed, is
+	/// considered expired and can be rolled back by another transaction's deadlock detection.
+	/// `-1` disables expiration. Default: -1.
+	///
+	/// @param expiration expiration in seconds; `-1` disables expiration
+	/// @return this instance for chaining
+	public TransactionOptions setExpiration(long expiration) {
+		try {
+			MH_SET_EXPIRATION.invokeExact(ptr(), expiration);
+		} catch (Throwable t) {
+			throw new RocksDBException("setExpiration failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the transaction expiration in seconds.
+	///
+	/// @return expiration in seconds; `-1` means expiration is disabled
+	public long getExpiration() {
+		try {
+			return (long) MH_GET_EXPIRATION.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw new RocksDBException("getExpiration failed", t);
+		}
+	}
+
+	/// Maximum depth of the wait-for graph traversed when detecting deadlocks. Default: 50.
+	///
+	/// @param deadlockDetectDepth max wait-for graph depth
+	/// @return this instance for chaining
+	public TransactionOptions setDeadlockDetectDepth(long deadlockDetectDepth) {
+		try {
+			MH_SET_DEADLOCK_DETECT_DEPTH.invokeExact(ptr(), deadlockDetectDepth);
+		} catch (Throwable t) {
+			throw new RocksDBException("setDeadlockDetectDepth failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the maximum wait-for graph depth traversed during deadlock detection.
+	///
+	/// @return max wait-for graph depth
+	public long getDeadlockDetectDepth() {
+		try {
+			return (long) MH_GET_DEADLOCK_DETECT_DEPTH.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw new RocksDBException("getDeadlockDetectDepth failed", t);
+		}
+	}
+
+	/// Maximum size (bytes) of the transaction's underlying write batch. `0` means no limit.
+	/// Default: 0.
+	///
+	/// @param maxWriteBatchSize max write batch size in bytes; `0` means unlimited
+	/// @return this instance for chaining
+	public TransactionOptions setMaxWriteBatchSize(long maxWriteBatchSize) {
+		try {
+			MH_SET_MAX_WRITE_BATCH_SIZE.invokeExact(ptr(), maxWriteBatchSize);
+		} catch (Throwable t) {
+			throw new RocksDBException("setMaxWriteBatchSize failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the maximum write batch size in bytes.
+	///
+	/// @return max write batch size in bytes; `0` means unlimited
+	public long getMaxWriteBatchSize() {
+		try {
+			return (long) MH_GET_MAX_WRITE_BATCH_SIZE.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw new RocksDBException("getMaxWriteBatchSize failed", t);
+		}
+	}
+
+	/// If `true`, skips two-phase locking for this transaction alone, overriding
+	/// [TransactionDBOptions#setSkipConcurrencyControl(boolean)]. Default: `false`.
+	///
+	/// @param value `true` to skip concurrency control for this transaction
+	/// @return this instance for chaining
+	public TransactionOptions setSkipConcurrencyControl(boolean value) {
+		try {
+			MH_SET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+		} catch (Throwable t) {
+			throw new RocksDBException("setSkipConcurrencyControl failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether concurrency control is skipped for this transaction.
+	///
+	/// @return `true` if concurrency control is skipped
+	public boolean getSkipConcurrencyControl() {
+		try {
+			return (byte) MH_GET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr()) != 0;
+		} catch (Throwable t) {
+			throw new RocksDBException("getSkipConcurrencyControl failed", t);
+		}
+	}
+
+	/// If `true`, skips the prepare phase of two-phase commit; the transaction commits
+	/// directly. Only meaningful with [TxnDBWritePolicy#WRITE_PREPARED] or
+	/// [TxnDBWritePolicy#WRITE_UNPREPARED]. Default: `false`.
+	///
+	/// @param value `true` to skip the prepare phase
+	/// @return this instance for chaining
+	public TransactionOptions setSkipPrepare(boolean value) {
+		try {
+			MH_SET_SKIP_PREPARE.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+		} catch (Throwable t) {
+			throw new RocksDBException("setSkipPrepare failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether the prepare phase is skipped.
+	///
+	/// @return `true` if the prepare phase is skipped
+	public boolean getSkipPrepare() {
+		try {
+			return (byte) MH_GET_SKIP_PREPARE.invokeExact(ptr()) != 0;
+		} catch (Throwable t) {
+			throw new RocksDBException("getSkipPrepare failed", t);
+		}
+	}
+
+	/// Write-batch size (bytes) at which this transaction flushes its buffered writes early,
+	/// overriding [TransactionDBOptions#setDefaultWriteBatchFlushThreshold(long)]. `0` disables
+	/// early flushing. Default: 0.
+	///
+	/// @param writeBatchFlushThreshold flush threshold in bytes; `0` disables
+	/// @return this instance for chaining
+	public TransactionOptions setWriteBatchFlushThreshold(long writeBatchFlushThreshold) {
+		try {
+			MH_SET_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr(), writeBatchFlushThreshold);
+		} catch (Throwable t) {
+			throw new RocksDBException("setWriteBatchFlushThreshold failed", t);
+		}
+		return this;
+	}
+
+	/// Returns this transaction's write-batch flush threshold in bytes.
+	///
+	/// @return flush threshold in bytes; `0` means disabled
+	public long getWriteBatchFlushThreshold() {
+		try {
+			return (long) MH_GET_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw new RocksDBException("getWriteBatchFlushThreshold failed", t);
+		}
+	}
+
+	/// If `true`, the transaction's write batch tracks the user-defined timestamp size of each
+	/// column family it touches. Default: `false`.
+	///
+	/// @param value `true` to track per-column-family timestamp size
+	/// @return this instance for chaining
+	public TransactionOptions setWriteBatchTrackTimestampSize(boolean value) {
+		try {
+			MH_SET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+		} catch (Throwable t) {
+			throw new RocksDBException("setWriteBatchTrackTimestampSize failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether the write batch tracks per-column-family timestamp size.
+	///
+	/// @return `true` if timestamp size tracking is enabled
+	public boolean getWriteBatchTrackTimestampSize() {
+		try {
+			return (byte) MH_GET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE.invokeExact(ptr()) != 0;
+		} catch (Throwable t) {
+			throw new RocksDBException("getWriteBatchTrackTimestampSize failed", t);
+		}
+	}
+
+	/// If `true`, this transaction's commit bypasses the memtable and writes directly to L0,
+	/// overriding [TransactionDBOptions#setTxnCommitBypassMemtableThreshold(int)]. Default: `false`.
+	///
+	/// @param value `true` to bypass the memtable on commit
+	/// @return this instance for chaining
+	public TransactionOptions setCommitBypassMemtable(boolean value) {
+		try {
+			MH_SET_COMMIT_BYPASS_MEMTABLE.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+		} catch (Throwable t) {
+			throw new RocksDBException("setCommitBypassMemtable failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether commit bypasses the memtable for this transaction.
+	///
+	/// @return `true` if commit bypasses the memtable
+	public boolean getCommitBypassMemtable() {
+		try {
+			return (byte) MH_GET_COMMIT_BYPASS_MEMTABLE.invokeExact(ptr()) != 0;
+		} catch (Throwable t) {
+			throw new RocksDBException("getCommitBypassMemtable failed", t);
+		}
+	}
+
+	/// Number of keys above which this transaction is treated as "large" for commit
+	/// optimization purposes. `0` disables the optimization. Default: 0.
+	///
+	/// @param largeTxnCommitOptimizeThreshold key-count threshold; `0` disables the optimization
+	/// @return this instance for chaining
+	public TransactionOptions setLargeTxnCommitOptimizeThreshold(int largeTxnCommitOptimizeThreshold) {
+		try {
+			MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD.invokeExact(ptr(), largeTxnCommitOptimizeThreshold);
+		} catch (Throwable t) {
+			throw new RocksDBException("setLargeTxnCommitOptimizeThreshold failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the key-count threshold above which this transaction is treated as "large".
+	///
+	/// @return key-count threshold; `0` means the optimization is disabled
+	public int getLargeTxnCommitOptimizeThreshold() {
+		try {
+			return (int) MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw new RocksDBException("getLargeTxnCommitOptimizeThreshold failed", t);
+		}
+	}
+
+	/// Total byte size above which this transaction is treated as "large" for commit
+	/// optimization purposes. `0` disables the optimization. Default: 0.
+	///
+	/// @param largeTxnCommitOptimizeByteThreshold byte-size threshold; `0` disables the optimization
+	/// @return this instance for chaining
+	public TransactionOptions setLargeTxnCommitOptimizeByteThreshold(long largeTxnCommitOptimizeByteThreshold) {
+		try {
+			MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD.invokeExact(ptr(), largeTxnCommitOptimizeByteThreshold);
+		} catch (Throwable t) {
+			throw new RocksDBException("setLargeTxnCommitOptimizeByteThreshold failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the byte-size threshold above which this transaction is treated as "large".
+	///
+	/// @return byte-size threshold; `0` means the optimization is disabled
+	public long getLargeTxnCommitOptimizeByteThreshold() {
+		try {
+			return (long) MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw new RocksDBException("getLargeTxnCommitOptimizeByteThreshold failed", t);
+		}
 	}
 
 	@Override
