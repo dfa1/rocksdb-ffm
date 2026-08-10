@@ -59,13 +59,6 @@ public final class ColumnFamilyDescriptor {
 		return name;
 	}
 
-	/// Returns the name as a UTF-8 string.
-	///
-	/// @return column family name decoded as UTF-8
-	public String nameAsString() {
-		return new String(name, StandardCharsets.UTF_8);
-	}
-
 	/// Returns the per-family options, or `null` if none were specified.
 	Options options() {
 		return options;
