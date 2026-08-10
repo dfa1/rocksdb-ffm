@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -93,37 +94,9 @@ class BackupIdTest {
 	}
 
 	@Test
-	void equals_isByValue() {
+	void equalsAndHashCode_satisfyContract() {
 		// Given / When / Then
-		assertThat(BackupId.of(10)).isEqualTo(BackupId.of(10));
-		assertThat(BackupId.of(10)).isNotEqualTo(BackupId.of(11));
-	}
-
-	@Test
-	void equals_returnsFalseForNonBackupId() {
-		// Given
-		var sut = BackupId.of(1);
-
-		// When
-		var result = sut.equals("not a backup id");
-
-		// Then
-		assertThat(result).isFalse();
-	}
-
-	@Test
-	void hashCode_isConsistentWithEquals() {
-		// Given
-		var a = BackupId.of(99);
-		var b = BackupId.of(99);
-
-		// When
-		var hashA = a.hashCode();
-		var hashB = b.hashCode();
-
-		// Then
-		assertThat(a).isEqualTo(b);
-		assertThat(hashA).isEqualTo(hashB);
+		EqualsVerifier.forClass(BackupId.class).verify();
 	}
 
 	@Test

@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,18 +73,9 @@ class MemorySizeTest {
 	}
 
 	@Test
-	void hashCode_isConsistentWithEquals() {
-		// Given
-		var a = MemorySize.ofMB(1);
-		var b = MemorySize.ofKB(1024);
-
-		// When
-		var hashCodeA = a.hashCode();
-		var hashCodeB = b.hashCode();
-
-		// Then
-		assertThat(a).isEqualTo(b);
-		assertThat(hashCodeA).isEqualTo(hashCodeB);
+	void equalsAndHashCode_satisfyContract() {
+		// Given / When / Then
+		EqualsVerifier.forClass(MemorySize.class).verify();
 	}
 
 	@Test

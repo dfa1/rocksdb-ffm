@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -134,37 +135,9 @@ class SequenceNumberTest {
 	}
 
 	@Test
-	void equals_isByValueExact() {
+	void equalsAndHashCode_satisfyContract() {
 		// Given / When / Then
-		assertThat(SequenceNumber.of(10)).isEqualTo(SequenceNumber.of(10));
-		assertThat(SequenceNumber.of(10)).isNotEqualTo(SequenceNumber.of(11));
-	}
-
-	@Test
-	void equals_returnsFalseForNonSequenceNumber() {
-		// Given
-		var sut = SequenceNumber.of(1);
-
-		// When
-		var result = sut.equals("not a sequence number");
-
-		// Then
-		assertThat(result).isFalse();
-	}
-
-	@Test
-	void hashCode_isConsistentWithEquals() {
-		// Given
-		var a = SequenceNumber.of(99);
-		var b = SequenceNumber.of(99);
-
-		// When
-		var hashA = a.hashCode();
-		var hashB = b.hashCode();
-
-		// Then
-		assertThat(a).isEqualTo(b);
-		assertThat(hashA).isEqualTo(hashB);
+		EqualsVerifier.forClass(SequenceNumber.class).verify();
 	}
 
 	@Test
