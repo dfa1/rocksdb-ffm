@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
           fetch-depth: 0
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '25'
           distribution: 'zulu'
@@ -31,7 +31,7 @@ jobs:
           version: 0.15.2
 
       - name: Cache RocksDB native builds
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             native/osx-aarch64/src/main/resources/native
@@ -42,7 +42,7 @@ jobs:
           key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt') }}-ubuntu-latest-${{ runner.arch }}
 
       - name: Cache SonarCloud packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar

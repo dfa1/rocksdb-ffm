@@ -19,13 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: maven-central
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.ref }}
           submodules: recursive
 
       - name: Set up JDK 25 with Maven Central publishing
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '25'
           distribution: 'zulu'
@@ -51,7 +51,7 @@ jobs:
       # combined upload happens only after everything else finishes, so a
       # long build means a long-lived, late network call).
       - name: Cache RocksDB native builds
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             native/osx-aarch64/src/main/resources/native
