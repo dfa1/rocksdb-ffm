@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -127,6 +128,125 @@ class CheckpointTest {
 		}
 
 		// Then — snapshot still has the key
+		try (var snap = RocksDB.openReadOnly(cpDir)) {
+			assertThat(snap.get("k".getBytes())).isEqualTo("v".getBytes());
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// exportTo(Path) convenience overload (defaults to MemorySize.ZERO)
+	// -----------------------------------------------------------------------
+
+	@Test
+	void exportTo_withoutLogSize_flushesWalByDefault(@TempDir Path dir) {
+		// Given
+		var cpDir = dir.resolve("checkpoint");
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"))) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			try (var cp = Checkpoint.newCheckpoint(db)) {
+				cp.exportTo(cpDir);
+			}
+		}
+
+		// Then
+		try (var snap = RocksDB.openReadOnly(cpDir)) {
+			assertThat(snap.get("k".getBytes())).isEqualTo("v".getBytes());
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// newCheckpoint across the other DB types
+	// -----------------------------------------------------------------------
+
+	@Test
+	void newCheckpoint_fromBlobDB_createsReadableSnapshot(@TempDir Path dir) {
+		// Given
+		var cpDir = dir.resolve("checkpoint");
+		try (var db = RocksDB.openBlob(dir.resolve("db"))) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			try (var cp = Checkpoint.newCheckpoint(db)) {
+				cp.exportTo(cpDir);
+			}
+		}
+
+		// Then — read-only open can't resolve blob values, reopen read-write instead
+		try (var snap = RocksDB.openReadWrite(cpDir)) {
+			assertThat(snap.get("k".getBytes())).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void newCheckpoint_fromTtlDB_createsReadableSnapshot(@TempDir Path dir) {
+		// Given
+		var cpDir = dir.resolve("checkpoint");
+		try (var db = RocksDB.openTtl(dir.resolve("db"), Duration.ofSeconds(60))) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			try (var cp = Checkpoint.newCheckpoint(db)) {
+				cp.exportTo(cpDir);
+			}
+		}
+
+		// Then — reopen as a TTL DB too, so the trailing timestamp RocksDB stores
+		// alongside the value is stripped the same way the original write path did
+		try (var snap = RocksDB.openTtl(cpDir, Duration.ofSeconds(60))) {
+			assertThat(snap.get("k".getBytes())).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void newCheckpoint_fromReadOnlyDB_createsReadableSnapshot(@TempDir Path dir) {
+		// Given — flush before reopening read-only: a checkpoint taken from a
+		// read-only handle cannot trigger a flush of its own (no write access),
+		// so unflushed WAL data would otherwise be silently dropped from the export
+		var cpDir = dir.resolve("checkpoint");
+		try (var rw = RocksDB.openReadWrite(dir.resolve("db"));
+		     var fo = FlushOptions.newFlushOptions()) {
+			rw.put("k".getBytes(), "v".getBytes());
+			rw.flush(fo);
+		}
+
+		try (var ro = RocksDB.openReadOnly(dir.resolve("db"))) {
+			// When
+			try (var cp = Checkpoint.newCheckpoint(ro)) {
+				cp.exportTo(cpDir);
+			}
+		}
+
+		// Then
+		try (var snap = RocksDB.openReadOnly(cpDir)) {
+			assertThat(snap.get("k".getBytes())).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void newCheckpoint_fromSecondaryDB_createsReadableSnapshot(
+			@TempDir Path primaryDir, @TempDir Path secondaryDir, @TempDir Path cpParentDir) {
+		// Given
+		var cpDir = cpParentDir.resolve("checkpoint");
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var primary = RocksDB.openReadWrite(opts, primaryDir);
+		     var fo = FlushOptions.newFlushOptions()) {
+			primary.put("k".getBytes(), "v".getBytes());
+			primary.flush(fo);
+		}
+
+		try (var opts = Options.newOptions();
+		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir)) {
+			secondary.tryCatchUpWithPrimary();
+
+			// When
+			try (var cp = Checkpoint.newCheckpoint(secondary)) {
+				cp.exportTo(cpDir);
+			}
+		}
+
+		// Then
 		try (var snap = RocksDB.openReadOnly(cpDir)) {
 			assertThat(snap.get("k".getBytes())).isEqualTo("v".getBytes());
 		}
