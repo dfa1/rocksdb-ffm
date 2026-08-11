@@ -42,6 +42,7 @@ Each entry requires adding an opaque type, factory function(s), and option sette
 | Trace reader/writer | `rocksdb/trace_reader_writer.h` | File-based factory functions, read/write/close wrappers | Operation tracing and replay for debugging |
 | Persistent Cache | `rocksdb/persistent_cache.h` | `rocksdb_persistent_cache_t`, `rocksdb_persistent_cache_create(env, path, size, log, optimized_for_nvm)` | `NewPersistentCache()` only takes `Env*`/`Logger` (both already have `rocksdb_env_t`/`rocksdb_logger_t` shims) plus scalars — same shape as `rocksdb_rate_limiter_create()` |
 | Wide Columns | `rocksdb/wide_columns.h` | `rocksdb_put_entity()`, `rocksdb_get_entity()`, `rocksdb_pinnablewidecolumns_t` | `WideColumn` is a name/value `Slice` pair; `WideColumns` is a vector of those — expressible as parallel `char**`/`size_t*` arrays exactly like `rocksdb_multi_get()` already does |
+| Library version query | `rocksdb/version.h` | A `rocksdb_version()`-style function returning `ROCKSDB_MAJOR`/`ROCKSDB_MINOR`/`ROCKSDB_PATCH` | These are C++ preprocessor macros, not runtime-queryable through `c.h`. The official JNI binding gets this via a custom native method in its own `rocksjni.cc` that reads the macros directly — not available to a C-API-only wrapper. We currently only know the version via the pinned submodule tag (see `CLAUDE.md`); no way to ask the loaded native library at runtime |
 
 ---
 
