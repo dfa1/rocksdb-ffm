@@ -676,13 +676,7 @@ public final class RocksDB {
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(db, readOpts, k, (long) key.length, err);
 			checkError(err);
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				if (slice == null) {
-					return null;
-				}
-				MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-				MemorySegment valPtr = slice.value(valLenSeg);
-				long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-				return valPtr.reinterpret(valLen).toArray(ValueLayout.JAVA_BYTE);
+				return slice == null ? null : slice.toByteArray(arena);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
@@ -780,9 +774,10 @@ public final class RocksDB {
 	/// `destroyHandle` stay as raw [MethodHandle] parameters rather than going through a
 	/// wrapper type: `MH_PINNABLE_HANDLE_GET_VALUE`/`MH_PINNABLE_HANDLE_DESTROY` are
 	/// already mapped exactly once, right here, so there is no duplication to hide behind
-	/// a wrapper. Contrast with [#withPinnableSlice] below, for the older
-	/// `rocksdb_pinnableslice_t` API, where [PinnableSlice] exists specifically because
-	/// that mapping used to be duplicated across three classes.
+	/// a wrapper. Contrast with the older `rocksdb_pinnableslice_t` API, where
+	/// [PinnableSlice] owns both the mapping and every way a pinned value gets consumed
+	/// (copy to `byte[]`, copy into a buffer, or this same [Mapper] callback pattern),
+	/// since that mapping used to be duplicated across three classes.
 	///
 	/// The caller has already opened `arena` in its own try-with-resources (closed once
 	/// this method returns) and obtained `scratch` (its `errptr` slot) and `handle` (or
@@ -832,36 +827,6 @@ public final class RocksDB {
 				// exception already in flight from fn.map above. Same convention as
 				// NativeObject#close().
 			}
-		}
-	}
-
-	/// Shared core for the `rocksdb_pinnableslice_t`-based scoped `get(key, Mapper)`,
-	/// used by [TransactionDB] and [Transaction] — the only two wrappers whose C API has
-	/// no `_v2`/`pinnable_handle_t` equivalent (see `rocksdb/include/rocksdb/c.h`). The
-	/// caller has already opened `arena` in its own try-with-resources (closed once this
-	/// method returns) and obtained `err` (its `errptr` slot) and `pin` (or
-	/// `MemorySegment.NULL` for NotFound/error) via its own class-specific
-	/// `get_pinned`/`get_pinned_cf` downcall.
-	///
-	/// [PinnableSlice] owns the destroy step here (via its inherited
-	/// `NativeObject#close()`, which swallows a destroy failure the same way
-	/// [#withPinnedCore] does), so this method needs no `finally` of its own — the
-	/// try-with-resources on `slice` runs before this method returns, BEFORE the
-	/// caller's own try-with-resources closes `arena`, for the same reason
-	/// [#withPinnedCore] destroys its handle before `arena` closes.
-	static <R> Optional<R> withPinnableSlice(Arena arena, MemorySegment err, MemorySegment pin, Mapper<R> fn) {
-		checkError(err);
-		try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-			if (slice == null) {
-				return Optional.empty();
-			}
-			MemorySegment lenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment data = slice.value(lenSeg);
-			long len = lenSeg.get(ValueLayout.JAVA_LONG, 0);
-			MemorySegment view = data.reinterpret(len, arena, null).asReadOnly();
-			R result = fn.map(view);
-			Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
-			return Optional.of(result);
 		}
 	}
 
@@ -1610,13 +1575,7 @@ public final class RocksDB {
 					db, readOpts, cf.ptr(), toNative(arena, key), (long) key.length, err);
 			checkError(err);
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				if (slice == null) {
-					return null;
-				}
-				MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-				MemorySegment valPtr = slice.value(valLenSeg);
-				long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-				return valPtr.reinterpret(valLen).toArray(ValueLayout.JAVA_BYTE);
+				return slice == null ? null : slice.toByteArray(arena);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
