@@ -443,7 +443,10 @@ public final class TransactionDB extends NativeObject {
 			} catch (Throwable t) {
 				throw RocksDBException.wrap("get_pinned failed", t);
 			}
-			return RocksDB.withPinnableSlice(arena, err, pin, fn);
+			RocksDB.checkError(err);
+			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
+				return slice == null ? Optional.empty() : Optional.of(slice.map(arena, fn));
+			}
 		}
 	}
 
@@ -652,13 +655,7 @@ public final class TransactionDB extends NativeObject {
 					RocksDB.toNative(arena, key), (long) key.length, err);
 			RocksDB.checkError(err);
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				if (slice == null) {
-					return null;
-				}
-				MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-				MemorySegment valPtr = slice.value(valLenSeg);
-				long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-				return valPtr.reinterpret(valLen).toArray(ValueLayout.JAVA_BYTE);
+				return slice == null ? null : slice.toByteArray(arena);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
@@ -681,18 +678,7 @@ public final class TransactionDB extends NativeObject {
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				if (slice == null) {
-					return new CopyResult.NotFound();
-				}
-				MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-				MemorySegment valPtr = slice.value(valLenSeg);
-				long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-				if (valLen > value.remaining()) {
-					return new CopyResult.NotEnoughCapacity(valLen);
-				}
-				MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(valLen));
-				value.position(value.position() + (int) valLen);
-				return new CopyResult.Copied();
+				return slice == null ? new CopyResult.NotFound() : slice.copyInto(arena, value);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
@@ -714,17 +700,7 @@ public final class TransactionDB extends NativeObject {
 					ptr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				if (slice == null) {
-					return new CopyResult.NotFound();
-				}
-				MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-				MemorySegment valPtr = slice.value(valLenSeg);
-				long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-				if (valLen > value.byteSize()) {
-					return new CopyResult.NotEnoughCapacity(valLen);
-				}
-				value.copyFrom(valPtr.reinterpret(valLen));
-				return new CopyResult.Copied();
+				return slice == null ? new CopyResult.NotFound() : slice.copyInto(arena, value, value.byteSize());
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
@@ -749,7 +725,10 @@ public final class TransactionDB extends NativeObject {
 			} catch (Throwable t) {
 				throw RocksDBException.wrap("get_pinned failed", t);
 			}
-			return RocksDB.withPinnableSlice(arena, err, pin, fn);
+			RocksDB.checkError(err);
+			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
+				return slice == null ? Optional.empty() : Optional.of(slice.map(arena, fn));
+			}
 		}
 	}
 
