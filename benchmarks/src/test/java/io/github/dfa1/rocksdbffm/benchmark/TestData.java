@@ -43,7 +43,7 @@ final class TestData {
 		return randomBytes(count, BATCH_VALUE_SIZE);
 	}
 
-	private static byte[][] randomBytes(int count, int size) {
+	static byte[][] randomBytes(int count, int size) {
 		byte[][] result = new byte[count][];
 		for (int i = 0; i < count; i++) {
 			byte[] bytes = new byte[size];
