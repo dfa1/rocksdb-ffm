@@ -4,12 +4,17 @@
 # Usage:
 #   ./scripts/benchmark.sh                     # the FFM-vs-JNI comparison table
 #   ./scripts/benchmark.sh PinnedReadBenchmark # a single benchmark class
+#
+# Anything after the class name is passed straight to the JVM, e.g.
+#   ./scripts/benchmark.sh ScaleBenchmarkRunner -Djmh.forks=2
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 MAIN_CLASS="io.github.dfa1.rocksdbffm.benchmark.${1:-BenchmarkRunner}"
+shift || true
+JVM_ARGS=("$@")
 
 # One reactor invocation builds every upstream module and resolves the test-scope
 # classpath from it. Inside a single session Maven resolves sibling modules to their
@@ -30,5 +35,6 @@ CP="benchmarks/target/test-classes:benchmarks/target/classes:$DEPS"
 echo ">>> Running ${MAIN_CLASS}..."
 java --enable-native-access=ALL-UNNAMED \
     --sun-misc-unsafe-memory-access=allow \
+    ${JVM_ARGS[@]+"${JVM_ARGS[@]}"} \
     -cp "$CP" \
     "$MAIN_CLASS"
