@@ -149,12 +149,18 @@ public class FfmValueSizeBenchmark {
 		return db.get(lookupKeyMemorySegment, MemorySegment::byteSize).orElseThrow();
 	}
 
+	/// Runs this class with [GCProfiler] attached. `-Djmh.forks=<n>` overrides the `@Fork`
+	/// count above -- the default of 1 is fine for the allocation columns, which are
+	/// deterministic, but the throughput columns need several forks before small
+	/// differences between tiers mean anything.
 	static void main() throws Exception {
-		org.openjdk.jmh.runner.options.Options opt = new OptionsBuilder()
-				.addProfiler(GCProfiler.class)
-				.include(FfmValueSizeBenchmark.class.getSimpleName())
-				.build();
-
-		new org.openjdk.jmh.runner.Runner(opt).run();
+		OptionsBuilder builder = new OptionsBuilder();
+		builder.addProfiler(GCProfiler.class);
+		builder.include(FfmValueSizeBenchmark.class.getSimpleName());
+		String forks = System.getProperty("jmh.forks");
+		if (forks != null) {
+			builder.forks(Integer.parseInt(forks));
+		}
+		new org.openjdk.jmh.runner.Runner(builder.build()).run();
 	}
 }
