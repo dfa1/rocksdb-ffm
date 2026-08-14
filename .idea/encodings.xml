@@ -3,14 +3,22 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/benchmarks/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/benchmarks/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bom/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bom/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/integration-tests/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/integration-tests/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/native/linux-aarch64/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/native/linux-aarch64/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/native/linux-x86_64/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/native/linux-x86_64/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/native/osx-aarch64/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/native/osx-aarch64/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/native/windows-aarch64/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/native/windows-aarch64/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/native/windows-x86_64/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/native/windows-x86_64/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>

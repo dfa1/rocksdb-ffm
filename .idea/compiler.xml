@@ -6,10 +6,13 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="rocksdbffm-native-windows-aarch64" />
         <module name="rocksdbffm-integration-tests" />
         <module name="rocksdbffm-native-linux-x86_64" />
-        <module name="rocksdbffm-core" />
         <module name="rocksdbffm-native-osx-aarch64" />
+        <module name="rocksdbffm-native-windows-x86_64" />
+        <module name="rocksdbffm-core" />
+        <module name="rocksdbffm-native-linux-aarch64" />
       </profile>
       <profile name="Annotation profile for rocksdbffm" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -27,7 +30,7 @@
         </processorPath>
         <module name="ffm-rocksdb" />
       </profile>
-      <profile name="Annotation profile for rocksdbffm-benchmarks" enabled="true">
+      <profile name="Annotation profile for RocksDB FFM" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
