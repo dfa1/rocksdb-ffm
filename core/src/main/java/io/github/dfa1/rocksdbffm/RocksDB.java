@@ -668,7 +668,14 @@ public final class RocksDB {
 	// Package-private shared helpers — rocksdb_t* operations, mapped once
 	// -----------------------------------------------------------------------
 
-	/// byte[] get via PinnableSlice — zero-copy from block cache. Returns `null` if not found.
+	/// Single-copy byte[] get: pins the value via `rocksdb_get_pinned` and copies it out
+	/// once. Not zero-copy — the returned array is a copy by definition — but cheaper than
+	/// `rocksdb_get`, which per `c.h` returns "a malloc()ed array" the caller must free:
+	/// that path copies the value into a fresh native buffer first, so producing a byte[]
+	/// from it costs two copies plus a malloc/free round trip. Pinning skips the
+	/// intermediate buffer entirely; `destroy` just drops the pin.
+	///
+	/// Returns `null` if not found.
 	static byte[] getBytes(MemorySegment db, MemorySegment readOpts, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
@@ -1566,7 +1573,8 @@ public final class RocksDB {
 		}
 	}
 
-	/// byte[] get with explicit column family via PinnableSlice. Returns `null` if not found.
+	/// Single-copy byte[] get from `cf` via `rocksdb_get_pinned_cf`. See [#getBytes] for why
+	/// this pins rather than calling `rocksdb_get`. Returns `null` if not found.
 	static byte[] getCfBytes(MemorySegment db, MemorySegment readOpts, ColumnFamilyHandle cf,
 	                         byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {

@@ -30,6 +30,20 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
+/// Per-call overhead of the FFM binding, **not** read or write performance.
+///
+/// The database here holds two keys (`read-key` and `instant-key`), written in `setup()`
+/// and never flushed, so every `reads*` benchmark resolves from the memtable skiplist: no
+/// block cache, no bloom filter, no index block, no SST, no LSM levels. What is left after
+/// that is the downcall itself plus argument marshalling, which is exactly what these
+/// numbers are good for -- comparing FFM against JNI call for call.
+///
+/// Do not read them as read throughput. Real read performance, against a 10k/100k-key
+/// database with the LSM settled via flush + compaction, is [FfmScaleBenchmark] /
+/// [JniScaleBenchmark]; those are the numbers to quote for `get`.
+///
+/// The `ByteBuffer` read tier currently has no realistic counterpart in the scale
+/// benchmarks -- only byte[] and zero-copy are swept there.
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)

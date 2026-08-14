@@ -81,8 +81,9 @@ public final class ReadWriteDB extends NativeObject {
 	// Get
 	// -----------------------------------------------------------------------
 
-	/// Get via PinnableSlice — pins data directly from the block cache.
-	/// Returns `null` if not found.
+	/// Single-copy get: pins the value in the block cache and copies it out once into a
+	/// new array, skipping the malloc'd intermediate buffer `rocksdb_get` would allocate.
+	/// For a read with no copy at all, see [#get(MemorySegment, Mapper)].
 	///
 	/// @param key the key to look up
 	/// @return value bytes, or `null` if not found

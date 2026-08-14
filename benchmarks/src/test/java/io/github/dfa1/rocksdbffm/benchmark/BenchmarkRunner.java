@@ -15,14 +15,20 @@ import java.util.TreeMap;
 /// ./scripts/benchmark.sh
 /// ```
 ///
+/// **These are per-call overhead numbers, not read/write throughput.** [FfmBenchmark] and
+/// [JniBenchmark] both run against a 1-2 key database that is never flushed, so every get
+/// is a memtable hit. That isolates the FFM-vs-JNI crossing cost, which is what this table
+/// is for; it says nothing about how fast `get` is on a real database. For that, run
+/// [ScaleBenchmarkRunner], which sweeps 10k/100k keys with the LSM settled.
+///
 /// Tiers compared:
 ///
 ///   - byte[]       — FFM vs JNI
 ///   - ByteBuffer   — FFM vs JNI
 ///   - MemorySegment — FFM only (no JNI equivalent)
 ///   - Instant deserialize: byte[] get vs zero-copy get(key, Mapper) — FFM only (no JNI equivalent)
-///   - Blob read, size-swept: byte[] vs MemorySegment vs get(key, Mapper), 8 B..1 MB (FFM only) —
-///     [FfmBlobSizeBenchmark], printed as its own per-size table since it has no single mean
+///   - Value read, size-swept: byte[] vs MemorySegment vs get(key, Mapper), 8 B..1 MB (FFM only) —
+///     [FfmValueSizeBenchmark], printed as its own per-size table since it has no single mean
 ///     to fold into the row above (folding it in either drops five of the six sizes measured,
 ///     or silently keeps only the last one, which is what happened before this table existed)
 public class BenchmarkRunner {
@@ -33,11 +39,15 @@ public class BenchmarkRunner {
 	private static final Map<String, String> LABELS = new LinkedHashMap<>();
 
 	static {
-		LABELS.put("readsBytes", "Read  — byte[]");
-		LABELS.put("readsDirectByteBuffer", "Read  — DirectByteBuffer");
-		LABELS.put("readsMemorySegment", "Read  — MemorySegment (FFM)");
-		LABELS.put("readsInstantViaByteArray", "Read Instant — byte[] + deserialize");
-		LABELS.put("readsInstantViaPinned", "Read Instant — get(key, Mapper) (FFM)");
+		// "Get*" rather than "Read": these run against a 1-2 key, never-flushed database,
+		// so they are memtable hits measuring call overhead, not read throughput. Quoting
+		// them as read performance is the mistake the label is there to prevent -- see the
+		// class javadoc on FfmBenchmark, and ScaleBenchmarkRunner for real read numbers.
+		LABELS.put("readsBytes", "Get (memtable) — byte[]");
+		LABELS.put("readsDirectByteBuffer", "Get (memtable) — DirectByteBuffer");
+		LABELS.put("readsMemorySegment", "Get (memtable) — MemorySegment (FFM)");
+		LABELS.put("readsInstantViaByteArray", "Get Instant (memtable) — byte[] + deser");
+		LABELS.put("readsInstantViaPinned", "Get Instant (memtable) — Mapper (FFM)");
 		LABELS.put("writesBytes", "Write — byte[]");
 		LABELS.put("writesDirectByteBuffer", "Write — DirectByteBuffer");
 		LABELS.put("writesMemorySegment", "Write — MemorySegment (FFM)");
@@ -53,7 +63,7 @@ public class BenchmarkRunner {
 
 		printTable(scores);
 
-		runBlobSizeSweep();
+		runValueSizeSweep();
 	}
 
 	private static void run(Class<?> benchClass, String label, Map<String, double[]> scores, int col)
@@ -103,24 +113,24 @@ public class BenchmarkRunner {
 		System.out.printf("%-32s %,14.0f %s %s%n", label, ffm, jniStr, gainStr);
 	}
 
-	private static void runBlobSizeSweep() throws Exception {
-		System.out.printf("%n=== FFM: blob read, size sweep ===%n%n");
+	private static void runValueSizeSweep() throws Exception {
+		System.out.printf("%n=== FFM: read by value size ===%n%n");
 		Options opt = new OptionsBuilder()
-				.include(FfmBlobSizeBenchmark.class.getSimpleName())
+				.include(FfmValueSizeBenchmark.class.getSimpleName())
 				.build();
 		Collection<RunResult> results = new Runner(opt).run();
 
-		// blobValueSize -> [byte[], MemorySegment, Pinned (Mapper)]
+		// valueSize -> [byte[], MemorySegment, Pinned (Mapper)]
 		Map<Long, double[]> bySize = new TreeMap<>();
 		for (RunResult r : results) {
 			String name = r.getPrimaryResult().getLabel();
-			long size = Long.parseLong(r.getParams().getParam("blobValueSize"));
+			long size = Long.parseLong(r.getParams().getParam("valueSize"));
 			double mean = r.getPrimaryResult().getStatistics().getMean();
 			double[] row = bySize.computeIfAbsent(size, k -> new double[3]);
 			switch (name) {
-				case "readsBlobViaByteArray" -> row[0] = mean;
-				case "readsBlobViaMemorySegment" -> row[1] = mean;
-				case "readsBlobViaPinned" -> row[2] = mean;
+				case "readsValueViaByteArray" -> row[0] = mean;
+				case "readsValueViaMemorySegment" -> row[1] = mean;
+				case "readsValueViaPinned" -> row[2] = mean;
 				default -> throw new IllegalStateException("unexpected benchmark: " + name);
 			}
 		}

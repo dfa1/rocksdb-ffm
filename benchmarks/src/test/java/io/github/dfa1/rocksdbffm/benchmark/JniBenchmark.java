@@ -23,6 +23,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
+/// JNI baseline for [FfmBenchmark]: per-call overhead of `org.rocksdb`, **not** read or
+/// write performance.
+///
+/// Same caveat as [FfmBenchmark], and for the same reason -- this database holds a single
+/// key (`read-key`), written in `setup()` and never flushed, so `readsBytes` and
+/// `readsDirectByteBuffer` are memtable hits that measure the JNI crossing rather than a
+/// realistic `get`. See [JniScaleBenchmark] for read throughput against a populated,
+/// settled database.
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
