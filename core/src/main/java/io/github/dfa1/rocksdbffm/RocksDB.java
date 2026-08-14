@@ -58,8 +58,6 @@ public final class RocksDB {
 
 	/// `void rocksdb_close(rocksdb_t* db);`
 	private static final MethodHandle MH_CLOSE;
-	/// `rocksdb_pinnableslice_t* rocksdb_get_pinned(rocksdb_t* db, const rocksdb_readoptions_t* options, const char* key, size_t keylen, char** errptr);`
-	private static final MethodHandle MH_GET_PINNED;
 	/// `unsigned char rocksdb_get_into_buffer(rocksdb_t* db, const rocksdb_readoptions_t* options, const char* key, size_t keylen, char* buffer, size_t buffer_size, size_t* vallen, unsigned char* found, char** errptr);`
 	private static final MethodHandle MH_GET_INTO_BUFFER;
 	/// `rocksdb_pinnable_handle_t* rocksdb_get_pinned_v2(rocksdb_t* db, const rocksdb_readoptions_t* options, const char* key, size_t keylen, char** errptr);`
@@ -133,8 +131,6 @@ public final class RocksDB {
 	private static final MethodHandle MH_DROP_CF;
 	/// `void rocksdb_put_cf(rocksdb_t* db, const rocksdb_writeoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, const char* val, size_t vallen, char** errptr);`
 	private static final MethodHandle MH_PUT_CF;
-	/// `rocksdb_pinnableslice_t* rocksdb_get_pinned_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char** errptr);`
-	private static final MethodHandle MH_GET_PINNED_CF;
 	/// `unsigned char rocksdb_get_into_buffer_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char* buffer, size_t buffer_size, size_t* vallen, unsigned char* found, char** errptr);`
 	private static final MethodHandle MH_GET_INTO_BUFFER_CF;
 	/// `void rocksdb_delete_cf(rocksdb_t* db, const rocksdb_writeoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char** errptr);`
@@ -197,12 +193,6 @@ public final class RocksDB {
 
 		MH_CLOSE = NativeLibrary.lookup("rocksdb_close",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_GET_PINNED = NativeLibrary.lookup("rocksdb_get_pinned",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS));
 
 		MH_GET_INTO_BUFFER = NativeLibrary.lookup("rocksdb_get_into_buffer",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
@@ -366,12 +356,6 @@ public final class RocksDB {
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS));
-
-		MH_GET_PINNED_CF = NativeLibrary.lookup("rocksdb_get_pinned_cf",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS));
 
@@ -668,23 +652,32 @@ public final class RocksDB {
 	// Package-private shared helpers — rocksdb_t* operations, mapped once
 	// -----------------------------------------------------------------------
 
-	/// Single-copy byte[] get: pins the value via `rocksdb_get_pinned` and copies it out
+	/// Single-copy byte[] get: pins the value via `rocksdb_get_pinned_v2` and copies it out
 	/// once. Not zero-copy — the returned array is a copy by definition — but cheaper than
 	/// `rocksdb_get`, which per `c.h` returns "a malloc()ed array" the caller must free:
 	/// that path copies the value into a fresh native buffer first, so producing a byte[]
 	/// from it costs two copies plus a malloc/free round trip. Pinning skips the
 	/// intermediate buffer entirely; `destroy` just drops the pin.
 	///
+	/// Uses the `_v2` handle rather than the older `rocksdb_get_pinned`, per `c.h`'s note
+	/// on that family: "These functions avoid unnecessary memory allocations and copies.
+	/// Bindings should migrate to these for better performance." [Transaction] and
+	/// [TransactionDB] have no `_v2` equivalent in the C API and still go through
+	/// [PinnableSlice].
+	///
 	/// Returns `null` if not found.
 	static byte[] getBytes(MemorySegment db, MemorySegment readOpts, byte[] key) {
+		// Calls withPinnedCore rather than withPinned: this method already needs an arena to
+		// marshal `key`, and withPinned opens its own, so delegating there would pay for two
+		// Arena.ofConfined() per get instead of one.
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment k = toNative(arena, key);
-			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(db, readOpts, k, (long) key.length, err);
-			checkError(err);
-			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? null : slice.toByteArray(arena);
-			}
+			MemorySegment handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(
+					db, readOpts, k, (long) key.length, err);
+			return withPinnedCore(arena, err, handle, MH_PINNABLE_HANDLE_GET_VALUE,
+					MH_PINNABLE_HANDLE_DESTROY, value -> value.toArray(ValueLayout.JAVA_BYTE))
+					.orElse(null);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
@@ -1573,18 +1566,20 @@ public final class RocksDB {
 		}
 	}
 
-	/// Single-copy byte[] get from `cf` via `rocksdb_get_pinned_cf`. See [#getBytes] for why
-	/// this pins rather than calling `rocksdb_get`. Returns `null` if not found.
+	/// Single-copy byte[] get from `cf` via `rocksdb_get_pinned_cf_v2`. See [#getBytes] for
+	/// why this pins rather than calling `rocksdb_get`, and why it uses the `_v2` handle.
+	/// Returns `null` if not found.
 	static byte[] getCfBytes(MemorySegment db, MemorySegment readOpts, ColumnFamilyHandle cf,
 	                         byte[] key) {
+		// Single arena, same reasoning as getBytes above.
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
-					db, readOpts, cf.ptr(), toNative(arena, key), (long) key.length, err);
-			checkError(err);
-			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? null : slice.toByteArray(arena);
-			}
+			MemorySegment k = toNative(arena, key);
+			MemorySegment handle = (MemorySegment) MH_GET_PINNED_CF_V2.invokeExact(
+					db, readOpts, cf.ptr(), k, (long) key.length, err);
+			return withPinnedCore(arena, err, handle, MH_PINNABLE_HANDLE_GET_VALUE,
+					MH_PINNABLE_HANDLE_DESTROY, value -> value.toArray(ValueLayout.JAVA_BYTE))
+					.orElse(null);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
