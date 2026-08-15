@@ -302,12 +302,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @return native segment pointing to the current key
 	public MemorySegment keySegment() {
-		try {
-			MemorySegment data = (MemorySegment) MH_KEY.invokeExact(ptr(), lenSegment);
-			return data.reinterpret(lenSegment.get(ValueLayout.JAVA_LONG, 0));
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("key failed", t);
-		}
+		return readKey();
 	}
 
 	/// Returns a zero-copy view of the current value.
@@ -316,12 +311,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @return native segment pointing to the current value
 	public MemorySegment valueSegment() {
-		try {
-			MemorySegment data = (MemorySegment) MH_VALUE.invokeExact(ptr(), lenSegment);
-			return data.reinterpret(lenSegment.get(ValueLayout.JAVA_LONG, 0));
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("value failed", t);
-		}
+		return readValue();
 	}
 
 	/// Scoped zero-copy read of the current key. `fn` receives a read-only view valid
@@ -343,14 +333,7 @@ public final class RocksIterator extends NativeObject {
 	/// @return the result of `fn`
 	public <R> R key(Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment data;
-			try {
-				data = (MemorySegment) MH_KEY.invokeExact(ptr(), lenSegment);
-			} catch (Throwable t) {
-				throw RocksDBException.wrap("key failed", t);
-			}
-			long len = lenSegment.get(ValueLayout.JAVA_LONG, 0);
-			MemorySegment view = data.reinterpret(len, arena, null).asReadOnly();
+			MemorySegment view = readKey().reinterpret(arena, null).asReadOnly();
 			R result = fn.map(view);
 			Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
 			return result;
@@ -368,14 +351,7 @@ public final class RocksIterator extends NativeObject {
 	/// @return the result of `fn`
 	public <R> R value(Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment data;
-			try {
-				data = (MemorySegment) MH_VALUE.invokeExact(ptr(), lenSegment);
-			} catch (Throwable t) {
-				throw RocksDBException.wrap("value failed", t);
-			}
-			long len = lenSegment.get(ValueLayout.JAVA_LONG, 0);
-			MemorySegment view = data.reinterpret(len, arena, null).asReadOnly();
+			MemorySegment view = readValue().reinterpret(arena, null).asReadOnly();
 			R result = fn.map(view);
 			Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
 			return result;
@@ -392,18 +368,13 @@ public final class RocksIterator extends NativeObject {
 	/// @param dst destination buffer to copy the key into
 	/// @return [CopyResult.Copied] if copied, or [CopyResult.NotEnoughCapacity] if `dst` is too small
 	public CopyResult key(ByteBuffer dst) {
-		try {
-			MemorySegment data = (MemorySegment) MH_KEY.invokeExact(ptr(), lenSegment);
-			long len = lenSegment.get(ValueLayout.JAVA_LONG, 0);
-			if (len > dst.remaining()) {
-				return new CopyResult.NotEnoughCapacity(len);
-			}
-			MemorySegment.ofBuffer(dst).copyFrom(data.reinterpret(len));
-			dst.position(dst.position() + (int) len);
-			return new CopyResult.Copied();
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("key failed", t);
+		MemorySegment data = readKey();
+		if (data.byteSize() > dst.remaining()) {
+			return new CopyResult.NotEnoughCapacity(data.byteSize());
 		}
+		MemorySegment.ofBuffer(dst).copyFrom(data);
+		dst.position(dst.position() + (int) data.byteSize());
+		return new CopyResult.Copied();
 	}
 
 	/// Copies the current value into `dst`. Copies nothing when `dst`'s remaining capacity is
@@ -412,18 +383,13 @@ public final class RocksIterator extends NativeObject {
 	/// @param dst destination buffer to copy the value into
 	/// @return [CopyResult.Copied] if copied, or [CopyResult.NotEnoughCapacity] if `dst` is too small
 	public CopyResult value(ByteBuffer dst) {
-		try {
-			MemorySegment data = (MemorySegment) MH_VALUE.invokeExact(ptr(), lenSegment);
-			long len = lenSegment.get(ValueLayout.JAVA_LONG, 0);
-			if (len > dst.remaining()) {
-				return new CopyResult.NotEnoughCapacity(len);
-			}
-			MemorySegment.ofBuffer(dst).copyFrom(data.reinterpret(len));
-			dst.position(dst.position() + (int) len);
-			return new CopyResult.Copied();
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("value failed", t);
+		MemorySegment data = readValue();
+		if (data.byteSize() > dst.remaining()) {
+			return new CopyResult.NotEnoughCapacity(data.byteSize());
 		}
+		MemorySegment.ofBuffer(dst).copyFrom(data);
+		dst.position(dst.position() + (int) data.byteSize());
+		return new CopyResult.Copied();
 	}
 
 	// -----------------------------------------------------------------------
@@ -436,12 +402,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @return current key as a newly allocated byte array
 	public byte[] key() {
-		try {
-			MemorySegment data = (MemorySegment) MH_KEY.invokeExact(ptr(), lenSegment);
-			return data.reinterpret(lenSegment.get(ValueLayout.JAVA_LONG, 0)).toArray(ValueLayout.JAVA_BYTE);
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("key failed", t);
-		}
+		return readKey().toArray(ValueLayout.JAVA_BYTE);
 	}
 
 	/// Returns a copy of the current value as a byte array.
@@ -450,12 +411,35 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @return current value as a newly allocated byte array
 	public byte[] value() {
+		return readValue().toArray(ValueLayout.JAVA_BYTE);
+	}
+
+	/// Invokes `MH_KEY` and returns the current key already reinterpreted to its actual
+	/// length, so callers never read `lenSegment` themselves.
+	///
+	/// @return the current key's bytes, as a segment of exactly its length
+	private MemorySegment readKey() {
+		MemorySegment data;
 		try {
-			MemorySegment data = (MemorySegment) MH_VALUE.invokeExact(ptr(), lenSegment);
-			return data.reinterpret(lenSegment.get(ValueLayout.JAVA_LONG, 0)).toArray(ValueLayout.JAVA_BYTE);
+			data = (MemorySegment) MH_KEY.invokeExact(ptr(), lenSegment);
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("key failed", t);
+		}
+		return data.reinterpret(lenSegment.get(ValueLayout.JAVA_LONG, 0));
+	}
+
+	/// Invokes `MH_VALUE` and returns the current value already reinterpreted to its
+	/// actual length, so callers never read `lenSegment` themselves.
+	///
+	/// @return the current value's bytes, as a segment of exactly its length
+	private MemorySegment readValue() {
+		MemorySegment data;
+		try {
+			data = (MemorySegment) MH_VALUE.invokeExact(ptr(), lenSegment);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("value failed", t);
 		}
+		return data.reinterpret(lenSegment.get(ValueLayout.JAVA_LONG, 0));
 	}
 
 	// -----------------------------------------------------------------------

@@ -248,7 +248,7 @@ public final class Transaction extends NativeObject {
 			RocksDB.checkError(err);
 
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? null : slice.toByteArray(arena);
+				return slice == null ? null : slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
@@ -270,7 +270,7 @@ public final class Transaction extends NativeObject {
 					ptr(), readOptions.ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? new CopyResult.NotFound() : slice.copyInto(arena, value);
+				return slice == null ? new CopyResult.NotFound() : slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
@@ -292,7 +292,7 @@ public final class Transaction extends NativeObject {
 					ptr(), readOptions.ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? new CopyResult.NotFound() : slice.copyInto(arena, value, value.byteSize());
+				return slice == null ? new CopyResult.NotFound() : slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
@@ -324,7 +324,7 @@ public final class Transaction extends NativeObject {
 			}
 			RocksDB.checkError(err);
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? Optional.empty() : Optional.of(slice.map(arena, fn));
+				return slice == null ? Optional.empty() : Optional.of(slice.map(arena, fn, err));
 			}
 		}
 	}
@@ -545,7 +545,7 @@ public final class Transaction extends NativeObject {
 					RocksDB.toNative(arena, key), (long) key.length, err);
 			RocksDB.checkError(err);
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? null : slice.toByteArray(arena);
+				return slice == null ? null : slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
@@ -569,7 +569,7 @@ public final class Transaction extends NativeObject {
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? new CopyResult.NotFound() : slice.copyInto(arena, value);
+				return slice == null ? new CopyResult.NotFound() : slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
@@ -592,7 +592,7 @@ public final class Transaction extends NativeObject {
 					ptr(), readOptions.ptr(), cf.ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? new CopyResult.NotFound() : slice.copyInto(arena, value, value.byteSize());
+				return slice == null ? new CopyResult.NotFound() : slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
@@ -623,7 +623,7 @@ public final class Transaction extends NativeObject {
 			}
 			RocksDB.checkError(err);
 			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? Optional.empty() : Optional.of(slice.map(arena, fn));
+				return slice == null ? Optional.empty() : Optional.of(slice.map(arena, fn, err));
 			}
 		}
 	}

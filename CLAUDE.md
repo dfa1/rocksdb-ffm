@@ -205,6 +205,7 @@ instance method listed below lives on the DB type (`ReadWriteDB`, `TtlDB`, …),
 - American English everywhere (javadoc, comments, identifiers): recognize/optimize/finalize/serialize/normalize/behavior/color — never -ise/-isation/-our. Matches the JDK (Object.finalize, Serializable).
 - code is indented with tabs (enforced by checkstyle)
 - always keep the MethodHandles private static final
+    - never pass a `MethodHandle` as a method parameter, even internally: `invokeExact` on a `static final` field lets the JIT treat the target as a compile-time constant; routed through a parameter, that constant-folding is lost. Each call site must invoke its own `MH_` field directly, even if that means near-duplicate call sites instead of one shared helper
 - every `MH_` field must have a `/// \`<c prototype>\`` comment on the line immediately above it, copied verbatim from `rocksdb/include/rocksdb/c.h` (strip the `extern ROCKSDB_LIBRARY_API` prefix); no duplicate comment in the `static` block
 - don't map multiple times the same symbol from C library of rocksdb
     - try to create always a java wrapper for that (i.e. PinnableSlice)

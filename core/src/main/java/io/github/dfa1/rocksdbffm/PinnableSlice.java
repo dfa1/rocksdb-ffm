@@ -55,48 +55,47 @@ final class PinnableSlice extends NativeObject {
 
 	/// Copies this slice's value into a freshly allocated array.
 	///
-	/// @param arena arena to allocate the native length scratch slot in
+	/// @param vallenOut native `size_t*` scratch slot to receive the value's length; the
+	///                  caller's already-checked `errptr` slot can be reused here, since
+	///                  it is dead by the time a [PinnableSlice] exists
 	/// @return the value's bytes, copied into a new array
-	byte[] toByteArray(Arena arena) {
-		MemorySegment lenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-		MemorySegment data = value(lenSeg);
-		long len = lenSeg.get(ValueLayout.JAVA_LONG, 0);
-		return data.reinterpret(len).toArray(ValueLayout.JAVA_BYTE);
+	byte[] toByteArray(MemorySegment vallenOut) {
+		return value(vallenOut).toArray(ValueLayout.JAVA_BYTE);
 	}
 
 	/// Copies this slice's value into `dest`, or reports insufficient capacity without
 	/// copying anything.
 	///
-	/// @param arena       arena to allocate the native length scratch slot in
-	/// @param dest        destination segment to copy into
+	/// @param dest         destination segment to copy into
 	/// @param destCapacity `dest`'s usable capacity in bytes
+	/// @param vallenOut    native `size_t*` scratch slot to receive the value's length; the
+	///                     caller's already-checked `errptr` slot can be reused here, since
+	///                     it is dead by the time a [PinnableSlice] exists
 	/// @return [CopyResult.Copied] on success, [CopyResult.NotEnoughCapacity] if `dest` is too small
-	CopyResult copyInto(Arena arena, MemorySegment dest, long destCapacity) {
-		MemorySegment lenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-		MemorySegment data = value(lenSeg);
-		long len = lenSeg.get(ValueLayout.JAVA_LONG, 0);
-		if (len > destCapacity) {
-			return new CopyResult.NotEnoughCapacity(len);
+	CopyResult copyInto(MemorySegment dest, long destCapacity, MemorySegment vallenOut) {
+		MemorySegment data = value(vallenOut);
+		if (data.byteSize() > destCapacity) {
+			return new CopyResult.NotEnoughCapacity(data.byteSize());
 		}
-		dest.copyFrom(data.reinterpret(len));
+		dest.copyFrom(data);
 		return new CopyResult.Copied();
 	}
 
-	/// [ByteBuffer] counterpart of [#copyInto(Arena, MemorySegment, long)]; also advances
-	/// `dest`'s position by the copied length on success.
+	/// [ByteBuffer] counterpart of [#copyInto(MemorySegment, long, MemorySegment)]; also
+	/// advances `dest`'s position by the copied length on success.
 	///
-	/// @param arena arena to allocate the native length scratch slot in
-	/// @param dest  direct [ByteBuffer] to copy into
+	/// @param dest      direct [ByteBuffer] to copy into
+	/// @param vallenOut native `size_t*` scratch slot to receive the value's length; the
+	///                  caller's already-checked `errptr` slot can be reused here, since
+	///                  it is dead by the time a [PinnableSlice] exists
 	/// @return [CopyResult.Copied] on success, [CopyResult.NotEnoughCapacity] if `dest` is too small
-	CopyResult copyInto(Arena arena, ByteBuffer dest) {
-		MemorySegment lenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-		MemorySegment data = value(lenSeg);
-		long len = lenSeg.get(ValueLayout.JAVA_LONG, 0);
-		if (len > dest.remaining()) {
-			return new CopyResult.NotEnoughCapacity(len);
+	CopyResult copyInto(ByteBuffer dest, MemorySegment vallenOut) {
+		MemorySegment data = value(vallenOut);
+		if (data.byteSize() > dest.remaining()) {
+			return new CopyResult.NotEnoughCapacity(data.byteSize());
 		}
-		MemorySegment.ofBuffer(dest).copyFrom(data.reinterpret(len));
-		dest.position(dest.position() + (int) len);
+		MemorySegment.ofBuffer(dest).copyFrom(data);
+		dest.position(dest.position() + (int) data.byteSize());
 		return new CopyResult.Copied();
 	}
 
@@ -104,34 +103,37 @@ final class PinnableSlice extends NativeObject {
 	/// passed to `fn` is bound to `arena` and read-only; it must not be retained beyond
 	/// the call, per [Mapper]'s contract.
 	///
-	/// @param arena arena to allocate the native length scratch slot in and bind the view to
-	/// @param fn    callback invoked with a zero-copy view of this slice's value
-	/// @param <R>   the type produced by `fn`
+	/// @param arena     arena to bind the view to
+	/// @param fn        callback invoked with a zero-copy view of this slice's value
+	/// @param vallenOut native `size_t*` scratch slot to receive the value's length; the
+	///                  caller's already-checked `errptr` slot can be reused here, since
+	///                  it is dead by the time a [PinnableSlice] exists
+	/// @param <R>       the type produced by `fn`
 	/// @throws NullPointerException if `fn` returns `null`
 	/// @return the non-null result of `fn`
-	<R> R map(Arena arena, Mapper<R> fn) {
-		MemorySegment lenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-		MemorySegment data = value(lenSeg);
-		long len = lenSeg.get(ValueLayout.JAVA_LONG, 0);
+	<R> R map(Arena arena, Mapper<R> fn, MemorySegment vallenOut) {
 		// The `null` cleanup is deliberate: this view borrows from the slice, it does
 		// not own the memory, so closing `arena` must not attempt to free it.
-		MemorySegment view = data.reinterpret(len, arena, null).asReadOnly();
+		MemorySegment view = value(vallenOut).reinterpret(arena, null).asReadOnly();
 		R result = fn.map(view);
 		Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
 		return result;
 	}
 
-	/// Returns the raw value pointer and writes its length into `vallenOut`, a
-	/// caller-allocated `size_t*` slot.
+	/// Returns this slice's value, already sized to its actual length — `vallenOut` is
+	/// consumed internally so every caller works with a correctly bounded [MemorySegment]
+	/// instead of reading the length back out itself.
 	///
-	/// @param vallenOut native slot to receive the value's length
-	/// @return pointer to the value's bytes
+	/// @param vallenOut native `size_t*` scratch slot to receive the value's length
+	/// @return the value's bytes, as a segment of exactly its length
 	private MemorySegment value(MemorySegment vallenOut) {
+		MemorySegment data;
 		try {
-			return (MemorySegment) MH_VALUE.invokeExact(ptr(), vallenOut);
+			data = (MemorySegment) MH_VALUE.invokeExact(ptr(), vallenOut);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("pinnableslice value failed", t);
 		}
+		return data.reinterpret(vallenOut.get(ValueLayout.JAVA_LONG, 0));
 	}
 
 	@Override
