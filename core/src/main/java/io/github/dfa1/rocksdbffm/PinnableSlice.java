@@ -43,14 +43,15 @@ final class PinnableSlice extends NativeObject {
 		super(ptr);
 	}
 
-	/// Wraps `ptr`, or returns `null` if `ptr` is `MemorySegment.NULL` — the
-	/// `get_pinned`/`get_pinned_cf` downcalls return NULL for NotFound or error (the two
-	/// are distinguished only by `errptr`, which callers must check separately).
+	/// Wraps `ptr`, which must not be `MemorySegment.NULL` — the `get_pinned`/
+	/// `get_pinned_cf` downcalls return NULL for NotFound or error (the two are
+	/// distinguished only by `errptr`), so callers must check for NULL themselves before
+	/// calling this.
 	///
-	/// @param ptr the raw `rocksdb_pinnableslice_t*`, or `MemorySegment.NULL`
-	/// @return a wrapper owning `ptr`, or `null` if `ptr` is `MemorySegment.NULL`
-	static PinnableSlice wrapOrNull(MemorySegment ptr) {
-		return MemorySegment.NULL.equals(ptr) ? null : new PinnableSlice(ptr);
+	/// @param ptr the raw, non-NULL `rocksdb_pinnableslice_t*`
+	/// @return a wrapper owning `ptr`
+	static PinnableSlice wrap(MemorySegment ptr) {
+		return new PinnableSlice(ptr);
 	}
 
 	/// Copies this slice's value into a freshly allocated array.

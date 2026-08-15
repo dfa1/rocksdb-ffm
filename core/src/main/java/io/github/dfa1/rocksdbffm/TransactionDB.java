@@ -444,8 +444,11 @@ public final class TransactionDB extends NativeObject {
 				throw RocksDBException.wrap("get_pinned failed", t);
 			}
 			RocksDB.checkError(err);
-			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? Optional.empty() : Optional.of(slice.map(arena, fn, err));
+			if (MemorySegment.NULL.equals(pin)) {
+				return Optional.empty();
+			}
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return Optional.of(slice.map(arena, fn, err));
 			}
 		}
 	}
@@ -654,8 +657,11 @@ public final class TransactionDB extends NativeObject {
 					ptr(), readOptions.ptr(), cf.ptr(),
 					RocksDB.toNative(arena, key), (long) key.length, err);
 			RocksDB.checkError(err);
-			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? null : slice.toByteArray(err);
+			if (MemorySegment.NULL.equals(pin)) {
+				return null;
+			}
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
@@ -677,8 +683,11 @@ public final class TransactionDB extends NativeObject {
 					ptr(), readOpts.ptr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
-			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? new CopyResult.NotFound() : slice.copyInto(value, err);
+			if (MemorySegment.NULL.equals(pin)) {
+				return new CopyResult.NotFound();
+			}
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
@@ -699,8 +708,11 @@ public final class TransactionDB extends NativeObject {
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
 					ptr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
-			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? new CopyResult.NotFound() : slice.copyInto(value, value.byteSize(), err);
+			if (MemorySegment.NULL.equals(pin)) {
+				return new CopyResult.NotFound();
+			}
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
@@ -726,8 +738,11 @@ public final class TransactionDB extends NativeObject {
 				throw RocksDBException.wrap("get_pinned failed", t);
 			}
 			RocksDB.checkError(err);
-			try (PinnableSlice slice = PinnableSlice.wrapOrNull(pin)) {
-				return slice == null ? Optional.empty() : Optional.of(slice.map(arena, fn, err));
+			if (MemorySegment.NULL.equals(pin)) {
+				return Optional.empty();
+			}
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return Optional.of(slice.map(arena, fn, err));
 			}
 		}
 	}

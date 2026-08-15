@@ -659,8 +659,11 @@ public final class RocksDB {
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(
 					db, readOpts, k, (long) key.length, err);
 			checkError(err);
-			try (PinnableHandle ph = PinnableHandle.wrapOrNull(handle)) {
-				return ph == null ? null : ph.toByteArray(err);
+			if (MemorySegment.NULL.equals(handle)) {
+				return null;
+			}
+			try (PinnableHandle ph = PinnableHandle.wrap(handle)) {
+				return ph.toByteArray(err);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
@@ -731,8 +734,11 @@ public final class RocksDB {
 				throw RocksDBException.wrap("get_pinned failed", t);
 			}
 			checkError(err);
-			try (PinnableHandle ph = PinnableHandle.wrapOrNull(handle)) {
-				return ph == null ? Optional.empty() : Optional.of(ph.map(arena, fn, err));
+			if (MemorySegment.NULL.equals(handle)) {
+				return Optional.empty();
+			}
+			try (PinnableHandle ph = PinnableHandle.wrap(handle)) {
+				return Optional.of(ph.map(arena, fn, err));
 			}
 		}
 	}
@@ -751,8 +757,11 @@ public final class RocksDB {
 				throw RocksDBException.wrap("get_pinned failed", t);
 			}
 			checkError(err);
-			try (PinnableHandle ph = PinnableHandle.wrapOrNull(handle)) {
-				return ph == null ? Optional.empty() : Optional.of(ph.map(arena, fn, err));
+			if (MemorySegment.NULL.equals(handle)) {
+				return Optional.empty();
+			}
+			try (PinnableHandle ph = PinnableHandle.wrap(handle)) {
+				return Optional.of(ph.map(arena, fn, err));
 			}
 		}
 	}
@@ -1505,8 +1514,11 @@ public final class RocksDB {
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_CF_V2.invokeExact(
 					db, readOpts, cf.ptr(), k, (long) key.length, err);
 			checkError(err);
-			try (PinnableHandle ph = PinnableHandle.wrapOrNull(handle)) {
-				return ph == null ? null : ph.toByteArray(err);
+			if (MemorySegment.NULL.equals(handle)) {
+				return null;
+			}
+			try (PinnableHandle ph = PinnableHandle.wrap(handle)) {
+				return ph.toByteArray(err);
 			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);

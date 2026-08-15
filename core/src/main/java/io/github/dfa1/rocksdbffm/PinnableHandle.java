@@ -42,14 +42,15 @@ final class PinnableHandle extends NativeObject {
 		super(ptr);
 	}
 
-	/// Wraps `ptr`, or returns `null` if `ptr` is `MemorySegment.NULL` — the
-	/// `get_pinned_v2`/`get_pinned_cf_v2` downcalls return NULL for NotFound or error (the
-	/// two are distinguished only by `errptr`, which callers must check separately).
+	/// Wraps `ptr`, which must not be `MemorySegment.NULL` — the `get_pinned_v2`/
+	/// `get_pinned_cf_v2` downcalls return NULL for NotFound or error (the two are
+	/// distinguished only by `errptr`), so callers must check for NULL themselves before
+	/// calling this.
 	///
-	/// @param ptr the raw `rocksdb_pinnable_handle_t*`, or `MemorySegment.NULL`
-	/// @return a wrapper owning `ptr`, or `null` if `ptr` is `MemorySegment.NULL`
-	static PinnableHandle wrapOrNull(MemorySegment ptr) {
-		return MemorySegment.NULL.equals(ptr) ? null : new PinnableHandle(ptr);
+	/// @param ptr the raw, non-NULL `rocksdb_pinnable_handle_t*`
+	/// @return a wrapper owning `ptr`
+	static PinnableHandle wrap(MemorySegment ptr) {
+		return new PinnableHandle(ptr);
 	}
 
 	/// Copies this handle's value into a freshly allocated array.
