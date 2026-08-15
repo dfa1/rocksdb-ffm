@@ -39,7 +39,7 @@ jobs:
       - name: Install Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
         with:
-          version: 0.15.2
+          version: 0.16.0
 
       # Same cache ci.yml's ubuntu-latest leg populates for this exact rocksdb
       # submodule commit; a release commit only bumps pom.xml versions, so the

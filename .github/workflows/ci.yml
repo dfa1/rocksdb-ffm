@@ -32,7 +32,7 @@ jobs:
       - name: Install Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
         with:
-          version: 0.15.2
+          version: 0.16.0
 
       - name: Cache RocksDB native builds
         uses: actions/cache@v6
@@ -44,6 +44,10 @@ jobs:
             native/windows-x86_64/src/main/resources/native
             native/windows-aarch64/src/main/resources/native
           key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt') }}-${{ matrix.os }}-${{ runner.arch }}
+
+      - name: Build macOS x86_64 native library
+        if: matrix.os == 'macos-latest'
+        run: ./scripts/build-rocksdb.sh "${RUNNER_TEMP}/rocksdbffm-osx-x86_64" osx-x86_64
 
       - name: Build and test
         run: mvn --batch-mode verify
