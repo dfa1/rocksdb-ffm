@@ -22,10 +22,11 @@ import java.util.OptionalLong;
 ///
 /// | Method | Returns |
 /// |---|---|
-/// | [#open] | [ReadWriteDB] |
+/// | [#openReadWrite] | [ReadWriteDB] |
 /// | [#openReadOnly] | [ReadOnlyDB] |
 /// | [#openTtl] | [TtlDB] |
 /// | [#openSecondary] | [SecondaryDB] |
+/// | [#openBlob] | [BlobDB] |
 /// | [#openTransaction] | [TransactionDB] |
 /// | [#openOptimistic] | [OptimisticTransactionDB] |
 ///
