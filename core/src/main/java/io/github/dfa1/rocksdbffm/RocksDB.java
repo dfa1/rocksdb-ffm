@@ -2,7 +2,6 @@ package io.github.dfa1.rocksdbffm;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
@@ -12,7 +11,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
 
@@ -65,10 +63,6 @@ public final class RocksDB {
 	private static final MethodHandle MH_GET_PINNED_V2;
 	/// `rocksdb_pinnable_handle_t* rocksdb_get_pinned_cf_v2(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED_CF_V2;
-	/// `const char* rocksdb_pinnable_handle_get_value(const rocksdb_pinnable_handle_t* handle, size_t* vallen);`
-	private static final MethodHandle MH_PINNABLE_HANDLE_GET_VALUE;
-	/// `void rocksdb_pinnable_handle_destroy(rocksdb_pinnable_handle_t* handle);`
-	private static final MethodHandle MH_PINNABLE_HANDLE_DESTROY;
 	/// `void rocksdb_put(rocksdb_t* db, const rocksdb_writeoptions_t* options, const char* key, size_t keylen, const char* val, size_t vallen, char** errptr);`
 	private static final MethodHandle MH_PUT;
 	/// `void rocksdb_delete(rocksdb_t* db, const rocksdb_writeoptions_t* options, const char* key, size_t keylen, char** errptr);`
@@ -217,17 +211,6 @@ public final class RocksDB {
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS));
-
-		// get_value/destroy are pure in-memory pointer arithmetic — safe and worth
-		// marking critical(false) (no heap-array access) to skip transition overhead.
-		MH_PINNABLE_HANDLE_GET_VALUE = NativeLibrary.lookup("rocksdb_pinnable_handle_get_value",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS),
-				Linker.Option.critical(false));
-
-		MH_PINNABLE_HANDLE_DESTROY = NativeLibrary.lookup("rocksdb_pinnable_handle_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
-				Linker.Option.critical(false));
 
 		MH_PUT = NativeLibrary.lookup("rocksdb_put",
 				FunctionDescriptor.ofVoid(
@@ -668,17 +651,17 @@ public final class RocksDB {
 	///
 	/// Returns `null` if not found.
 	static byte[] getBytes(MemorySegment db, MemorySegment readOpts, byte[] key) {
-		// Calls withPinnedCore rather than withPinned: this method already needs an arena to
-		// marshal `key`, and withPinned opens its own, so delegating there would pay for two
-		// Arena.ofConfined() per get instead of one.
+		// Single arena: it already needs one to marshal `key`, and withPinned would open
+		// its own, paying for two Arena.ofConfined() per get instead of one.
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment k = toNative(arena, key);
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(
 					db, readOpts, k, (long) key.length, err);
-			return withPinnedCore(arena, err, handle, MH_PINNABLE_HANDLE_GET_VALUE,
-					MH_PINNABLE_HANDLE_DESTROY, value -> value.toArray(ValueLayout.JAVA_BYTE))
-					.orElse(null);
+			checkError(err);
+			try (PinnableHandle ph = PinnableHandle.wrapOrNull(handle)) {
+				return ph == null ? null : ph.toByteArray(err);
+			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
@@ -735,98 +718,41 @@ public final class RocksDB {
 	// withPinned — scoped zero-copy get via rocksdb_pinnable_handle_t
 	// -----------------------------------------------------------------------
 
-	/// Scoped zero-copy get via `rocksdb_get_pinned_v2`. Thin wrapper around the
-	/// handle-specific downcall; [#withPinnedCore] owns the actual lifetime logic.
+	/// Scoped zero-copy get via `rocksdb_get_pinned_v2`. [PinnableHandle] owns the pinned
+	/// value's lifetime and every way it gets consumed.
 	static <R> Optional<R> withPinned(MemorySegment db, MemorySegment readOpts,
 	                                   MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment scratch = errHolder(arena);
+			MemorySegment err = errHolder(arena);
 			MemorySegment handle;
 			try {
-				handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(db, readOpts, key, key.byteSize(), scratch);
+				handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(db, readOpts, key, key.byteSize(), err);
 			} catch (Throwable t) {
 				throw RocksDBException.wrap("get_pinned failed", t);
 			}
-			return withPinnedCore(arena, scratch, handle,
-					MH_PINNABLE_HANDLE_GET_VALUE, MH_PINNABLE_HANDLE_DESTROY, fn);
+			checkError(err);
+			try (PinnableHandle ph = PinnableHandle.wrapOrNull(handle)) {
+				return ph == null ? Optional.empty() : Optional.of(ph.map(arena, fn, err));
+			}
 		}
 	}
 
-	/// Scoped zero-copy get from `cf` via `rocksdb_get_pinned_cf_v2`. Thin wrapper
-	/// around the handle-specific downcall; [#withPinnedCore] owns the lifetime logic.
+	/// Scoped zero-copy get from `cf` via `rocksdb_get_pinned_cf_v2`. See [#withPinned]
+	/// for the lifetime contract.
 	static <R> Optional<R> withPinnedCf(MemorySegment db, MemorySegment readOpts, ColumnFamilyHandle cf,
 	                                     MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment scratch = errHolder(arena);
+			MemorySegment err = errHolder(arena);
 			MemorySegment handle;
 			try {
 				handle = (MemorySegment) MH_GET_PINNED_CF_V2.invokeExact(
-						db, readOpts, cf.ptr(), key, key.byteSize(), scratch);
+						db, readOpts, cf.ptr(), key, key.byteSize(), err);
 			} catch (Throwable t) {
 				throw RocksDBException.wrap("get_pinned failed", t);
 			}
-			return withPinnedCore(arena, scratch, handle,
-					MH_PINNABLE_HANDLE_GET_VALUE, MH_PINNABLE_HANDLE_DESTROY, fn);
-		}
-	}
-
-	/// Shared core for the `rocksdb_pinnable_handle_t`-based scoped `get(key, Mapper)` —
-	/// used only by [#withPinned]/[#withPinnedCf] above, which is why `valueHandle`/
-	/// `destroyHandle` stay as raw [MethodHandle] parameters rather than going through a
-	/// wrapper type: `MH_PINNABLE_HANDLE_GET_VALUE`/`MH_PINNABLE_HANDLE_DESTROY` are
-	/// already mapped exactly once, right here, so there is no duplication to hide behind
-	/// a wrapper. Contrast with the older `rocksdb_pinnableslice_t` API, where
-	/// [PinnableSlice] owns both the mapping and every way a pinned value gets consumed
-	/// (copy to `byte[]`, copy into a buffer, or this same [Mapper] callback pattern),
-	/// since that mapping used to be duplicated across three classes.
-	///
-	/// The caller has already opened `arena` in its own try-with-resources (closed once
-	/// this method returns) and obtained `scratch` (its `errptr` slot) and `handle` (or
-	/// `MemorySegment.NULL` for NotFound/error) via its own class-specific
-	/// `get_pinned_v2`/`get_pinned_cf_v2` downcall.
-	///
-	/// `scratch` is the same native slot the caller already used as `errptr`: once
-	/// [#checkError] passes below, that slot is dead, so `valueHandle`'s
-	/// `size_t* vallen` out-param reuses it in place instead of a second
-	/// `arena.allocate` call.
-	///
-	/// The native handle is destroyed in the `finally` block below, BEFORE the caller's
-	/// try-with-resources closes `arena` on return. That means a segment that escapes
-	/// `fn` and is read back on the calling thread, in the narrow gap between this
-	/// method returning and the caller's arena actually closing, would be a genuine
-	/// use-after-free rather than a loud failure — but no caller code runs in that gap
-	/// (it is a single native destroy call immediately followed by the caller's resource
-	/// close, with nothing in between), and cross-thread access is independently blocked
-	/// by the confined arena's thread-ownership check regardless of open/closed state.
-	/// So in practice an escaped segment still fails loudly: `IllegalStateException` once
-	/// the caller's arena closes, or `WrongThreadException` from another thread.
-	static <R> Optional<R> withPinnedCore(Arena arena, MemorySegment scratch, MemorySegment handle,
-	                                       MethodHandle valueHandle, MethodHandle destroyHandle, Mapper<R> fn) {
-		checkError(scratch);
-		if (MemorySegment.NULL.equals(handle)) {
-			return Optional.empty();
-		}
-		try {
-			MemorySegment data;
-			try {
-				data = (MemorySegment) valueHandle.invokeExact(handle, scratch);
-			} catch (Throwable t) {
-				throw RocksDBException.wrap("pinned handle get_value failed", t);
-			}
-			long len = scratch.get(ValueLayout.JAVA_LONG, 0);
-			// The `null` cleanup is deliberate: this view borrows from the handle, it
-			// does not own the memory, so closing `arena` must not attempt to free it.
-			MemorySegment view = data.reinterpret(len, arena, null).asReadOnly();
-			R result = fn.map(view);
-			Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
-			return Optional.of(result);
-		} finally {
-			try {
-				destroyHandle.invokeExact(handle);
-			} catch (Throwable t) {
-				// Swallowed deliberately: a destroy failure here must not mask an
-				// exception already in flight from fn.map above. Same convention as
-				// NativeObject#close().
+			checkError(err);
+			try (PinnableHandle ph = PinnableHandle.wrapOrNull(handle)) {
+				return ph == null ? Optional.empty() : Optional.of(ph.map(arena, fn, err));
 			}
 		}
 	}
@@ -1578,9 +1504,10 @@ public final class RocksDB {
 			MemorySegment k = toNative(arena, key);
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_CF_V2.invokeExact(
 					db, readOpts, cf.ptr(), k, (long) key.length, err);
-			return withPinnedCore(arena, err, handle, MH_PINNABLE_HANDLE_GET_VALUE,
-					MH_PINNABLE_HANDLE_DESTROY, value -> value.toArray(ValueLayout.JAVA_BYTE))
-					.orElse(null);
+			checkError(err);
+			try (PinnableHandle ph = PinnableHandle.wrapOrNull(handle)) {
+				return ph == null ? null : ph.toByteArray(err);
+			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
