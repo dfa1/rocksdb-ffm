@@ -60,7 +60,8 @@ final class PinnableHandle extends NativeObject {
 	///                  it is dead by the time a [PinnableHandle] exists
 	/// @return the value's bytes, copied into a new array
 	byte[] toByteArray(MemorySegment vallenOut) {
-		return value(vallenOut).toArray(ValueLayout.JAVA_BYTE);
+		MemorySegment data = value(vallenOut);
+		return data.reinterpret(vallenOut.get(ValueLayout.JAVA_LONG, 0)).toArray(ValueLayout.JAVA_BYTE);
 	}
 
 	/// Maps this handle's value to a result via `fn`, with no intermediate copy. The view
@@ -76,28 +77,28 @@ final class PinnableHandle extends NativeObject {
 	/// @throws NullPointerException if `fn` returns `null`
 	/// @return the non-null result of `fn`
 	<R> R map(Arena arena, Mapper<R> fn, MemorySegment vallenOut) {
+		MemorySegment data = value(vallenOut);
 		// The `null` cleanup is deliberate: this view borrows from the handle, it does
 		// not own the memory, so closing `arena` must not attempt to free it.
-		MemorySegment view = value(vallenOut).reinterpret(arena, null).asReadOnly();
+		MemorySegment view = data.reinterpret(vallenOut.get(ValueLayout.JAVA_LONG, 0), arena, null).asReadOnly();
 		R result = fn.map(view);
 		Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
 		return result;
 	}
 
-	/// Returns this handle's value, already sized to its actual length — `vallenOut` is
-	/// consumed internally so every caller works with a correctly bounded [MemorySegment]
-	/// instead of reading the length back out itself.
+	/// Invokes `rocksdb_pinnable_handle_get_value`. Returns the raw, unsized value
+	/// pointer — every caller reinterprets it to `vallenOut`'s length itself, at whichever
+	/// arity it needs (plain, or arena-bound for [#map]), rather than this method doing a
+	/// reinterpret that a caller would immediately reinterpret again.
 	///
 	/// @param vallenOut native `size_t*` scratch slot to receive the value's length
-	/// @return the value's bytes, as a segment of exactly its length
+	/// @return the raw, unsized value pointer
 	private MemorySegment value(MemorySegment vallenOut) {
-		MemorySegment data;
 		try {
-			data = (MemorySegment) MH_GET_VALUE.invokeExact(ptr(), vallenOut);
+			return (MemorySegment) MH_GET_VALUE.invokeExact(ptr(), vallenOut);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("pinnable_handle_get_value failed", t);
 		}
-		return data.reinterpret(vallenOut.get(ValueLayout.JAVA_LONG, 0));
 	}
 
 	@Override
