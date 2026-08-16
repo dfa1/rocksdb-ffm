@@ -304,6 +304,11 @@ EOF
         # build libzstd.a anyway, so the vendored recipe's own tar
         # invocation has nothing left to trip over.
         if [ "$IS_WINDOWS_HOST" = true ]; then
+            # Two attempts at fixing this already turned out not to behave
+            # the way local (macOS) testing predicted -- trace every command
+            # here explicitly rather than guess a third time from ambiguous
+            # log output.
+            set -x
             ZSTD_TARBALL="$(make -n libzstd.a | grep -o 'zstd-[0-9.]*\.tar\.gz' | head -1)"
             echo "[build-rocksdb-windows] zstd tarball: '$ZSTD_TARBALL'"
             make "$ZSTD_TARBALL"
@@ -328,6 +333,7 @@ EOF
             rm -rf "${ZSTD_REPACK_DIR:?}/$ZSTD_TOPDIR/tests"
             (cd "$ZSTD_REPACK_DIR" && tar czf "$ROCKSDB_DIR/$ZSTD_TARBALL" "$ZSTD_TOPDIR")
             rm -rf "$ZSTD_REPACK_DIR"
+            set +x
         fi
         # rocksdb/Makefile's own libzstd.a recipe already targets just the
         # static lib, but its liblz4.a recipe invokes lz4's `all`, which
@@ -354,6 +360,8 @@ EOF
         # variable always wins. AR apparently isn't reassigned there (an
         # env-var AR keeps working), but pass everything as command-line
         # variables here for a uniform, precedence-proof invocation.
+        echo "[build-rocksdb-windows] before libzstd.a/liblz4.a build:"
+        ls -la "$ROCKSDB_DIR"/zstd* "$ROCKSDB_DIR"/lz4* 2>&1 || true
         make libzstd.a liblz4.a BUILD_SHARED=no ALLOW_BUILD_PARAMETER_CHANGE=1 \
             CC="$ZSTD_LZ4_MAKE_CC" CXX="$ZSTD_LZ4_MAKE_CXX" AR="$AR_WRAPPER" \
             RANLIB="$RANLIB_WRAPPER" -j"$JOBS"
