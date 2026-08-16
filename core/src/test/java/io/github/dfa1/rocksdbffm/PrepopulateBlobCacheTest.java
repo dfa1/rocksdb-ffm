@@ -1,21 +1,22 @@
 package io.github.dfa1.rocksdbffm;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PrepopulateBlobCacheTest {
 
-	@Test
-	void fromValue_resolvesEveryDeclaredConstant() {
-		for (PrepopulateBlobCache v : PrepopulateBlobCache.values()) {
-			// Given / When
-			var result = PrepopulateBlobCache.fromValue(v.value);
+	@ParameterizedTest
+	@EnumSource(PrepopulateBlobCache.class)
+	void fromValue_roundTrips(PrepopulateBlobCache v) {
+		// Given / When
+		var result = PrepopulateBlobCache.fromValue(v.value);
 
-			// Then
-			assertThat(result).isEqualTo(v);
-		}
+		// Then
+		assertThat(result).isEqualTo(v);
 	}
 
 	@Test

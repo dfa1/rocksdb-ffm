@@ -47,11 +47,16 @@ public enum CompressionType {
 	}
 
 	static CompressionType fromValue(int value) {
-		for (CompressionType t : values()) {
-			if (t.value == value) {
-				return t;
-			}
-		}
-		throw new IllegalArgumentException("Unknown compression type value: " + value);
+		return switch (value) {
+			case 0 -> NO_COMPRESSION;
+			case 1 -> SNAPPY;
+			case 2 -> ZLIB;
+			case 3 -> BZLIB2;
+			case 4 -> LZ4;
+			case 5 -> LZ4HC;
+			case 6 -> XPRESS;
+			case 7 -> ZSTD;
+			default -> throw new IllegalArgumentException("Unknown compression type value: " + value);
+		};
 	}
 }

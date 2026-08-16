@@ -18,11 +18,10 @@ public enum PrepopulateBlobCache {
 	}
 
 	static PrepopulateBlobCache fromValue(int value) {
-		for (PrepopulateBlobCache v : values()) {
-			if (v.value == value) {
-				return v;
-			}
-		}
-		throw new IllegalArgumentException("Unknown PrepopulateBlobCache value: " + value);
+		return switch (value) {
+			case 0 -> DISABLE;
+			case 1 -> FLUSH_ONLY;
+			default -> throw new IllegalArgumentException("Unknown PrepopulateBlobCache value: " + value);
+		};
 	}
 }

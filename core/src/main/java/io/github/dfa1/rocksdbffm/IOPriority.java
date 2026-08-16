@@ -23,4 +23,15 @@ public enum IOPriority {
 	int getValue() {
 		return value;
 	}
+
+	static IOPriority fromValue(int value) {
+		return switch (value) {
+			case 0 -> LOW;
+			case 1 -> MID;
+			case 2 -> HIGH;
+			case 3 -> USER;
+			case 4 -> TOTAL;
+			default -> TOTAL;
+		};
+	}
 }

@@ -42,4 +42,21 @@ public enum IOActivity {
 	int getValue() {
 		return value;
 	}
+
+	static IOActivity fromValue(int value) {
+		return switch (value) {
+			case 0 -> FLUSH;
+			case 1 -> COMPACTION;
+			case 2 -> DB_OPEN;
+			case 3 -> GET;
+			case 4 -> MULTI_GET;
+			case 5 -> DB_ITERATOR;
+			case 6 -> VERIFY_DB_CHECKSUM;
+			case 7 -> VERIFY_FILE_CHECKSUMS;
+			case 8 -> GET_ENTITY;
+			case 9 -> MULTI_GET_ENTITY;
+			case 10 -> GET_FILE_CHECKSUMS_FROM_CURRENT_MANIFEST;
+			default -> UNKNOWN;
+		};
+	}
 }

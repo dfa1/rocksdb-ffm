@@ -345,12 +345,7 @@ public final class TransactionDBOptions extends NativeObject {
 	public WritePolicy getWritePolicy() {
 		try {
 			int value = (int) MH_GET_WRITE_POLICY.invokeExact(ptr());
-			for (WritePolicy policy : WritePolicy.values()) {
-				if (policy.getValue() == value) {
-					return policy;
-				}
-			}
-			return WritePolicy.WRITE_COMMITTED;
+			return WritePolicy.fromValue(value);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getWritePolicy failed", t);
 		}

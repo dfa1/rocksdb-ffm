@@ -296,12 +296,7 @@ public final class Options extends NativeObject {
 	public StatsLevel getStatisticsLevel() {
 		try {
 			int level = (int) MH_GET_STATISTICS_LEVEL.invokeExact(ptr());
-			for (StatsLevel l : StatsLevel.values()) {
-				if (l.getValue() == level) {
-					return l;
-				}
-			}
-			return StatsLevel.DISABLE_ALL;
+			return StatsLevel.fromValue(level);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getStatisticsLevel failed", t);
 		}

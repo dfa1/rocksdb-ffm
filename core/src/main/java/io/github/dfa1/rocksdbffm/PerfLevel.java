@@ -32,11 +32,13 @@ public enum PerfLevel {
 	}
 
 	static PerfLevel fromValue(int value) {
-		for (PerfLevel level : values()) {
-			if (level.value == value) {
-				return level;
-			}
-		}
-		throw new IllegalArgumentException("Unknown PerfLevel value: " + value);
+		return switch (value) {
+			case 0 -> UNINITIALIZED;
+			case 1 -> DISABLE;
+			case 2 -> ENABLE_COUNT;
+			case 3 -> ENABLE_TIME_EXCEPT_FOR_MUTEX;
+			case 4 -> ENABLE_TIME;
+			default -> throw new IllegalArgumentException("Unknown PerfLevel value: " + value);
+		};
 	}
 }

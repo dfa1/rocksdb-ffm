@@ -1,21 +1,22 @@
 package io.github.dfa1.rocksdbffm;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PerfLevelTest {
 
-	@Test
-	void fromValue_resolvesEveryDeclaredConstant() {
-		for (PerfLevel level : PerfLevel.values()) {
-			// Given / When
-			var result = PerfLevel.fromValue(level.value);
+	@ParameterizedTest
+	@EnumSource(PerfLevel.class)
+	void fromValue_roundTrips(PerfLevel level) {
+		// Given / When
+		var result = PerfLevel.fromValue(level.value);
 
-			// Then
-			assertThat(result).isEqualTo(level);
-		}
+		// Then
+		assertThat(result).isEqualTo(level);
 	}
 
 	@Test

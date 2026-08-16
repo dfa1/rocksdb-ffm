@@ -296,12 +296,7 @@ public final class WriteOptions extends NativeObject {
 	public IOPriority getRateLimiterPriority() {
 		try {
 			int value = (int) MH_GET_RATE_LIMITER_PRIORITY.invokeExact(ptr());
-			for (IOPriority priority : IOPriority.values()) {
-				if (priority.getValue() == value) {
-					return priority;
-				}
-			}
-			return IOPriority.TOTAL;
+			return IOPriority.fromValue(value);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getRateLimiterPriority failed", t);
 		}
@@ -327,12 +322,7 @@ public final class WriteOptions extends NativeObject {
 	public IOActivity getIoActivity() {
 		try {
 			int value = (int) MH_GET_IO_ACTIVITY.invokeExact(ptr());
-			for (IOActivity activity : IOActivity.values()) {
-				if (activity.getValue() == value) {
-					return activity;
-				}
-			}
-			return IOActivity.UNKNOWN;
+			return IOActivity.fromValue(value);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getIoActivity failed", t);
 		}

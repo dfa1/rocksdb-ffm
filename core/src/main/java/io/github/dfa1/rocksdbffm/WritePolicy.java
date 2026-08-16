@@ -22,4 +22,13 @@ public enum WritePolicy {
 	int getValue() {
 		return value;
 	}
+
+	static WritePolicy fromValue(int value) {
+		return switch (value) {
+			case 0 -> WRITE_COMMITTED;
+			case 1 -> WRITE_PREPARED;
+			case 2 -> WRITE_UNPREPARED;
+			default -> WRITE_COMMITTED;
+		};
+	}
 }

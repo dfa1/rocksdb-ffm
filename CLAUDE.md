@@ -218,3 +218,7 @@ instance method listed below lives on the DB type (`ReadWriteDB`, `TtlDB`, …),
     - this is needed to avoid double close() crashing the JVM
 - don't expose public constructors, like CompactOptions.newCompactOptions(), CompactOptions.newCompactOptions()
     - why? to be able to call super in the private constructor and to have more freedom in the static factory method
+- int-backed enums map native int → enum via a package-private `fromValue(int)` using a `switch` expression (see
+  `LogLevel`), never a `for (X x : X.values())` loop — `values()` allocates a fresh array on every call. Unmapped
+  input either falls back to a documented default constant or throws `IllegalArgumentException`, matching whatever
+  the existing enum already did — `fromValue` changes the lookup mechanism, not the fallback behavior.
