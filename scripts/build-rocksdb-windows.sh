@@ -305,10 +305,27 @@ EOF
         # invocation has nothing left to trip over.
         if [ "$IS_WINDOWS_HOST" = true ]; then
             ZSTD_TARBALL="$(make -n libzstd.a | grep -o 'zstd-[0-9.]*\.tar\.gz' | head -1)"
+            echo "[build-rocksdb-windows] zstd tarball: '$ZSTD_TARBALL'"
             make "$ZSTD_TARBALL"
             ZSTD_REPACK_DIR="$(mktemp -d)"
-            tar xzf "$ZSTD_TARBALL" -C "$ZSTD_REPACK_DIR" --exclude='*/tests/*'
+            # Extract with tar's own exit code ignored: the one symlink it
+            # can't create on Windows is the only thing that makes it
+            # nonzero -- confirmed in the first CI attempt, tar extracts
+            # every other file first (all of lib/, all that's actually
+            # needed) before reporting failure at the very end. A
+            # --exclude='*/tests/*' filter on the extract itself was tried
+            # next and produced an empty extraction instead (glob semantics
+            # apparently differ on this tar) -- extract everything, then
+            # just delete tests/ from the result; no glob matching left to
+            # get wrong.
+            tar xzf "$ZSTD_TARBALL" -C "$ZSTD_REPACK_DIR" || true
             ZSTD_TOPDIR="$(ls "$ZSTD_REPACK_DIR")"
+            echo "[build-rocksdb-windows] zstd repack: topdir='$ZSTD_TOPDIR', entries=$(ls "$ZSTD_REPACK_DIR" | wc -l)"
+            if [ -z "$ZSTD_TOPDIR" ] || [ ! -d "$ZSTD_REPACK_DIR/$ZSTD_TOPDIR/lib" ]; then
+                echo "[build-rocksdb-windows] ERROR: zstd extraction produced no usable lib/ directory" >&2
+                exit 1
+            fi
+            rm -rf "${ZSTD_REPACK_DIR:?}/$ZSTD_TOPDIR/tests"
             (cd "$ZSTD_REPACK_DIR" && tar czf "$ROCKSDB_DIR/$ZSTD_TARBALL" "$ZSTD_TOPDIR")
             rm -rf "$ZSTD_REPACK_DIR"
         fi
