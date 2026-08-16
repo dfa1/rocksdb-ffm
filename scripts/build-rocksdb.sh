@@ -109,6 +109,15 @@ echo "[build-rocksdb] Building RocksDB $CLASSIFIER$CROSS with zig cc/c++ (jobs=$
 
 export CC="zig cc -target $ZIG_TARGET"
 export CXX="zig c++ -target $ZIG_TARGET"
+# ZSTD's/LZ4's own Makefiles archive their .o files (already correctly
+# cross-compiled by $(CC) above) via the implicit $(AR) (`ar rcs ...`),
+# which without this defaults to the host's native ar/binutils. That writes
+# libzstd.a/liblz4.a in the host's own archive/symbol-table convention, not
+# the target's -- when cross-compiling to macOS from Linux, the later
+# `make shared_lib` link step (a genuinely Mach-O-aware linker) can't parse
+# that archive and fails with "unknown cpu architecture". zig ar produces
+# an archive the matching target linker understands, cross or not.
+export AR="zig ar"
 export PORTABLE=1
 # TODO: to have hermetic zig build, disable external libs for now
 export ROCKSDB_DISABLE_SNAPPY=1
