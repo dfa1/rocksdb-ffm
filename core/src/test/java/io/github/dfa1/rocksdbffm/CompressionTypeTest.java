@@ -60,11 +60,12 @@ class CompressionTypeTest {
 		}
 	}
 
-	@Test
-	void openDb_withZstdCompression_writesAndReadsBack(@TempDir Path dir) {
+	@ParameterizedTest
+	@EnumSource(value = CompressionType.class, names = {"ZSTD", "LZ4"})
+	void openDb_withHermeticCompression_writesAndReadsBack(CompressionType type, @TempDir Path dir) {
 		try (Options opts = Options.newOptions()
 				.setCreateIfMissing(true)
-				.setCompression(CompressionType.ZSTD);
+				.setCompression(type);
 		     ReadWriteDB db = RocksDB.openReadWrite(opts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
@@ -74,8 +75,10 @@ class CompressionTypeTest {
 	// A round-trip test alone can't tell a working codec from a no-op one, since
 	// get/put succeeds either way. Comparing on-disk SST size against
 	// NO_COMPRESSION for deliberately repetitive data catches that failure mode.
-	@Test
-	void openDb_withZstdCompression_actuallyCompressesOnDisk(@TempDir Path noCompressionDir, @TempDir Path zstdDir) {
+	@ParameterizedTest
+	@EnumSource(value = CompressionType.class, names = {"ZSTD", "LZ4"})
+	void openDb_withHermeticCompression_actuallyCompressesOnDisk(
+			CompressionType type, @TempDir Path noCompressionDir, @TempDir Path compressedDir) {
 		byte[] value = "a".repeat(64 * 1024).getBytes();
 
 		long uncompressedSize;
@@ -91,20 +94,20 @@ class CompressionTypeTest {
 			uncompressedSize = db.getLongProperty(Property.TOTAL_SST_FILES_SIZE).orElseThrow();
 		}
 
-		long zstdSize;
+		long compressedSize;
 		try (Options opts = Options.newOptions()
 				.setCreateIfMissing(true)
-				.setCompression(CompressionType.ZSTD);
-		     ReadWriteDB db = RocksDB.openReadWrite(opts, zstdDir);
+				.setCompression(type);
+		     ReadWriteDB db = RocksDB.openReadWrite(opts, compressedDir);
 		     FlushOptions flushOptions = FlushOptions.newFlushOptions()) {
 			for (int i = 0; i < 100; i++) {
 				db.put(("k" + i).getBytes(), value);
 			}
 			db.flush(flushOptions);
-			zstdSize = db.getLongProperty(Property.TOTAL_SST_FILES_SIZE).orElseThrow();
+			compressedSize = db.getLongProperty(Property.TOTAL_SST_FILES_SIZE).orElseThrow();
 		}
 
-		assertThat(zstdSize).isLessThan(uncompressedSize / 2);
+		assertThat(compressedSize).isLessThan(uncompressedSize / 2);
 	}
 
 	// SNAPPY is force-disabled in the bundled native library (see
