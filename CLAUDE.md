@@ -17,8 +17,10 @@ This project is heavily AI-driven. As an agent, your goal is to:
 - **Native Compiler:** `zig cc` / `zig c++` — used as a drop-in C/C++ compiler via
   `CC="zig cc" CXX="zig c++" PORTABLE=1 make shared_lib`. Zig bundles clang + libc++ for every target, enabling
   cross-compilation without a separate sysroot.
-- **Build System:** Maven Wrapper (`./mvnw`). Run `./mvnw generate-resources -Pnative-build` once to build the native lib; `./mvnw test`
-  thereafter. Use `./mvnw` (not `mvn`) to ensure the correct Maven version is used.
+- **Build System:** Maven Wrapper (`./mvnw`). `./mvnw generate-resources` (or `test`, `compile`, ...) auto-detects the
+  host OS/arch and cross-compiles RocksDB for just that one `native/*` classifier via zig cc — a plain local build no
+  longer compiles all 5 targets. Add `-Pall-natives` to build every classifier regardless of host (what CI and
+  releases use). Use `./mvnw` (not `mvn`) to ensure the correct Maven version is used.
   **NEVER run `mvn install` or `./mvnw install`** — it pollutes `~/.m2` with local artifacts. Use `compile`, `test`, or `package` instead.
 - **Testing:** JUnit 5, AssertJ.
 - **Benchmarking:** JMH (Java Microbenchmark Harness).
@@ -45,8 +47,8 @@ To ensure type safety and consistent units across the API:
 - **Read-only headers:** NEVER modify system include files (e.g. `/opt/homebrew/...`, `/usr/include/...`). They are
   read-only references; all mappings live in Java source.
 - **Library loading:** `NativeLibrary.java` loads the native library from the classpath resource
-  `/native/<os>-<arch>/librocksdb.<ext>` (bundled by the `native-build` Maven profile). There is no brew/system
-  fallback. NEVER add hardcoded system paths back.
+  `/native/<os>-<arch>/librocksdb.<ext>` (bundled by each `native/*` module's `exec-maven-plugin` execution). There is
+  no brew/system fallback. NEVER add hardcoded system paths back.
 - **Paths:** Never use raw `String` for file system paths. Always use `java.nio.file.Path` for any API surface that
   accepts paths (open, backup, checkpoint).
 - **Memory Sizes:** Never use raw `long` for byte counts (e.g., cache size, write buffer size). Always use the project's

@@ -69,6 +69,17 @@
 		     default, a plain build (no coverage profile) would pass the literal token "@{argLine}" to
 		     the JVM instead of resolving it to nothing. -->
 		<argLine />
+		<!-- Each native/* module cross-compiles RocksDB via zig cc, which works from
+		     any host for any target — so a plain local build was compiling RocksDB
+		     5 times (once per classifier) even though local dev only ever needs the
+		     host's own. Default every classifier to skipped; the host-* profiles
+		     below un-skip the one matching the machine actually running the build,
+		     and the all-natives profile (used by CI/release) un-skips every one. -->
+		<skip.native.osx-aarch64>true</skip.native.osx-aarch64>
+		<skip.native.linux-x86_64>true</skip.native.linux-x86_64>
+		<skip.native.linux-aarch64>true</skip.native.linux-aarch64>
+		<skip.native.windows-x86_64>true</skip.native.windows-x86_64>
+		<skip.native.windows-aarch64>true</skip.native.windows-aarch64>
 	</properties>
 
 	<dependencyManagement>
@@ -342,6 +353,85 @@
 					</plugin>
 				</plugins>
 			</build>
+		</profile>
+		<!-- Local-dev convenience: auto-activate the one classifier matching the
+		     host running the build, so a plain `mvn compile`/`mvn test` only
+		     cross-compiles RocksDB once instead of for all 5 targets. See the
+		     skip.native.* property defaults above. `name`/`arch` match against
+		     the os.name/os.arch system properties; `family=unix` also matches
+		     Mac OS X in Maven's own os-activation logic, so Linux uses an
+		     explicit name check instead to stay unambiguous. -->
+		<profile>
+			<id>host-osx-aarch64</id>
+			<activation>
+				<os>
+					<family>mac</family>
+					<arch>aarch64</arch>
+				</os>
+			</activation>
+			<properties>
+				<skip.native.osx-aarch64>false</skip.native.osx-aarch64>
+			</properties>
+		</profile>
+		<profile>
+			<id>host-linux-x86_64</id>
+			<activation>
+				<os>
+					<name>linux</name>
+					<arch>amd64</arch>
+				</os>
+			</activation>
+			<properties>
+				<skip.native.linux-x86_64>false</skip.native.linux-x86_64>
+			</properties>
+		</profile>
+		<profile>
+			<id>host-linux-aarch64</id>
+			<activation>
+				<os>
+					<name>linux</name>
+					<arch>aarch64</arch>
+				</os>
+			</activation>
+			<properties>
+				<skip.native.linux-aarch64>false</skip.native.linux-aarch64>
+			</properties>
+		</profile>
+		<profile>
+			<id>host-windows-x86_64</id>
+			<activation>
+				<os>
+					<family>windows</family>
+					<arch>amd64</arch>
+				</os>
+			</activation>
+			<properties>
+				<skip.native.windows-x86_64>false</skip.native.windows-x86_64>
+			</properties>
+		</profile>
+		<profile>
+			<id>host-windows-aarch64</id>
+			<activation>
+				<os>
+					<family>windows</family>
+					<arch>aarch64</arch>
+				</os>
+			</activation>
+			<properties>
+				<skip.native.windows-aarch64>false</skip.native.windows-aarch64>
+			</properties>
+		</profile>
+		<!-- CI/release: build every classifier regardless of host, e.g.
+		     `mvn verify -Pall-natives`. -->
+		<profile>
+			<id>all-natives</id>
+			<properties>
+				<skip.native.osx-aarch64>false</skip.native.osx-aarch64>
+				<skip.native.linux-x86_64>false</skip.native.linux-x86_64>
+				<skip.native.linux-aarch64>false</skip.native.linux-aarch64>
+				<skip.native.windows-x86_64>false</skip.native.windows-x86_64>
+				<skip.native.windows-aarch64>false</skip.native.windows-aarch64>
+			</properties>
 		</profile>
 	</profiles>
 </project>

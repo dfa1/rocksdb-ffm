@@ -26,6 +26,9 @@
 							<goal>exec</goal>
 						</goals>
 						<configuration>
+							<!-- See skip.native.* in the root pom.xml: skipped unless this host
+								 matches the classifier, or -Pall-natives is active. -->
+							<skip>${skip.native.windows-x86_64}</skip>
 							<!-- exec-maven-plugin cannot launch a .sh directly on native Windows
 								 (CreateProcess error=193); invoke it through bash (Git Bash on
 								 windows-latest runners) instead. -->
