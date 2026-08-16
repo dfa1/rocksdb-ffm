@@ -50,6 +50,50 @@ public final class BlockBasedTableOptions extends NativeObject {
 		}
 	}
 
+	/// SST format version, per `table.h`. Higher versions enable newer on-disk features at
+	/// the cost of read compatibility with older RocksDB releases; the information is read
+	/// from the file footer, so this only affects newly written tables. Versions 0 and 1 are
+	/// no longer supported (RocksDB errors reading such files) and are intentionally not
+	/// represented here.
+	public enum FormatVersion {
+		/// Since RocksDB 3.10. Changes how blocks compressed with LZ4/BZip2/Zlib are encoded.
+		V2(2),
+		/// Since RocksDB 5.15. Changes how keys are encoded in index blocks.
+		V3(3),
+		/// Since RocksDB 5.16. Changes how values are encoded in index blocks; reduces index
+		/// size when `indexBlockRestartInterval > 1`.
+		V4(4),
+		/// Since RocksDB 6.6.0. Full/partitioned filters use a faster, more accurate Bloom
+		/// filter implementation with a different schema.
+		V5(5),
+		/// Since RocksDB 8.6.0. Changes the file footer and checksum matching so misplaced
+		/// SST data is as likely to fail checksum verification as random corruption; also
+		/// checksum-protects the footer itself.
+		V6(6),
+		/// Since RocksDB 10.4.0. Supports custom compression algorithms via a
+		/// `CompressionManager` with a non-built-in name; changes the `TableProperties`
+		/// `compression_name` field format. Default.
+		V7(7);
+
+		final int value;
+
+		FormatVersion(int value) {
+			this.value = value;
+		}
+
+		static FormatVersion fromValue(int value) {
+			return switch (value) {
+				case 2 -> V2;
+				case 3 -> V3;
+				case 4 -> V4;
+				case 5 -> V5;
+				case 6 -> V6;
+				case 7 -> V7;
+				default -> throw new IllegalArgumentException("Unknown FormatVersion value: " + value);
+			};
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// Method handles
 	// -----------------------------------------------------------------------
@@ -72,6 +116,8 @@ public final class BlockBasedTableOptions extends NativeObject {
 	private static final MethodHandle MH_SET_INDEX_TYPE;
 	/// `void rocksdb_block_based_options_set_format_version(rocksdb_block_based_table_options_t*, int);`
 	private static final MethodHandle MH_SET_FORMAT_VERSION;
+	/// `uint32_t rocksdb_block_based_options_get_format_version(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_FORMAT_VERSION;
 	/// `void rocksdb_block_based_options_set_whole_key_filtering(rocksdb_block_based_table_options_t*, unsigned char);`
 	private static final MethodHandle MH_SET_WHOLE_KEY_FILTERING;
 	/// `void rocksdb_block_based_options_set_partition_filters(rocksdb_block_based_table_options_t* options, unsigned char partition_filters);`
@@ -105,6 +151,9 @@ public final class BlockBasedTableOptions extends NativeObject {
 
 		MH_SET_FORMAT_VERSION = NativeLibrary.lookup("rocksdb_block_based_options_set_format_version",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_FORMAT_VERSION = NativeLibrary.lookup("rocksdb_block_based_options_get_format_version",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
 		MH_SET_WHOLE_KEY_FILTERING = NativeLibrary.lookup(
 				"rocksdb_block_based_options_set_whole_key_filtering",
@@ -220,17 +269,28 @@ public final class BlockBasedTableOptions extends NativeObject {
 	}
 
 	/// Sets the SST format version. Higher versions enable newer features but
-	/// reduce backward compatibility. Default: 2.
+	/// reduce backward compatibility. Default: [FormatVersion#V7].
 	///
 	/// @param formatVersion SST format version to use
 	/// @return `this` for chaining
-	public BlockBasedTableOptions setFormatVersion(int formatVersion) {
+	public BlockBasedTableOptions setFormatVersion(FormatVersion formatVersion) {
 		try {
-			MH_SET_FORMAT_VERSION.invokeExact(ptr(), formatVersion);
+			MH_SET_FORMAT_VERSION.invokeExact(ptr(), formatVersion.value);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setFormatVersion failed", t);
 		}
 		return this;
+	}
+
+	/// Returns the configured SST format version.
+	///
+	/// @return current SST format version
+	public FormatVersion getFormatVersion() {
+		try {
+			return FormatVersion.fromValue((int) MH_GET_FORMAT_VERSION.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("getFormatVersion failed", t);
+		}
 	}
 
 	/// If true, a whole-key Bloom filter is built in addition to any prefix filter.

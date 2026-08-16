@@ -174,7 +174,8 @@ class TableOptionsTest {
 	@Test
 	void formatVersion5_allowsReadWrite(@TempDir Path dir) {
 		// Given
-		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setFormatVersion(5);
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setFormatVersion(BlockBasedTableOptions.FormatVersion.V5);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
 		     var db = RocksDB.openReadWrite(opts, dir)) {
 
@@ -185,6 +186,20 @@ class TableOptionsTest {
 
 			// Then
 			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void setFormatVersion_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setFormatVersion(BlockBasedTableOptions.FormatVersion.V5)) {
+
+			// When
+			var result = tbl.getFormatVersion();
+
+			// Then
+			assertThat(result).isEqualTo(BlockBasedTableOptions.FormatVersion.V5);
 		}
 	}
 }

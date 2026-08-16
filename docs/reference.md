@@ -180,7 +180,7 @@ Per-call options:
 | `setFilterPolicy`             | `FilterPolicy` (ownership transferred) |
 | `setCacheIndexAndFilterBlocks`| `boolean`                            |
 | `setIndexType`                | `BlockBasedTableOptions.IndexType`   |
-| `setFormatVersion`            | `int`                                |
+| `setFormatVersion`            | `BlockBasedTableOptions.FormatVersion` |
 | `setWholeKeyFiltering`        | `boolean`                            |
 | `setPartitionFilters`         | `boolean`                            |
 
