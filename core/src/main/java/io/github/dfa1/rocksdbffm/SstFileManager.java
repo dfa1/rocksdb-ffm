@@ -14,7 +14,7 @@ import java.lang.invoke.MethodHandle;
 /// try (Env env = Env.defaultEnv();
 ///      SstFileManager sfm = SstFileManager.create(env)
 ///          .setMaxAllowedSpaceUsage(MemorySize.ofGB(10))
-///          .setDeleteRateBytesPerSecond(MemorySize.ofMB(64).toBytes());
+///          .setDeleteRateBytesPerSecond(MemorySize.ofMB(64));
 ///      Options opts = Options.newOptions()
 ///          .setCreateIfMissing(true)
 ///          .setSstFileManager(sfm)) {
@@ -197,15 +197,13 @@ public final class SstFileManager extends NativeObject {
 		}
 	}
 
-	/// Returns the trash-file deletion rate in bytes per second.
+	/// Returns the trash-file deletion rate.
 	///
-	/// A value of `-1` means delete as fast as possible (no rate limit).
-	///
-	/// @return deletion rate in bytes per second, or `-1` for unlimited
-	// TODO: see setDeleteRateBytesPerSecond — same Optional<MemorySize> migration applies here
-	public long getDeleteRateBytesPerSecond() {
+	/// @return the deletion rate, [MemorySize#ZERO] for synchronous deletion, or `null` if unlimited
+	public MemorySize getDeleteRateBytesPerSecond() {
 		try {
-			return (long) MH_GET_DELETE_RATE_BYTES_PER_SECOND.invokeExact(ptr());
+			long rate = (long) MH_GET_DELETE_RATE_BYTES_PER_SECOND.invokeExact(ptr());
+			return rate < 0 ? null : MemorySize.ofBytes(rate);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getDeleteRateBytesPerSecond failed", t);
 		}
@@ -213,17 +211,17 @@ public final class SstFileManager extends NativeObject {
 
 	/// Sets the rate at which trash SST files are deleted.
 	///
-	/// Use `-1` to delete as fast as possible. Use `0` to disable background
-	/// deletion entirely (files are removed synchronously).
+	/// Pass `null` to delete as fast as possible (no rate limit). Pass [MemorySize#ZERO] to
+	/// disable background deletion entirely (files are removed synchronously) — per
+	/// `delete_scheduler.cc`, RocksDB itself treats `null` and [MemorySize#ZERO] identically
+	/// (no throttling, no background thread), so the distinction is purely about intent at
+	/// the call site.
 	///
-	/// @param deleteRate deletion rate in bytes per second; `-1` for unlimited, `0` for synchronous
+	/// @param deleteRate deletion rate, [MemorySize#ZERO] for synchronous, or `null` for unlimited
 	/// @return this instance for chaining
-	// TODO: switch to Optional<MemorySize> (empty = unlimited/-1, MemorySize.ZERO = synchronous/0);
-	//  left as raw long because MemorySize rejects negative values and this is the only
-	//  rate-style API in the codebase with a negative sentinel, so it doesn't warrant a new type.
-	public SstFileManager setDeleteRateBytesPerSecond(long deleteRate) {
+	public SstFileManager setDeleteRateBytesPerSecond(MemorySize deleteRate) {
 		try {
-			MH_SET_DELETE_RATE_BYTES_PER_SECOND.invokeExact(ptr(), deleteRate);
+			MH_SET_DELETE_RATE_BYTES_PER_SECOND.invokeExact(ptr(), deleteRate == null ? -1L : deleteRate.toBytes());
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setDeleteRateBytesPerSecond failed", t);

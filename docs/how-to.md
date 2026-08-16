@@ -460,7 +460,7 @@ try (var rateLimiter = RateLimiter.create(MemorySize.ofMB(10));   // 10 MB/s
 try (var env = Env.defaultEnv();
      var sstFileManager = SstFileManager.create(env)
 		     .setMaxAllowedSpaceUsage(MemorySize.ofGB(10))
-		     .setDeleteRateBytesPerSecond(MemorySize.ofMB(64).toBytes());
+		     .setDeleteRateBytesPerSecond(MemorySize.ofMB(64));
      var options = Options.newOptions()
 		     .setCreateIfMissing(true)
 		     .setSstFileManager(sstFileManager);

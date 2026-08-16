@@ -73,7 +73,7 @@ class SstFileManagerTest {
 		// Given
 		try (var env = Env.defaultEnv();
 		     var sut = SstFileManager.create(env)
-				     .setDeleteRateBytesPerSecond(MemorySize.ofMB(64).toBytes());
+				     .setDeleteRateBytesPerSecond(MemorySize.ofMB(64));
 		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
 		     var db = RocksDB.openReadWrite(opts, dir)) {
 
@@ -81,7 +81,39 @@ class SstFileManagerTest {
 			var result = sut.getDeleteRateBytesPerSecond();
 
 			// Then
-			assertThat(result).isEqualTo(MemorySize.ofMB(64).toBytes());
+			assertThat(result).isEqualTo(MemorySize.ofMB(64));
+		}
+	}
+
+	@Test
+	void setDeleteRateBytesPerSecond_null_roundTripsAsUnlimited(@TempDir Path dir) {
+		// Given
+		try (var env = Env.defaultEnv();
+		     var sut = SstFileManager.create(env).setDeleteRateBytesPerSecond(null);
+		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+
+			// When
+			var result = sut.getDeleteRateBytesPerSecond();
+
+			// Then
+			assertThat(result).isNull();
+		}
+	}
+
+	@Test
+	void setDeleteRateBytesPerSecond_zero_roundTripsAsSynchronous(@TempDir Path dir) {
+		// Given
+		try (var env = Env.defaultEnv();
+		     var sut = SstFileManager.create(env).setDeleteRateBytesPerSecond(MemorySize.ZERO);
+		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+
+			// When
+			var result = sut.getDeleteRateBytesPerSecond();
+
+			// Then
+			assertThat(result).isEqualTo(MemorySize.ZERO);
 		}
 	}
 
