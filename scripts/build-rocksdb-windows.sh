@@ -270,6 +270,30 @@ EOF
     chmod +x "$ZSTD_LZ4_CC_WRAPPER"
     ZSTD_LZ4_MAKE_CC="$ZSTD_LZ4_CC_WRAPPER"
 
+    if [ "$IS_WINDOWS_HOST" = true ]; then
+        # rocksdb/Makefile's libzstd.a recipe does a plain `tar xvzf
+        # zstd-*.tar.gz` with no flags to change (vendored, not ours to
+        # edit). zstd's tarball ships a few CLI-alias symlinks under
+        # tests/cli-tests/bin/ (e.g. unzstd -> zstd); creating those requires
+        # a privilege Windows doesn't grant by default, so tar exits nonzero
+        # there and make aborts the whole recipe -- confirmed in CI, even
+        # though everything actually needed (lib/) extracted fine first.
+        # Shadow `tar` on PATH and exclude the irrelevant tests/ tree for
+        # zstd's archive specifically, so extraction succeeds outright
+        # instead of needing its exit code swallowed.
+        REAL_TAR="$(command -v tar)"
+        TAR_WRAPPER="$WRAPPER_DIR/tar"
+        cat > "$TAR_WRAPPER" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+case "\$*" in
+    *zstd-*.tar.gz*) exec "$REAL_TAR" "\$@" --exclude='*/tests/*' ;;
+    *) exec "$REAL_TAR" "\$@" ;;
+esac
+EOF
+        chmod +x "$TAR_WRAPPER"
+    fi
+
     (
         cd "$ROCKSDB_DIR"
         # Cross-compilation: a make_config.mk left by a previous classifier's
@@ -304,7 +328,14 @@ EOF
         # explicit `override` there, which lz4's Makefile does not use), and
         # command-line variables propagate to recursive $(MAKE) calls
         # automatically via MAKEFLAGS, so pass it on the invocation instead.
-        ALLOW_BUILD_PARAMETER_CHANGE=1 CC="$ZSTD_LZ4_MAKE_CC" CXX="$ZSTD_LZ4_MAKE_CXX" AR="$AR_WRAPPER" \
+        # RANLIB, unlike AR, was left unset here -- confirmed in CI: on the
+        # native Windows host this let make's implicit RANLIB fall through
+        # to something already on PATH/in the environment (observed failing
+        # as "C:\Strawberry\c\bin\ccache: command not found" while building
+        # liblz4.a), instead of the zig-backed wrapper. Pass it explicitly,
+        # matching AR.
+        ALLOW_BUILD_PARAMETER_CHANGE=1 CC="$ZSTD_LZ4_MAKE_CC" CXX="$ZSTD_LZ4_MAKE_CXX" \
+            AR="$AR_WRAPPER" RANLIB="$RANLIB_WRAPPER" PATH="$WRAPPER_DIR:$PATH" \
             make libzstd.a liblz4.a BUILD_SHARED=no -j"$JOBS"
     )
     ZSTD_SRC_DIR="$(ls -d "$ROCKSDB_DIR"/zstd-*/ | head -1)"
