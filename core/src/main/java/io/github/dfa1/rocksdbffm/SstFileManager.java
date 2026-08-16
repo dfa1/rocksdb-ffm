@@ -233,9 +233,9 @@ public final class SstFileManager extends NativeObject {
 	/// Default is `0.25`.
 	///
 	/// @return current max trash-to-total ratio
-	public double getMaxTrashDbRatio() {
+	public Ratio getMaxTrashDbRatio() {
 		try {
-			return (double) MH_GET_MAX_TRASH_DB_RATIO.invokeExact(ptr());
+			return Ratio.of((double) MH_GET_MAX_TRASH_DB_RATIO.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getMaxTrashDbRatio failed", t);
 		}
@@ -245,11 +245,11 @@ public final class SstFileManager extends NativeObject {
 	///
 	/// When the ratio exceeds this threshold, deletions become synchronous.
 	///
-	/// @param ratio max trash-to-total ratio; must be between 0.0 and 1.0
+	/// @param ratio max trash-to-total ratio
 	/// @return this instance for chaining
-	public SstFileManager setMaxTrashDbRatio(double ratio) {
+	public SstFileManager setMaxTrashDbRatio(Ratio ratio) {
 		try {
-			MH_SET_MAX_TRASH_DB_RATIO.invokeExact(ptr(), ratio);
+			MH_SET_MAX_TRASH_DB_RATIO.invokeExact(ptr(), ratio.toDouble());
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setMaxTrashDbRatio failed", t);

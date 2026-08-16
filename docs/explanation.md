@@ -141,6 +141,7 @@ Raw numbers carry no unit and cannot be validated where they are created.
 | Cache / buffer sizes | `long` (bytes, silently) | `MemorySize.ofMB(64)` |
 | Snapshot position    | `long`                   | `SequenceNumber`      |
 | Backup identity      | `int` (native `uint32`)  | `BackupId`            |
+| Fractions/thresholds | `double` (0.0–1.0, hoped)| `Ratio.of(0.5)`       |
 | Filesystem locations | `String`                 | `java.nio.file.Path`  |
 | Durations            | `long` (seconds)         | `java.time.Duration`  |
 

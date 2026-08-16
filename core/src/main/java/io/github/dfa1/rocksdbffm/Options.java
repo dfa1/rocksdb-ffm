@@ -512,13 +512,13 @@ public final class Options extends NativeObject {
 
 	/// Blob files whose age is older than this fraction of the oldest snapshot are
 	/// unconditionally GC'd, regardless of garbage ratio.
-	/// Range: [0.0, 1.0]. Default: 0.5.
+	/// Default: 0.5.
 	///
-	/// @param value age cutoff fraction in [0.0, 1.0]
+	/// @param value age cutoff fraction
 	/// @return `this` for chaining
-	public Options setBlobGcAgeCutoff(double value) {
+	public Options setBlobGcAgeCutoff(Ratio value) {
 		try {
-			MH_SET_BLOB_GC_AGE_CUTOFF.invokeExact(ptr(), value);
+			MH_SET_BLOB_GC_AGE_CUTOFF.invokeExact(ptr(), value.toDouble());
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setBlobGcAgeCutoff failed", t);
@@ -527,23 +527,23 @@ public final class Options extends NativeObject {
 
 	/// Returns the blob GC age cutoff fraction.
 	///
-	/// @return age cutoff in [0.0, 1.0]
-	public double getBlobGcAgeCutoff() {
+	/// @return age cutoff fraction
+	public Ratio getBlobGcAgeCutoff() {
 		try {
-			return (double) MH_GET_BLOB_GC_AGE_CUTOFF.invokeExact(ptr());
+			return Ratio.of((double) MH_GET_BLOB_GC_AGE_CUTOFF.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getBlobGcAgeCutoff failed", t);
 		}
 	}
 
 	/// Blob files whose garbage ratio exceeds this threshold are force-compacted.
-	/// Range: [0.0, 1.0]. Default: 1.0 (disabled).
+	/// Default: 1.0 (disabled).
 	///
-	/// @param value force-GC garbage ratio threshold in [0.0, 1.0]
+	/// @param value force-GC garbage ratio threshold
 	/// @return `this` for chaining
-	public Options setBlobGcForceThreshold(double value) {
+	public Options setBlobGcForceThreshold(Ratio value) {
 		try {
-			MH_SET_BLOB_GC_FORCE_THRESHOLD.invokeExact(ptr(), value);
+			MH_SET_BLOB_GC_FORCE_THRESHOLD.invokeExact(ptr(), value.toDouble());
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setBlobGcForceThreshold failed", t);
@@ -552,10 +552,10 @@ public final class Options extends NativeObject {
 
 	/// Returns the blob GC force-compaction garbage ratio threshold.
 	///
-	/// @return force-GC threshold in [0.0, 1.0]
-	public double getBlobGcForceThreshold() {
+	/// @return force-GC threshold
+	public Ratio getBlobGcForceThreshold() {
 		try {
-			return (double) MH_GET_BLOB_GC_FORCE_THRESHOLD.invokeExact(ptr());
+			return Ratio.of((double) MH_GET_BLOB_GC_FORCE_THRESHOLD.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getBlobGcForceThreshold failed", t);
 		}

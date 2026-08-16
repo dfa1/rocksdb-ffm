@@ -54,8 +54,8 @@ class SstFileManagerIntegrationTest {
 		// Given
 		try (var env = Env.defaultEnv();
 		     var sfm = SstFileManager.create(env)
-				     .setDeleteRateBytesPerSecond(MemorySize.ofMB(64).toBytes())
-				     .setMaxTrashDbRatio(0.5);
+				     .setDeleteRateBytesPerSecond(MemorySize.ofMB(64))
+				     .setMaxTrashDbRatio(Ratio.of(0.5));
 		     var opts = Options.newOptions()
 				     .setCreateIfMissing(true)
 				     .setSstFileManager(sfm);
@@ -65,8 +65,8 @@ class SstFileManagerIntegrationTest {
 			db.put("key".getBytes(), "value".getBytes());
 
 			// Then
-			assertThat(sfm.getDeleteRateBytesPerSecond()).isEqualTo(MemorySize.ofMB(64).toBytes());
-			assertThat(sfm.getMaxTrashDbRatio()).isEqualTo(0.5);
+			assertThat(sfm.getDeleteRateBytesPerSecond()).isEqualTo(MemorySize.ofMB(64));
+			assertThat(sfm.getMaxTrashDbRatio()).isEqualTo(Ratio.of(0.5));
 			assertThat(sfm.getTotalTrashSize().toBytes()).isGreaterThanOrEqualTo(0);
 		}
 	}

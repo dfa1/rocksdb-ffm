@@ -66,8 +66,8 @@ class BlobDBIntegrationTest {
 				.setBlobFileSize(MemorySize.ofMB(64))
 				.setBlobCompressionType(CompressionType.NO_COMPRESSION)
 				.setEnableBlobGc(true)
-				.setBlobGcAgeCutoff(0.25)
-				.setBlobGcForceThreshold(0.8)
+				.setBlobGcAgeCutoff(Ratio.of(0.25))
+				.setBlobGcForceThreshold(Ratio.of(0.8))
 				.setBlobFileStartingLevel(0)) {
 
 			// When
@@ -86,8 +86,8 @@ class BlobDBIntegrationTest {
 			assertThat(blobFileSize).isEqualTo(MemorySize.ofMB(64));
 			assertThat(blobCompressionType).isEqualTo(CompressionType.NO_COMPRESSION);
 			assertThat(enableBlobGc).isTrue();
-			assertThat(blobGcAgeCutoff).isEqualTo(0.25);
-			assertThat(blobGcForceThreshold).isEqualTo(0.8);
+			assertThat(blobGcAgeCutoff).isEqualTo(Ratio.of(0.25));
+			assertThat(blobGcForceThreshold).isEqualTo(Ratio.of(0.8));
 			assertThat(blobFileStartingLevel).isEqualTo(0);
 
 			try (var db = RocksDB.openBlob(opts, dir)) {

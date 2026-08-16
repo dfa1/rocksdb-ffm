@@ -146,8 +146,8 @@ Blob options (used with `RocksDB.openBlob`, each with a matching getter):
 | `setBlobFileSize`              | `MemorySize`            |
 | `setBlobCompressionType`       | `CompressionType`       |
 | `setEnableBlobGc`              | `boolean`               |
-| `setBlobGcAgeCutoff`           | `double` (0.0–1.0)      |
-| `setBlobGcForceThreshold`      | `double` (0.0–1.0)      |
+| `setBlobGcAgeCutoff`           | `Ratio`                 |
+| `setBlobGcForceThreshold`      | `Ratio`                 |
 | `setBlobCompactionReadaheadSize` | `MemorySize`          |
 | `setBlobFileStartingLevel`     | `int`                   |
 | `setBlobCache`                 | `Cache`                 |
@@ -306,6 +306,7 @@ listing every existing column family, `default` included.
 | `MemorySize`      | Byte counts. `ofBytes`, `ofKB`, `ofMB`, `ofGB`, `ZERO`, `toBytes()`; immutable, `Comparable` |
 | `SequenceNumber`  | RocksDB sequence numbers. `of(long)`, `toLong()`, `isAfter`, `isBefore`; `Comparable`        |
 | `BackupId`        | Backup identity (native `uint32`). `of(long)`, `toLong()`; `Comparable`                      |
+| `Ratio`           | Fraction in `[0.0, 1.0]`. `of(double)`, `toDouble()`, `ZERO`, `ONE`; immutable, `Comparable` |
 | `CopyResult`      | Sealed: `Copied()`, `NotEnoughCapacity(long required)`, `NotFound()`                         |
 | `RocksDBException`| Unchecked; thrown by every operation that can fail                                            |
 | `NativeObject`    | Base class of every native wrapper; `ptr()`, `close()` (idempotent), abstract `tryClose`      |

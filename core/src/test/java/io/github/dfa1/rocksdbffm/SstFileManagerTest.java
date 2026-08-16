@@ -121,7 +121,7 @@ class SstFileManagerTest {
 	void setMaxTrashDbRatio_roundTrips(@TempDir Path dir) {
 		// Given
 		try (var env = Env.defaultEnv();
-		     var sut = SstFileManager.create(env).setMaxTrashDbRatio(0.5);
+		     var sut = SstFileManager.create(env).setMaxTrashDbRatio(Ratio.of(0.5));
 		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
 		     var db = RocksDB.openReadWrite(opts, dir)) {
 
@@ -129,7 +129,7 @@ class SstFileManagerTest {
 			var result = sut.getMaxTrashDbRatio();
 
 			// Then
-			assertThat(result).isEqualTo(0.5);
+			assertThat(result).isEqualTo(Ratio.of(0.5));
 		}
 	}
 
