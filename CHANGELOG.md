@@ -5,33 +5,48 @@ All notable changes to **rocksdbffm** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8] — 2026-08-16
+
+Hermetic ZSTD/LZ4 on all five platforms including Windows, local builds now cross-compile only the
+host's own native classifier, four Architecture Decision Records, and a clean split between genuine
+RocksDB errors and bugs in this library's own FFM plumbing.
 
 ### Added
 
-- ZSTD and LZ4 now built hermetically via `zig cc` and statically linked, replacing an unreliable host-library probe; tests confirm the codecs actually compress. ([4062792](https://github.com/dfa1/rocksdbffm/commit/4062792), [06c3840](https://github.com/dfa1/rocksdbffm/commit/06c3840))
+- ZSTD and LZ4 now built hermetically via `zig cc` and statically linked, replacing an unreliable host-library probe; tests confirm the codecs actually compress — including on Windows, via CMake instead of the POSIX Makefile. ([4062792](https://github.com/dfa1/rocksdbffm/commit/4062792), [06c3840](https://github.com/dfa1/rocksdbffm/commit/06c3840), [19ef44c](https://github.com/dfa1/rocksdbffm/commit/19ef44c))
 - `WriteOptions` now maps its full field set (`sync`, `disableWal`, `noSlowdown`, `lowPri`, `ioActivity`, and more), plus new `IOPriority`/`IOActivity` enums. ([9fbed88](https://github.com/dfa1/rocksdbffm/commit/9fbed88))
+- `ReadOptions` maps 7 more C API setters: `verifyChecksums`, `fillCache`, `pinData`, `tailing`, `totalOrderSeek`, `prefixSameAsStart`, `readaheadSize`. ([6e6c2ef](https://github.com/dfa1/rocksdbffm/commit/6e6c2ef))
+- `BlockBasedTableOptions.FormatVersion` enum replaces the unvalidated raw `int` `setFormatVersion` took. ([565ce69](https://github.com/dfa1/rocksdbffm/commit/565ce69))
+- `ConcurrentStressIntegrationTest`. ([#84](https://github.com/dfa1/rocksdbffm/pull/84))
+- `docs/adr/` — four Architecture Decision Records covering FFM-vs-JNI, the `zig cc` build, the ownership model, and error handling. ([#87](https://github.com/dfa1/rocksdbffm/pull/87))
+- Local `mvn` builds now cross-compile only the host's own native classifier by default (each other one logs `skipping execute as per configuration`) instead of all five every time; `-Pall-natives` forces the full matrix, used by CI and releases. ([#86](https://github.com/dfa1/rocksdbffm/pull/86))
 - `FfmValueSizeBenchmark` gains 64B/128B sweep points. ([f16b2b8](https://github.com/dfa1/rocksdbffm/commit/f16b2b8))
 
 ### Changed
 
 - **Breaking:** `TxnDBWritePolicy` renamed to `WritePolicy`. ([f30aac8](https://github.com/dfa1/rocksdbffm/commit/f30aac8))
 - **Breaking:** Transaction/TransactionDB lock and expiration timeouts now use `Duration` (`null` = disabled/wait-forever) instead of raw `long` + `-1`. ([5570369](https://github.com/dfa1/rocksdbffm/commit/5570369))
-- `RocksDBException` constructors are now private; all construction goes through `wrap()`/`of()`. ([2857681](https://github.com/dfa1/rocksdbffm/commit/2857681), [7b72364](https://github.com/dfa1/rocksdbffm/commit/7b72364))
+- **Breaking:** `RocksDBException` has no public constructor and is now thrown only for a genuine RocksDB-reported error; `wrap()` is deleted. A bug in this library's own FFM plumbing now surfaces as its own exception type (`NullPointerException`, `IllegalStateException`, …) or `AssertionError` instead of masquerading as a `RocksDBException` — see [ADR 0004](docs/adr/0004-error-handling.md). ([#88](https://github.com/dfa1/rocksdbffm/pull/88))
 - Int-backed enum reverse lookups now use `switch` instead of a `values()`-loop. ([c506d06](https://github.com/dfa1/rocksdbffm/commit/c506d06))
 - `PinnableHandle` extracted from `PinnableSlice`; both now reuse the caller's dead `errptr` slot and check `NULL` before opening their try-scope. ([1cb6c45](https://github.com/dfa1/rocksdbffm/commit/1cb6c45), [460b9d7](https://github.com/dfa1/rocksdbffm/commit/460b9d7), [2273661](https://github.com/dfa1/rocksdbffm/commit/2273661))
 - `Transaction`/`TransactionDB`'s `get`/`getForUpdate` now go through `PinnableSlice` instead of the malloc'd `rocksdb_*_get[_for_update]`. ([fedacf8](https://github.com/dfa1/rocksdbffm/commit/fedacf8))
 - Malloc'd-C-string-to-`String` conversion centralized into `RocksDB.toJavaString`/`toOptionalString`. ([36f1b62](https://github.com/dfa1/rocksdbffm/commit/36f1b62))
+- `keyMayExist`'s try/catch centralized into `RocksDB` static helpers, shared by `ReadWriteDB`/`TtlDB`. ([3c2a8ae](https://github.com/dfa1/rocksdbffm/commit/3c2a8ae), [b1c9ed4](https://github.com/dfa1/rocksdbffm/commit/b1c9ed4))
 
 ### Fixed
 
 - `Transaction.getSnapshot()` never actually returned `null` — dropped the dead check and its javadoc claim. ([61ba393](https://github.com/dfa1/rocksdbffm/commit/61ba393))
 - `PinnableHandle`/`PinnableSlice` reinterpreted their pinned value twice, costing throughput on small values. ([12d54b8](https://github.com/dfa1/rocksdbffm/commit/12d54b8), [cc99c1b](https://github.com/dfa1/rocksdbffm/commit/cc99c1b))
 - Stale `[#open]` javadoc reference and missing `openBlob` row fixed. ([72a6e40](https://github.com/dfa1/rocksdbffm/commit/72a6e40))
+- Windows hermetic ZSTD/LZ4 build: wrong `RANLIB` precedence broke `liblz4.a`, zstd's tarball shipped Windows-incompatible symlinks, a `make -n` "dry run" wasn't actually one (GNU Make always executes `$(MAKE)`-referencing recipe lines even under `-n`), and zstd/lz4 built unoptimized (`DEBUG_LEVEL=1`) inside an otherwise-release build. ([cb37b2e](https://github.com/dfa1/rocksdbffm/commit/cb37b2e)..[19ef44c](https://github.com/dfa1/rocksdbffm/commit/19ef44c), [9af8b8f](https://github.com/dfa1/rocksdbffm/commit/9af8b8f))
+- `build-rocksdb.sh` never exported `AR`, so `make libzstd.a liblz4.a` used the host's native `ar`, producing archives in the wrong convention for a cross-target linker. ([3b5eaa4](https://github.com/dfa1/rocksdbffm/commit/3b5eaa4))
+- `sonar.yml`/`publish.yml` native-lib cache keys were missing build-script inputs (unlike `ci.yml`), serving a stale pre-hermetic-compression native library. ([e2cf50d](https://github.com/dfa1/rocksdbffm/commit/e2cf50d))
 
 ### Build & Tooling
 
 - `checkstyle` bumped 13.9.0 → 13.10.0. ([0c40152](https://github.com/dfa1/rocksdbffm/commit/0c40152))
+- Zig version bumped in CI. ([21158b4](https://github.com/dfa1/rocksdbffm/commit/21158b4))
+- `WriteBatchSizeBenchmark` gains a `-Djmh.forks` override, matching `FfmValueSizeBenchmark`/`ScaleBenchmarkRunner`. ([b214b86](https://github.com/dfa1/rocksdbffm/commit/b214b86))
 
 ## [0.7] — 2026-08-15
 
