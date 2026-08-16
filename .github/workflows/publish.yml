@@ -59,7 +59,7 @@ jobs:
             native/linux-aarch64/src/main/resources/native
             native/windows-x86_64/src/main/resources/native
             native/windows-aarch64/src/main/resources/native
-          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt') }}-ubuntu-latest-${{ runner.arch }}
+          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt', 'rocksdb/Makefile', 'scripts/build-rocksdb.sh', 'scripts/build-rocksdb-windows.sh') }}-ubuntu-latest-${{ runner.arch }}
 
       - name: Publish to Maven Central
         env:
