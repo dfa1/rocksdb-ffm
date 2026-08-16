@@ -157,10 +157,10 @@ class TransactionDBOptionsTest {
 		try (var sut = TransactionDBOptions.newTransactionDBOptions()) {
 
 			// When
-			sut.setDefaultWriteBatchFlushThreshold(1024);
+			sut.setDefaultWriteBatchFlushThreshold(MemorySize.ofBytes(1024));
 
 			// Then
-			assertThat(sut.getDefaultWriteBatchFlushThreshold()).isEqualTo(1024);
+			assertThat(sut.getDefaultWriteBatchFlushThreshold()).isEqualTo(MemorySize.ofBytes(1024));
 		}
 	}
 

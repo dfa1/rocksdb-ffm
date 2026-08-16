@@ -428,29 +428,29 @@ public final class TransactionDBOptions extends NativeObject {
 		}
 	}
 
-	/// Default write-batch size (bytes) at which a transaction using
-	/// [WritePolicy#WRITE_PREPARED] or [WritePolicy#WRITE_UNPREPARED] flushes its
-	/// buffered writes early, used when a transaction does not set its own
-	/// [TransactionOptions#setWriteBatchFlushThreshold(long)]. `0` disables early flushing.
-	/// Default: 0.
+	/// Default write-batch size at which a transaction using [WritePolicy#WRITE_PREPARED] or
+	/// [WritePolicy#WRITE_UNPREPARED] flushes its buffered writes early, used when a
+	/// transaction does not set its own
+	/// [TransactionOptions#setWriteBatchFlushThreshold(MemorySize)]. [MemorySize#ZERO]
+	/// disables early flushing. Default: [MemorySize#ZERO].
 	///
-	/// @param defaultWriteBatchFlushThreshold flush threshold in bytes; `0` disables
+	/// @param defaultWriteBatchFlushThreshold flush threshold; [MemorySize#ZERO] disables it
 	/// @return this instance for chaining
-	public TransactionDBOptions setDefaultWriteBatchFlushThreshold(long defaultWriteBatchFlushThreshold) {
+	public TransactionDBOptions setDefaultWriteBatchFlushThreshold(MemorySize defaultWriteBatchFlushThreshold) {
 		try {
-			MH_SET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr(), defaultWriteBatchFlushThreshold);
+			MH_SET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr(), defaultWriteBatchFlushThreshold.toBytes());
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setDefaultWriteBatchFlushThreshold failed", t);
 		}
 		return this;
 	}
 
-	/// Returns the default write-batch flush threshold in bytes.
+	/// Returns the default write-batch flush threshold.
 	///
-	/// @return flush threshold in bytes; `0` means disabled
-	public long getDefaultWriteBatchFlushThreshold() {
+	/// @return flush threshold; [MemorySize#ZERO] means disabled
+	public MemorySize getDefaultWriteBatchFlushThreshold() {
 		try {
-			return (long) MH_GET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr());
+			return MemorySize.ofBytes((long) MH_GET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getDefaultWriteBatchFlushThreshold failed", t);
 		}

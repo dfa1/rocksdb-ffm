@@ -418,26 +418,26 @@ public final class TransactionOptions extends NativeObject {
 		}
 	}
 
-	/// Maximum size (bytes) of the transaction's underlying write batch. `0` means no limit.
-	/// Default: 0.
+	/// Maximum size of the transaction's underlying write batch. [MemorySize#ZERO] means no
+	/// limit. Default: [MemorySize#ZERO].
 	///
-	/// @param maxWriteBatchSize max write batch size in bytes; `0` means unlimited
+	/// @param maxWriteBatchSize max write batch size; [MemorySize#ZERO] means unlimited
 	/// @return this instance for chaining
-	public TransactionOptions setMaxWriteBatchSize(long maxWriteBatchSize) {
+	public TransactionOptions setMaxWriteBatchSize(MemorySize maxWriteBatchSize) {
 		try {
-			MH_SET_MAX_WRITE_BATCH_SIZE.invokeExact(ptr(), maxWriteBatchSize);
+			MH_SET_MAX_WRITE_BATCH_SIZE.invokeExact(ptr(), maxWriteBatchSize.toBytes());
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setMaxWriteBatchSize failed", t);
 		}
 		return this;
 	}
 
-	/// Returns the maximum write batch size in bytes.
+	/// Returns the maximum write batch size.
 	///
-	/// @return max write batch size in bytes; `0` means unlimited
-	public long getMaxWriteBatchSize() {
+	/// @return max write batch size; [MemorySize#ZERO] means unlimited
+	public MemorySize getMaxWriteBatchSize() {
 		try {
-			return (long) MH_GET_MAX_WRITE_BATCH_SIZE.invokeExact(ptr());
+			return MemorySize.ofBytes((long) MH_GET_MAX_WRITE_BATCH_SIZE.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getMaxWriteBatchSize failed", t);
 		}
@@ -494,27 +494,35 @@ public final class TransactionOptions extends NativeObject {
 		}
 	}
 
-	/// Write-batch size (bytes) at which this transaction flushes its buffered writes early,
-	/// overriding [TransactionDBOptions#setDefaultWriteBatchFlushThreshold(long)]. `0` disables
-	/// early flushing. Default: 0.
+	/// Write-batch size at which this transaction flushes its buffered writes early,
+	/// overriding [TransactionDBOptions#setDefaultWriteBatchFlushThreshold(MemorySize)].
+	/// [MemorySize#ZERO] disables early flushing for this transaction, overriding any
+	/// DB-wide setting. `null` (the default) inherits the DB-wide setting instead — per
+	/// `transaction_db.h`, the native field defaults to `-1`, not `0`: only a negative value
+	/// means "use `TransactionDBOptions`'s default", while `0` explicitly means "no limit for
+	/// this transaction".
 	///
-	/// @param writeBatchFlushThreshold flush threshold in bytes; `0` disables
+	/// @param writeBatchFlushThreshold flush threshold; [MemorySize#ZERO] disables it for
+	///                                 this transaction, `null` inherits the DB-wide default
 	/// @return this instance for chaining
-	public TransactionOptions setWriteBatchFlushThreshold(long writeBatchFlushThreshold) {
+	public TransactionOptions setWriteBatchFlushThreshold(MemorySize writeBatchFlushThreshold) {
 		try {
-			MH_SET_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr(), writeBatchFlushThreshold);
+			MH_SET_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr(),
+					writeBatchFlushThreshold == null ? -1L : writeBatchFlushThreshold.toBytes());
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setWriteBatchFlushThreshold failed", t);
 		}
 		return this;
 	}
 
-	/// Returns this transaction's write-batch flush threshold in bytes.
+	/// Returns this transaction's write-batch flush threshold.
 	///
-	/// @return flush threshold in bytes; `0` means disabled
-	public long getWriteBatchFlushThreshold() {
+	/// @return flush threshold, [MemorySize#ZERO] if disabled for this transaction, or `null`
+	/// if inheriting the DB-wide default
+	public MemorySize getWriteBatchFlushThreshold() {
 		try {
-			return (long) MH_GET_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr());
+			long threshold = (long) MH_GET_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr());
+			return threshold < 0 ? null : MemorySize.ofBytes(threshold);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getWriteBatchFlushThreshold failed", t);
 		}
@@ -596,13 +604,15 @@ public final class TransactionOptions extends NativeObject {
 	}
 
 	/// Total byte size above which this transaction is treated as "large" for commit
-	/// optimization purposes. `0` disables the optimization. Default: 0.
+	/// optimization purposes. [MemorySize#ZERO] disables the optimization. Default:
+	/// [MemorySize#ZERO].
 	///
-	/// @param largeTxnCommitOptimizeByteThreshold byte-size threshold; `0` disables the optimization
+	/// @param largeTxnCommitOptimizeByteThreshold byte-size threshold; [MemorySize#ZERO]
+	///                                            disables the optimization
 	/// @return this instance for chaining
-	public TransactionOptions setLargeTxnCommitOptimizeByteThreshold(long largeTxnCommitOptimizeByteThreshold) {
+	public TransactionOptions setLargeTxnCommitOptimizeByteThreshold(MemorySize largeTxnCommitOptimizeByteThreshold) {
 		try {
-			MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD.invokeExact(ptr(), largeTxnCommitOptimizeByteThreshold);
+			MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD.invokeExact(ptr(), largeTxnCommitOptimizeByteThreshold.toBytes());
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setLargeTxnCommitOptimizeByteThreshold failed", t);
 		}
@@ -611,10 +621,10 @@ public final class TransactionOptions extends NativeObject {
 
 	/// Returns the byte-size threshold above which this transaction is treated as "large".
 	///
-	/// @return byte-size threshold; `0` means the optimization is disabled
-	public long getLargeTxnCommitOptimizeByteThreshold() {
+	/// @return byte-size threshold; [MemorySize#ZERO] means the optimization is disabled
+	public MemorySize getLargeTxnCommitOptimizeByteThreshold() {
 		try {
-			return (long) MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD.invokeExact(ptr());
+			return MemorySize.ofBytes((long) MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getLargeTxnCommitOptimizeByteThreshold failed", t);
 		}

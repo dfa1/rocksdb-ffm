@@ -142,10 +142,10 @@ class TransactionOptionsTest {
 		try (var sut = TransactionOptions.newTransactionOptions()) {
 
 			// When
-			sut.setMaxWriteBatchSize(4096);
+			sut.setMaxWriteBatchSize(MemorySize.ofBytes(4096));
 
 			// Then
-			assertThat(sut.getMaxWriteBatchSize()).isEqualTo(4096);
+			assertThat(sut.getMaxWriteBatchSize()).isEqualTo(MemorySize.ofBytes(4096));
 		}
 	}
 
@@ -181,10 +181,36 @@ class TransactionOptionsTest {
 		try (var sut = TransactionOptions.newTransactionOptions()) {
 
 			// When
-			sut.setWriteBatchFlushThreshold(2048);
+			sut.setWriteBatchFlushThreshold(MemorySize.ofBytes(2048));
 
 			// Then
-			assertThat(sut.getWriteBatchFlushThreshold()).isEqualTo(2048);
+			assertThat(sut.getWriteBatchFlushThreshold()).isEqualTo(MemorySize.ofBytes(2048));
+		}
+	}
+
+	@Test
+	void setWriteBatchFlushThreshold_null_roundTripsAsInheritDbDefault() {
+		// Given
+		try (var sut = TransactionOptions.newTransactionOptions()) {
+
+			// When
+			sut.setWriteBatchFlushThreshold(null);
+
+			// Then
+			assertThat(sut.getWriteBatchFlushThreshold()).isNull();
+		}
+	}
+
+	@Test
+	void setWriteBatchFlushThreshold_zero_roundTripsAsDisabled() {
+		// Given
+		try (var sut = TransactionOptions.newTransactionOptions()) {
+
+			// When
+			sut.setWriteBatchFlushThreshold(MemorySize.ZERO);
+
+			// Then
+			assertThat(sut.getWriteBatchFlushThreshold()).isEqualTo(MemorySize.ZERO);
 		}
 	}
 
@@ -233,10 +259,10 @@ class TransactionOptionsTest {
 		try (var sut = TransactionOptions.newTransactionOptions()) {
 
 			// When
-			sut.setLargeTxnCommitOptimizeByteThreshold(1_048_576);
+			sut.setLargeTxnCommitOptimizeByteThreshold(MemorySize.ofBytes(1_048_576));
 
 			// Then
-			assertThat(sut.getLargeTxnCommitOptimizeByteThreshold()).isEqualTo(1_048_576);
+			assertThat(sut.getLargeTxnCommitOptimizeByteThreshold()).isEqualTo(MemorySize.ofBytes(1_048_576));
 		}
 	}
 }
