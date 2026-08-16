@@ -238,7 +238,7 @@ public final class RocksIterator extends NativeObject {
 	/// @return `true` if the iterator has a valid current position
 	public boolean isValid() {
 		try {
-			return ((byte) MH_VALID.invokeExact(ptr())) != 0;
+			return RocksDB.fromByte((byte) MH_VALID.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isValid failed", t);
 		}

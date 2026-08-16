@@ -54,7 +54,7 @@ public final class OptimisticTransactionOptions extends NativeObject {
 	/// @return `this` for chaining
 	public OptimisticTransactionOptions setSetSnapshot(boolean value) {
 		try {
-			MH_SET_SET_SNAPSHOT.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_SET_SNAPSHOT.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setSetSnapshot failed", t);
 		}

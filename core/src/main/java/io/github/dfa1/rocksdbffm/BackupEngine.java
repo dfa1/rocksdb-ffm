@@ -257,7 +257,7 @@ public final class BackupEngine extends NativeObject {
 	private void createBackup(MemorySegment dbPtr, boolean flush) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_CREATE_NEW_BACKUP_FLUSH.invokeExact(ptr(), dbPtr, flush ? (byte) 1 : (byte) 0, err);
+			MH_CREATE_NEW_BACKUP_FLUSH.invokeExact(ptr(), dbPtr, RocksDB.toByte(flush), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("createNewBackup failed", t);

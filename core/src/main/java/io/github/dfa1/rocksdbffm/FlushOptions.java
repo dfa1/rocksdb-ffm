@@ -62,7 +62,7 @@ public final class FlushOptions extends NativeObject {
 	/// @return `this` for chaining
 	public FlushOptions setWait(boolean wait) {
 		try {
-			MH_SET_WAIT.invokeExact(ptr(), wait ? (byte) 1 : (byte) 0);
+			MH_SET_WAIT.invokeExact(ptr(), RocksDB.toByte(wait));
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("flushoptions setWait failed", t);
@@ -74,7 +74,7 @@ public final class FlushOptions extends NativeObject {
 	/// @return `true` if flush blocks until the memtable is written to disk
 	public boolean isWait() {
 		try {
-			return ((byte) MH_GET_WAIT.invokeExact(ptr())) != 0;
+			return RocksDB.fromByte((byte) MH_GET_WAIT.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("flushoptions getWait failed", t);
 		}

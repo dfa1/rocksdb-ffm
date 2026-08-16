@@ -157,7 +157,7 @@ public final class SstFileManager extends NativeObject {
 	/// @return `true` if the space limit has been reached
 	public boolean isMaxAllowedSpaceReached() {
 		try {
-			return (byte) MH_IS_MAX_ALLOWED_SPACE_REACHED.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_IS_MAX_ALLOWED_SPACE_REACHED.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isMaxAllowedSpaceReached failed", t);
 		}
@@ -169,7 +169,7 @@ public final class SstFileManager extends NativeObject {
 	/// @return `true` if the space limit has been reached including compaction output
 	public boolean isMaxAllowedSpaceReachedIncludingCompactions() {
 		try {
-			return (byte) MH_IS_MAX_ALLOWED_SPACE_REACHED_INCLUDING_COMPACTIONS.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_IS_MAX_ALLOWED_SPACE_REACHED_INCLUDING_COMPACTIONS.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isMaxAllowedSpaceReachedIncludingCompactions failed", t);
 		}

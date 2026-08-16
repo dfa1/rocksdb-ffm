@@ -184,7 +184,7 @@ public final class TransactionDB extends NativeObject {
 	public void flushWal(boolean sync) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_FLUSH_WAL.invokeExact(ptr(), sync ? (byte) 1 : (byte) 0, err);
+			MH_FLUSH_WAL.invokeExact(ptr(), RocksDB.toByte(sync), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("flushWal failed", t);

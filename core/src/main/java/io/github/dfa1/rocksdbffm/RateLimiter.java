@@ -141,7 +141,7 @@ public final class RateLimiter extends NativeObject {
 		try {
 			MemorySegment ptr = (MemorySegment) MH_CREATE_WITH_MODE.invokeExact(
 					rateBytesPerSec.toBytes(), refillPeriodUs, fairness,
-					mode.value, autoTuned ? (byte) 1 : (byte) 0);
+					mode.value, RocksDB.toByte(autoTuned));
 			return new RateLimiter(ptr);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("RateLimiter createWithMode failed", t);

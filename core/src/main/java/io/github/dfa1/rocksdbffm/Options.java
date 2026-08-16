@@ -247,7 +247,7 @@ public final class Options extends NativeObject {
 	/// @return `this` for chaining
 	public Options setCreateIfMissing(boolean value) {
 		try {
-			MH_SET_CREATE_IF_MISSING.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_CREATE_IF_MISSING.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setCreateIfMissing failed", t);
 		}
@@ -259,7 +259,7 @@ public final class Options extends NativeObject {
 	/// @return `true` if the DB is created on open when absent
 	public boolean getCreateIfMissing() {
 		try {
-			return ((byte) MH_GET_CREATE_IF_MISSING.invokeExact(ptr())) != 0;
+			return RocksDB.fromByte((byte) MH_GET_CREATE_IF_MISSING.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getCreateIfMissing failed", t);
 		}
@@ -392,7 +392,7 @@ public final class Options extends NativeObject {
 	/// @return `this` for chaining
 	public Options setEnableBlobFiles(boolean value) {
 		try {
-			MH_SET_ENABLE_BLOB_FILES.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_ENABLE_BLOB_FILES.invokeExact(ptr(), RocksDB.toByte(value));
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setEnableBlobFiles failed", t);
@@ -404,7 +404,7 @@ public final class Options extends NativeObject {
 	/// @return `true` if large values are stored in separate blob files
 	public boolean getEnableBlobFiles() {
 		try {
-			return ((byte) MH_GET_ENABLE_BLOB_FILES.invokeExact(ptr())) != 0;
+			return RocksDB.fromByte((byte) MH_GET_ENABLE_BLOB_FILES.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getEnableBlobFiles failed", t);
 		}
@@ -492,7 +492,7 @@ public final class Options extends NativeObject {
 	/// @return `this` for chaining
 	public Options setEnableBlobGc(boolean value) {
 		try {
-			MH_SET_ENABLE_BLOB_GC.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_ENABLE_BLOB_GC.invokeExact(ptr(), RocksDB.toByte(value));
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setEnableBlobGc failed", t);
@@ -504,7 +504,7 @@ public final class Options extends NativeObject {
 	/// @return `true` if blob GC is enabled
 	public boolean getEnableBlobGc() {
 		try {
-			return ((byte) MH_GET_ENABLE_BLOB_GC.invokeExact(ptr())) != 0;
+			return RocksDB.fromByte((byte) MH_GET_ENABLE_BLOB_GC.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getEnableBlobGc failed", t);
 		}

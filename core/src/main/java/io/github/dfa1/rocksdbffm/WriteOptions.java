@@ -127,7 +127,7 @@ public final class WriteOptions extends NativeObject {
 	/// @return this instance for chaining
 	public WriteOptions setSync(boolean sync) {
 		try {
-			MH_SET_SYNC.invokeExact(ptr(), sync ? (byte) 1 : (byte) 0);
+			MH_SET_SYNC.invokeExact(ptr(), RocksDB.toByte(sync));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setSync failed", t);
 		}
@@ -139,7 +139,7 @@ public final class WriteOptions extends NativeObject {
 	/// @return `true` if fsync is enabled
 	public boolean isSync() {
 		try {
-			return (byte) MH_GET_SYNC.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_SYNC.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isSync failed", t);
 		}
@@ -164,7 +164,7 @@ public final class WriteOptions extends NativeObject {
 	/// @return `true` if the WAL is skipped
 	public boolean isDisableWal() {
 		try {
-			return (byte) MH_GET_DISABLE_WAL.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_DISABLE_WAL.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isDisableWal failed", t);
 		}
@@ -178,7 +178,7 @@ public final class WriteOptions extends NativeObject {
 	public WriteOptions setIgnoreMissingColumnFamilies(boolean ignoreMissingColumnFamilies) {
 		try {
 			MH_SET_IGNORE_MISSING_COLUMN_FAMILIES.invokeExact(ptr(),
-					ignoreMissingColumnFamilies ? (byte) 1 : (byte) 0);
+					RocksDB.toByte(ignoreMissingColumnFamilies));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setIgnoreMissingColumnFamilies failed", t);
 		}
@@ -190,7 +190,7 @@ public final class WriteOptions extends NativeObject {
 	/// @return `true` if a missing column family is ignored
 	public boolean isIgnoreMissingColumnFamilies() {
 		try {
-			return (byte) MH_GET_IGNORE_MISSING_COLUMN_FAMILIES.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_IGNORE_MISSING_COLUMN_FAMILIES.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isIgnoreMissingColumnFamilies failed", t);
 		}
@@ -203,7 +203,7 @@ public final class WriteOptions extends NativeObject {
 	/// @return this instance for chaining
 	public WriteOptions setNoSlowdown(boolean noSlowdown) {
 		try {
-			MH_SET_NO_SLOWDOWN.invokeExact(ptr(), noSlowdown ? (byte) 1 : (byte) 0);
+			MH_SET_NO_SLOWDOWN.invokeExact(ptr(), RocksDB.toByte(noSlowdown));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setNoSlowdown failed", t);
 		}
@@ -215,7 +215,7 @@ public final class WriteOptions extends NativeObject {
 	/// @return `true` if the write fails fast rather than blocking
 	public boolean isNoSlowdown() {
 		try {
-			return (byte) MH_GET_NO_SLOWDOWN.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_NO_SLOWDOWN.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isNoSlowdown failed", t);
 		}
@@ -228,7 +228,7 @@ public final class WriteOptions extends NativeObject {
 	/// @return this instance for chaining
 	public WriteOptions setLowPri(boolean lowPri) {
 		try {
-			MH_SET_LOW_PRI.invokeExact(ptr(), lowPri ? (byte) 1 : (byte) 0);
+			MH_SET_LOW_PRI.invokeExact(ptr(), RocksDB.toByte(lowPri));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setLowPri failed", t);
 		}
@@ -240,7 +240,7 @@ public final class WriteOptions extends NativeObject {
 	/// @return `true` if this write is low priority
 	public boolean isLowPri() {
 		try {
-			return (byte) MH_GET_LOW_PRI.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_LOW_PRI.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isLowPri failed", t);
 		}
@@ -254,7 +254,7 @@ public final class WriteOptions extends NativeObject {
 	public WriteOptions setMemtableInsertHintPerBatch(boolean memtableInsertHintPerBatch) {
 		try {
 			MH_SET_MEMTABLE_INSERT_HINT_PER_BATCH.invokeExact(ptr(),
-					memtableInsertHintPerBatch ? (byte) 1 : (byte) 0);
+					RocksDB.toByte(memtableInsertHintPerBatch));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setMemtableInsertHintPerBatch failed", t);
 		}
@@ -266,7 +266,7 @@ public final class WriteOptions extends NativeObject {
 	/// @return `true` if the hint is inserted once per batch
 	public boolean isMemtableInsertHintPerBatch() {
 		try {
-			return (byte) MH_GET_MEMTABLE_INSERT_HINT_PER_BATCH.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_MEMTABLE_INSERT_HINT_PER_BATCH.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isMemtableInsertHintPerBatch failed", t);
 		}

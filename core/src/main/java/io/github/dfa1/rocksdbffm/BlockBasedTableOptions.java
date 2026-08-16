@@ -170,7 +170,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setNoBlockCache(boolean noBlockCache) {
 		try {
-			MH_SET_NO_BLOCK_CACHE.invokeExact(ptr(), noBlockCache ? (byte) 1 : (byte) 0);
+			MH_SET_NO_BLOCK_CACHE.invokeExact(ptr(), RocksDB.toByte(noBlockCache));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setNoBlockCache failed", t);
 		}
@@ -198,7 +198,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setCacheIndexAndFilterBlocks(boolean value) {
 		try {
-			MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setCacheIndexAndFilterBlocks failed", t);
 		}
@@ -240,7 +240,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setWholeKeyFiltering(boolean value) {
 		try {
-			MH_SET_WHOLE_KEY_FILTERING.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_WHOLE_KEY_FILTERING.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setWholeKeyFiltering failed", t);
 		}
@@ -254,7 +254,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setPartitionFilters(boolean value) {
 		try {
-			MH_SET_PARTITION_FILTERS.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_PARTITION_FILTERS.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setPartitionFilters failed", t);
 		}

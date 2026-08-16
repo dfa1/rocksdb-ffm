@@ -351,7 +351,7 @@ public final class Transaction extends NativeObject {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE.invokeExact(
 					ptr(), readOptions.ptr(), RocksDB.toNative(arena, key), (long) key.length,
-					exclusive ? (byte) 1 : (byte) 0, err);
+					RocksDB.toByte(exclusive), err);
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return null;
@@ -379,7 +379,7 @@ public final class Transaction extends NativeObject {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE.invokeExact(
 					ptr(), readOptions.ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(),
-					exclusive ? (byte) 1 : (byte) 0, err);
+					RocksDB.toByte(exclusive), err);
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;
@@ -407,7 +407,7 @@ public final class Transaction extends NativeObject {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE.invokeExact(
 					ptr(), readOptions.ptr(), key, key.byteSize(),
-					exclusive ? (byte) 1 : (byte) 0, err);
+					RocksDB.toByte(exclusive), err);
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;
@@ -643,7 +643,7 @@ public final class Transaction extends NativeObject {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE_CF.invokeExact(
 					ptr(), readOptions.ptr(), cf.ptr(), RocksDB.toNative(arena, key), (long) key.length,
-					exclusive ? (byte) 1 : (byte) 0, err);
+					RocksDB.toByte(exclusive), err);
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return null;
@@ -674,7 +674,7 @@ public final class Transaction extends NativeObject {
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE_CF.invokeExact(
 					ptr(), readOptions.ptr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(),
-					exclusive ? (byte) 1 : (byte) 0, err);
+					RocksDB.toByte(exclusive), err);
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;
@@ -704,7 +704,7 @@ public final class Transaction extends NativeObject {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE_CF.invokeExact(
 					ptr(), readOptions.ptr(), cf.ptr(), key, key.byteSize(),
-					exclusive ? (byte) 1 : (byte) 0, err);
+					RocksDB.toByte(exclusive), err);
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;

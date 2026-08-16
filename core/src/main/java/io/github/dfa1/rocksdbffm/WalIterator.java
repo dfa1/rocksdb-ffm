@@ -70,7 +70,7 @@ public final class WalIterator extends NativeObject {
 	/// @return `true` if the iterator is valid
 	public boolean isValid() {
 		try {
-			return ((byte) MH_VALID.invokeExact(ptr())) != 0;
+			return RocksDB.fromByte((byte) MH_VALID.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("wal_iter_valid failed", t);
 		}

@@ -532,7 +532,7 @@ public final class RocksDB {
 			MemorySegment err = errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
 			MemorySegment ptr = (MemorySegment) MH_OPEN_FOR_READ_ONLY.invokeExact(
-					options.ptr(), pathSeg, errorIfWalFileExists ? (byte) 1 : (byte) 0, err);
+					options.ptr(), pathSeg, toByte(errorIfWalFileExists), err);
 			checkError(err);
 			return new ReadOnlyDB(ptr, ReadOptions.newReadOptions());
 		} catch (Throwable t) {
@@ -851,7 +851,7 @@ public final class RocksDB {
 
 	static void cancelAllBackgroundWork(MemorySegment db, boolean wait) {
 		try {
-			MH_CANCEL_ALL_BACKGROUND_WORK.invokeExact(db, wait ? (byte) 1 : (byte) 0);
+			MH_CANCEL_ALL_BACKGROUND_WORK.invokeExact(db, toByte(wait));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("cancelAllBackgroundWork failed", t);
 		}
@@ -907,7 +907,7 @@ public final class RocksDB {
 	static void flushWal(MemorySegment db, boolean sync) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MH_FLUSH_WAL.invokeExact(db, sync ? (byte) 1 : (byte) 0, err);
+			MH_FLUSH_WAL.invokeExact(db, toByte(sync), err);
 			checkError(err);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("flushWal failed", t);
@@ -1013,9 +1013,9 @@ public final class RocksDB {
 
 	static boolean keyMayExistSegment(MemorySegment db, MemorySegment roOpts,
 	                                  MemorySegment key, long keyLen) throws Throwable {
-		return ((byte) MH_KEY_MAY_EXIST.invokeExact(db, roOpts, key, keyLen,
+		return fromByte((byte) MH_KEY_MAY_EXIST.invokeExact(db, roOpts, key, keyLen,
 				MemorySegment.NULL, MemorySegment.NULL,
-				MemorySegment.NULL, 0L, MemorySegment.NULL)) != 0;
+				MemorySegment.NULL, 0L, MemorySegment.NULL));
 	}
 
 	static void compactRangeBytes(MemorySegment db, byte[] startKey, byte[] endKey) {
@@ -1231,7 +1231,7 @@ public final class RocksDB {
 			}
 			MemorySegment ptr = (MemorySegment) MH_OPEN_FOR_READ_ONLY_CF.invokeExact(
 					options.ptr(), pathSeg, n, namesArr, optsArr, handlesArr,
-					errorIfWalFileExists ? (byte) 1 : (byte) 0, err);
+					toByte(errorIfWalFileExists), err);
 			checkError(err);
 			handles.clear();
 			for (int i = 0; i < n; i++) {
@@ -1641,9 +1641,9 @@ public final class RocksDB {
 	static boolean keyMayExistCfSegment(MemorySegment db, MemorySegment roOpts,
 	                                    ColumnFamilyHandle cf,
 	                                    MemorySegment key, long keyLen) throws Throwable {
-		return ((byte) MH_KEY_MAY_EXIST_CF.invokeExact(db, roOpts, cf.ptr(), key, keyLen,
+		return fromByte((byte) MH_KEY_MAY_EXIST_CF.invokeExact(db, roOpts, cf.ptr(), key, keyLen,
 				MemorySegment.NULL, MemorySegment.NULL,
-				MemorySegment.NULL, 0L, MemorySegment.NULL)) != 0;
+				MemorySegment.NULL, 0L, MemorySegment.NULL));
 	}
 
 	static RocksIterator createIteratorCf(MemorySegment db, MemorySegment readOpts,
@@ -1761,5 +1761,21 @@ public final class RocksDB {
 			return Optional.empty();
 		}
 		return Optional.of(toJavaString(ptr));
+	}
+
+	/// Converts a Java `boolean` to the `unsigned char` (0 or 1) the C API expects.
+	///
+	/// @param value the boolean to convert
+	/// @return `(byte) 1` if `value` is `true`, `(byte) 0` otherwise
+	public static byte toByte(boolean value) {
+		return value ? (byte) 1 : (byte) 0;
+	}
+
+	/// [#toByte(boolean)] in reverse: converts a C API `unsigned char` result back to a Java `boolean`.
+	///
+	/// @param value the native byte to convert
+	/// @return `false` if `value` is `0`, `true` otherwise
+	public static boolean fromByte(byte value) {
+		return value != 0;
 	}
 }

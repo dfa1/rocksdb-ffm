@@ -222,7 +222,7 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @return `this` for chaining
 	public BackupEngineOptions setShareTableFiles(boolean val) {
 		try {
-			MH_SET_SHARE_TABLE_FILES.invokeExact(ptr(), val ? (byte) 1 : (byte) 0);
+			MH_SET_SHARE_TABLE_FILES.invokeExact(ptr(), RocksDB.toByte(val));
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setShareTableFiles failed", t);
@@ -234,7 +234,7 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @return `true` if SST sharing is enabled
 	public boolean isShareTableFiles() {
 		try {
-			return (byte) MH_GET_SHARE_TABLE_FILES.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_SHARE_TABLE_FILES.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isShareTableFiles failed", t);
 		}
@@ -246,7 +246,7 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @return `this` for chaining
 	public BackupEngineOptions setSync(boolean val) {
 		try {
-			MH_SET_SYNC.invokeExact(ptr(), val ? (byte) 1 : (byte) 0);
+			MH_SET_SYNC.invokeExact(ptr(), RocksDB.toByte(val));
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setSync failed", t);
@@ -258,7 +258,7 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @return `true` if sync-after-write is enabled
 	public boolean isSync() {
 		try {
-			return (byte) MH_GET_SYNC.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_SYNC.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isSync failed", t);
 		}
@@ -271,7 +271,7 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @return `this` for chaining
 	public BackupEngineOptions setDestroyOldData(boolean val) {
 		try {
-			MH_SET_DESTROY_OLD_DATA.invokeExact(ptr(), val ? (byte) 1 : (byte) 0);
+			MH_SET_DESTROY_OLD_DATA.invokeExact(ptr(), RocksDB.toByte(val));
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setDestroyOldData failed", t);
@@ -283,7 +283,7 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @return `true` if destroy-old-data is enabled
 	public boolean isDestroyOldData() {
 		try {
-			return (byte) MH_GET_DESTROY_OLD_DATA.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_DESTROY_OLD_DATA.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isDestroyOldData failed", t);
 		}
@@ -295,7 +295,7 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @return `this` for chaining
 	public BackupEngineOptions setBackupLogFiles(boolean val) {
 		try {
-			MH_SET_BACKUP_LOG_FILES.invokeExact(ptr(), val ? (byte) 1 : (byte) 0);
+			MH_SET_BACKUP_LOG_FILES.invokeExact(ptr(), RocksDB.toByte(val));
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setBackupLogFiles failed", t);
@@ -307,7 +307,7 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @return `true` if log file backup is enabled
 	public boolean isBackupLogFiles() {
 		try {
-			return (byte) MH_GET_BACKUP_LOG_FILES.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_BACKUP_LOG_FILES.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isBackupLogFiles failed", t);
 		}

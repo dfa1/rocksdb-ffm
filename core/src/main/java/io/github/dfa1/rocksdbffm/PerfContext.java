@@ -159,7 +159,7 @@ public final class PerfContext extends NativeObject {
 		MemorySegment strPtr;
 		try {
 			strPtr = (MemorySegment) MH_REPORT.invokeExact(ptr(),
-					excludeZeroCounters ? (byte) 1 : (byte) 0);
+					RocksDB.toByte(excludeZeroCounters));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("report failed", t);
 		}

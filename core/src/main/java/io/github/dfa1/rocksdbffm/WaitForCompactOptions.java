@@ -93,7 +93,7 @@ public final class WaitForCompactOptions extends NativeObject {
 	/// @return `this` for chaining
 	public WaitForCompactOptions setAbortOnPause(boolean value) {
 		try {
-			MH_SET_ABORT_ON_PAUSE.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_ABORT_ON_PAUSE.invokeExact(ptr(), RocksDB.toByte(value));
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setAbortOnPause failed", t);
@@ -105,7 +105,7 @@ public final class WaitForCompactOptions extends NativeObject {
 	/// @return `true` if abort-on-pause is enabled
 	public boolean isAbortOnPause() {
 		try {
-			return ((byte) MH_GET_ABORT_ON_PAUSE.invokeExact(ptr())) != 0;
+			return RocksDB.fromByte((byte) MH_GET_ABORT_ON_PAUSE.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isAbortOnPause failed", t);
 		}
@@ -118,7 +118,7 @@ public final class WaitForCompactOptions extends NativeObject {
 	/// @return `this` for chaining
 	public WaitForCompactOptions setFlush(boolean value) {
 		try {
-			MH_SET_FLUSH.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_FLUSH.invokeExact(ptr(), RocksDB.toByte(value));
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setFlush failed", t);
@@ -130,7 +130,7 @@ public final class WaitForCompactOptions extends NativeObject {
 	/// @return `true` if flush-before-wait is enabled
 	public boolean isFlush() {
 		try {
-			return ((byte) MH_GET_FLUSH.invokeExact(ptr())) != 0;
+			return RocksDB.fromByte((byte) MH_GET_FLUSH.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isFlush failed", t);
 		}
@@ -143,7 +143,7 @@ public final class WaitForCompactOptions extends NativeObject {
 	/// @return `this` for chaining
 	public WaitForCompactOptions setCloseDb(boolean value) {
 		try {
-			MH_SET_CLOSE_DB.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_CLOSE_DB.invokeExact(ptr(), RocksDB.toByte(value));
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setCloseDb failed", t);
@@ -155,7 +155,7 @@ public final class WaitForCompactOptions extends NativeObject {
 	/// @return `true` if close-after-compact is enabled
 	public boolean isCloseDb() {
 		try {
-			return ((byte) MH_GET_CLOSE_DB.invokeExact(ptr())) != 0;
+			return RocksDB.fromByte((byte) MH_GET_CLOSE_DB.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("isCloseDb failed", t);
 		}

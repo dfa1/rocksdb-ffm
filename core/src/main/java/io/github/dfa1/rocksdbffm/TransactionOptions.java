@@ -211,7 +211,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return this instance for chaining
 	public TransactionOptions setSetSnapshot(boolean value) {
 		try {
-			MH_SET_SET_SNAPSHOT.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_SET_SNAPSHOT.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setSetSnapshot failed", t);
 		}
@@ -223,7 +223,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return `true` if a snapshot is taken at transaction start
 	public boolean getSetSnapshot() {
 		try {
-			return (byte) MH_GET_SET_SNAPSHOT.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_SET_SNAPSHOT.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getSetSnapshot failed", t);
 		}
@@ -236,7 +236,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return this instance for chaining
 	public TransactionOptions setDeadlockDetect(boolean value) {
 		try {
-			MH_SET_DEADLOCK_DETECT.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_DEADLOCK_DETECT.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setDeadlockDetect failed", t);
 		}
@@ -248,7 +248,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return `true` if deadlock detection is enabled
 	public boolean getDeadlockDetect() {
 		try {
-			return (byte) MH_GET_DEADLOCK_DETECT.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_DEADLOCK_DETECT.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getDeadlockDetect failed", t);
 		}
@@ -262,7 +262,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return this instance for chaining
 	public TransactionOptions setUseOnlyTheLastCommitTimeBatchForRecovery(boolean value) {
 		try {
-			MH_SET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setUseOnlyTheLastCommitTimeBatchForRecovery failed", t);
 		}
@@ -274,7 +274,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return `true` if only the last commit-time write batch is used during recovery
 	public boolean getUseOnlyTheLastCommitTimeBatchForRecovery() {
 		try {
-			return (byte) MH_GET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getUseOnlyTheLastCommitTimeBatchForRecovery failed", t);
 		}
@@ -450,7 +450,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return this instance for chaining
 	public TransactionOptions setSkipConcurrencyControl(boolean value) {
 		try {
-			MH_SET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setSkipConcurrencyControl failed", t);
 		}
@@ -462,7 +462,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return `true` if concurrency control is skipped
 	public boolean getSkipConcurrencyControl() {
 		try {
-			return (byte) MH_GET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getSkipConcurrencyControl failed", t);
 		}
@@ -476,7 +476,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return this instance for chaining
 	public TransactionOptions setSkipPrepare(boolean value) {
 		try {
-			MH_SET_SKIP_PREPARE.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_SKIP_PREPARE.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setSkipPrepare failed", t);
 		}
@@ -488,7 +488,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return `true` if the prepare phase is skipped
 	public boolean getSkipPrepare() {
 		try {
-			return (byte) MH_GET_SKIP_PREPARE.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_SKIP_PREPARE.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getSkipPrepare failed", t);
 		}
@@ -527,7 +527,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return this instance for chaining
 	public TransactionOptions setWriteBatchTrackTimestampSize(boolean value) {
 		try {
-			MH_SET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setWriteBatchTrackTimestampSize failed", t);
 		}
@@ -539,7 +539,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return `true` if timestamp size tracking is enabled
 	public boolean getWriteBatchTrackTimestampSize() {
 		try {
-			return (byte) MH_GET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getWriteBatchTrackTimestampSize failed", t);
 		}
@@ -552,7 +552,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return this instance for chaining
 	public TransactionOptions setCommitBypassMemtable(boolean value) {
 		try {
-			MH_SET_COMMIT_BYPASS_MEMTABLE.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_COMMIT_BYPASS_MEMTABLE.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setCommitBypassMemtable failed", t);
 		}
@@ -564,7 +564,7 @@ public final class TransactionOptions extends NativeObject {
 	/// @return `true` if commit bypasses the memtable
 	public boolean getCommitBypassMemtable() {
 		try {
-			return (byte) MH_GET_COMMIT_BYPASS_MEMTABLE.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_COMMIT_BYPASS_MEMTABLE.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getCommitBypassMemtable failed", t);
 		}

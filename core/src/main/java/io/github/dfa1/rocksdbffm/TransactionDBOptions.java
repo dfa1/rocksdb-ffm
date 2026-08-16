@@ -359,7 +359,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @return this instance for chaining
 	public TransactionDBOptions setRollbackMergeOperands(boolean value) {
 		try {
-			MH_SET_ROLLBACK_MERGE_OPERANDS.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_ROLLBACK_MERGE_OPERANDS.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setRollbackMergeOperands failed", t);
 		}
@@ -371,7 +371,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @return `true` if merge operands are rolled back
 	public boolean getRollbackMergeOperands() {
 		try {
-			return (byte) MH_GET_ROLLBACK_MERGE_OPERANDS.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_ROLLBACK_MERGE_OPERANDS.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getRollbackMergeOperands failed", t);
 		}
@@ -384,7 +384,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @return this instance for chaining
 	public TransactionDBOptions setUsePerKeyPointLockMgr(boolean value) {
 		try {
-			MH_SET_USE_PER_KEY_POINT_LOCK_MGR.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_USE_PER_KEY_POINT_LOCK_MGR.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setUsePerKeyPointLockMgr failed", t);
 		}
@@ -396,7 +396,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @return `true` if the per-key point lock manager is active
 	public boolean getUsePerKeyPointLockMgr() {
 		try {
-			return (byte) MH_GET_USE_PER_KEY_POINT_LOCK_MGR.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_USE_PER_KEY_POINT_LOCK_MGR.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getUsePerKeyPointLockMgr failed", t);
 		}
@@ -410,7 +410,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @return this instance for chaining
 	public TransactionDBOptions setSkipConcurrencyControl(boolean value) {
 		try {
-			MH_SET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setSkipConcurrencyControl failed", t);
 		}
@@ -422,7 +422,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @return `true` if concurrency control is skipped
 	public boolean getSkipConcurrencyControl() {
 		try {
-			return (byte) MH_GET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getSkipConcurrencyControl failed", t);
 		}
@@ -463,7 +463,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @return this instance for chaining
 	public TransactionDBOptions setEnableUdtValidation(boolean value) {
 		try {
-			MH_SET_ENABLE_UDT_VALIDATION.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
+			MH_SET_ENABLE_UDT_VALIDATION.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setEnableUdtValidation failed", t);
 		}
@@ -475,7 +475,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @return `true` if user-defined-timestamp validation is enabled
 	public boolean getEnableUdtValidation() {
 		try {
-			return (byte) MH_GET_ENABLE_UDT_VALIDATION.invokeExact(ptr()) != 0;
+			return RocksDB.fromByte((byte) MH_GET_ENABLE_UDT_VALIDATION.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getEnableUdtValidation failed", t);
 		}
