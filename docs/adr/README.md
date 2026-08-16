@@ -1,6 +1,7 @@
 # Architecture Decision Records
 
-A short record of *why* a significant decision was made, captured close to when it was made. Unlike
+Each record follows the [Architectural Decision Records](https://adr.github.io/) format: a short
+record of *why* a significant decision was made, captured close to when it was made. Unlike
 [explanation.md](../explanation.md), which stays up to date with the library's current shape, an ADR
 is a point-in-time snapshot: context, the decision, and its known consequences at the time. When a
 later decision supersedes an earlier one, the earlier ADR stays (marked `Superseded`) rather than
