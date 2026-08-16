@@ -132,12 +132,16 @@ public class WriteBatchSizeBenchmark {
 		db.write(batch);
 	}
 
+	/// Runs this class with [GCProfiler] attached. `-Djmh.forks=<n>` overrides the `@Fork`
+	/// count above.
 	static void main() throws Exception {
-		org.openjdk.jmh.runner.options.Options opt = new OptionsBuilder()
-				.addProfiler(GCProfiler.class)
-				.include(WriteBatchSizeBenchmark.class.getSimpleName())
-				.build();
-
-		new org.openjdk.jmh.runner.Runner(opt).run();
+		OptionsBuilder builder = new OptionsBuilder();
+		builder.addProfiler(GCProfiler.class);
+		builder.include(WriteBatchSizeBenchmark.class.getSimpleName());
+		String forks = System.getProperty("jmh.forks");
+		if (forks != null) {
+			builder.forks(Integer.parseInt(forks));
+		}
+		new org.openjdk.jmh.runner.Runner(builder.build()).run();
 	}
 }
