@@ -7,54 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.7] — 2026-08-15
-
-Closes out the last remaining `byte[]`/`ByteBuffer`/`MemorySegment` tier gaps across the whole
-library, normalizes `RocksDB`'s open-mode factory names, adds a scoped zero-copy `get(key, Mapper)`
-read path to every DB type, completes the `TransactionDBOptions`/`TransactionOptions` surface,
-consolidates `PinnableSlice` into a single reusable wrapper, and adds SonarCloud + coverage
-infrastructure.
-
 ### Added
 
-- `ByteBuffer`/`MemorySegment` access tiers for the last gaps in the three-tier API: `WriteBatch`'s no-CF `put`/`delete`, `TransactionDB`'s CF-scoped `get`, `OptimisticTransactionDB`'s no-CF `deleteRange`, `SstFileWriter`'s `put`/`delete`/`deleteRange`, and all of `Transaction`'s `put`/`delete`/`get`/`getForUpdate` (previously `byte[]`-only, the largest gap). ([#68](https://github.com/dfa1/rocksdbffm/issues/68), [#69](https://github.com/dfa1/rocksdbffm/pull/69))
-- `WriteBatchSizeBenchmark` sweeps batch size (1–400) across all four write tiers; benchmark test data switched from tiny repeated placeholder strings to realistic 16-byte keys / 1KB values, randomly generated and unique per entry. ([#69](https://github.com/dfa1/rocksdbffm/pull/69))
-- SonarCloud static analysis and coverage reporting, gated on every PR. ([#62](https://github.com/dfa1/rocksdbffm/issues/62), [#63](https://github.com/dfa1/rocksdbffm/pull/63))
-- Test coverage for previously 0%-coverage classes; the `integration-tests` module now feeds the aggregate coverage report instead of running outside it. ([#65](https://github.com/dfa1/rocksdbffm/pull/65))
-- `docs/` restructured using the [Diataxis](https://diataxis.fr/) framework (tutorial / how-to / reference / explanation), replacing one long README. ([#66](https://github.com/dfa1/rocksdbffm/issues/66), [#67](https://github.com/dfa1/rocksdbffm/pull/67))
-- Dedicated `LRUCache`/`HyperClockCache` tests; `RocksIterator.refresh()` snapshot-semantics coverage restored. ([90d54ae](https://github.com/dfa1/rocksdbffm/commit/90d54ae))
-- `ReadWriteDB.get(MemorySegment, Mapper)` and equivalents across every DB type (`ReadOnlyDB`, `TtlDB`, `SecondaryDB`, `BlobDB`, `OptimisticTransactionDB`, `TransactionDB`, `Transaction`), plus `RocksIterator.key(Mapper)`/`value(Mapper)` — a scoped, zero-copy read callback built on `rocksdb_pinnable_handle_t`/`rocksdb_pinnableslice_t`, for hot read paths where a `byte[]` copy isn't wanted. ([#57](https://github.com/dfa1/rocksdbffm/pull/57))
-- `TransactionDBOptions`/`TransactionOptions` now map the complete C API option surface: 10 new option pairs on `TransactionDBOptions` (`maxNumDeadlocks`, `transactionLockTimeout`, `defaultLockTimeout`, `writePolicy`, `rollbackMergeOperands`, `usePerKeyPointLockMgr`, `skipConcurrencyControl`, `defaultWriteBatchFlushThreshold`, `enableUdtValidation`, `txnCommitBypassMemtableThreshold`) and 12 on `TransactionOptions`, plus getters for options that already existed and a new `TxnDBWritePolicy` enum. ([1348f3d](https://github.com/dfa1/rocksdbffm/commit/1348f3d))
-- `FfmScaleBenchmark`/`JniScaleBenchmark`/`ScaleBenchmarkRunner`: FFM-vs-JNI throughput and allocation comparison across `get`/iteration, zero-copy vs copy tiers, at realistic key counts (10k/100k) instead of a near-empty database. ([#80](https://github.com/dfa1/rocksdbffm/pull/80))
-- `EqualsVerifier` contract tests for the three domain primitives with hand-rolled `equals`/`hashCode` (`BackupId`, `MemorySize`, `SequenceNumber`), replacing spot-check tests with a full-contract check. ([310238d](https://github.com/dfa1/rocksdbffm/commit/310238d))
-- `WriteBatch`: the 8 previously-uncovered overloads (`put(Arena, byte[], byte[])`, `clear()`, and the CF-scoped `ByteBuffer`/`MemorySegment` tiers for `put`/`delete`/`deleteRange`) now have tests. ([269dd6a](https://github.com/dfa1/rocksdbffm/commit/269dd6a))
-- `Checkpoint` coverage extended to `BlobDB`, `TtlDB`, `ReadOnlyDB`, and `SecondaryDB` (previously only `ReadWriteDB`), plus the `exportTo(Path)` convenience overload. ([#75](https://github.com/dfa1/rocksdbffm/pull/75))
-- `docs/c-api-gaps.md`: documented library-version-query as a Type B gap — `rocksdb/c.h` has no runtime way to ask the loaded native library its version. ([#78](https://github.com/dfa1/rocksdbffm/pull/78))
+- ZSTD and LZ4 now built hermetically via `zig cc` and statically linked, replacing an unreliable host-library probe; tests confirm the codecs actually compress. ([4062792](https://github.com/dfa1/rocksdbffm/commit/4062792), [06c3840](https://github.com/dfa1/rocksdbffm/commit/06c3840))
+- `WriteOptions` now maps its full field set (`sync`, `disableWal`, `noSlowdown`, `lowPri`, `ioActivity`, and more), plus new `IOPriority`/`IOActivity` enums. ([9fbed88](https://github.com/dfa1/rocksdbffm/commit/9fbed88))
+- `FfmValueSizeBenchmark` gains 64B/128B sweep points. ([f16b2b8](https://github.com/dfa1/rocksdbffm/commit/f16b2b8))
 
 ### Changed
 
-- **Breaking:** `RocksDB`'s open-mode factory methods no longer bake column-family support into the method name — it's now an overload of the base factory. `openWithColumnFamilies` → `open(..., descriptors, handles)`, `openReadOnlyWithColumnFamilies` → `openReadOnly(..., descriptors, handles[, boolean])`, `openWithTtl`/`openWithColumnFamiliesAndTtl` → `openTtl(...)`, `openWithBlobFiles` → `openBlob(...)`, `openTransactionWithColumnFamilies` → `openTransaction(..., descriptors, handles)`, `openOptimisticWithColumnFamilies` → `openOptimistic(..., descriptors, handles)`. ([#70](https://github.com/dfa1/rocksdbffm/pull/70))
-- **Breaking:** `RocksDB.open` renamed to `RocksDB.openReadWrite`, matching the descriptive naming of every other factory (`openReadOnly`, `openTtl`, `openBlob`, `openSecondary`, `openTransaction`, `openOptimistic`). ([#70](https://github.com/dfa1/rocksdbffm/pull/70))
-- **Breaking:** `ReadWriteDB#get(ByteBuffer, ByteBuffer)` and `#get(MemorySegment, MemorySegment)` return a sealed `CopyResult` (`Copied` / `NotEnoughCapacity(long)` / `NotFound`) instead of an `int`/`long` sentinel — the old encoding let a too-small destination silently truncate the value while still reporting the full length, and let a value above `Integer.MAX_VALUE` collide with the `-1` not-found sentinel. ([#44](https://github.com/dfa1/rocksdbffm/issues/44), [#47](https://github.com/dfa1/rocksdbffm/issues/47), [#54](https://github.com/dfa1/rocksdbffm/pull/54), [#60](https://github.com/dfa1/rocksdbffm/pull/60))
-- `rocksdb` submodule upgraded from v11.0.4 to v11.8.1. ([#53](https://github.com/dfa1/rocksdbffm/issues/53), [#56](https://github.com/dfa1/rocksdbffm/pull/56))
-- Property-based tests (jqwik) replaced with parameterized invariant tests. ([#43](https://github.com/dfa1/rocksdbffm/pull/43))
-- `Checkpoint` and `SstFileWriter` byte-count APIs use `MemorySize` instead of raw `long`. ([616b8c0](https://github.com/dfa1/rocksdbffm/commit/616b8c0))
-- `PinnableSlice` now owns all pinned-value consumption (`toByteArray`, `copyInto`, `map`) instead of every `get(...)` overload hand-rolling copy/map logic around it — 12 call sites across `RocksDB`, `Transaction`, and `TransactionDB` migrated, no behavior change. ([#58](https://github.com/dfa1/rocksdbffm/issues/58), [#80](https://github.com/dfa1/rocksdbffm/pull/80))
-- `getBytes()`/`getCfBytes()` moved from `rocksdb_get_pinned` to `rocksdb_get_pinned_v2`, the same zero-copy core the `Mapper` tier uses — cuts a `PinnableSlice` allocation (104 B/op, measured across an 8 B–1 MB sweep) at every value size. ([#81](https://github.com/dfa1/rocksdbffm/pull/81))
-- CI: `goto-bus-stop/setup-zig` (unmaintained) migrated to the maintained `mlugg/setup-zig`; `actions/checkout`/`setup-java`/`cache` bumped off the deprecated Node 20 runtime, and `dependabot.yml` now tracks `github-actions` updates. ([1986333](https://github.com/dfa1/rocksdbffm/commit/1986333), [7c13009](https://github.com/dfa1/rocksdbffm/commit/7c13009))
+- **Breaking:** `TxnDBWritePolicy` renamed to `WritePolicy`. ([f30aac8](https://github.com/dfa1/rocksdbffm/commit/f30aac8))
+- **Breaking:** Transaction/TransactionDB lock and expiration timeouts now use `Duration` (`null` = disabled/wait-forever) instead of raw `long` + `-1`. ([5570369](https://github.com/dfa1/rocksdbffm/commit/5570369))
+- `RocksDBException` constructors are now private; all construction goes through `wrap()`/`of()`. ([2857681](https://github.com/dfa1/rocksdbffm/commit/2857681), [7b72364](https://github.com/dfa1/rocksdbffm/commit/7b72364))
+- Int-backed enum reverse lookups now use `switch` instead of a `values()`-loop. ([c506d06](https://github.com/dfa1/rocksdbffm/commit/c506d06))
+- `PinnableHandle` extracted from `PinnableSlice`; both now reuse the caller's dead `errptr` slot and check `NULL` before opening their try-scope. ([1cb6c45](https://github.com/dfa1/rocksdbffm/commit/1cb6c45), [460b9d7](https://github.com/dfa1/rocksdbffm/commit/460b9d7), [2273661](https://github.com/dfa1/rocksdbffm/commit/2273661))
+- `Transaction`/`TransactionDB`'s `get`/`getForUpdate` now go through `PinnableSlice` instead of the malloc'd `rocksdb_*_get[_for_update]`. ([fedacf8](https://github.com/dfa1/rocksdbffm/commit/fedacf8))
+- Malloc'd-C-string-to-`String` conversion centralized into `RocksDB.toJavaString`/`toOptionalString`. ([36f1b62](https://github.com/dfa1/rocksdbffm/commit/36f1b62))
 
 ### Fixed
 
-- `TransactionDB.createColumnFamily()` now creates the column family on the `txn_db` handle instead of one the transaction DB can't see. ([#61](https://github.com/dfa1/rocksdbffm/issues/61), [626428b](https://github.com/dfa1/rocksdbffm/commit/626428b))
+- `Transaction.getSnapshot()` never actually returned `null` — dropped the dead check and its javadoc claim. ([61ba393](https://github.com/dfa1/rocksdbffm/commit/61ba393))
+- `PinnableHandle`/`PinnableSlice` reinterpreted their pinned value twice, costing throughput on small values. ([12d54b8](https://github.com/dfa1/rocksdbffm/commit/12d54b8), [cc99c1b](https://github.com/dfa1/rocksdbffm/commit/cc99c1b))
+- Stale `[#open]` javadoc reference and missing `openBlob` row fixed. ([72a6e40](https://github.com/dfa1/rocksdbffm/commit/72a6e40))
+
+### Build & Tooling
+
+- `checkstyle` bumped 13.9.0 → 13.10.0. ([0c40152](https://github.com/dfa1/rocksdbffm/commit/0c40152))
+
+## [0.7] — 2026-08-15
+
+Closes out the last three-tier API gaps, normalizes `RocksDB`'s open-mode factory names, adds a
+scoped zero-copy `get(key, Mapper)` read path to every DB type, completes the
+`TransactionDBOptions`/`TransactionOptions` surface, consolidates `PinnableSlice`, and adds
+SonarCloud + coverage infrastructure.
+
+### Added
+
+- `ByteBuffer`/`MemorySegment` tiers for the last three-tier gaps: `WriteBatch`, `TransactionDB`, `OptimisticTransactionDB`, `SstFileWriter`, and all of `Transaction` (previously `byte[]`-only). ([#68](https://github.com/dfa1/rocksdbffm/issues/68), [#69](https://github.com/dfa1/rocksdbffm/pull/69))
+- `WriteBatchSizeBenchmark` sweeps batch size (1–400) across all four write tiers, with realistic 16-byte key / 1KB value data. ([#69](https://github.com/dfa1/rocksdbffm/pull/69))
+- SonarCloud static analysis and coverage reporting, gated on every PR. ([#62](https://github.com/dfa1/rocksdbffm/issues/62), [#63](https://github.com/dfa1/rocksdbffm/pull/63))
+- Test coverage added for previously 0%-coverage classes; `integration-tests` now feeds the aggregate coverage report. ([#65](https://github.com/dfa1/rocksdbffm/pull/65))
+- `docs/` restructured using the [Diataxis](https://diataxis.fr/) framework, replacing one long README. ([#66](https://github.com/dfa1/rocksdbffm/issues/66), [#67](https://github.com/dfa1/rocksdbffm/pull/67))
+- Dedicated `LRUCache`/`HyperClockCache` tests; `RocksIterator.refresh()` snapshot-semantics coverage restored. ([90d54ae](https://github.com/dfa1/rocksdbffm/commit/90d54ae))
+- Scoped zero-copy `get(MemorySegment, Mapper)` added across every DB type, plus `RocksIterator.key(Mapper)`/`value(Mapper)`. ([#57](https://github.com/dfa1/rocksdbffm/pull/57))
+- `TransactionDBOptions`/`TransactionOptions` now map the complete C API option surface (22 new option pairs), plus a new `TxnDBWritePolicy` enum. ([1348f3d](https://github.com/dfa1/rocksdbffm/commit/1348f3d))
+- `FfmScaleBenchmark`/`JniScaleBenchmark`: FFM-vs-JNI comparison at realistic key counts (10k/100k) instead of a near-empty database. ([#80](https://github.com/dfa1/rocksdbffm/pull/80))
+- `EqualsVerifier` contract tests for `BackupId`/`MemorySize`/`SequenceNumber`'s hand-rolled `equals`/`hashCode`. ([310238d](https://github.com/dfa1/rocksdbffm/commit/310238d))
+- `WriteBatch`: 8 previously-uncovered overloads now have tests. ([269dd6a](https://github.com/dfa1/rocksdbffm/commit/269dd6a))
+- `Checkpoint` coverage extended to `BlobDB`, `TtlDB`, `ReadOnlyDB`, `SecondaryDB`, plus an `exportTo(Path)` overload. ([#75](https://github.com/dfa1/rocksdbffm/pull/75))
+- `docs/c-api-gaps.md`: documented library-version-query as a Type B gap. ([#78](https://github.com/dfa1/rocksdbffm/pull/78))
+
+### Changed
+
+- **Breaking:** `RocksDB`'s open-mode factories no longer bake column-family support into the name — `openWithColumnFamilies` → `open(..., descriptors, handles)`, `openReadOnlyWithColumnFamilies` → `openReadOnly(...)`, `openWithTtl` → `openTtl(...)`, `openWithBlobFiles` → `openBlob(...)`, `openTransactionWithColumnFamilies` → `openTransaction(...)`, `openOptimisticWithColumnFamilies` → `openOptimistic(...)`. ([#70](https://github.com/dfa1/rocksdbffm/pull/70))
+- **Breaking:** `RocksDB.open` renamed to `RocksDB.openReadWrite`, matching every other factory's naming. ([#70](https://github.com/dfa1/rocksdbffm/pull/70))
+- **Breaking:** `ReadWriteDB#get(ByteBuffer/MemorySegment, ...)` returns a sealed `CopyResult` instead of an `int`/`long` sentinel — the old encoding let a too-small destination silently truncate the value, and a value above `Integer.MAX_VALUE` collided with the not-found sentinel. ([#44](https://github.com/dfa1/rocksdbffm/issues/44), [#47](https://github.com/dfa1/rocksdbffm/issues/47), [#54](https://github.com/dfa1/rocksdbffm/pull/54), [#60](https://github.com/dfa1/rocksdbffm/pull/60))
+- `rocksdb` submodule upgraded from v11.0.4 to v11.8.1. ([#53](https://github.com/dfa1/rocksdbffm/issues/53), [#56](https://github.com/dfa1/rocksdbffm/pull/56))
+- Property-based tests (jqwik) replaced with parameterized invariant tests. ([#43](https://github.com/dfa1/rocksdbffm/pull/43))
+- `Checkpoint` and `SstFileWriter` byte-count APIs use `MemorySize` instead of raw `long`. ([616b8c0](https://github.com/dfa1/rocksdbffm/commit/616b8c0))
+- `PinnableSlice` now owns all pinned-value consumption (`toByteArray`, `copyInto`, `map`) instead of every `get(...)` overload hand-rolling it — 12 call sites migrated, no behavior change. ([#58](https://github.com/dfa1/rocksdbffm/issues/58), [#80](https://github.com/dfa1/rocksdbffm/pull/80))
+- `getBytes()`/`getCfBytes()` moved to `rocksdb_get_pinned_v2`, cutting a `PinnableSlice` allocation at every value size. ([#81](https://github.com/dfa1/rocksdbffm/pull/81))
+- CI: `setup-zig` action migrated off the unmaintained fork; `checkout`/`setup-java`/`cache` off the deprecated Node 20 runtime; `dependabot.yml` now tracks `github-actions`. ([1986333](https://github.com/dfa1/rocksdbffm/commit/1986333), [7c13009](https://github.com/dfa1/rocksdbffm/commit/7c13009))
+
+### Fixed
+
+- `TransactionDB.createColumnFamily()` now creates the column family on the `txn_db` handle instead of one it can't see. ([#61](https://github.com/dfa1/rocksdbffm/issues/61), [626428b](https://github.com/dfa1/rocksdbffm/commit/626428b))
 - `getBytes()` now delegates to `rocksdb_get_into_buffer` instead of allocating an intermediate PinnableSlice. ([#52](https://github.com/dfa1/rocksdbffm/issues/52), [#54](https://github.com/dfa1/rocksdbffm/pull/54))
 - CI badge no longer renders "no status" on the README. ([#51](https://github.com/dfa1/rocksdbffm/pull/51))
-- Read benchmarks no longer measure against a 1–2 key database (every SST/block-cache/bloom-filter/LSM-level path was bypassed): `FfmBlobSizeBenchmark` renamed to `FfmValueSizeBenchmark` with a real dataset sized off a 32 MB target, `FfmBenchmark`/`JniBenchmark` documented as per-call-overhead microbenchmarks rather than read throughput. ([38b32e6](https://github.com/dfa1/rocksdbffm/commit/38b32e6), [55a2d34](https://github.com/dfa1/rocksdbffm/commit/55a2d34))
-- Blob-size benchmark sweep decoupled from the rest of the FFM suite — it previously reran (and polluted the block cache for) every other benchmark in the class once per sweep size. ([#57](https://github.com/dfa1/rocksdbffm/pull/57))
+- Read benchmarks no longer measure against a 1–2 key database: `FfmBlobSizeBenchmark` renamed to `FfmValueSizeBenchmark` with a real 32 MB dataset; `FfmBenchmark`/`JniBenchmark` documented as per-call-overhead microbenchmarks. ([38b32e6](https://github.com/dfa1/rocksdbffm/commit/38b32e6), [55a2d34](https://github.com/dfa1/rocksdbffm/commit/55a2d34))
+- Blob-size benchmark sweep decoupled from the FFM suite — it previously reran (and polluted the block cache for) every other benchmark once per sweep size. ([#57](https://github.com/dfa1/rocksdbffm/pull/57))
 
 ### Removed
 
-- `ReadWriteDB.getSupportedCompressions` dropped (unused, not part of the documented tier surface). ([3e6eae3](https://github.com/dfa1/rocksdbffm/commit/3e6eae3))
-- `ColumnFamilyDescriptor.nameAsString()` dropped (unused, no callers or tests). ([#75](https://github.com/dfa1/rocksdbffm/pull/75))
+- `ReadWriteDB.getSupportedCompressions` dropped (unused). ([3e6eae3](https://github.com/dfa1/rocksdbffm/commit/3e6eae3))
+- `ColumnFamilyDescriptor.nameAsString()` dropped (unused). ([#75](https://github.com/dfa1/rocksdbffm/pull/75))
 
 ### Security
 
@@ -62,8 +87,8 @@ infrastructure.
 
 ### Build & Tooling
 
-- RocksDB native builds cached in the `sonar.yml` and `publish.yml` workflows; `publish.yml` gains a `workflow_dispatch` ref input. ([25678c0](https://github.com/dfa1/rocksdbffm/commit/25678c0), [6e3ec0d](https://github.com/dfa1/rocksdbffm/commit/6e3ec0d), [ee2c7d1](https://github.com/dfa1/rocksdbffm/commit/ee2c7d1))
-- Dependency bumps: `flatten-maven-plugin`, `checkstyle` (13.8.0 → 13.9.0), `maven-jar-plugin`, `jacoco-maven-plugin` (0.8.13 → 0.8.15), `junit-jupiter` (6.1.2 → 6.1.3, [#77](https://github.com/dfa1/rocksdbffm/pull/77)), `equalsverifier` (3.17.5 → 4.5, dev scope, [#76](https://github.com/dfa1/rocksdbffm/pull/76)), `advanced-security/maven-dependency-submission-action` (4.1.3 → 5.0.0, [#73](https://github.com/dfa1/rocksdbffm/pull/73)).
+- RocksDB native builds cached in `sonar.yml`/`publish.yml`; `publish.yml` gains a `workflow_dispatch` ref input. ([25678c0](https://github.com/dfa1/rocksdbffm/commit/25678c0), [6e3ec0d](https://github.com/dfa1/rocksdbffm/commit/6e3ec0d), [ee2c7d1](https://github.com/dfa1/rocksdbffm/commit/ee2c7d1))
+- Dependency bumps: `flatten-maven-plugin`, `checkstyle` (13.8.0 → 13.9.0), `maven-jar-plugin`, `jacoco-maven-plugin` (0.8.13 → 0.8.15), `junit-jupiter` (6.1.2 → 6.1.3, [#77](https://github.com/dfa1/rocksdbffm/pull/77)), `equalsverifier` (3.17.5 → 4.5, [#76](https://github.com/dfa1/rocksdbffm/pull/76)), `maven-dependency-submission-action` (4.1.3 → 5.0.0, [#73](https://github.com/dfa1/rocksdbffm/pull/73)).
 
 ## [0.6] — 2026-07-20
 
@@ -78,7 +103,7 @@ maintenance.
 
 ### Changed
 
-- American English spelling adopted throughout (javadoc, comments, identifiers) — matches the JDK's own convention (`Object.finalize`, `Serializable`). ([#32](https://github.com/dfa1/rocksdbffm/pull/32))
+- American English spelling adopted throughout (javadoc, comments, identifiers), matching the JDK's own convention. ([#32](https://github.com/dfa1/rocksdbffm/pull/32))
 
 ### Fixed
 
