@@ -270,30 +270,6 @@ EOF
     chmod +x "$ZSTD_LZ4_CC_WRAPPER"
     ZSTD_LZ4_MAKE_CC="$ZSTD_LZ4_CC_WRAPPER"
 
-    if [ "$IS_WINDOWS_HOST" = true ]; then
-        # rocksdb/Makefile's libzstd.a recipe does a plain `tar xvzf
-        # zstd-*.tar.gz` with no flags to change (vendored, not ours to
-        # edit). zstd's tarball ships a few CLI-alias symlinks under
-        # tests/cli-tests/bin/ (e.g. unzstd -> zstd); creating those requires
-        # a privilege Windows doesn't grant by default, so tar exits nonzero
-        # there and make aborts the whole recipe -- confirmed in CI, even
-        # though everything actually needed (lib/) extracted fine first.
-        # Shadow `tar` on PATH and exclude the irrelevant tests/ tree for
-        # zstd's archive specifically, so extraction succeeds outright
-        # instead of needing its exit code swallowed.
-        REAL_TAR="$(command -v tar)"
-        TAR_WRAPPER="$WRAPPER_DIR/tar"
-        cat > "$TAR_WRAPPER" <<EOF
-#!/usr/bin/env bash
-set -euo pipefail
-case "\$*" in
-    *zstd-*.tar.gz*) exec "$REAL_TAR" "\$@" --exclude='*/tests/*' ;;
-    *) exec "$REAL_TAR" "\$@" ;;
-esac
-EOF
-        chmod +x "$TAR_WRAPPER"
-    fi
-
     (
         cd "$ROCKSDB_DIR"
         # Cross-compilation: a make_config.mk left by a previous classifier's
@@ -314,6 +290,28 @@ EOF
         # narrower target here for the same effect without also touching
         # RocksDB's own (irrelevant to this CMake build) object dir.
         make clean-ext-libraries-all
+        # libzstd.a's recipe does a plain, hardcoded `tar xvzf
+        # zstd-*.tar.gz` (vendored, not ours to edit). zstd's tarball ships
+        # a few CLI-alias symlinks under tests/cli-tests/bin/ (e.g.
+        # unzstd -> zstd); creating those requires a privilege Windows
+        # doesn't grant by default, so on the native Windows host that tar
+        # invocation exits nonzero and make aborts the whole recipe --
+        # confirmed in CI, even though everything actually needed (lib/)
+        # had already extracted fine first. A wrapper shadowing `tar` on
+        # PATH was tried first and did not take effect (still failed
+        # identically) -- rather than chase why, repack the tarball
+        # ourselves first, stripping the one directory that isn't needed to
+        # build libzstd.a anyway, so the vendored recipe's own tar
+        # invocation has nothing left to trip over.
+        if [ "$IS_WINDOWS_HOST" = true ]; then
+            ZSTD_TARBALL="$(make -n libzstd.a | grep -o 'zstd-[0-9.]*\.tar\.gz' | head -1)"
+            make "$ZSTD_TARBALL"
+            ZSTD_REPACK_DIR="$(mktemp -d)"
+            tar xzf "$ZSTD_TARBALL" -C "$ZSTD_REPACK_DIR" --exclude='*/tests/*'
+            ZSTD_TOPDIR="$(ls "$ZSTD_REPACK_DIR")"
+            (cd "$ZSTD_REPACK_DIR" && tar czf "$ROCKSDB_DIR/$ZSTD_TARBALL" "$ZSTD_TOPDIR")
+            rm -rf "$ZSTD_REPACK_DIR"
+        fi
         # rocksdb/Makefile's own libzstd.a recipe already targets just the
         # static lib, but its liblz4.a recipe invokes lz4's `all`, which
         # also builds the *shared* liblz4 -- and that step fails cross-
@@ -328,15 +326,20 @@ EOF
         # explicit `override` there, which lz4's Makefile does not use), and
         # command-line variables propagate to recursive $(MAKE) calls
         # automatically via MAKEFLAGS, so pass it on the invocation instead.
-        # RANLIB, unlike AR, was left unset here -- confirmed in CI: on the
-        # native Windows host this let make's implicit RANLIB fall through
-        # to something already on PATH/in the environment (observed failing
-        # as "C:\Strawberry\c\bin\ccache: command not found" while building
-        # liblz4.a), instead of the zig-backed wrapper. Pass it explicitly,
-        # matching AR.
-        ALLOW_BUILD_PARAMETER_CHANGE=1 CC="$ZSTD_LZ4_MAKE_CC" CXX="$ZSTD_LZ4_MAKE_CXX" \
-            AR="$AR_WRAPPER" RANLIB="$RANLIB_WRAPPER" PATH="$WRAPPER_DIR:$PATH" \
-            make libzstd.a liblz4.a BUILD_SHARED=no -j"$JOBS"
+        # RANLIB was first tried the same way as CC/CXX/AR here (an
+        # environment-variable prefix on the `make` invocation) and that
+        # was not enough -- confirmed in CI, still failed identically
+        # ("C:\Strawberry\c\bin\ccache: command not found" building
+        # liblz4.a). Same root cause as BUILD_SHARED above: lz4's own
+        # lib/Makefile reassigns RANLIB itself, and a plain environment
+        # variable loses to *any* makefile assignment (even non-`:=`) by
+        # GNU Make's default precedence -- only a command-line-origin
+        # variable always wins. AR apparently isn't reassigned there (an
+        # env-var AR keeps working), but pass everything as command-line
+        # variables here for a uniform, precedence-proof invocation.
+        make libzstd.a liblz4.a BUILD_SHARED=no ALLOW_BUILD_PARAMETER_CHANGE=1 \
+            CC="$ZSTD_LZ4_MAKE_CC" CXX="$ZSTD_LZ4_MAKE_CXX" AR="$AR_WRAPPER" \
+            RANLIB="$RANLIB_WRAPPER" -j"$JOBS"
     )
     ZSTD_SRC_DIR="$(ls -d "$ROCKSDB_DIR"/zstd-*/ | head -1)"
     LZ4_SRC_DIR="$(ls -d "$ROCKSDB_DIR"/lz4-*/ | head -1)"
