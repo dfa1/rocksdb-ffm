@@ -38,8 +38,10 @@ Every snippet omits imports; all types live in `io.github.dfa1.rocksdbffm`.
 
 ## Pick an access tier
 
-Every read and write exists in three tiers. They differ only in how key and value bytes cross the
-Java/native boundary.
+Every read and write exists in three tiers, differing only in how key and value bytes cross the
+Java/native boundary. Reads have a fourth, zero-copy option on top: instead of copying the value
+into a destination you provide, `get(key, Mapper)` hands your callback a view directly into
+RocksDB's own pinned memory.
 
 ```java
 // byte[] — convenience. Allocates and copies on every call.
@@ -55,18 +57,34 @@ switch (db.get(key, dst)) {
 	case CopyResult.NotFound() -> handleMiss();
 }
 
-// MemorySegment — fastest. You own the arena, so you own the lifetime.
+// MemorySegment — you own the arena, so you own the lifetime. Still one copy,
+// into your own destination segment.
 try (Arena arena = Arena.ofConfined()) {
 	MemorySegment k = arena.allocateFrom("k");
 	MemorySegment v = arena.allocate(1024);
 	CopyResult result = db.get(k, v);
 }
+
+// Mapper — fastest: no destination buffer at all. fn gets a read-only view
+// straight into RocksDB's own pinned memory; nothing is copied.
+try (Arena arena = Arena.ofConfined()) {
+	MemorySegment k = arena.allocateFrom("k");
+	Optional<Integer> len = db.get(k, value -> (int) value.byteSize());
+}
 ```
 
 The `byte[]` `get` returns `null` when the key is absent. The buffer/segment tiers return a
 [`CopyResult`](reference.md#domain-types) instead, which distinguishes "missing" from "present but
-your destination is too small" — a distinction the old `int` return could not make. See
-[explanation.md#three-access-tiers](explanation.md#three-access-tiers) for why all three exist.
+your destination is too small" — a distinction the old `int` return could not make. `get(key, Mapper)`
+returns an `Optional<R>` instead — there's no destination to be too small for, so the only two
+outcomes are "present, mapped to a result" and "absent." See
+[explanation.md#three-access-tiers](explanation.md#three-access-tiers) for why `byte[]`/`ByteBuffer`/
+`MemorySegment` exist as three separate tiers, and for the zero-copy `Mapper` path layered on top of
+the `MemorySegment` tier.
+
+The `Mapper` view is only valid for the duration of the callback — it's bound to an arena that
+closes the moment `fn` returns, so copy anything you need to keep (`value.toArray(JAVA_BYTE)`,
+a parsed primitive, …) before returning. Retaining the view itself throws `IllegalStateException`.
 
 ## Open a database read-only
 
