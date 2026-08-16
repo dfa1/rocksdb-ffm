@@ -161,7 +161,11 @@ make clean -j"$JOBS" 2>/dev/null || true
 # RocksDB's object dir. The `make clean` above already guarantees a clean
 # tree, so the guard has nothing to protect here.
 export ALLOW_BUILD_PARAMETER_CHANGE=1
-make libzstd.a liblz4.a -j"$JOBS"
+# DEBUG_LEVEL=0: this target name isn't among the ones rocksdb/Makefile
+# auto-forces to 0 (clean/release/install/shared_lib/...), so it would
+# otherwise fall through to the file's debug default (unoptimized, assertions
+# on) and silently ship a slower zstd/lz4 inside an otherwise-release build.
+make libzstd.a liblz4.a DEBUG_LEVEL=0 -j"$JOBS"
 ZSTD_SRC_DIR="$(ls -d zstd-*/ | head -1)"
 LZ4_SRC_DIR="$(ls -d lz4-*/ | head -1)"
 

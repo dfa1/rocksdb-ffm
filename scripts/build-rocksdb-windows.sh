@@ -366,7 +366,12 @@ EOF
         # variables here for a uniform, precedence-proof invocation.
         echo "[build-rocksdb-windows] before libzstd.a/liblz4.a build:"
         ls -la "$ROCKSDB_DIR"/zstd* "$ROCKSDB_DIR"/lz4* 2>&1 || true
-        make libzstd.a liblz4.a BUILD_SHARED=no ALLOW_BUILD_PARAMETER_CHANGE=1 \
+        # DEBUG_LEVEL=0: this target name isn't among the ones rocksdb/Makefile
+        # auto-forces to 0 (clean/release/install/shared_lib/...), so it would
+        # otherwise fall through to the file's debug default (unoptimized,
+        # assertions on) and silently ship a slower zstd/lz4 inside an
+        # otherwise-release CMake build.
+        make libzstd.a liblz4.a BUILD_SHARED=no ALLOW_BUILD_PARAMETER_CHANGE=1 DEBUG_LEVEL=0 \
             CC="$ZSTD_LZ4_MAKE_CC" CXX="$ZSTD_LZ4_MAKE_CXX" AR="$AR_WRAPPER" \
             RANLIB="$RANLIB_WRAPPER" -j"$JOBS"
     )
