@@ -927,12 +927,7 @@ public final class RocksDB {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment propSeg = arena.allocateFrom(property.propertyName());
 			MemorySegment result = (MemorySegment) MH_PROPERTY_VALUE.invokeExact(db, propSeg);
-			if (MemorySegment.NULL.equals(result)) {
-				return Optional.empty();
-			}
-			String value = result.reinterpret(Long.MAX_VALUE).getString(0);
-			free(result);
-			return Optional.of(value);
+			return toOptionalString(result);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getProperty failed", t);
 		}
@@ -1678,12 +1673,7 @@ public final class RocksDB {
 			MemorySegment propSeg = arena.allocateFrom(property.propertyName());
 			MemorySegment result = (MemorySegment) MH_PROPERTY_VALUE_CF.invokeExact(
 					db, cf.ptr(), propSeg);
-			if (MemorySegment.NULL.equals(result)) {
-				return Optional.empty();
-			}
-			String value = result.reinterpret(Long.MAX_VALUE).getString(0);
-			free(result);
-			return Optional.of(value);
+			return toOptionalString(result);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getProperty failed", t);
 		}
@@ -1746,9 +1736,30 @@ public final class RocksDB {
 	public static void checkError(MemorySegment errHolder) {
 		MemorySegment errPtr = errHolder.get(ValueLayout.ADDRESS, 0);
 		if (!MemorySegment.NULL.equals(errPtr)) {
-			String msg = errPtr.reinterpret(Long.MAX_VALUE).getString(0);
-			free(errPtr);
+			String msg = toJavaString(errPtr);
 			throw new RocksDBException(msg);
 		}
+	}
+
+	/// Converts a malloc'd, NUL-terminated `char*` returned by the RocksDB C API into a
+	/// Java [String], then frees it.
+	///
+	/// @param ptr non-NULL `char*` allocated by RocksDB
+	/// @return the decoded string
+	public static String toJavaString(MemorySegment ptr) {
+		String s = ptr.reinterpret(Long.MAX_VALUE).getString(0);
+		free(ptr);
+		return s;
+	}
+
+	/// [#toJavaString(MemorySegment)] for C APIs that return NULL instead of a value.
+	///
+	/// @param ptr `char*` allocated by RocksDB, or `MemorySegment.NULL`
+	/// @return the decoded string, or [Optional#empty()] if `ptr` is NULL
+	public static Optional<String> toOptionalString(MemorySegment ptr) {
+		if (MemorySegment.NULL.equals(ptr)) {
+			return Optional.empty();
+		}
+		return Optional.of(toJavaString(ptr));
 	}
 }

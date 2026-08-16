@@ -429,12 +429,7 @@ public final class TransactionDB extends NativeObject {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment propSeg = arena.allocateFrom(property.propertyName());
 			MemorySegment result = (MemorySegment) MH_PROPERTY_VALUE.invokeExact(ptr(), propSeg);
-			if (MemorySegment.NULL.equals(result)) {
-				return Optional.empty();
-			}
-			String value = result.reinterpret(Long.MAX_VALUE).getString(0);
-			RocksDB.free(result);
-			return Optional.of(value);
+			return RocksDB.toOptionalString(result);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getProperty failed", t);
 		}

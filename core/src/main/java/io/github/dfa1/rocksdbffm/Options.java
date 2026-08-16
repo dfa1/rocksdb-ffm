@@ -311,9 +311,7 @@ public final class Options extends NativeObject {
 			if (MemorySegment.NULL.equals(strPtr)) {
 				return null;
 			}
-			String result = strPtr.reinterpret(Long.MAX_VALUE).getString(0);
-			RocksDB.free(strPtr);
-			return result;
+			return RocksDB.toJavaString(strPtr);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getStatisticsString failed", t);
 		}

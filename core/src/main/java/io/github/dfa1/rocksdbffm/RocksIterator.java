@@ -268,12 +268,7 @@ public final class RocksIterator extends NativeObject {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MH_GET_ERROR.invokeExact(ptr(), err);
 			MemorySegment errPtr = err.get(ValueLayout.ADDRESS, 0);
-			if (MemorySegment.NULL.equals(errPtr)) {
-				return Optional.empty();
-			}
-			String msg = errPtr.reinterpret(Long.MAX_VALUE).getString(0);
-			RocksDB.free(errPtr);
-			return Optional.of(msg);
+			return RocksDB.toOptionalString(errPtr);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("error failed", t);
 		}

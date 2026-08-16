@@ -166,9 +166,7 @@ public final class PerfContext extends NativeObject {
 		if (MemorySegment.NULL.equals(strPtr)) {
 			return "";
 		}
-		String result = strPtr.reinterpret(Long.MAX_VALUE).getString(0);
-		RocksDB.free(strPtr);
-		return result;
+		return RocksDB.toJavaString(strPtr);
 	}
 
 	@Override
