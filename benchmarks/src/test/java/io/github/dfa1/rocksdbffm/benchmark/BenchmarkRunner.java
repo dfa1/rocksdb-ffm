@@ -52,6 +52,13 @@ public class BenchmarkRunner {
 		LABELS.put("writesDirectByteBuffer", "Write — DirectByteBuffer");
 		LABELS.put("writesMemorySegment", "Write — MemorySegment (FFM)");
 		LABELS.put("batchWrites", "Batch write (100 ops)");
+		// FFM only: batchWrites above pays for a fresh Arena.ofConfined() per put (100 per
+		// batch), which dominates once the native call itself is a cheap in-memory buffer
+		// append rather than an I/O-adjacent op. This row shows the fix: one Arena reused
+		// across the whole batch via WriteBatch.put(Arena, byte[], byte[]). JNI has no
+		// arena concept, so its column is N/A rather than a second measurement of the same
+		// JNI batchWrites run.
+		LABELS.put("batchWritesArena", "Batch write, arena reuse (100 ops, FFM)");
 	}
 
 	static void main() throws Exception {

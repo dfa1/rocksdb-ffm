@@ -213,9 +213,7 @@ public final class ReadWriteDB extends NativeObject {
 	/// @param key the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	public boolean keyMayExist(byte[] key) {
-		try (Arena arena = Arena.ofConfined()) {
-			return RocksDB.keyMayExistSegment(ptr(), readOpts.ptr(), RocksDB.toNative(arena, key), key.length);
-		}
+		return RocksDB.keyMayExistBytes(ptr(), readOpts.ptr(), key);
 	}
 
 	/// [#keyMayExist(byte\[\])] with explicit [ReadOptions].
@@ -224,9 +222,7 @@ public final class ReadWriteDB extends NativeObject {
 	/// @param key         the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	public boolean keyMayExist(ReadOptions readOptions, byte[] key) {
-		try (Arena arena = Arena.ofConfined()) {
-			return RocksDB.keyMayExistSegment(ptr(), readOptions.ptr(), RocksDB.toNative(arena, key), key.length);
-		}
+		return RocksDB.keyMayExistBytes(ptr(), readOptions.ptr(), key);
 	}
 
 	/// Zero-copy for direct [ByteBuffer]s.
@@ -657,10 +653,7 @@ public final class ReadWriteDB extends NativeObject {
 	/// @param key the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	public boolean keyMayExist(ColumnFamilyHandle cf, byte[] key) {
-		try (Arena arena = Arena.ofConfined()) {
-			return RocksDB.keyMayExistCfSegment(ptr(), readOpts.ptr(), cf,
-					RocksDB.toNative(arena, key), key.length);
-		}
+		return RocksDB.keyMayExistCfBytes(ptr(), readOpts.ptr(), cf, key);
 	}
 
 	/// [#keyMayExist(ColumnFamilyHandle, byte\[\])] with explicit [ReadOptions].
@@ -670,10 +663,7 @@ public final class ReadWriteDB extends NativeObject {
 	/// @param key         the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	public boolean keyMayExist(ColumnFamilyHandle cf, ReadOptions readOptions, byte[] key) {
-		try (Arena arena = Arena.ofConfined()) {
-			return RocksDB.keyMayExistCfSegment(ptr(), readOptions.ptr(), cf,
-					RocksDB.toNative(arena, key), key.length);
-		}
+		return RocksDB.keyMayExistCfBytes(ptr(), readOptions.ptr(), cf, key);
 	}
 
 	/// Zero-copy keyMayExist in `cf` for direct [ByteBuffer]s.

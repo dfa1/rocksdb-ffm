@@ -1022,6 +1022,14 @@ public final class RocksDB {
 		}
 	}
 
+	/// [#keyMayExistSegment] for a `byte[]` key: marshals `key` into a scratch [Arena]
+	/// before delegating.
+	static boolean keyMayExistBytes(MemorySegment db, MemorySegment roOpts, byte[] key) {
+		try (Arena arena = Arena.ofConfined()) {
+			return keyMayExistSegment(db, roOpts, toNative(arena, key), key.length);
+		}
+	}
+
 	static void compactRangeBytes(MemorySegment db, byte[] startKey, byte[] endKey) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment s = startKey == null ? MemorySegment.NULL : toNative(arena, startKey);
@@ -1651,6 +1659,15 @@ public final class RocksDB {
 					MemorySegment.NULL, 0L, MemorySegment.NULL));
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("keyMayExist failed", t);
+		}
+	}
+
+	/// [#keyMayExistCfSegment] for a `byte[]` key: marshals `key` into a scratch [Arena]
+	/// before delegating.
+	static boolean keyMayExistCfBytes(MemorySegment db, MemorySegment roOpts,
+	                                  ColumnFamilyHandle cf, byte[] key) {
+		try (Arena arena = Arena.ofConfined()) {
+			return keyMayExistCfSegment(db, roOpts, cf, toNative(arena, key), key.length);
 		}
 	}
 
