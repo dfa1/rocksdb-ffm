@@ -105,10 +105,10 @@ class TransactionDBOptionsTest {
 		try (var sut = TransactionDBOptions.newTransactionDBOptions()) {
 
 			// When
-			sut.setWritePolicy(TxnDBWritePolicy.WRITE_PREPARED);
+			sut.setWritePolicy(WritePolicy.WRITE_PREPARED);
 
 			// Then
-			assertThat(sut.getWritePolicy()).isEqualTo(TxnDBWritePolicy.WRITE_PREPARED);
+			assertThat(sut.getWritePolicy()).isEqualTo(WritePolicy.WRITE_PREPARED);
 		}
 	}
 

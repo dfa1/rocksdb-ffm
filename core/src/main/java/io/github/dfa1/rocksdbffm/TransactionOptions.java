@@ -255,8 +255,8 @@ public final class TransactionOptions extends NativeObject {
 	}
 
 	/// If `true`, recovery replays only the most recent commit-time write batch for each key,
-	/// instead of all of them. Only meaningful with [TxnDBWritePolicy#WRITE_PREPARED] or
-	/// [TxnDBWritePolicy#WRITE_UNPREPARED]. Default: `false`.
+	/// instead of all of them. Only meaningful with [WritePolicy#WRITE_PREPARED] or
+	/// [WritePolicy#WRITE_UNPREPARED]. Default: `false`.
 	///
 	/// @param value `true` to use only the last commit-time write batch during recovery
 	/// @return this instance for chaining
@@ -469,8 +469,8 @@ public final class TransactionOptions extends NativeObject {
 	}
 
 	/// If `true`, skips the prepare phase of two-phase commit; the transaction commits
-	/// directly. Only meaningful with [TxnDBWritePolicy#WRITE_PREPARED] or
-	/// [TxnDBWritePolicy#WRITE_UNPREPARED]. Default: `false`.
+	/// directly. Only meaningful with [WritePolicy#WRITE_PREPARED] or
+	/// [WritePolicy#WRITE_UNPREPARED]. Default: `false`.
 	///
 	/// @param value `true` to skip the prepare phase
 	/// @return this instance for chaining

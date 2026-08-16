@@ -326,11 +326,11 @@ public final class TransactionDBOptions extends NativeObject {
 		return millis < 0 ? null : Duration.ofMillis(millis);
 	}
 
-	/// Controls when a transaction's writes become durable. Default: [TxnDBWritePolicy#WRITE_COMMITTED].
+	/// Controls when a transaction's writes become durable. Default: [WritePolicy#WRITE_COMMITTED].
 	///
 	/// @param writePolicy the write policy
 	/// @return this instance for chaining
-	public TransactionDBOptions setWritePolicy(TxnDBWritePolicy writePolicy) {
+	public TransactionDBOptions setWritePolicy(WritePolicy writePolicy) {
 		try {
 			MH_SET_WRITE_POLICY.invokeExact(ptr(), writePolicy.getValue());
 		} catch (Throwable t) {
@@ -341,16 +341,16 @@ public final class TransactionDBOptions extends NativeObject {
 
 	/// Returns the configured write policy.
 	///
-	/// @return the active [TxnDBWritePolicy]
-	public TxnDBWritePolicy getWritePolicy() {
+	/// @return the active [WritePolicy]
+	public WritePolicy getWritePolicy() {
 		try {
 			int value = (int) MH_GET_WRITE_POLICY.invokeExact(ptr());
-			for (TxnDBWritePolicy policy : TxnDBWritePolicy.values()) {
+			for (WritePolicy policy : WritePolicy.values()) {
 				if (policy.getValue() == value) {
 					return policy;
 				}
 			}
-			return TxnDBWritePolicy.WRITE_COMMITTED;
+			return WritePolicy.WRITE_COMMITTED;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getWritePolicy failed", t);
 		}
@@ -358,7 +358,7 @@ public final class TransactionDBOptions extends NativeObject {
 
 	/// If `true`, [Transaction#rollback()] on a key with a merge operand rolls back by
 	/// inserting the merge operand's inverse instead of the prior value. Only meaningful with
-	/// [TxnDBWritePolicy#WRITE_PREPARED] or [TxnDBWritePolicy#WRITE_UNPREPARED]. Default: `false`.
+	/// [WritePolicy#WRITE_PREPARED] or [WritePolicy#WRITE_UNPREPARED]. Default: `false`.
 	///
 	/// @param value `true` to roll back merge operands
 	/// @return this instance for chaining
@@ -434,7 +434,7 @@ public final class TransactionDBOptions extends NativeObject {
 	}
 
 	/// Default write-batch size (bytes) at which a transaction using
-	/// [TxnDBWritePolicy#WRITE_PREPARED] or [TxnDBWritePolicy#WRITE_UNPREPARED] flushes its
+	/// [WritePolicy#WRITE_PREPARED] or [WritePolicy#WRITE_UNPREPARED] flushes its
 	/// buffered writes early, used when a transaction does not set its own
 	/// [TransactionOptions#setWriteBatchFlushThreshold(long)]. `0` disables early flushing.
 	/// Default: 0.

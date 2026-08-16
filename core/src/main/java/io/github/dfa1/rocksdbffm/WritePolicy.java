@@ -2,7 +2,7 @@ package io.github.dfa1.rocksdbffm;
 
 /// Determines when a [TransactionDB]'s writes become visible to other transactions,
 /// matching the C++ `TxnDBWritePolicy` enum.
-public enum TxnDBWritePolicy {
+public enum WritePolicy {
 	/// Write only the committed data to the DB (default). Reads by a transaction see only
 	/// its own uncommitted writes plus any other transaction's committed writes.
 	WRITE_COMMITTED(0),
@@ -14,7 +14,7 @@ public enum TxnDBWritePolicy {
 
 	private final int value;
 
-	TxnDBWritePolicy(int value) {
+	WritePolicy(int value) {
 		this.value = value;
 	}
 
