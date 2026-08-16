@@ -158,7 +158,7 @@ Per-call options:
 | Class                            | Factory                                 | Setters                                                     |
 |:---------------------------------|:----------------------------------------|:------------------------------------------------------------|
 | `ReadOptions`                    | `newReadOptions()`                      | `setSnapshot(Snapshot)`                                     |
-| `WriteOptions`                   | `newWriteOptions()`                     | —                                                            |
+| `WriteOptions`                   | `newWriteOptions()`                     | `setSync`, `setDisableWal`, `setIgnoreMissingColumnFamilies`, `setNoSlowdown`, `setLowPri`, `setMemtableInsertHintPerBatch`, `setRateLimiterPriority(IOPriority)`, `setIoActivity(IOActivity)` |
 | `FlushOptions`                   | `newFlushOptions()`                     | `setWait(boolean)` / `isWait()`                             |
 | `CompactOptions`                 | `newCompactOptions()`                   | `setExclusiveManualCompaction`, `setBottommostLevelCompaction`, `setChangeLevel`, `setTargetLevel` |
 | `WaitForCompactOptions`          | `create()`                              | `setAbortOnPause`, `setFlush`, `setCloseDb`, `setTimeout(Duration)` |
@@ -322,6 +322,8 @@ listing every existing column family, `default` included.
 | `PerfLevel`                         | `UNINITIALIZED`, `DISABLE`, `ENABLE_COUNT`, `ENABLE_TIME_EXCEPT_FOR_MUTEX`, `ENABLE_TIME`      |
 | `PrepopulateBlobCache`              | `DISABLE`, `FLUSH_ONLY`                                                                        |
 | `RateLimiter.Mode`                  | `READS_ONLY`, `WRITES_ONLY`, `ALL_IO`                                                          |
+| `IOPriority`                        | `LOW`, `MID`, `HIGH`, `USER`, `TOTAL`                                                          |
+| `IOActivity`                        | `FLUSH`, `COMPACTION`, `DB_OPEN`, `GET`, `MULTI_GET`, `DB_ITERATOR`, `VERIFY_DB_CHECKSUM`, `VERIFY_FILE_CHECKSUMS`, `GET_ENTITY`, `MULTI_GET_ENTITY`, `GET_FILE_CHECKSUMS_FROM_CURRENT_MANIFEST`, `UNKNOWN` |
 | `BlockBasedTableOptions.IndexType`  | Block-based index layout selection                                                             |
 | `Property`, `TickerType`, `HistogramType`, `PerfMetric` | Large enumerations; see the Javadoc for the full lists                     |
 
