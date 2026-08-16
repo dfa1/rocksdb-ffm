@@ -351,7 +351,7 @@ public final class TransactionDB extends NativeObject {
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
-				return new CopyResult.NotFound();
+				return CopyResult.NotFound.INSTANCE;
 			}
 			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
 				return slice.copyInto(value, err);
@@ -375,7 +375,7 @@ public final class TransactionDB extends NativeObject {
 					ptr(), readOpts.ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
-				return new CopyResult.NotFound();
+				return CopyResult.NotFound.INSTANCE;
 			}
 			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
 				return slice.copyInto(value, value.byteSize(), err);
@@ -643,7 +643,7 @@ public final class TransactionDB extends NativeObject {
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
-				return new CopyResult.NotFound();
+				return CopyResult.NotFound.INSTANCE;
 			}
 			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
 				return slice.copyInto(value, err);
@@ -668,7 +668,7 @@ public final class TransactionDB extends NativeObject {
 					ptr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
-				return new CopyResult.NotFound();
+				return CopyResult.NotFound.INSTANCE;
 			}
 			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
 				return slice.copyInto(value, value.byteSize(), err);

@@ -239,7 +239,7 @@ class TtlDBTest {
 			CopyResult result = db.get(key, out);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 		}
 	}
 
@@ -256,7 +256,7 @@ class TtlDBTest {
 			CopyResult result = db.get(key.asSlice(0, 1), out);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			assertThat(out.asSlice(0, 1).toArray(ValueLayout.JAVA_BYTE)).isEqualTo("v".getBytes());
 		}
 	}
@@ -743,7 +743,7 @@ class TtlDBTest {
 			var getVal = ByteBuffer.allocateDirect(32);
 
 			// Then
-			assertThat(db.get(cf, getKey, getVal)).isEqualTo(new CopyResult.Copied());
+			assertThat(db.get(cf, getKey, getVal)).isEqualTo(CopyResult.Copied.INSTANCE);
 		}
 	}
 

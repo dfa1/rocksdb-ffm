@@ -17,6 +17,8 @@ public sealed interface CopyResult {
 
 	/// The value fit and was copied in full; the destination's position was advanced accordingly.
 	record Copied() implements CopyResult {
+		// Stateless; every call site shares this instance instead of allocating a fresh one.
+		static final Copied INSTANCE = new Copied();
 	}
 
 	/// The value exists but does not fit in the destination. Nothing was copied and the
@@ -28,5 +30,7 @@ public sealed interface CopyResult {
 
 	/// The key does not exist. The destination is unchanged.
 	record NotFound() implements CopyResult {
+		// Stateless; every call site shares this instance instead of allocating a fresh one.
+		static final NotFound INSTANCE = new NotFound();
 	}
 }

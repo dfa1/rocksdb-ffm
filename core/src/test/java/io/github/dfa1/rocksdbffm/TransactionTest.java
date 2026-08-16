@@ -49,7 +49,7 @@ class TransactionTest {
 			// Then
 			var out = ByteBuffer.allocateDirect(64);
 			CopyResult result = txn.get(ro, ByteBuffer.allocateDirect(1).put((byte) 'k').flip(), out);
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			txn.commit();
 		}
 	}
@@ -68,7 +68,7 @@ class TransactionTest {
 			CopyResult result = txn.get(ro, key, out);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.NotFound());
+			assertThat(result).isEqualTo(CopyResult.NotFound.INSTANCE);
 		}
 	}
 
@@ -105,7 +105,7 @@ class TransactionTest {
 			CopyResult result = txn.getForUpdate(ro, key, out, true);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			txn.commit();
 		}
 	}
@@ -131,7 +131,7 @@ class TransactionTest {
 			// Then
 			var out = arena.allocate(64);
 			CopyResult result = txn.get(ro, key, out);
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			txn.commit();
 		}
 	}
@@ -171,7 +171,7 @@ class TransactionTest {
 			CopyResult result = txn.getForUpdate(ro, key, out, true);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			txn.commit();
 		}
 	}
@@ -198,7 +198,7 @@ class TransactionTest {
 			// Then
 			var out = ByteBuffer.allocateDirect(64);
 			CopyResult result = txn.get(cf, ro, ByteBuffer.allocateDirect(1).put((byte) 'k').flip(), out);
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			txn.commit();
 			handles.forEach(ColumnFamilyHandle::close);
 		}
@@ -242,7 +242,7 @@ class TransactionTest {
 			CopyResult result = txn.getForUpdate(cf, ro, key, out, true);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			txn.commit();
 			handles.forEach(ColumnFamilyHandle::close);
 		}
@@ -271,7 +271,7 @@ class TransactionTest {
 			// Then
 			var out = arena.allocate(64);
 			CopyResult result = txn.get(cf, ro, key, out);
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			txn.commit();
 			handles.forEach(ColumnFamilyHandle::close);
 		}
@@ -317,7 +317,7 @@ class TransactionTest {
 			CopyResult result = txn.getForUpdate(cf, ro, key, out, true);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			txn.commit();
 			handles.forEach(ColumnFamilyHandle::close);
 		}

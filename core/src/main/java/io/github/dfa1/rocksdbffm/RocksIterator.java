@@ -369,7 +369,7 @@ public final class RocksIterator extends NativeObject {
 		}
 		MemorySegment.ofBuffer(dst).copyFrom(data);
 		dst.position(dst.position() + (int) data.byteSize());
-		return new CopyResult.Copied();
+		return CopyResult.Copied.INSTANCE;
 	}
 
 	/// Copies the current value into `dst`. Copies nothing when `dst`'s remaining capacity is
@@ -384,7 +384,7 @@ public final class RocksIterator extends NativeObject {
 		}
 		MemorySegment.ofBuffer(dst).copyFrom(data);
 		dst.position(dst.position() + (int) data.byteSize());
-		return new CopyResult.Copied();
+		return CopyResult.Copied.INSTANCE;
 	}
 
 	// -----------------------------------------------------------------------

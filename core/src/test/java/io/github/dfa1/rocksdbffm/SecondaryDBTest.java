@@ -156,7 +156,7 @@ class SecondaryDBTest {
 			CopyResult result = secondary.get(key, out);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			out.flip();
 			var bytes = new byte[out.remaining()];
 			out.get(bytes);
@@ -186,7 +186,7 @@ class SecondaryDBTest {
 			CopyResult result = secondary.get(key.asSlice(0, 1), out);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			assertThat(out.asSlice(0, 1).toArray(ValueLayout.JAVA_BYTE)).isEqualTo("v".getBytes());
 		}
 	}

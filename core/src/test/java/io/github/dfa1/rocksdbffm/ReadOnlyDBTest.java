@@ -89,7 +89,7 @@ class ReadOnlyDBTest {
 			CopyResult result = ro.get(key, out);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			out.flip();
 			var bytes = new byte[out.remaining()];
 			out.get(bytes);
@@ -113,7 +113,7 @@ class ReadOnlyDBTest {
 			CopyResult result = ro.get(key, out);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.NotFound());
+			assertThat(result).isEqualTo(CopyResult.NotFound.INSTANCE);
 		}
 	}
 
@@ -158,7 +158,7 @@ class ReadOnlyDBTest {
 			CopyResult result = ro.get(key.asSlice(0, 3), value);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			assertThat(value.asSlice(0, 5).toArray(ValueLayout.JAVA_BYTE))
 					.isEqualTo("value".getBytes());
 		}
@@ -312,7 +312,7 @@ class ReadOnlyDBTest {
 			CopyResult result = ro.get(cf, key, out);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
@@ -340,7 +340,7 @@ class ReadOnlyDBTest {
 			CopyResult result = ro.get(cf, key.asSlice(0, 3), value);
 
 			// Then
-			assertThat(result).isEqualTo(new CopyResult.Copied());
+			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			assertThat(value.asSlice(0, 5).toArray(ValueLayout.JAVA_BYTE))
 					.isEqualTo("value".getBytes());
 			handles.forEach(ColumnFamilyHandle::close);

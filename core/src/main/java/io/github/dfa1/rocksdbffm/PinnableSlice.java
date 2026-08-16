@@ -81,7 +81,7 @@ final class PinnableSlice extends NativeObject {
 			return new CopyResult.NotEnoughCapacity(len);
 		}
 		dest.copyFrom(data.reinterpret(len));
-		return new CopyResult.Copied();
+		return CopyResult.Copied.INSTANCE;
 	}
 
 	/// [ByteBuffer] counterpart of [#copyInto(MemorySegment, long, MemorySegment)]; also
@@ -100,7 +100,7 @@ final class PinnableSlice extends NativeObject {
 		}
 		MemorySegment.ofBuffer(dest).copyFrom(data.reinterpret(len));
 		dest.position(dest.position() + (int) len);
-		return new CopyResult.Copied();
+		return CopyResult.Copied.INSTANCE;
 	}
 
 	/// Maps this slice's value to a result via `fn`, with no intermediate copy. The view

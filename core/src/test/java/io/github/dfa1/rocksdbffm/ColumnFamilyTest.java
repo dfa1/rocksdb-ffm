@@ -250,7 +250,7 @@ class ColumnFamilyTest {
 			ByteBuffer getVal = ByteBuffer.allocateDirect(64);
 
 			// Then
-			assertThat(db.get(cf, getKey, getVal)).isEqualTo(new CopyResult.Copied());
+			assertThat(db.get(cf, getKey, getVal)).isEqualTo(CopyResult.Copied.INSTANCE);
 		}
 	}
 

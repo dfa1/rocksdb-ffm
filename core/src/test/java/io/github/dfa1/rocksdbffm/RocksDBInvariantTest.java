@@ -175,7 +175,7 @@ class RocksDBInvariantTest {
 			CopyResult result = db.get(key, readBuffer);
 
 			// Then
-			assertThat(result).as(testCase.name()).isEqualTo(new CopyResult.Copied());
+			assertThat(result).as(testCase.name()).isEqualTo(CopyResult.Copied.INSTANCE);
 			assertThat(readBuffer.toArray(ValueLayout.JAVA_BYTE)).as(testCase.name()).isEqualTo(testCase.value());
 		}
 	}

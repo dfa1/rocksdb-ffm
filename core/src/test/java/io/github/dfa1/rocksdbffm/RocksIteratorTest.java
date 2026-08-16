@@ -193,9 +193,9 @@ class RocksIteratorTest {
 				valBuf.get(valBytes);
 
 				// Then
-				assertThat(keyResult).isEqualTo(new CopyResult.Copied());
+				assertThat(keyResult).isEqualTo(CopyResult.Copied.INSTANCE);
 				assertThat(keyBytes).isEqualTo("hello".getBytes());
-				assertThat(valResult).isEqualTo(new CopyResult.Copied());
+				assertThat(valResult).isEqualTo(CopyResult.Copied.INSTANCE);
 				assertThat(valBytes).isEqualTo("world".getBytes());
 			}
 		}

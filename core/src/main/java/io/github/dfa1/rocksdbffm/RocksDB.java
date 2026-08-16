@@ -681,14 +681,14 @@ public final class RocksDB {
 					MemorySegment.ofBuffer(value), (long) value.remaining(), valLenSeg, foundSeg, err);
 			checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
-				return new CopyResult.NotFound();
+				return CopyResult.NotFound.INSTANCE;
 			}
 			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
 			if (fit == 0) {
 				return new CopyResult.NotEnoughCapacity(valLen);
 			}
 			value.position(value.position() + (int) valLen);
-			return new CopyResult.Copied();
+			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
@@ -705,13 +705,13 @@ public final class RocksDB {
 					value, value.byteSize(), valLenSeg, foundSeg, err);
 			checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
-				return new CopyResult.NotFound();
+				return CopyResult.NotFound.INSTANCE;
 			}
 			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
 			if (fit == 0) {
 				return new CopyResult.NotEnoughCapacity(valLen);
 			}
-			return new CopyResult.Copied();
+			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
@@ -1532,14 +1532,14 @@ public final class RocksDB {
 					MemorySegment.ofBuffer(value), (long) value.remaining(), valLenSeg, foundSeg, err);
 			checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
-				return new CopyResult.NotFound();
+				return CopyResult.NotFound.INSTANCE;
 			}
 			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
 			if (fit == 0) {
 				return new CopyResult.NotEnoughCapacity(valLen);
 			}
 			value.position(value.position() + (int) valLen);
-			return new CopyResult.Copied();
+			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
@@ -1557,13 +1557,13 @@ public final class RocksDB {
 					value, value.byteSize(), valLenSeg, foundSeg, err);
 			checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
-				return new CopyResult.NotFound();
+				return CopyResult.NotFound.INSTANCE;
 			}
 			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
 			if (fit == 0) {
 				return new CopyResult.NotEnoughCapacity(valLen);
 			}
-			return new CopyResult.Copied();
+			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
