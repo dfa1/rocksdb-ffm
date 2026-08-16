@@ -66,7 +66,10 @@ public final class ColumnFamilyHandle extends NativeObject {
 			MemorySegment lenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment namePtr = (MemorySegment) MH_GET_NAME.invokeExact(ptr(), lenSeg);
 			long nameLen = lenSeg.get(ValueLayout.JAVA_LONG, 0);
-			byte[] bytes = namePtr.reinterpret(nameLen).toArray(ValueLayout.JAVA_BYTE);
+			// namePtr is malloc'd by CopyString() on the C side (db/c.cc) -- unlike the other
+			// toByteArray() call sites in this codebase, this one owns the pointer and must free it.
+			byte[] bytes = RocksDB.toByteArray(namePtr, nameLen);
+			RocksDB.free(namePtr);
 			return new String(bytes, StandardCharsets.UTF_8);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getName failed", t);

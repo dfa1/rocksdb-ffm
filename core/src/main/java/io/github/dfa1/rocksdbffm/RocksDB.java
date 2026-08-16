@@ -1766,6 +1766,18 @@ public final class RocksDB {
 		}
 	}
 
+	/// Copies `len` bytes out of a length-prefixed, non-owned native pointer (e.g. a `const
+	/// char*` + separate `size_t*` out-param) into a new Java array. Unlike [#toJavaString],
+	/// this does not free `ptr` -- use it for borrowed views the C API still owns, such as a
+	/// pointer into an internal `std::string` that stays alive only as long as its parent object.
+	///
+	/// @param ptr non-NULL native pointer to a borrowed buffer
+	/// @param len number of bytes to copy
+	/// @return a new array containing a copy of the bytes
+	public static byte[] toByteArray(MemorySegment ptr, long len) {
+		return ptr.reinterpret(len).toArray(ValueLayout.JAVA_BYTE);
+	}
+
 	/// Converts a malloc'd, NUL-terminated `char*` returned by the RocksDB C API into a
 	/// Java [String], then frees it.
 	///

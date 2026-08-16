@@ -384,7 +384,7 @@ public final class RocksIterator extends NativeObject {
 	/// @return current key as a newly allocated byte array
 	public byte[] key() {
 		MemorySegment raw = readKey();
-		return raw.reinterpret(lenSegment.get(ValueLayout.JAVA_LONG, 0)).toArray(ValueLayout.JAVA_BYTE);
+		return RocksDB.toByteArray(raw, lenSegment.get(ValueLayout.JAVA_LONG, 0));
 	}
 
 	/// Returns a copy of the current value as a byte array.
@@ -394,7 +394,7 @@ public final class RocksIterator extends NativeObject {
 	/// @return current value as a newly allocated byte array
 	public byte[] value() {
 		MemorySegment raw = readValue();
-		return raw.reinterpret(lenSegment.get(ValueLayout.JAVA_LONG, 0)).toArray(ValueLayout.JAVA_BYTE);
+		return RocksDB.toByteArray(raw, lenSegment.get(ValueLayout.JAVA_LONG, 0));
 	}
 
 	/// Invokes `MH_KEY`. Returns the raw, unsized key pointer — every caller reinterprets

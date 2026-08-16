@@ -157,7 +157,7 @@ Per-call options:
 
 | Class                            | Factory                                 | Setters                                                     |
 |:---------------------------------|:----------------------------------------|:------------------------------------------------------------|
-| `ReadOptions`                    | `newReadOptions()`                      | `setSnapshot(Snapshot)`                                     |
+| `ReadOptions`                    | `newReadOptions()`                      | `setSnapshot(Snapshot)`, `setVerifyChecksums`, `setFillCache`, `setPinData`, `setTailing`, `setTotalOrderSeek`, `setPrefixSameAsStart`, `setReadaheadSize(MemorySize)`, `setIterateLowerBound`/`setIterateUpperBound` (byte[]/ByteBuffer/MemorySegment), `setRequestId(String)` |
 | `WriteOptions`                   | `newWriteOptions()`                     | `setSync`, `setDisableWal`, `setIgnoreMissingColumnFamilies`, `setNoSlowdown`, `setLowPri`, `setMemtableInsertHintPerBatch`, `setRateLimiterPriority(IOPriority)`, `setIoActivity(IOActivity)` |
 | `FlushOptions`                   | `newFlushOptions()`                     | `setWait(boolean)` / `isWait()`                             |
 | `CompactOptions`                 | `newCompactOptions()`                   | `setExclusiveManualCompaction`, `setBottommostLevelCompaction`, `setChangeLevel`, `setTargetLevel` |

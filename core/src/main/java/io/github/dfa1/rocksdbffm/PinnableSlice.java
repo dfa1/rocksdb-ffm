@@ -62,7 +62,7 @@ final class PinnableSlice extends NativeObject {
 	/// @return the value's bytes, copied into a new array
 	byte[] toByteArray(MemorySegment vallenOut) {
 		MemorySegment data = value(vallenOut);
-		return data.reinterpret(vallenOut.get(ValueLayout.JAVA_LONG, 0)).toArray(ValueLayout.JAVA_BYTE);
+		return RocksDB.toByteArray(data, vallenOut.get(ValueLayout.JAVA_LONG, 0));
 	}
 
 	/// Copies this slice's value into `dest`, or reports insufficient capacity without
