@@ -12,9 +12,14 @@ is JNI's inherent bottleneck: new features land in RocksDB's C++ core well befor
 API. At the time of writing, `rocksdbjni` has published no 11.x release at all, while the C API has
 been at 11.x for a while.
 
-The alternative was building this library the same way: a `RocksDB`-style JNI wrapper, hand-written
-C++ glue per mapped function, one native module per platform compiled with a C++ toolchain. That path
-was rejected in favor of `java.lang.foreign` (the Foreign Function & Memory API, stable since JDK 22 /
+Two alternatives were on the table. The first was building this library the same way `rocksdbjni`
+does: hand-written C++ glue per mapped function, one native module per platform compiled with a C++
+toolchain. The second was [JNA](https://github.com/java-native-access/jna) (Java Native Access), which
+also removes the C++ glue requirement — it maps a Java interface's methods to native functions via
+reflection at runtime, no compiled glue layer at all. JNA was rejected on performance: its
+reflection-based dynamic dispatch is markedly slower than JNI's, let alone FFM's JIT-compiled downcall
+stubs, and it is a third-party dependency rather than a JDK-standard API. Both alternatives were
+rejected in favor of `java.lang.foreign` (the Foreign Function & Memory API, stable since JDK 22 /
 JEP 454).
 
 ## Decision
