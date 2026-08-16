@@ -66,4 +66,4 @@ jobs:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: ./mvnw deploy -Prelease -DskipTests --batch-mode
+        run: ./mvnw deploy -Prelease,all-natives -DskipTests --batch-mode
