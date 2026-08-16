@@ -235,9 +235,12 @@ error into an undefined-behavior bug. The one supported override is explicit:
 -Drocksdb.lib.path=/path/to/librocksdb.so
 ```
 
-All native modules are ordinary unconditional dependencies — no Maven profiles. The build always
-produces every platform artifact, applications declare the ones they ship to, and the loader ignores
-the rest. Declaring all five is a normal thing to do for a cross-platform application.
+All native modules are ordinary unconditional dependencies — applications declare all five, the loader
+ignores the ones that don't match the running platform, and declaring all five is a normal thing to do
+for a cross-platform application. Producing them is not unconditional, though: since `zig cc` lets any
+host cross-compile any classifier, a plain local build only cross-compiles the host's own by default
+(an OS-family-activated Maven profile skips the exec step for the other four); `-Pall-natives` forces
+every classifier regardless of host, which is what CI and releases use.
 
 ## Building with Zig
 

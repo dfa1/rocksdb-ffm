@@ -1,7 +1,7 @@
 # RocksDB FFM
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.dfa1/rocksdbffm-core.svg)](https://central.sonatype.com/artifact/io.github.dfa1/rocksdbffm-core)
-![PURL](https://img.shields.io/badge/purl-pkg%3Amaven%2Fio.github.dfa1%2Frocksdbffm--core%400.6-blue)
+![PURL](https://img.shields.io/badge/purl-pkg%3Amaven%2Fio.github.dfa1%2Frocksdbffm--core%400.8-blue)
 ![RocksDB](https://img.shields.io/badge/RocksDB-11.8.1-green.svg)
 ![MacOS](https://img.shields.io/badge/macOS-fully_supported-green.svg)
 ![Linux](https://img.shields.io/badge/linux-fully_supported-green.svg)
@@ -36,7 +36,7 @@ Import the BOM, then depend on `rocksdbffm-core` plus one native artifact per pl
     <dependency>
       <groupId>io.github.dfa1</groupId>
       <artifactId>rocksdbffm-bom</artifactId>
-      <version>0.6</version>
+      <version>0.8</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
