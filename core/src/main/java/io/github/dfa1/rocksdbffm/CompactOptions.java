@@ -87,7 +87,7 @@ public final class CompactOptions extends NativeObject {
 		try {
 			result = (MemorySegment) MH_CREATE.invokeExact();
 		} catch (Throwable e) {
-			throw new RocksDBException(e.getMessage());
+			throw RocksDBException.wrap(e.getMessage(), e);
 		}
 		return new CompactOptions(result);
 	}
@@ -101,7 +101,7 @@ public final class CompactOptions extends NativeObject {
 		try {
 			MH_SET_EXCLUSIVE.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
 		} catch (Throwable t) {
-			throw new RocksDBException("setExclusiveManualCompaction failed", t);
+			throw RocksDBException.wrap("setExclusiveManualCompaction failed", t);
 		}
 		return this;
 	}
@@ -113,7 +113,7 @@ public final class CompactOptions extends NativeObject {
 		try {
 			return (byte) MH_GET_EXCLUSIVE.invokeExact(ptr()) != 0;
 		} catch (Throwable t) {
-			throw new RocksDBException("isExclusiveManualCompaction failed", t);
+			throw RocksDBException.wrap("isExclusiveManualCompaction failed", t);
 		}
 	}
 
@@ -126,7 +126,7 @@ public final class CompactOptions extends NativeObject {
 		try {
 			MH_SET_BOTTOMMOST.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
 		} catch (Throwable t) {
-			throw new RocksDBException("setBottommostLevelCompaction failed", t);
+			throw RocksDBException.wrap("setBottommostLevelCompaction failed", t);
 		}
 		return this;
 	}
@@ -138,7 +138,7 @@ public final class CompactOptions extends NativeObject {
 		try {
 			return (byte) MH_GET_BOTTOMMOST.invokeExact(ptr()) != 0;
 		} catch (Throwable t) {
-			throw new RocksDBException("isBottommostLevelCompaction failed", t);
+			throw RocksDBException.wrap("isBottommostLevelCompaction failed", t);
 		}
 	}
 
@@ -152,7 +152,7 @@ public final class CompactOptions extends NativeObject {
 		try {
 			MH_SET_CHANGE_LEVEL.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
 		} catch (Throwable t) {
-			throw new RocksDBException("setChangeLevel failed", t);
+			throw RocksDBException.wrap("setChangeLevel failed", t);
 		}
 		return this;
 	}
@@ -164,7 +164,7 @@ public final class CompactOptions extends NativeObject {
 		try {
 			return (byte) MH_GET_CHANGE_LEVEL.invokeExact(ptr()) != 0;
 		} catch (Throwable t) {
-			throw new RocksDBException("isChangeLevel failed", t);
+			throw RocksDBException.wrap("isChangeLevel failed", t);
 		}
 	}
 
@@ -177,7 +177,7 @@ public final class CompactOptions extends NativeObject {
 		try {
 			MH_SET_TARGET_LEVEL.invokeExact(ptr(), level);
 		} catch (Throwable t) {
-			throw new RocksDBException("setTargetLevel failed", t);
+			throw RocksDBException.wrap("setTargetLevel failed", t);
 		}
 		return this;
 	}
@@ -189,7 +189,7 @@ public final class CompactOptions extends NativeObject {
 		try {
 			return (int) MH_GET_TARGET_LEVEL.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getTargetLevel failed", t);
+			throw RocksDBException.wrap("getTargetLevel failed", t);
 		}
 	}
 

@@ -98,7 +98,7 @@ public final class RateLimiter extends NativeObject {
 					rateBytesPerSec.toBytes(), refillPeriodUs, fairness);
 			return new RateLimiter(ptr);
 		} catch (Throwable t) {
-			throw new RocksDBException("RateLimiter create failed", t);
+			throw RocksDBException.wrap("RateLimiter create failed", t);
 		}
 	}
 
@@ -115,7 +115,7 @@ public final class RateLimiter extends NativeObject {
 					rateBytesPerSec.toBytes(), refillPeriodUs, fairness);
 			return new RateLimiter(ptr);
 		} catch (Throwable t) {
-			throw new RocksDBException("RateLimiter createAutoTuned failed", t);
+			throw RocksDBException.wrap("RateLimiter createAutoTuned failed", t);
 		}
 	}
 
@@ -144,7 +144,7 @@ public final class RateLimiter extends NativeObject {
 					mode.value, autoTuned ? (byte) 1 : (byte) 0);
 			return new RateLimiter(ptr);
 		} catch (Throwable t) {
-			throw new RocksDBException("RateLimiter createWithMode failed", t);
+			throw RocksDBException.wrap("RateLimiter createWithMode failed", t);
 		}
 	}
 

@@ -109,7 +109,7 @@ public final class Logger extends NativeObject {
 			MemorySegment ptr = (MemorySegment) MH_CREATE_STDERR.invokeExact(level.value, prefixSeg);
 			return new Logger(ptr, STDERR_CALLBACK_ID);
 		} catch (Throwable t) {
-			throw new RocksDBException("Logger.newStderrLogger failed", t);
+			throw RocksDBException.wrap("Logger.newStderrLogger failed", t);
 		}
 	}
 
@@ -132,7 +132,7 @@ public final class Logger extends NativeObject {
 			return new Logger(ptr, id);
 		} catch (Throwable t) {
 			REGISTRY.remove(id);
-			throw new RocksDBException("Logger.newCallbackLogger failed", t);
+			throw RocksDBException.wrap("Logger.newCallbackLogger failed", t);
 		}
 	}
 

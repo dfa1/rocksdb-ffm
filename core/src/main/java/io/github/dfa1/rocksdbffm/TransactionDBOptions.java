@@ -171,7 +171,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return new TransactionDBOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw new RocksDBException("transactiondb options create failed", t);
+			throw RocksDBException.wrap("transactiondb options create failed", t);
 		}
 	}
 
@@ -183,7 +183,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_MAX_NUM_LOCKS.invokeExact(ptr(), maxNumLocks);
 		} catch (Throwable t) {
-			throw new RocksDBException("setMaxNumLocks failed", t);
+			throw RocksDBException.wrap("setMaxNumLocks failed", t);
 		}
 		return this;
 	}
@@ -195,7 +195,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return (long) MH_GET_MAX_NUM_LOCKS.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getMaxNumLocks failed", t);
+			throw RocksDBException.wrap("getMaxNumLocks failed", t);
 		}
 	}
 
@@ -207,7 +207,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_MAX_NUM_DEADLOCKS.invokeExact(ptr(), maxNumDeadlocks);
 		} catch (Throwable t) {
-			throw new RocksDBException("setMaxNumDeadlocks failed", t);
+			throw RocksDBException.wrap("setMaxNumDeadlocks failed", t);
 		}
 		return this;
 	}
@@ -219,7 +219,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return (int) MH_GET_MAX_NUM_DEADLOCKS.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getMaxNumDeadlocks failed", t);
+			throw RocksDBException.wrap("getMaxNumDeadlocks failed", t);
 		}
 	}
 
@@ -231,7 +231,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_NUM_STRIPES.invokeExact(ptr(), numStripes);
 		} catch (Throwable t) {
-			throw new RocksDBException("setNumStripes failed", t);
+			throw RocksDBException.wrap("setNumStripes failed", t);
 		}
 		return this;
 	}
@@ -243,7 +243,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return (long) MH_GET_NUM_STRIPES.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getNumStripes failed", t);
+			throw RocksDBException.wrap("getNumStripes failed", t);
 		}
 	}
 
@@ -258,7 +258,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_TRANSACTION_LOCK_TIMEOUT.invokeExact(ptr(), toMillisOrNoTimeout(transactionLockTimeout));
 		} catch (Throwable t) {
-			throw new RocksDBException("setTransactionLockTimeout failed", t);
+			throw RocksDBException.wrap("setTransactionLockTimeout failed", t);
 		}
 		return this;
 	}
@@ -270,7 +270,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return millisToDurationOrNull((long) MH_GET_TRANSACTION_LOCK_TIMEOUT.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("getTransactionLockTimeout failed", t);
+			throw RocksDBException.wrap("getTransactionLockTimeout failed", t);
 		}
 	}
 
@@ -285,7 +285,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_DEFAULT_LOCK_TIMEOUT.invokeExact(ptr(), toMillisOrNoTimeout(defaultLockTimeout));
 		} catch (Throwable t) {
-			throw new RocksDBException("setDefaultLockTimeout failed", t);
+			throw RocksDBException.wrap("setDefaultLockTimeout failed", t);
 		}
 		return this;
 	}
@@ -297,7 +297,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return millisToDurationOrNull((long) MH_GET_DEFAULT_LOCK_TIMEOUT.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("getDefaultLockTimeout failed", t);
+			throw RocksDBException.wrap("getDefaultLockTimeout failed", t);
 		}
 	}
 
@@ -334,7 +334,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_WRITE_POLICY.invokeExact(ptr(), writePolicy.getValue());
 		} catch (Throwable t) {
-			throw new RocksDBException("setWritePolicy failed", t);
+			throw RocksDBException.wrap("setWritePolicy failed", t);
 		}
 		return this;
 	}
@@ -352,7 +352,7 @@ public final class TransactionDBOptions extends NativeObject {
 			}
 			return TxnDBWritePolicy.WRITE_COMMITTED;
 		} catch (Throwable t) {
-			throw new RocksDBException("getWritePolicy failed", t);
+			throw RocksDBException.wrap("getWritePolicy failed", t);
 		}
 	}
 
@@ -366,7 +366,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_ROLLBACK_MERGE_OPERANDS.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
 		} catch (Throwable t) {
-			throw new RocksDBException("setRollbackMergeOperands failed", t);
+			throw RocksDBException.wrap("setRollbackMergeOperands failed", t);
 		}
 		return this;
 	}
@@ -378,7 +378,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return (byte) MH_GET_ROLLBACK_MERGE_OPERANDS.invokeExact(ptr()) != 0;
 		} catch (Throwable t) {
-			throw new RocksDBException("getRollbackMergeOperands failed", t);
+			throw RocksDBException.wrap("getRollbackMergeOperands failed", t);
 		}
 	}
 
@@ -391,7 +391,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_USE_PER_KEY_POINT_LOCK_MGR.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
 		} catch (Throwable t) {
-			throw new RocksDBException("setUsePerKeyPointLockMgr failed", t);
+			throw RocksDBException.wrap("setUsePerKeyPointLockMgr failed", t);
 		}
 		return this;
 	}
@@ -403,7 +403,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return (byte) MH_GET_USE_PER_KEY_POINT_LOCK_MGR.invokeExact(ptr()) != 0;
 		} catch (Throwable t) {
-			throw new RocksDBException("getUsePerKeyPointLockMgr failed", t);
+			throw RocksDBException.wrap("getUsePerKeyPointLockMgr failed", t);
 		}
 	}
 
@@ -417,7 +417,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
 		} catch (Throwable t) {
-			throw new RocksDBException("setSkipConcurrencyControl failed", t);
+			throw RocksDBException.wrap("setSkipConcurrencyControl failed", t);
 		}
 		return this;
 	}
@@ -429,7 +429,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return (byte) MH_GET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr()) != 0;
 		} catch (Throwable t) {
-			throw new RocksDBException("getSkipConcurrencyControl failed", t);
+			throw RocksDBException.wrap("getSkipConcurrencyControl failed", t);
 		}
 	}
 
@@ -445,7 +445,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr(), defaultWriteBatchFlushThreshold);
 		} catch (Throwable t) {
-			throw new RocksDBException("setDefaultWriteBatchFlushThreshold failed", t);
+			throw RocksDBException.wrap("setDefaultWriteBatchFlushThreshold failed", t);
 		}
 		return this;
 	}
@@ -457,7 +457,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return (long) MH_GET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getDefaultWriteBatchFlushThreshold failed", t);
+			throw RocksDBException.wrap("getDefaultWriteBatchFlushThreshold failed", t);
 		}
 	}
 
@@ -470,7 +470,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_ENABLE_UDT_VALIDATION.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
 		} catch (Throwable t) {
-			throw new RocksDBException("setEnableUdtValidation failed", t);
+			throw RocksDBException.wrap("setEnableUdtValidation failed", t);
 		}
 		return this;
 	}
@@ -482,7 +482,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return (byte) MH_GET_ENABLE_UDT_VALIDATION.invokeExact(ptr()) != 0;
 		} catch (Throwable t) {
-			throw new RocksDBException("getEnableUdtValidation failed", t);
+			throw RocksDBException.wrap("getEnableUdtValidation failed", t);
 		}
 	}
 
@@ -497,7 +497,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD.invokeExact(ptr(), txnCommitBypassMemtableThreshold);
 		} catch (Throwable t) {
-			throw new RocksDBException("setTxnCommitBypassMemtableThreshold failed", t);
+			throw RocksDBException.wrap("setTxnCommitBypassMemtableThreshold failed", t);
 		}
 		return this;
 	}
@@ -509,7 +509,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return (int) MH_GET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getTxnCommitBypassMemtableThreshold failed", t);
+			throw RocksDBException.wrap("getTxnCommitBypassMemtableThreshold failed", t);
 		}
 	}
 

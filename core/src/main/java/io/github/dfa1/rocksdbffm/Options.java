@@ -236,7 +236,7 @@ public final class Options extends NativeObject {
 		try {
 			return new Options((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw new RocksDBException("options create failed", t);
+			throw RocksDBException.wrap("options create failed", t);
 		}
 	}
 
@@ -249,7 +249,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_CREATE_IF_MISSING.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
 		} catch (Throwable t) {
-			throw new RocksDBException("setCreateIfMissing failed", t);
+			throw RocksDBException.wrap("setCreateIfMissing failed", t);
 		}
 		return this;
 	}
@@ -261,7 +261,7 @@ public final class Options extends NativeObject {
 		try {
 			return ((byte) MH_GET_CREATE_IF_MISSING.invokeExact(ptr())) != 0;
 		} catch (Throwable t) {
-			throw new RocksDBException("getCreateIfMissing failed", t);
+			throw RocksDBException.wrap("getCreateIfMissing failed", t);
 		}
 	}
 
@@ -272,7 +272,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_ENABLE_STATISTICS.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("enableStatistics failed", t);
+			throw RocksDBException.wrap("enableStatistics failed", t);
 		}
 		return this;
 	}
@@ -285,7 +285,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_STATISTICS_LEVEL.invokeExact(ptr(), level.getValue());
 		} catch (Throwable t) {
-			throw new RocksDBException("setStatisticsLevel failed", t);
+			throw RocksDBException.wrap("setStatisticsLevel failed", t);
 		}
 		return this;
 	}
@@ -303,7 +303,7 @@ public final class Options extends NativeObject {
 			}
 			return StatsLevel.DISABLE_ALL;
 		} catch (Throwable t) {
-			throw new RocksDBException("getStatisticsLevel failed", t);
+			throw RocksDBException.wrap("getStatisticsLevel failed", t);
 		}
 	}
 
@@ -320,7 +320,7 @@ public final class Options extends NativeObject {
 			RocksDB.free(strPtr);
 			return result;
 		} catch (Throwable t) {
-			throw new RocksDBException("getStatisticsString failed", t);
+			throw RocksDBException.wrap("getStatisticsString failed", t);
 		}
 	}
 
@@ -332,7 +332,7 @@ public final class Options extends NativeObject {
 		try {
 			return (long) MH_STATISTICS_GET_TICKER_COUNT.invokeExact(ptr(), ticker.getValue());
 		} catch (Throwable t) {
-			throw new RocksDBException("getTickerCount failed", t);
+			throw RocksDBException.wrap("getTickerCount failed", t);
 		}
 	}
 
@@ -344,7 +344,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_STATISTICS_GET_HISTOGRAM_DATA.invokeExact(ptr(), histogram.getValue(), data.ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getHistogramData failed", t);
+			throw RocksDBException.wrap("getHistogramData failed", t);
 		}
 	}
 
@@ -358,7 +358,7 @@ public final class Options extends NativeObject {
 			MH_SET_COMPRESSION.invokeExact(ptr(), type.value);
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setCompression failed", t);
+			throw RocksDBException.wrap("setCompression failed", t);
 		}
 	}
 
@@ -369,7 +369,7 @@ public final class Options extends NativeObject {
 		try {
 			return CompressionType.fromValue((int) MH_GET_COMPRESSION.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("getCompression failed", t);
+			throw RocksDBException.wrap("getCompression failed", t);
 		}
 	}
 
@@ -382,7 +382,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_BLOCK_BASED_TABLE_FACTORY.invokeExact(ptr(), tableConfig.ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("setTableFormatConfig failed", t);
+			throw RocksDBException.wrap("setTableFormatConfig failed", t);
 		}
 		return this;
 	}
@@ -402,7 +402,7 @@ public final class Options extends NativeObject {
 			MH_SET_ENABLE_BLOB_FILES.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setEnableBlobFiles failed", t);
+			throw RocksDBException.wrap("setEnableBlobFiles failed", t);
 		}
 	}
 
@@ -413,7 +413,7 @@ public final class Options extends NativeObject {
 		try {
 			return ((byte) MH_GET_ENABLE_BLOB_FILES.invokeExact(ptr())) != 0;
 		} catch (Throwable t) {
-			throw new RocksDBException("getEnableBlobFiles failed", t);
+			throw RocksDBException.wrap("getEnableBlobFiles failed", t);
 		}
 	}
 
@@ -427,7 +427,7 @@ public final class Options extends NativeObject {
 			MH_SET_MIN_BLOB_SIZE.invokeExact(ptr(), size.toBytes());
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setMinBlobSize failed", t);
+			throw RocksDBException.wrap("setMinBlobSize failed", t);
 		}
 	}
 
@@ -438,7 +438,7 @@ public final class Options extends NativeObject {
 		try {
 			return MemorySize.ofBytes((long) MH_GET_MIN_BLOB_SIZE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("getMinBlobSize failed", t);
+			throw RocksDBException.wrap("getMinBlobSize failed", t);
 		}
 	}
 
@@ -452,7 +452,7 @@ public final class Options extends NativeObject {
 			MH_SET_BLOB_FILE_SIZE.invokeExact(ptr(), size.toBytes());
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setBlobFileSize failed", t);
+			throw RocksDBException.wrap("setBlobFileSize failed", t);
 		}
 	}
 
@@ -463,7 +463,7 @@ public final class Options extends NativeObject {
 		try {
 			return MemorySize.ofBytes((long) MH_GET_BLOB_FILE_SIZE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("getBlobFileSize failed", t);
+			throw RocksDBException.wrap("getBlobFileSize failed", t);
 		}
 	}
 
@@ -477,7 +477,7 @@ public final class Options extends NativeObject {
 			MH_SET_BLOB_COMPRESSION_TYPE.invokeExact(ptr(), type.value);
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setBlobCompressionType failed", t);
+			throw RocksDBException.wrap("setBlobCompressionType failed", t);
 		}
 	}
 
@@ -488,7 +488,7 @@ public final class Options extends NativeObject {
 		try {
 			return CompressionType.fromValue((int) MH_GET_BLOB_COMPRESSION_TYPE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("getBlobCompressionType failed", t);
+			throw RocksDBException.wrap("getBlobCompressionType failed", t);
 		}
 	}
 
@@ -502,7 +502,7 @@ public final class Options extends NativeObject {
 			MH_SET_ENABLE_BLOB_GC.invokeExact(ptr(), value ? (byte) 1 : (byte) 0);
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setEnableBlobGc failed", t);
+			throw RocksDBException.wrap("setEnableBlobGc failed", t);
 		}
 	}
 
@@ -513,7 +513,7 @@ public final class Options extends NativeObject {
 		try {
 			return ((byte) MH_GET_ENABLE_BLOB_GC.invokeExact(ptr())) != 0;
 		} catch (Throwable t) {
-			throw new RocksDBException("getEnableBlobGc failed", t);
+			throw RocksDBException.wrap("getEnableBlobGc failed", t);
 		}
 	}
 
@@ -528,7 +528,7 @@ public final class Options extends NativeObject {
 			MH_SET_BLOB_GC_AGE_CUTOFF.invokeExact(ptr(), value);
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setBlobGcAgeCutoff failed", t);
+			throw RocksDBException.wrap("setBlobGcAgeCutoff failed", t);
 		}
 	}
 
@@ -539,7 +539,7 @@ public final class Options extends NativeObject {
 		try {
 			return (double) MH_GET_BLOB_GC_AGE_CUTOFF.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getBlobGcAgeCutoff failed", t);
+			throw RocksDBException.wrap("getBlobGcAgeCutoff failed", t);
 		}
 	}
 
@@ -553,7 +553,7 @@ public final class Options extends NativeObject {
 			MH_SET_BLOB_GC_FORCE_THRESHOLD.invokeExact(ptr(), value);
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setBlobGcForceThreshold failed", t);
+			throw RocksDBException.wrap("setBlobGcForceThreshold failed", t);
 		}
 	}
 
@@ -564,7 +564,7 @@ public final class Options extends NativeObject {
 		try {
 			return (double) MH_GET_BLOB_GC_FORCE_THRESHOLD.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getBlobGcForceThreshold failed", t);
+			throw RocksDBException.wrap("getBlobGcForceThreshold failed", t);
 		}
 	}
 
@@ -578,7 +578,7 @@ public final class Options extends NativeObject {
 			MH_SET_BLOB_COMPACTION_READAHEAD_SIZE.invokeExact(ptr(), size.toBytes());
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setBlobCompactionReadaheadSize failed", t);
+			throw RocksDBException.wrap("setBlobCompactionReadaheadSize failed", t);
 		}
 	}
 
@@ -589,7 +589,7 @@ public final class Options extends NativeObject {
 		try {
 			return MemorySize.ofBytes((long) MH_GET_BLOB_COMPACTION_READAHEAD_SIZE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("getBlobCompactionReadaheadSize failed", t);
+			throw RocksDBException.wrap("getBlobCompactionReadaheadSize failed", t);
 		}
 	}
 
@@ -603,7 +603,7 @@ public final class Options extends NativeObject {
 			MH_SET_BLOB_FILE_STARTING_LEVEL.invokeExact(ptr(), level);
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setBlobFileStartingLevel failed", t);
+			throw RocksDBException.wrap("setBlobFileStartingLevel failed", t);
 		}
 	}
 
@@ -614,7 +614,7 @@ public final class Options extends NativeObject {
 		try {
 			return (int) MH_GET_BLOB_FILE_STARTING_LEVEL.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getBlobFileStartingLevel failed", t);
+			throw RocksDBException.wrap("getBlobFileStartingLevel failed", t);
 		}
 	}
 
@@ -628,7 +628,7 @@ public final class Options extends NativeObject {
 			MH_SET_BLOB_CACHE.invokeExact(ptr(), cache.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setBlobCache failed", t);
+			throw RocksDBException.wrap("setBlobCache failed", t);
 		}
 	}
 
@@ -642,7 +642,7 @@ public final class Options extends NativeObject {
 			MH_SET_PREPOPULATE_BLOB_CACHE.invokeExact(ptr(), mode.value);
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setPrepopulateBlobCache failed", t);
+			throw RocksDBException.wrap("setPrepopulateBlobCache failed", t);
 		}
 	}
 
@@ -653,7 +653,7 @@ public final class Options extends NativeObject {
 		try {
 			return PrepopulateBlobCache.fromValue((int) MH_GET_PREPOPULATE_BLOB_CACHE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("getPrepopulateBlobCache failed", t);
+			throw RocksDBException.wrap("getPrepopulateBlobCache failed", t);
 		}
 	}
 
@@ -671,7 +671,7 @@ public final class Options extends NativeObject {
 			MH_SET_INFO_LOG.invokeExact(ptr(), logger.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setInfoLog failed", t);
+			throw RocksDBException.wrap("setInfoLog failed", t);
 		}
 	}
 
@@ -684,7 +684,7 @@ public final class Options extends NativeObject {
 			MH_SET_INFO_LOG_LEVEL.invokeExact(ptr(), level.value);
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setInfoLogLevel failed", t);
+			throw RocksDBException.wrap("setInfoLogLevel failed", t);
 		}
 	}
 
@@ -695,7 +695,7 @@ public final class Options extends NativeObject {
 		try {
 			return LogLevel.fromValue((int) MH_GET_INFO_LOG_LEVEL.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("getInfoLogLevel failed", t);
+			throw RocksDBException.wrap("getInfoLogLevel failed", t);
 		}
 	}
 
@@ -711,7 +711,7 @@ public final class Options extends NativeObject {
 			MH_SET_ENV.invokeExact(ptr(), env.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setEnv failed", t);
+			throw RocksDBException.wrap("setEnv failed", t);
 		}
 	}
 
@@ -726,7 +726,7 @@ public final class Options extends NativeObject {
 			MH_SET_SST_FILE_MANAGER.invokeExact(ptr(), sfm.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setSstFileManager failed", t);
+			throw RocksDBException.wrap("setSstFileManager failed", t);
 		}
 	}
 
@@ -742,7 +742,7 @@ public final class Options extends NativeObject {
 			MH_SET_RATELIMITER.invokeExact(ptr(), rateLimiter.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("setRateLimiter failed", t);
+			throw RocksDBException.wrap("setRateLimiter failed", t);
 		}
 	}
 

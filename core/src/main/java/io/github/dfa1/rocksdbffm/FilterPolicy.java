@@ -53,7 +53,7 @@ public final class FilterPolicy extends NativeObject {
 		try {
 			return new FilterPolicy((MemorySegment) MH_CREATE_BLOOM.invokeExact(bitsPerKey));
 		} catch (Throwable t) {
-			throw new RocksDBException("FilterPolicy.newBloom failed", t);
+			throw RocksDBException.wrap("FilterPolicy.newBloom failed", t);
 		}
 	}
 
@@ -67,7 +67,7 @@ public final class FilterPolicy extends NativeObject {
 		try {
 			return new FilterPolicy((MemorySegment) MH_CREATE_RIBBON.invokeExact(bloomEquivalentBitsPerKey));
 		} catch (Throwable t) {
-			throw new RocksDBException("FilterPolicy.newRibbon failed", t);
+			throw RocksDBException.wrap("FilterPolicy.newRibbon failed", t);
 		}
 	}
 

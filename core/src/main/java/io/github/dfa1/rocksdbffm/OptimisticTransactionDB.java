@@ -96,7 +96,7 @@ public final class OptimisticTransactionDB extends NativeObject {
 					ptr(), writeOptions.ptr(), txnOptions.ptr(), MemorySegment.NULL);
 			return new Transaction(txnPtr);
 		} catch (Throwable t) {
-			throw new RocksDBException("beginTransaction failed", t);
+			throw RocksDBException.wrap("beginTransaction failed", t);
 		}
 	}
 

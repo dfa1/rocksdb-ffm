@@ -32,7 +32,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			return new WriteOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw new RocksDBException("writeoptions create failed", t);
+			throw RocksDBException.wrap("writeoptions create failed", t);
 		}
 	}
 

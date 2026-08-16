@@ -67,7 +67,7 @@ public final class StatisticsHistogramData extends NativeObject {
 		try {
 			return new StatisticsHistogramData((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw new RocksDBException("histogram data create failed", t);
+			throw RocksDBException.wrap("histogram data create failed", t);
 		}
 	}
 
@@ -78,7 +78,7 @@ public final class StatisticsHistogramData extends NativeObject {
 		try {
 			return (double) MH_GET_MEDIAN.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getMedian failed", t);
+			throw RocksDBException.wrap("getMedian failed", t);
 		}
 	}
 
@@ -89,7 +89,7 @@ public final class StatisticsHistogramData extends NativeObject {
 		try {
 			return (double) MH_GET_P95.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getP95 failed", t);
+			throw RocksDBException.wrap("getP95 failed", t);
 		}
 	}
 
@@ -100,7 +100,7 @@ public final class StatisticsHistogramData extends NativeObject {
 		try {
 			return (double) MH_GET_P99.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getP99 failed", t);
+			throw RocksDBException.wrap("getP99 failed", t);
 		}
 	}
 
@@ -111,7 +111,7 @@ public final class StatisticsHistogramData extends NativeObject {
 		try {
 			return (double) MH_GET_AVERAGE.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getAverage failed", t);
+			throw RocksDBException.wrap("getAverage failed", t);
 		}
 	}
 
@@ -122,7 +122,7 @@ public final class StatisticsHistogramData extends NativeObject {
 		try {
 			return (double) MH_GET_STD_DEV.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getStdDev failed", t);
+			throw RocksDBException.wrap("getStdDev failed", t);
 		}
 	}
 
@@ -133,7 +133,7 @@ public final class StatisticsHistogramData extends NativeObject {
 		try {
 			return (double) MH_GET_MAX.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getMax failed", t);
+			throw RocksDBException.wrap("getMax failed", t);
 		}
 	}
 
@@ -144,7 +144,7 @@ public final class StatisticsHistogramData extends NativeObject {
 		try {
 			return (long) MH_GET_COUNT.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getCount failed", t);
+			throw RocksDBException.wrap("getCount failed", t);
 		}
 	}
 
@@ -155,7 +155,7 @@ public final class StatisticsHistogramData extends NativeObject {
 		try {
 			return (long) MH_GET_SUM.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getSum failed", t);
+			throw RocksDBException.wrap("getSum failed", t);
 		}
 	}
 
@@ -166,7 +166,7 @@ public final class StatisticsHistogramData extends NativeObject {
 		try {
 			return (double) MH_GET_MIN.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("getMin failed", t);
+			throw RocksDBException.wrap("getMin failed", t);
 		}
 	}
 

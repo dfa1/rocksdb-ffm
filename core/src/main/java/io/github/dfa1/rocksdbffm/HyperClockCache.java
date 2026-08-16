@@ -70,7 +70,7 @@ public final class HyperClockCache extends Cache {
 			return new HyperClockCache((MemorySegment) MH_CREATE.invokeExact(
 					capacity.toBytes(), estimatedEntryCharge.toBytes()));
 		} catch (Throwable t) {
-			throw new RocksDBException("HyperClockCache create failed", t);
+			throw RocksDBException.wrap("HyperClockCache create failed", t);
 		}
 	}
 
@@ -91,7 +91,7 @@ public final class HyperClockCache extends Cache {
 			MH_OPTS_SET_NUM_SHARD_BITS.invokeExact(opts, numShardBits);
 			return new HyperClockCache((MemorySegment) MH_CREATE_OPTS.invokeExact(opts));
 		} catch (Throwable t) {
-			throw new RocksDBException("HyperClockCache create failed", t);
+			throw RocksDBException.wrap("HyperClockCache create failed", t);
 		} finally {
 			if (opts != null) {
 				try {

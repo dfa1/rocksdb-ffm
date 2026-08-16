@@ -64,7 +64,7 @@ public final class Snapshot extends NativeObject {
 		try {
 			return SequenceNumber.of((long) MH_SEQUENCE_NUMBER.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("snapshot sequenceNumber failed", t);
+			throw RocksDBException.wrap("snapshot sequenceNumber failed", t);
 		}
 	}
 

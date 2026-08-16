@@ -37,7 +37,7 @@ public final class ReadOptions extends NativeObject {
 		try {
 			return new ReadOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw new RocksDBException("readoptions create failed", t);
+			throw RocksDBException.wrap("readoptions create failed", t);
 		}
 	}
 
@@ -53,7 +53,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_SNAPSHOT.invokeExact(ptr(), snapPtr);
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("readoptions setSnapshot failed", t);
+			throw RocksDBException.wrap("readoptions setSnapshot failed", t);
 		}
 	}
 

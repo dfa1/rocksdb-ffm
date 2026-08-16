@@ -822,7 +822,7 @@ public final class Transaction extends NativeObject {
 		try {
 			MH_SET_SAVEPOINT.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw new RocksDBException("transaction setSavePoint failed", t);
+			throw RocksDBException.wrap("transaction setSavePoint failed", t);
 		}
 	}
 

@@ -111,7 +111,7 @@ public final class SstFileWriter extends NativeObject {
 				MH_ENVOPTIONS_DESTROY.invokeExact(envOpts);
 			}
 		} catch (Throwable t) {
-			throw new RocksDBException("sstfilewriter create failed", t);
+			throw RocksDBException.wrap("sstfilewriter create failed", t);
 		}
 	}
 

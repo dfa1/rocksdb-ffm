@@ -54,7 +54,7 @@ public abstract class Cache extends NativeObject {
 		try {
 			MH_SET_CAPACITY.invokeExact(ptr(), capacity.toBytes());
 		} catch (Throwable t) {
-			throw new RocksDBException("setCapacity failed", t);
+			throw RocksDBException.wrap("setCapacity failed", t);
 		}
 	}
 
@@ -65,7 +65,7 @@ public abstract class Cache extends NativeObject {
 		try {
 			return MemorySize.ofBytes((long) MH_GET_CAPACITY.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("getCapacity failed", t);
+			throw RocksDBException.wrap("getCapacity failed", t);
 		}
 	}
 
@@ -76,7 +76,7 @@ public abstract class Cache extends NativeObject {
 		try {
 			return MemorySize.ofBytes((long) MH_GET_USAGE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("getUsage failed", t);
+			throw RocksDBException.wrap("getUsage failed", t);
 		}
 	}
 
@@ -87,7 +87,7 @@ public abstract class Cache extends NativeObject {
 		try {
 			return MemorySize.ofBytes((long) MH_GET_PINNED_USAGE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw new RocksDBException("getPinnedUsage failed", t);
+			throw RocksDBException.wrap("getPinnedUsage failed", t);
 		}
 	}
 

@@ -51,7 +51,7 @@ public final class FlushOptions extends NativeObject {
 		try {
 			return new FlushOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw new RocksDBException("flushoptions create failed", t);
+			throw RocksDBException.wrap("flushoptions create failed", t);
 		}
 	}
 
@@ -65,7 +65,7 @@ public final class FlushOptions extends NativeObject {
 			MH_SET_WAIT.invokeExact(ptr(), wait ? (byte) 1 : (byte) 0);
 			return this;
 		} catch (Throwable t) {
-			throw new RocksDBException("flushoptions setWait failed", t);
+			throw RocksDBException.wrap("flushoptions setWait failed", t);
 		}
 	}
 
@@ -76,7 +76,7 @@ public final class FlushOptions extends NativeObject {
 		try {
 			return ((byte) MH_GET_WAIT.invokeExact(ptr())) != 0;
 		} catch (Throwable t) {
-			throw new RocksDBException("flushoptions getWait failed", t);
+			throw RocksDBException.wrap("flushoptions getWait failed", t);
 		}
 	}
 
