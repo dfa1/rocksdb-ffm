@@ -217,7 +217,7 @@ Per-call options:
 |:-----------|:-------------------------------------------------------------------------------|
 | Position   | `seekToFirst()`, `seekToLast()`, `seek(target)`, `seekForPrev(target)`, `next()`, `prev()` — seeks accept all three tiers |
 | State      | `isValid()`, `checkError()` (throws), `error()` → `Optional<String>`, `refresh()` |
-| Zero copy  | `keySegment()`, `valueSegment()` — valid only until the next positioning call   |
+| Zero copy  | `key(Mapper)`, `value(Mapper)` — view scoped to the callback                    |
 | One copy   | `key(ByteBuffer)`, `value(ByteBuffer)` → `CopyResult`                           |
 | Convenience| `key()`, `value()` → fresh `byte[]` per call                                    |
 

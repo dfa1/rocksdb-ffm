@@ -171,10 +171,11 @@ API bloat for its own sake — the three answer different questions about who ow
   scope-check overhead, which is why this is the fastest read path in the benchmarks.
 
 Reads use `rocksdb_get_pinned` (a `PinnableSlice`) underneath, so the value is read straight out of
-the block cache without an intermediate copy on the native side. Iterators go further: `keySegment()`
-and `valueSegment()` hand back a segment pointing directly into RocksDB's own memory, with zero
-copies. The trade-off is a lifetime rule the compiler cannot enforce — those segments are invalidated
-by the next positioning call, so the caller must read or copy before moving on.
+the block cache without an intermediate copy on the native side. Iterators go further: `key(Mapper)`
+and `value(Mapper)` hand the callback a view pointing directly into RocksDB's own memory, with zero
+copies. The trade-off is a lifetime rule enforced at runtime rather than compile time — the view is
+bound to an arena that closes the moment the callback returns, so using it afterward throws instead
+of silently reading whatever the next positioning call left behind.
 
 ## Static factories, no public constructors
 

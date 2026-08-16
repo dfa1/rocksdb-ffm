@@ -233,29 +233,6 @@ class RocksIteratorTest {
 		}
 	}
 
-	@Test
-	void keySegment_valueSegment_zeroCopy(@TempDir Path dir) {
-		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
-			db.put("k".getBytes(), "v".getBytes());
-
-			try (RocksIterator it = db.newIterator()) {
-				it.seekToFirst();
-				assertThat(it.isValid()).isTrue();
-
-				// When
-				var keySeg = it.keySegment();
-				var valSeg = it.valueSegment();
-
-				// Then
-				assertThat(keySeg.toArray(ValueLayout.JAVA_BYTE))
-						.isEqualTo("k".getBytes());
-				assertThat(valSeg.toArray(ValueLayout.JAVA_BYTE))
-						.isEqualTo("v".getBytes());
-			}
-		}
-	}
-
 	// -----------------------------------------------------------------------
 	// Empty database
 	// -----------------------------------------------------------------------
@@ -479,8 +456,8 @@ class RocksIteratorTest {
 
 	@Test
 	void key_zeroCopy_staysCorrectAcrossNavigation_insteadOfSilentlyGoingStale(@TempDir Path dir) {
-		// Given — the exact bug the scoped API prevents: a raw keySegment() read before
-		// next() would silently start reporting the new position's bytes with no error.
+		// Given — the exact bug the scoped API prevents: a raw MemorySegment read held
+		// past next() would silently start reporting the new position's bytes with no error.
 		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());

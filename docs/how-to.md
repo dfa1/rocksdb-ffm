@@ -178,8 +178,8 @@ for (it.seekForPrev("user:9".getBytes()); it.isValid(); it.prev()) { /* ... */ }
 Comparison must be **unsigned** — RocksDB orders keys as raw bytes, and Java's signed `byte`
 comparison would place `0x80…0xFF` before `0x00`.
 
-For the zero-copy variants (`keySegment()`, `valueSegment()`) mind the lifetime rule: the segments
-are invalidated by the next positioning call.
+For the zero-copy variants (`key(Mapper)`, `value(Mapper)`) mind the lifetime rule: the view passed
+to the callback is only valid for the duration of that call.
 
 ## Delete a range of keys
 

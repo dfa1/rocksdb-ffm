@@ -205,14 +205,14 @@ natural end of the keyspace *and* on an I/O error.
 
 ```java
 for (it.seekToFirst(); it.isValid(); it.next()) {
-	MemorySegment key = it.keySegment();     // no copy — points into RocksDB's own memory
-	long keyLength = key.byteSize();
+	long keyLength = it.key(key -> key.byteSize());     // no copy — points into RocksDB's own memory
 }
 ```
 
-The catch is lifetime: a segment returned by `keySegment()`/`valueSegment()` is valid **only until
-the next positioning call** (`next`, `seek`, `prev`, …). Read it, or copy out of it, before moving
-the iterator.
+The catch is lifetime: the segment passed to the callback is only valid for the duration of that
+call — read it, or copy out of it, before returning. Using it after the callback returns throws
+`IllegalStateException` rather than silently reading whatever the next positioning call (`next`,
+`seek`, `prev`, …) left behind.
 
 ---
 
