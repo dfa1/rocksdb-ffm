@@ -736,17 +736,15 @@ public final class Transaction extends NativeObject {
 	// Snapshot
 	// -----------------------------------------------------------------------
 
-	/// Returns the snapshot associated with this transaction, or `null` if none
-	/// was set via [TransactionOptions].
-	/// The returned snapshot must be closed after use (freed via `rocksdb_free`).
+	/// Returns the snapshot associated with this transaction. `rocksdb_transaction_get_snapshot`
+	/// always allocates a wrapper, even when no snapshot was set via [TransactionOptions], so this
+	/// never returns `null` — the returned [Snapshot] must always be closed after use (freed via
+	/// `rocksdb_free`).
 	///
-	/// @return the transaction's snapshot, or `null` if none was set
+	/// @return the transaction's snapshot
 	public Snapshot getSnapshot() {
 		try {
 			MemorySegment snapPtr = (MemorySegment) MH_GET_SNAPSHOT.invokeExact(ptr());
-			if (MemorySegment.NULL.equals(snapPtr)) {
-				return null;
-			}
 			return new Snapshot(snapPtr); // released via rocksdb_free
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("getSnapshot failed", t);
