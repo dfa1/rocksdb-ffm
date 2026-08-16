@@ -89,7 +89,7 @@ public class WriteBatchSizeBenchmark {
 	// ---- byte[] tier ---------------------------------------------------
 
 	@Benchmark
-	public void batchWrites() {
+	public void batchWritesByteArray() {
 		batch.clear();
 		for (int i = 0; i < batchSize; i++) {
 			batch.put(batchKeys[i], batchValues[i]);

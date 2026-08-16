@@ -49,8 +49,12 @@ public class BenchmarkRunner {
 		LABELS.put("readsInstantViaByteArray", "Get Instant (memtable) — byte[] + deser");
 		LABELS.put("readsInstantViaPinned", "Get Instant (memtable) — Mapper (FFM)");
 		LABELS.put("writesBytes", "Write — byte[]");
+		// FFM only: caller-supplied Arena reused across calls instead of a fresh
+		// Arena.ofConfined() per put. No JNI equivalent — JNI has no arena concept.
+		LABELS.put("writesBytesArena", "Write — byte[], arena reuse (FFM)");
 		LABELS.put("writesDirectByteBuffer", "Write — DirectByteBuffer");
 		LABELS.put("writesMemorySegment", "Write — MemorySegment (FFM)");
+		LABELS.put("writesMemorySegmentArena", "Write — MemorySegment, arena reuse (FFM)");
 		LABELS.put("batchWrites", "Batch write (100 ops)");
 		// FFM only: batchWrites above pays for a fresh Arena.ofConfined() per put (100 per
 		// batch), which dominates once the native call itself is a cheap in-memory buffer
@@ -59,6 +63,8 @@ public class BenchmarkRunner {
 		// arena concept, so its column is N/A rather than a second measurement of the same
 		// JNI batchWrites run.
 		LABELS.put("batchWritesArena", "Batch write, arena reuse (100 ops, FFM)");
+		LABELS.put("batchWritesByteBuffer", "Batch write — DirectByteBuffer, zero-copy (100 ops, FFM)");
+		LABELS.put("batchWritesMemorySegment", "Batch write — MemorySegment, zero-copy (100 ops, FFM)");
 	}
 
 	static void main() throws Exception {
