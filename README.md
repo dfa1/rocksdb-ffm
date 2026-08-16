@@ -79,6 +79,7 @@ Docs follow the [Diátaxis](https://diataxis.fr/) framework.
 | [docs/explanation.md](docs/explanation.md)     | Explanation | Why FFM over JNI, ownership model, domain types, native library loading          |
 | [docs/benchmarks.md](docs/benchmarks.md)       | Explanation | FFM vs JNI throughput, methodology, how to reproduce                             |
 | [docs/c-api-gaps.md](docs/c-api-gaps.md)       | Reference   | What `rocksdb/c.h` exposes but is unwrapped, and what needs an upstream PR       |
+| [docs/adr/](docs/adr/README.md)                | Explanation | Architecture Decision Records — why a significant decision was made, at the time |
 
 ## Contributing
 

@@ -44,6 +44,8 @@ JNI's frame setup or thread-state transitions. On reads that is worth roughly 2Ã
 The cost is the floor: `java.lang.foreign` is only stable from JDK 22 (JEP 454), and this project
 requires **JDK 25+** so that no preview flags are involved and the baseline is an LTS release.
 
+See [ADR-0001](adr/0001-ffm-instead-of-jni.md) for the decision record behind this section.
+
 ## The C API is the whole contract
 
 This library maps `rocksdb/include/rocksdb/c.h` and nothing else. It never links C++ symbols
@@ -61,6 +63,8 @@ full breakdown of "C API exists, wrapper missing" versus "no C API yet" is in
 [c-api-gaps.md](c-api-gaps.md).
 
 ## Lifecycle and ownership
+
+See [ADR-0003](adr/0003-ownership-model.md) for the decision record behind this section.
 
 Every native pointer is owned by a Java object extending `NativeObject`, which implements
 `AutoCloseable`. There is no finalizer, no cleaner, and no GC-driven release: you close it, or it
@@ -110,6 +114,9 @@ is that the type system, not a runtime status code, carries the constraint. The 
 matrix is in [reference.md#db-types](reference.md#db-types).
 
 ## Errors are always loud
+
+See [ADR-0004](adr/0004-error-handling.md) (proposed) for an open question this section doesn't cover
+yet: separating genuine RocksDB errors from bugs in this library's own FFM plumbing.
 
 Every operation that can fail throws `RocksDBException`, unchecked. There is no `Status` object to
 inspect, no `-1` return, no error code a caller can forget to check.
@@ -228,6 +235,9 @@ produces every platform artifact, applications declare the ones they ship to, an
 the rest. Declaring all five is a normal thing to do for a cross-platform application.
 
 ## Building with Zig
+
+See [ADR-0002](adr/0002-why-zig.md) for the decision record behind this section, including the
+alternatives considered.
 
 The native library is compiled with `zig cc` / `zig c++` acting as drop-in C/C++ compilers. Zig
 bundles clang, libc++, and the macOS/Linux/MinGW-w64 sysroots for every target, so a single macOS or
