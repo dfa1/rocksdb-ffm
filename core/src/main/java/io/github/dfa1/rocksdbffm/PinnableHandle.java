@@ -61,7 +61,7 @@ final class PinnableHandle extends NativeObject {
 	/// @return the value's bytes, copied into a new array
 	byte[] toByteArray(MemorySegment vallenOut) {
 		MemorySegment data = value(vallenOut);
-		return data.reinterpret(vallenOut.get(ValueLayout.JAVA_LONG, 0)).toArray(ValueLayout.JAVA_BYTE);
+		return RocksDB.toByteArray(data, vallenOut.get(ValueLayout.JAVA_LONG, 0));
 	}
 
 	/// Maps this handle's value to a result via `fn`, with no intermediate copy. The view
