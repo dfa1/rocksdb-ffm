@@ -128,6 +128,36 @@ EXTRA_FLAGS="-Wno-error"
 rm -f make_config.mk
 make clean -j"$JOBS" 2>/dev/null || true
 
+# ---------------------------------------------------------------------------
+# ZSTD: build hermetically instead of relying on a host-installed libzstd.
+#
+# RocksDB's own Makefile already knows how to fetch a pinned,
+# checksum-verified zstd source tarball and build it as a static archive
+# (`libzstd.a`) — the same recipe upstream's rocksdbjavastatic pipeline uses
+# to ship codec libraries with no host dependency in the published JNI jars.
+# Reuse that target with our zig cross-compiler, then point the shared_lib
+# build's -I/-L at the result so build_detect_platform's probe finds it and
+# statically links it in.
+#
+# (zig cc's linker has no dynamic-library search fallback the way host cc
+# does via LIBRARY_PATH, so the plain `-lzstd` probe against a
+# brew/apt-installed zstd would silently fail to find it anyway — this step
+# is a genuine capability, not a behavior change for a case that used to
+# work.)
+#
+# ALLOW_BUILD_PARAMETER_CHANGE=1: `make libzstd.a` below runs with a bare
+# CC/CXX, while the `make shared_lib` after it adds -I/-L for the archive
+# just built — different strings trip RocksDB's build-parameter-signature
+# guard even though libzstd.a's own build never touches RocksDB's object
+# dir. The `make clean` above already guarantees a clean tree, so the guard
+# has nothing to protect here.
+export ALLOW_BUILD_PARAMETER_CHANGE=1
+make libzstd.a -j"$JOBS"
+ZSTD_SRC_DIR="$(ls -d zstd-*/ | head -1)"
+
+export CC="zig cc -target $ZIG_TARGET -I$ROCKSDB_DIR/${ZSTD_SRC_DIR}lib -L$ROCKSDB_DIR"
+export CXX="zig c++ -target $ZIG_TARGET -I$ROCKSDB_DIR/${ZSTD_SRC_DIR}lib -L$ROCKSDB_DIR"
+
 make shared_lib EXTRA_LDFLAGS="-s" EXTRA_CXXFLAGS="$EXTRA_FLAGS" EXTRA_CFLAGS="$EXTRA_FLAGS" -j"$JOBS"
 
 # ---------------------------------------------------------------------------

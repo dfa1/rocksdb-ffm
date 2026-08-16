@@ -43,7 +43,7 @@ jobs:
             native/linux-aarch64/src/main/resources/native
             native/windows-x86_64/src/main/resources/native
             native/windows-aarch64/src/main/resources/native
-          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt') }}-${{ matrix.os }}-${{ runner.arch }}
+          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt', 'rocksdb/Makefile', 'scripts/build-rocksdb.sh', 'scripts/build-rocksdb-windows.sh') }}-${{ matrix.os }}-${{ runner.arch }}
 
       - name: Build and test
         run: mvn --batch-mode verify

@@ -39,11 +39,15 @@ public enum CompressionType {
 	/// Zstandard compression.
 	ZSTD(7);
 
-	/// C API integer constant — package-private for use by [Options].
-	final int value;
+	private final int value;
 
 	CompressionType(int value) {
 		this.value = value;
+	}
+
+	// don't expose the raw value
+	int getValue() {
+		return value;
 	}
 
 	static CompressionType fromValue(int value) {

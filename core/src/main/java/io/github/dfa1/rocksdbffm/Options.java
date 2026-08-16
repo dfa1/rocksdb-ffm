@@ -350,7 +350,7 @@ public final class Options extends NativeObject {
 	/// @return `this` for chaining
 	public Options setCompression(CompressionType type) {
 		try {
-			MH_SET_COMPRESSION.invokeExact(ptr(), type.value);
+			MH_SET_COMPRESSION.invokeExact(ptr(), type.getValue());
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setCompression failed", t);
@@ -469,7 +469,7 @@ public final class Options extends NativeObject {
 	/// @return `this` for chaining
 	public Options setBlobCompressionType(CompressionType type) {
 		try {
-			MH_SET_BLOB_COMPRESSION_TYPE.invokeExact(ptr(), type.value);
+			MH_SET_BLOB_COMPRESSION_TYPE.invokeExact(ptr(), type.getValue());
 			return this;
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("setBlobCompressionType failed", t);
