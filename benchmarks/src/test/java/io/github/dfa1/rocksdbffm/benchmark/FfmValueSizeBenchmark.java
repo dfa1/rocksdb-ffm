@@ -86,7 +86,7 @@ public class FfmValueSizeBenchmark {
 	private Arena arena;
 
 	// JMH requires @Param fields to be public.
-	@Param({"8", "16", "1024", "4096", "65536", "1048576"})
+	@Param({"8", "16", "64", "128", "1024", "4096", "65536", "1048576"})
 	public int valueSize;
 
 	private byte[] lookupKeyBytes;
