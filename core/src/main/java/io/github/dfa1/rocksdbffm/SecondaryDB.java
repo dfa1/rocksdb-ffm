@@ -65,7 +65,7 @@ public final class SecondaryDB extends NativeObject {
 			MH_CATCH_UP.invokeExact(ptr(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("tryCatchUpWithPrimary failed", t);
+			throw RocksDB.wrapInvokeFailure("tryCatchUpWithPrimary failed", t);
 		}
 	}
 

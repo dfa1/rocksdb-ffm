@@ -136,7 +136,7 @@ final class PinnableSlice extends NativeObject {
 		try {
 			return (MemorySegment) MH_VALUE.invokeExact(ptr(), vallenOut);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("pinnableslice value failed", t);
+			throw RocksDB.wrapInvokeFailure("pinnableslice value failed", t);
 		}
 	}
 

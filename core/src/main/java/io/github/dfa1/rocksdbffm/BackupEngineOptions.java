@@ -181,7 +181,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MemorySegment dirSeg = arena.allocateFrom(backupDir.toString());
 			return new BackupEngineOptions((MemorySegment) MH_CREATE.invokeExact(dirSeg));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("BackupEngineOptions.create failed", t);
+			throw RocksDB.wrapInvokeFailure("BackupEngineOptions.create failed", t);
 		}
 	}
 
@@ -195,7 +195,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_BACKUP_DIR.invokeExact(ptr(), dirSeg);
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setBackupDir failed", t);
+			throw RocksDB.wrapInvokeFailure("setBackupDir failed", t);
 		}
 	}
 
@@ -211,7 +211,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_ENV.invokeExact(ptr(), env.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setEnv failed", t);
+			throw RocksDB.wrapInvokeFailure("setEnv failed", t);
 		}
 	}
 
@@ -225,7 +225,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_SHARE_TABLE_FILES.invokeExact(ptr(), RocksDB.toByte(val));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setShareTableFiles failed", t);
+			throw RocksDB.wrapInvokeFailure("setShareTableFiles failed", t);
 		}
 	}
 
@@ -236,7 +236,7 @@ public final class BackupEngineOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_SHARE_TABLE_FILES.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isShareTableFiles failed", t);
+			throw RocksDB.wrapInvokeFailure("isShareTableFiles failed", t);
 		}
 	}
 
@@ -249,7 +249,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_SYNC.invokeExact(ptr(), RocksDB.toByte(val));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setSync failed", t);
+			throw RocksDB.wrapInvokeFailure("setSync failed", t);
 		}
 	}
 
@@ -260,7 +260,7 @@ public final class BackupEngineOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_SYNC.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isSync failed", t);
+			throw RocksDB.wrapInvokeFailure("isSync failed", t);
 		}
 	}
 
@@ -274,7 +274,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_DESTROY_OLD_DATA.invokeExact(ptr(), RocksDB.toByte(val));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setDestroyOldData failed", t);
+			throw RocksDB.wrapInvokeFailure("setDestroyOldData failed", t);
 		}
 	}
 
@@ -285,7 +285,7 @@ public final class BackupEngineOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_DESTROY_OLD_DATA.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isDestroyOldData failed", t);
+			throw RocksDB.wrapInvokeFailure("isDestroyOldData failed", t);
 		}
 	}
 
@@ -298,7 +298,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_BACKUP_LOG_FILES.invokeExact(ptr(), RocksDB.toByte(val));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setBackupLogFiles failed", t);
+			throw RocksDB.wrapInvokeFailure("setBackupLogFiles failed", t);
 		}
 	}
 
@@ -309,7 +309,7 @@ public final class BackupEngineOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_BACKUP_LOG_FILES.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isBackupLogFiles failed", t);
+			throw RocksDB.wrapInvokeFailure("isBackupLogFiles failed", t);
 		}
 	}
 
@@ -323,7 +323,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_BACKUP_RATE_LIMIT.invokeExact(ptr(), limit.toBytes());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setBackupRateLimit failed", t);
+			throw RocksDB.wrapInvokeFailure("setBackupRateLimit failed", t);
 		}
 	}
 
@@ -334,7 +334,7 @@ public final class BackupEngineOptions extends NativeObject {
 		try {
 			return MemorySize.ofBytes((long) MH_GET_BACKUP_RATE_LIMIT.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getBackupRateLimit failed", t);
+			throw RocksDB.wrapInvokeFailure("getBackupRateLimit failed", t);
 		}
 	}
 
@@ -348,7 +348,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_RESTORE_RATE_LIMIT.invokeExact(ptr(), limit.toBytes());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setRestoreRateLimit failed", t);
+			throw RocksDB.wrapInvokeFailure("setRestoreRateLimit failed", t);
 		}
 	}
 
@@ -359,7 +359,7 @@ public final class BackupEngineOptions extends NativeObject {
 		try {
 			return MemorySize.ofBytes((long) MH_GET_RESTORE_RATE_LIMIT.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getRestoreRateLimit failed", t);
+			throw RocksDB.wrapInvokeFailure("getRestoreRateLimit failed", t);
 		}
 	}
 
@@ -372,7 +372,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_MAX_BACKGROUND_OPERATIONS.invokeExact(ptr(), val);
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setMaxBackgroundOperations failed", t);
+			throw RocksDB.wrapInvokeFailure("setMaxBackgroundOperations failed", t);
 		}
 	}
 
@@ -383,7 +383,7 @@ public final class BackupEngineOptions extends NativeObject {
 		try {
 			return (int) MH_GET_MAX_BACKGROUND_OPERATIONS.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getMaxBackgroundOperations failed", t);
+			throw RocksDB.wrapInvokeFailure("getMaxBackgroundOperations failed", t);
 		}
 	}
 
@@ -396,7 +396,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_CALLBACK_TRIGGER_INTERVAL_SIZE.invokeExact(ptr(), size.toBytes());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setCallbackTriggerIntervalSize failed", t);
+			throw RocksDB.wrapInvokeFailure("setCallbackTriggerIntervalSize failed", t);
 		}
 	}
 
@@ -407,7 +407,7 @@ public final class BackupEngineOptions extends NativeObject {
 		try {
 			return MemorySize.ofBytes((long) MH_GET_CALLBACK_TRIGGER_INTERVAL_SIZE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getCallbackTriggerIntervalSize failed", t);
+			throw RocksDB.wrapInvokeFailure("getCallbackTriggerIntervalSize failed", t);
 		}
 	}
 
@@ -421,7 +421,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_MAX_VALID_BACKUPS_TO_OPEN.invokeExact(ptr(), val);
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setMaxValidBackupsToOpen failed", t);
+			throw RocksDB.wrapInvokeFailure("setMaxValidBackupsToOpen failed", t);
 		}
 	}
 
@@ -432,7 +432,7 @@ public final class BackupEngineOptions extends NativeObject {
 		try {
 			return (int) MH_GET_MAX_VALID_BACKUPS_TO_OPEN.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getMaxValidBackupsToOpen failed", t);
+			throw RocksDB.wrapInvokeFailure("getMaxValidBackupsToOpen failed", t);
 		}
 	}
 
@@ -446,7 +446,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_SHARE_FILES_WITH_CHECKSUM_NAMING.invokeExact(ptr(), val);
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setShareFilesWithChecksumNaming failed", t);
+			throw RocksDB.wrapInvokeFailure("setShareFilesWithChecksumNaming failed", t);
 		}
 	}
 
@@ -457,7 +457,7 @@ public final class BackupEngineOptions extends NativeObject {
 		try {
 			return (int) MH_GET_SHARE_FILES_WITH_CHECKSUM_NAMING.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getShareFilesWithChecksumNaming failed", t);
+			throw RocksDB.wrapInvokeFailure("getShareFilesWithChecksumNaming failed", t);
 		}
 	}
 

@@ -116,7 +116,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			return new WriteOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writeoptions create failed", t);
+			throw RocksDB.wrapInvokeFailure("writeoptions create failed", t);
 		}
 	}
 
@@ -129,7 +129,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			MH_SET_SYNC.invokeExact(ptr(), RocksDB.toByte(sync));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setSync failed", t);
+			throw RocksDB.wrapInvokeFailure("setSync failed", t);
 		}
 		return this;
 	}
@@ -141,7 +141,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_SYNC.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isSync failed", t);
+			throw RocksDB.wrapInvokeFailure("isSync failed", t);
 		}
 	}
 
@@ -154,7 +154,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			MH_DISABLE_WAL.invokeExact(ptr(), disableWal ? 1 : 0);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setDisableWal failed", t);
+			throw RocksDB.wrapInvokeFailure("setDisableWal failed", t);
 		}
 		return this;
 	}
@@ -166,7 +166,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_DISABLE_WAL.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isDisableWal failed", t);
+			throw RocksDB.wrapInvokeFailure("isDisableWal failed", t);
 		}
 	}
 
@@ -180,7 +180,7 @@ public final class WriteOptions extends NativeObject {
 			MH_SET_IGNORE_MISSING_COLUMN_FAMILIES.invokeExact(ptr(),
 					RocksDB.toByte(ignoreMissingColumnFamilies));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setIgnoreMissingColumnFamilies failed", t);
+			throw RocksDB.wrapInvokeFailure("setIgnoreMissingColumnFamilies failed", t);
 		}
 		return this;
 	}
@@ -192,7 +192,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_IGNORE_MISSING_COLUMN_FAMILIES.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isIgnoreMissingColumnFamilies failed", t);
+			throw RocksDB.wrapInvokeFailure("isIgnoreMissingColumnFamilies failed", t);
 		}
 	}
 
@@ -205,7 +205,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			MH_SET_NO_SLOWDOWN.invokeExact(ptr(), RocksDB.toByte(noSlowdown));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setNoSlowdown failed", t);
+			throw RocksDB.wrapInvokeFailure("setNoSlowdown failed", t);
 		}
 		return this;
 	}
@@ -217,7 +217,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_NO_SLOWDOWN.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isNoSlowdown failed", t);
+			throw RocksDB.wrapInvokeFailure("isNoSlowdown failed", t);
 		}
 	}
 
@@ -230,7 +230,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			MH_SET_LOW_PRI.invokeExact(ptr(), RocksDB.toByte(lowPri));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setLowPri failed", t);
+			throw RocksDB.wrapInvokeFailure("setLowPri failed", t);
 		}
 		return this;
 	}
@@ -242,7 +242,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_LOW_PRI.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isLowPri failed", t);
+			throw RocksDB.wrapInvokeFailure("isLowPri failed", t);
 		}
 	}
 
@@ -256,7 +256,7 @@ public final class WriteOptions extends NativeObject {
 			MH_SET_MEMTABLE_INSERT_HINT_PER_BATCH.invokeExact(ptr(),
 					RocksDB.toByte(memtableInsertHintPerBatch));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setMemtableInsertHintPerBatch failed", t);
+			throw RocksDB.wrapInvokeFailure("setMemtableInsertHintPerBatch failed", t);
 		}
 		return this;
 	}
@@ -268,7 +268,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_MEMTABLE_INSERT_HINT_PER_BATCH.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isMemtableInsertHintPerBatch failed", t);
+			throw RocksDB.wrapInvokeFailure("isMemtableInsertHintPerBatch failed", t);
 		}
 	}
 
@@ -285,7 +285,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			MH_SET_RATE_LIMITER_PRIORITY.invokeExact(ptr(), rateLimiterPriority.getValue());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setRateLimiterPriority failed", t);
+			throw RocksDB.wrapInvokeFailure("setRateLimiterPriority failed", t);
 		}
 		return this;
 	}
@@ -298,7 +298,7 @@ public final class WriteOptions extends NativeObject {
 			int value = (int) MH_GET_RATE_LIMITER_PRIORITY.invokeExact(ptr());
 			return IOPriority.fromValue(value);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getRateLimiterPriority failed", t);
+			throw RocksDB.wrapInvokeFailure("getRateLimiterPriority failed", t);
 		}
 	}
 
@@ -311,7 +311,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			MH_SET_IO_ACTIVITY.invokeExact(ptr(), ioActivity.getValue());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setIoActivity failed", t);
+			throw RocksDB.wrapInvokeFailure("setIoActivity failed", t);
 		}
 		return this;
 	}
@@ -324,7 +324,7 @@ public final class WriteOptions extends NativeObject {
 			int value = (int) MH_GET_IO_ACTIVITY.invokeExact(ptr());
 			return IOActivity.fromValue(value);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getIoActivity failed", t);
+			throw RocksDB.wrapInvokeFailure("getIoActivity failed", t);
 		}
 	}
 

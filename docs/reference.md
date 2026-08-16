@@ -308,7 +308,7 @@ listing every existing column family, `default` included.
 | `BackupId`        | Backup identity (native `uint32`). `of(long)`, `toLong()`; `Comparable`                      |
 | `Ratio`           | Fraction in `[0.0, 1.0]`. `of(double)`, `toDouble()`, `ZERO`, `ONE`; immutable, `Comparable` |
 | `CopyResult`      | Sealed: `Copied()`, `NotEnoughCapacity(long required)`, `NotFound()`                         |
-| `RocksDBException`| Unchecked; thrown by every operation that can fail                                            |
+| `RocksDBException`| Unchecked; thrown for a genuine RocksDB-reported error (see [explanation.md#errors-are-always-loud](explanation.md#errors-are-always-loud)) |
 | `NativeObject`    | Base class of every native wrapper; `ptr()`, `close()` (idempotent), abstract `tryClose`      |
 
 `Path` is used for every filesystem argument; there is no `String` path overload anywhere.

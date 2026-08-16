@@ -54,7 +54,7 @@ public final class ColumnFamilyHandle extends NativeObject {
 		try {
 			return (int) MH_GET_ID.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getId failed", t);
+			throw RocksDB.wrapInvokeFailure("getId failed", t);
 		}
 	}
 
@@ -72,7 +72,7 @@ public final class ColumnFamilyHandle extends NativeObject {
 			RocksDB.free(namePtr);
 			return new String(bytes, StandardCharsets.UTF_8);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getName failed", t);
+			throw RocksDB.wrapInvokeFailure("getName failed", t);
 		}
 	}
 

@@ -143,7 +143,7 @@ public final class ReadOptions extends NativeObject {
 		try {
 			return new ReadOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("readoptions create failed", t);
+			throw RocksDB.wrapInvokeFailure("readoptions create failed", t);
 		}
 	}
 
@@ -159,7 +159,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_SNAPSHOT.invokeExact(ptr(), snapPtr);
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("readoptions setSnapshot failed", t);
+			throw RocksDB.wrapInvokeFailure("readoptions setSnapshot failed", t);
 		}
 	}
 
@@ -173,7 +173,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_VERIFY_CHECKSUMS.invokeExact(ptr(), RocksDB.toByte(verifyChecksums));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setVerifyChecksums failed", t);
+			throw RocksDB.wrapInvokeFailure("setVerifyChecksums failed", t);
 		}
 	}
 
@@ -184,7 +184,7 @@ public final class ReadOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_VERIFY_CHECKSUMS.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isVerifyChecksums failed", t);
+			throw RocksDB.wrapInvokeFailure("isVerifyChecksums failed", t);
 		}
 	}
 
@@ -198,7 +198,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_FILL_CACHE.invokeExact(ptr(), RocksDB.toByte(fillCache));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setFillCache failed", t);
+			throw RocksDB.wrapInvokeFailure("setFillCache failed", t);
 		}
 	}
 
@@ -209,7 +209,7 @@ public final class ReadOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_FILL_CACHE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isFillCache failed", t);
+			throw RocksDB.wrapInvokeFailure("isFillCache failed", t);
 		}
 	}
 
@@ -224,7 +224,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_PIN_DATA.invokeExact(ptr(), RocksDB.toByte(pinData));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setPinData failed", t);
+			throw RocksDB.wrapInvokeFailure("setPinData failed", t);
 		}
 	}
 
@@ -235,7 +235,7 @@ public final class ReadOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_PIN_DATA.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isPinData failed", t);
+			throw RocksDB.wrapInvokeFailure("isPinData failed", t);
 		}
 	}
 
@@ -249,7 +249,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_TAILING.invokeExact(ptr(), RocksDB.toByte(tailing));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setTailing failed", t);
+			throw RocksDB.wrapInvokeFailure("setTailing failed", t);
 		}
 	}
 
@@ -260,7 +260,7 @@ public final class ReadOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_TAILING.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isTailing failed", t);
+			throw RocksDB.wrapInvokeFailure("isTailing failed", t);
 		}
 	}
 
@@ -275,7 +275,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_TOTAL_ORDER_SEEK.invokeExact(ptr(), RocksDB.toByte(totalOrderSeek));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setTotalOrderSeek failed", t);
+			throw RocksDB.wrapInvokeFailure("setTotalOrderSeek failed", t);
 		}
 	}
 
@@ -286,7 +286,7 @@ public final class ReadOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_TOTAL_ORDER_SEEK.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isTotalOrderSeek failed", t);
+			throw RocksDB.wrapInvokeFailure("isTotalOrderSeek failed", t);
 		}
 	}
 
@@ -301,7 +301,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_PREFIX_SAME_AS_START.invokeExact(ptr(), RocksDB.toByte(prefixSameAsStart));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setPrefixSameAsStart failed", t);
+			throw RocksDB.wrapInvokeFailure("setPrefixSameAsStart failed", t);
 		}
 	}
 
@@ -312,7 +312,7 @@ public final class ReadOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_PREFIX_SAME_AS_START.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isPrefixSameAsStart failed", t);
+			throw RocksDB.wrapInvokeFailure("isPrefixSameAsStart failed", t);
 		}
 	}
 
@@ -327,7 +327,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_READAHEAD_SIZE.invokeExact(ptr(), readaheadSize.toBytes());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setReadaheadSize failed", t);
+			throw RocksDB.wrapInvokeFailure("setReadaheadSize failed", t);
 		}
 	}
 
@@ -338,7 +338,7 @@ public final class ReadOptions extends NativeObject {
 		try {
 			return MemorySize.ofBytes((long) MH_GET_READAHEAD_SIZE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getReadaheadSize failed", t);
+			throw RocksDB.wrapInvokeFailure("getReadaheadSize failed", t);
 		}
 	}
 
@@ -371,7 +371,7 @@ public final class ReadOptions extends NativeObject {
 			}
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setIterateLowerBound failed", t);
+			throw RocksDB.wrapInvokeFailure("setIterateLowerBound failed", t);
 		}
 	}
 
@@ -387,7 +387,7 @@ public final class ReadOptions extends NativeObject {
 					MemorySegment.ofBuffer(lowerBound), (long) lowerBound.remaining());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setIterateLowerBound failed", t);
+			throw RocksDB.wrapInvokeFailure("setIterateLowerBound failed", t);
 		}
 	}
 
@@ -402,7 +402,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_ITERATE_LOWER_BOUND.invokeExact(ptr(), lowerBound, lowerBound.byteSize());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setIterateLowerBound failed", t);
+			throw RocksDB.wrapInvokeFailure("setIterateLowerBound failed", t);
 		}
 	}
 
@@ -425,7 +425,7 @@ public final class ReadOptions extends NativeObject {
 			}
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setIterateUpperBound failed", t);
+			throw RocksDB.wrapInvokeFailure("setIterateUpperBound failed", t);
 		}
 	}
 
@@ -441,7 +441,7 @@ public final class ReadOptions extends NativeObject {
 					MemorySegment.ofBuffer(upperBound), (long) upperBound.remaining());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setIterateUpperBound failed", t);
+			throw RocksDB.wrapInvokeFailure("setIterateUpperBound failed", t);
 		}
 	}
 
@@ -456,7 +456,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_ITERATE_UPPER_BOUND.invokeExact(ptr(), upperBound, upperBound.byteSize());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setIterateUpperBound failed", t);
+			throw RocksDB.wrapInvokeFailure("setIterateUpperBound failed", t);
 		}
 	}
 
@@ -481,7 +481,7 @@ public final class ReadOptions extends NativeObject {
 			}
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setRequestId failed", t);
+			throw RocksDB.wrapInvokeFailure("setRequestId failed", t);
 		}
 	}
 
@@ -499,7 +499,7 @@ public final class ReadOptions extends NativeObject {
 			byte[] bytes = RocksDB.toByteArray(result, len);
 			return Optional.of(new String(bytes, StandardCharsets.UTF_8));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getRequestId failed", t);
+			throw RocksDB.wrapInvokeFailure("getRequestId failed", t);
 		}
 	}
 

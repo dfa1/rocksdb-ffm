@@ -175,7 +175,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			return new BlockBasedTableOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable e) {
-			throw RocksDBException.wrap("new block based config", e);
+			throw RocksDB.wrapInvokeFailure("new block based config", e);
 		}
 	}
 
@@ -192,7 +192,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_SET_BLOCK_SIZE.invokeExact(ptr(), blockSize.toBytes());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setBlockSize failed", t);
+			throw RocksDB.wrapInvokeFailure("setBlockSize failed", t);
 		}
 		return this;
 	}
@@ -205,7 +205,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_SET_FILTER_POLICY.invokeExact(ptr(), policy.ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setFilterPolicy failed", t);
+			throw RocksDB.wrapInvokeFailure("setFilterPolicy failed", t);
 		}
 		// BlockBasedTableConfig will take care of the freeing the policy
 		policy.transferOwnership();
@@ -221,7 +221,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_SET_NO_BLOCK_CACHE.invokeExact(ptr(), RocksDB.toByte(noBlockCache));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setNoBlockCache failed", t);
+			throw RocksDB.wrapInvokeFailure("setNoBlockCache failed", t);
 		}
 		return this;
 	}
@@ -235,7 +235,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_SET_BLOCK_CACHE.invokeExact(ptr(), cache.ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setBlockCache failed", t);
+			throw RocksDB.wrapInvokeFailure("setBlockCache failed", t);
 		}
 		return this;
 	}
@@ -249,7 +249,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setCacheIndexAndFilterBlocks failed", t);
+			throw RocksDB.wrapInvokeFailure("setCacheIndexAndFilterBlocks failed", t);
 		}
 		return this;
 	}
@@ -263,7 +263,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_SET_INDEX_TYPE.invokeExact(ptr(), indexType.value);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setIndexType failed", t);
+			throw RocksDB.wrapInvokeFailure("setIndexType failed", t);
 		}
 		return this;
 	}
@@ -277,7 +277,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_SET_FORMAT_VERSION.invokeExact(ptr(), formatVersion.value);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setFormatVersion failed", t);
+			throw RocksDB.wrapInvokeFailure("setFormatVersion failed", t);
 		}
 		return this;
 	}
@@ -289,7 +289,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			return FormatVersion.fromValue((int) MH_GET_FORMAT_VERSION.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getFormatVersion failed", t);
+			throw RocksDB.wrapInvokeFailure("getFormatVersion failed", t);
 		}
 	}
 
@@ -302,7 +302,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_SET_WHOLE_KEY_FILTERING.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setWholeKeyFiltering failed", t);
+			throw RocksDB.wrapInvokeFailure("setWholeKeyFiltering failed", t);
 		}
 		return this;
 	}
@@ -316,7 +316,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_SET_PARTITION_FILTERS.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setPartitionFilters failed", t);
+			throw RocksDB.wrapInvokeFailure("setPartitionFilters failed", t);
 		}
 		return this;
 	}

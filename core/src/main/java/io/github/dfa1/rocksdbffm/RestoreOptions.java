@@ -46,7 +46,7 @@ public final class RestoreOptions extends NativeObject {
 		try {
 			return new RestoreOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("RestoreOptions.create failed", t);
+			throw RocksDB.wrapInvokeFailure("RestoreOptions.create failed", t);
 		}
 	}
 
@@ -60,7 +60,7 @@ public final class RestoreOptions extends NativeObject {
 			MH_SET_KEEP_LOG_FILES.invokeExact(ptr(), keepLogFiles ? 1 : 0);
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setKeepLogFiles failed", t);
+			throw RocksDB.wrapInvokeFailure("setKeepLogFiles failed", t);
 		}
 	}
 

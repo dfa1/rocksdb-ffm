@@ -41,7 +41,7 @@ public final class OptimisticTransactionOptions extends NativeObject {
 		try {
 			return new OptimisticTransactionOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("optimistic transaction options create failed", t);
+			throw RocksDB.wrapInvokeFailure("optimistic transaction options create failed", t);
 		}
 	}
 
@@ -56,7 +56,7 @@ public final class OptimisticTransactionOptions extends NativeObject {
 		try {
 			MH_SET_SET_SNAPSHOT.invokeExact(ptr(), RocksDB.toByte(value));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setSetSnapshot failed", t);
+			throw RocksDB.wrapInvokeFailure("setSetSnapshot failed", t);
 		}
 		return this;
 	}
