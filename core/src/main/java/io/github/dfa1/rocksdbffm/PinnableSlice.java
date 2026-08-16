@@ -61,7 +61,8 @@ final class PinnableSlice extends NativeObject {
 	///                  it is dead by the time a [PinnableSlice] exists
 	/// @return the value's bytes, copied into a new array
 	byte[] toByteArray(MemorySegment vallenOut) {
-		return value(vallenOut).toArray(ValueLayout.JAVA_BYTE);
+		MemorySegment data = value(vallenOut);
+		return data.reinterpret(vallenOut.get(ValueLayout.JAVA_LONG, 0)).toArray(ValueLayout.JAVA_BYTE);
 	}
 
 	/// Copies this slice's value into `dest`, or reports insufficient capacity without
@@ -75,10 +76,11 @@ final class PinnableSlice extends NativeObject {
 	/// @return [CopyResult.Copied] on success, [CopyResult.NotEnoughCapacity] if `dest` is too small
 	CopyResult copyInto(MemorySegment dest, long destCapacity, MemorySegment vallenOut) {
 		MemorySegment data = value(vallenOut);
-		if (data.byteSize() > destCapacity) {
-			return new CopyResult.NotEnoughCapacity(data.byteSize());
+		long len = vallenOut.get(ValueLayout.JAVA_LONG, 0);
+		if (len > destCapacity) {
+			return new CopyResult.NotEnoughCapacity(len);
 		}
-		dest.copyFrom(data);
+		dest.copyFrom(data.reinterpret(len));
 		return new CopyResult.Copied();
 	}
 
@@ -92,11 +94,12 @@ final class PinnableSlice extends NativeObject {
 	/// @return [CopyResult.Copied] on success, [CopyResult.NotEnoughCapacity] if `dest` is too small
 	CopyResult copyInto(ByteBuffer dest, MemorySegment vallenOut) {
 		MemorySegment data = value(vallenOut);
-		if (data.byteSize() > dest.remaining()) {
-			return new CopyResult.NotEnoughCapacity(data.byteSize());
+		long len = vallenOut.get(ValueLayout.JAVA_LONG, 0);
+		if (len > dest.remaining()) {
+			return new CopyResult.NotEnoughCapacity(len);
 		}
-		MemorySegment.ofBuffer(dest).copyFrom(data);
-		dest.position(dest.position() + (int) data.byteSize());
+		MemorySegment.ofBuffer(dest).copyFrom(data.reinterpret(len));
+		dest.position(dest.position() + (int) len);
 		return new CopyResult.Copied();
 	}
 
@@ -113,28 +116,28 @@ final class PinnableSlice extends NativeObject {
 	/// @throws NullPointerException if `fn` returns `null`
 	/// @return the non-null result of `fn`
 	<R> R map(Arena arena, Mapper<R> fn, MemorySegment vallenOut) {
+		MemorySegment data = value(vallenOut);
 		// The `null` cleanup is deliberate: this view borrows from the slice, it does
 		// not own the memory, so closing `arena` must not attempt to free it.
-		MemorySegment view = value(vallenOut).reinterpret(arena, null).asReadOnly();
+		MemorySegment view = data.reinterpret(vallenOut.get(ValueLayout.JAVA_LONG, 0), arena, null).asReadOnly();
 		R result = fn.map(view);
 		Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
 		return result;
 	}
 
-	/// Returns this slice's value, already sized to its actual length — `vallenOut` is
-	/// consumed internally so every caller works with a correctly bounded [MemorySegment]
-	/// instead of reading the length back out itself.
+	/// Invokes `rocksdb_pinnableslice_value`. Returns the raw, unsized value pointer —
+	/// every caller reinterprets it to `vallenOut`'s length itself, at whichever arity it
+	/// needs (plain, or arena-bound for [#map]), rather than this method doing a
+	/// reinterpret that a caller would immediately reinterpret again.
 	///
 	/// @param vallenOut native `size_t*` scratch slot to receive the value's length
-	/// @return the value's bytes, as a segment of exactly its length
+	/// @return the raw, unsized value pointer
 	private MemorySegment value(MemorySegment vallenOut) {
-		MemorySegment data;
 		try {
-			data = (MemorySegment) MH_VALUE.invokeExact(ptr(), vallenOut);
+			return (MemorySegment) MH_VALUE.invokeExact(ptr(), vallenOut);
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("pinnableslice value failed", t);
 		}
-		return data.reinterpret(vallenOut.get(ValueLayout.JAVA_LONG, 0));
 	}
 
 	@Override
