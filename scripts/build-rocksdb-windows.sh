@@ -304,28 +304,33 @@ EOF
         # build libzstd.a anyway, so the vendored recipe's own tar
         # invocation has nothing left to trip over.
         if [ "$IS_WINDOWS_HOST" = true ]; then
-            # Two attempts at fixing this already turned out not to behave
-            # the way local (macOS) testing predicted -- trace every command
-            # here explicitly rather than guess a third time from ambiguous
-            # log output.
-            set -x
-            ZSTD_TARBALL="$(make -n libzstd.a | grep -o 'zstd-[0-9.]*\.tar\.gz' | head -1)"
-            echo "[build-rocksdb-windows] zstd tarball: '$ZSTD_TARBALL'"
+            # Root cause of every earlier attempt at this fix silently not
+            # taking effect (confirmed with a full `set -x` trace): deriving
+            # the tarball name via `make -n libzstd.a` was never a safe dry
+            # run for this target. GNU Make's documented -n/-t/-q exception
+            # -- a recipe line containing $(MAKE) always executes for real,
+            # even under -n, to support recursive make -- applies here: the
+            # 3rd line of libzstd.a's own recipe is `cd zstd-.../lib && ...
+            # $(MAKE) ... libzstd.a`, which invokes $(MAKE). So the "dry
+            # run" was actually attempting the cd for real on every attempt,
+            # before the tarball had ever been extracted, and failing there
+            # -- while its two prior lines (rm -rf / tar xvzf) genuinely
+            # were skipped as text-only, which is why no download/extract
+            # output ever appeared even though ZSTD_TARBALL still ended up
+            # with the right value (grep matched the printed-but-not-run
+            # tar line's text). Sidestep entirely: hardcode the filename --
+            # the rocksdb submodule is pinned (v11.8.1), so this is stable
+            # until that pin is deliberately bumped.
+            ZSTD_TARBALL="zstd-1.5.7.tar.gz"
             make "$ZSTD_TARBALL"
             ZSTD_REPACK_DIR="$(mktemp -d)"
             # Extract with tar's own exit code ignored: the one symlink it
             # can't create on Windows is the only thing that makes it
             # nonzero -- confirmed in the first CI attempt, tar extracts
             # every other file first (all of lib/, all that's actually
-            # needed) before reporting failure at the very end. A
-            # --exclude='*/tests/*' filter on the extract itself was tried
-            # next and produced an empty extraction instead (glob semantics
-            # apparently differ on this tar) -- extract everything, then
-            # just delete tests/ from the result; no glob matching left to
-            # get wrong.
+            # needed) before reporting failure at the very end.
             tar xzf "$ZSTD_TARBALL" -C "$ZSTD_REPACK_DIR" || true
             ZSTD_TOPDIR="$(ls "$ZSTD_REPACK_DIR")"
-            echo "[build-rocksdb-windows] zstd repack: topdir='$ZSTD_TOPDIR', entries=$(ls "$ZSTD_REPACK_DIR" | wc -l)"
             if [ -z "$ZSTD_TOPDIR" ] || [ ! -d "$ZSTD_REPACK_DIR/$ZSTD_TOPDIR/lib" ]; then
                 echo "[build-rocksdb-windows] ERROR: zstd extraction produced no usable lib/ directory" >&2
                 exit 1
@@ -333,7 +338,6 @@ EOF
             rm -rf "${ZSTD_REPACK_DIR:?}/$ZSTD_TOPDIR/tests"
             (cd "$ZSTD_REPACK_DIR" && tar czf "$ROCKSDB_DIR/$ZSTD_TARBALL" "$ZSTD_TOPDIR")
             rm -rf "$ZSTD_REPACK_DIR"
-            set +x
         fi
         # rocksdb/Makefile's own libzstd.a recipe already targets just the
         # static lib, but its liblz4.a recipe invokes lz4's `all`, which
