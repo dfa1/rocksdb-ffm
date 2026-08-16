@@ -93,7 +93,7 @@ public final class PerfContext extends NativeObject {
 		try {
 			MH_SET_PERF_LEVEL.invokeExact(level.value);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setPerfLevel failed", t);
+			throw RocksDB.wrapInvokeFailure("setPerfLevel failed", t);
 		}
 	}
 
@@ -122,7 +122,7 @@ public final class PerfContext extends NativeObject {
 		try {
 			return new PerfContext((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("PerfContext.currentPerfContext failed", t);
+			throw RocksDB.wrapInvokeFailure("PerfContext.currentPerfContext failed", t);
 		}
 	}
 
@@ -135,7 +135,7 @@ public final class PerfContext extends NativeObject {
 		try {
 			MH_RESET.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("reset failed", t);
+			throw RocksDB.wrapInvokeFailure("reset failed", t);
 		}
 	}
 
@@ -147,7 +147,7 @@ public final class PerfContext extends NativeObject {
 		try {
 			return (long) MH_METRIC.invokeExact(ptr(), metric.value);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("metric failed", t);
+			throw RocksDB.wrapInvokeFailure("metric failed", t);
 		}
 	}
 
@@ -161,7 +161,7 @@ public final class PerfContext extends NativeObject {
 			strPtr = (MemorySegment) MH_REPORT.invokeExact(ptr(),
 					RocksDB.toByte(excludeZeroCounters));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("report failed", t);
+			throw RocksDB.wrapInvokeFailure("report failed", t);
 		}
 		if (MemorySegment.NULL.equals(strPtr)) {
 			return "";

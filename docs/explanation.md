@@ -115,11 +115,16 @@ matrix is in [reference.md#db-types](reference.md#db-types).
 
 ## Errors are always loud
 
-See [ADR-0004](adr/0004-error-handling.md) (proposed) for an open question this section doesn't cover
-yet: separating genuine RocksDB errors from bugs in this library's own FFM plumbing.
+Every operation that can fail throws, unchecked. There is no `Status` object to inspect, no `-1`
+return, no error code a caller can forget to check.
 
-Every operation that can fail throws `RocksDBException`, unchecked. There is no `Status` object to
-inspect, no `-1` return, no error code a caller can forget to check.
+`RocksDBException` means exactly one thing: RocksDB itself reported an operational failure through
+its `errptr` out-parameter — corruption, an IO error, an invalid argument at the DB level. It is never
+thrown for a bug in this library's own FFM plumbing. A misused API surfaces as its own natural
+exception type instead (`NullPointerException`, `IllegalStateException`, …), and anything that should
+be structurally impossible for a correctly configured native call becomes an `AssertionError`. See
+[ADR-0004](adr/0004-error-handling.md) for the full reasoning — this split exists so that
+`catch (RocksDBException e)` is always meaningful, never a library bug wearing a "real error" costume.
 
 `null` survives in exactly one place: `byte[] get(byte[])` returns `null` for a missing key, because
 a miss is a normal outcome on the hot read path and boxing it in an `Optional` would allocate on

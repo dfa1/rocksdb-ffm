@@ -111,7 +111,7 @@ public final class SstFileWriter extends NativeObject {
 				MH_ENVOPTIONS_DESTROY.invokeExact(envOpts);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter create failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter create failed", t);
 		}
 	}
 
@@ -126,7 +126,7 @@ public final class SstFileWriter extends NativeObject {
 			MH_OPEN.invokeExact(ptr(), pathSeg, err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter open failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter open failed", t);
 		}
 	}
 
@@ -145,7 +145,7 @@ public final class SstFileWriter extends NativeObject {
 					err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter put failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter put failed", t);
 		}
 	}
 
@@ -162,7 +162,7 @@ public final class SstFileWriter extends NativeObject {
 					err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter put failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter put failed", t);
 		}
 	}
 
@@ -179,7 +179,7 @@ public final class SstFileWriter extends NativeObject {
 					err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter put failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter put failed", t);
 		}
 	}
 
@@ -193,7 +193,7 @@ public final class SstFileWriter extends NativeObject {
 			MH_DELETE.invokeExact(ptr(), keyNative, (long) key.length, err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter delete failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter delete failed", t);
 		}
 	}
 
@@ -206,7 +206,7 @@ public final class SstFileWriter extends NativeObject {
 			MH_DELETE.invokeExact(ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter delete failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter delete failed", t);
 		}
 	}
 
@@ -219,7 +219,7 @@ public final class SstFileWriter extends NativeObject {
 			MH_DELETE.invokeExact(ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter delete failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter delete failed", t);
 		}
 	}
 
@@ -239,7 +239,7 @@ public final class SstFileWriter extends NativeObject {
 					err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter deleteRange failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter deleteRange failed", t);
 		}
 	}
 
@@ -256,7 +256,7 @@ public final class SstFileWriter extends NativeObject {
 					err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter deleteRange failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter deleteRange failed", t);
 		}
 	}
 
@@ -273,7 +273,7 @@ public final class SstFileWriter extends NativeObject {
 					err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter deleteRange failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter deleteRange failed", t);
 		}
 	}
 
@@ -285,7 +285,7 @@ public final class SstFileWriter extends NativeObject {
 			MH_FINISH.invokeExact(ptr(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter finish failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter finish failed", t);
 		}
 	}
 
@@ -298,7 +298,7 @@ public final class SstFileWriter extends NativeObject {
 			MH_FILE_SIZE.invokeExact(ptr(), sizeSeg);
 			return MemorySize.ofBytes(sizeSeg.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("sstfilewriter fileSize failed", t);
+			throw RocksDB.wrapInvokeFailure("sstfilewriter fileSize failed", t);
 		}
 	}
 

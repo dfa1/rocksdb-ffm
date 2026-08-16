@@ -72,7 +72,7 @@ public final class WalIterator extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_VALID.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("wal_iter_valid failed", t);
+			throw RocksDB.wrapInvokeFailure("wal_iter_valid failed", t);
 		}
 	}
 
@@ -81,7 +81,7 @@ public final class WalIterator extends NativeObject {
 		try {
 			MH_NEXT.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("wal_iter_next failed", t);
+			throw RocksDB.wrapInvokeFailure("wal_iter_next failed", t);
 		}
 	}
 
@@ -95,7 +95,7 @@ public final class WalIterator extends NativeObject {
 			MH_STATUS.invokeExact(ptr(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("wal_iter_status failed", t);
+			throw RocksDB.wrapInvokeFailure("wal_iter_status failed", t);
 		}
 	}
 
@@ -111,7 +111,7 @@ public final class WalIterator extends NativeObject {
 			long seq = seqHolder.get(ValueLayout.JAVA_LONG, 0);
 			return new WalBatchResult(SequenceNumber.of(seq), WriteBatch.wrap(batchPtr));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("wal_iter_get_batch failed", t);
+			throw RocksDB.wrapInvokeFailure("wal_iter_get_batch failed", t);
 		}
 	}
 

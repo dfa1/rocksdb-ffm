@@ -1,6 +1,6 @@
 # ADR 0004: Separating genuine RocksDB errors from FFM binding bugs
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-16
 - **Deciders:** project maintainer
 
@@ -34,60 +34,56 @@ including the `NullPointerException` `PinnableHandle#map` deliberately throws wh
 
 ## Decision
 
-*(Proposed — not yet implemented.)* Move the classification logic off `RocksDBException` entirely, and
-bake it into every downcall `MethodHandle` itself via `MethodHandles.catchException`, applied once,
-centrally, in `NativeLibrary.lookup(...)` — the single factory every `MH_` field already goes through
-— rather than repeated per call site or even per field:
+Move the wrap/rethrow decision off `RocksDBException` and onto `RocksDB`, as
+`RocksDB.wrapInvokeFailure(String, Throwable)` — alongside the other shared FFM plumbing already
+there (`errHolder`, `checkError`, `toNative`; see `CLAUDE.md`'s "Centralized Error Handling" section):
 
 ```java
-static MethodHandle lookup(String symbol, FunctionDescriptor fd, Linker.Option... options) {
-    MethodHandle raw = /* existing Linker.downcallHandle(...) lookup */;
-    MethodHandle thrower = MethodHandles.throwException(raw.type().returnType(), Throwable.class);
-    MethodHandle handler = MethodHandles.filterArguments(thrower, 0, MH_CLASSIFY);
-    return MethodHandles.catchException(raw, Throwable.class, handler);
-}
-
-// classify(t) returns t unchanged for the four binding-bug types, or a new
-// AssertionError wrapping t for anything else -- never a RocksDBException.
-private static Throwable classify(Throwable t) { ... }
-```
-
-`MethodHandles.throwException(returnType, Throwable.class)` builds a handle that always throws
-whatever `Throwable` it's given, declared to "return" any type — which is what lets one `classify`
-method compose with every `MH_` field regardless of that field's actual return type (`MemorySegment`,
-`long`, `boolean`, `void`, an enum, …), with no per-return-type handler needed.
-
-- `NullPointerException`, `IllegalStateException` (including `WrongThreadException`),
-  `WrongMethodTypeException`, and `ClassCastException` propagate **unwrapped, with their original
-  type preserved** — a caller who somehow sees `NullPointerException` from a misused API sees exactly
-  that, never a `RocksDBException` with an `NullPointerException` cause three lines down.
-- Anything else — which, per the analysis above, should never actually happen for a correctly
-  configured downcall handle — becomes an `AssertionError`, not a `RocksDBException`. `AssertionError`
-  signals "this should be impossible," distinct from both `RocksDBException` (real DB errors) and an
-  ordinary `RuntimeException` (which reads more like "expected, just unhandled").
-- `RocksDBException` becomes reserved exclusively for the `errHolder`/`checkError` path and is no
-  longer constructible from any `invokeExact` catch site at all; `RocksDBException.wrap(String,
-  Throwable)` is deleted outright.
-
-One important limit: `invokeExact`'s signature is `throws Throwable` at the *language* level
-regardless of what a given handle instance actually does at runtime, so javac still requires a
-`try`/`catch` (or a `throws Throwable` on the enclosing method) at every call site — this decision
-does not, and cannot, delete that syntactic wrapper. What it does remove is every call site's own
-*classification* logic and custom message: since `MH_GET_VALUE` (for example) has already classified
-and rethrown by the time an exception reaches the call site's `catch`, that block collapses to one
-fixed, uniform, effectively-unreachable line:
-
-```java
-try {
-    return (MemorySegment) MH_GET_VALUE.invokeExact(ptr(), vallenOut);
-} catch (Throwable t) {
-    throw new AssertionError(t); // unreachable: MH_GET_VALUE already classified via NativeLibrary.lookup
+static RuntimeException wrapInvokeFailure(String message, Throwable t) {
+    if (t instanceof RuntimeException e) {
+        throw e;
+    }
+    if (t instanceof IOException e) {
+        throw new UncheckedIOException(message, e);
+    }
+    throw new AssertionError(message, t);
 }
 ```
 
-Landing this touches exactly one method (`NativeLibrary.lookup`) plus every call site's `catch` body
-(mechanical, identical edit at each), rather than either the field-by-field or fully-manual sweep
-originally proposed here.
+- **Every `RuntimeException` propagates unwrapped, with its original type preserved** — this is one
+  check, not an enumerated list of the four binding-bug types originally proposed here, because
+  `checkError` typically runs *inside the same `try` block* as `invokeExact`, right after it (see
+  `getBytes` for the established shape), so the genuine `RocksDBException` it throws for a real
+  `errptr` error also reaches this method — and needs to pass through unchanged too, exactly like the
+  four binding-bug types. Missing this is a real bug the first implementation attempt hit: five
+  existing tests broke because their expected `RocksDBException` came back as an `AssertionError`
+  wrapping it, once the enumerated-type check stopped recognizing `RocksDBException` itself as
+  something to pass through. `RuntimeException` alone covers `NullPointerException`,
+  `IllegalStateException` (including `WrongThreadException`), `WrongMethodTypeException`,
+  `ClassCastException`, *and* `RocksDBException` — no enumeration needed, and no risk of a fifth case
+  being missed the same way in the future.
+- **An `IOException`** — not from `invokeExact` itself, which never throws a checked exception, but
+  possible from other code sharing the same `try` block (e.g. file access) — **becomes an
+  `UncheckedIOException`**, the standard JDK idiom for surfacing a checked I/O failure as unchecked.
+- **Anything else reaching this method** — which, per the analysis above, should never actually happen
+  for a correctly configured downcall handle — **becomes an `AssertionError`**, not a
+  `RocksDBException`. `AssertionError` signals "this should be impossible," distinct from both
+  `RocksDBException` (real DB errors) and an ordinary `RuntimeException` (which reads more like
+  "expected, just unhandled").
+- `RocksDBException` becomes reserved exclusively for the `errHolder`/`checkError` path — it has no
+  public constructor, and is no longer *constructed* from any `invokeExact` catch site (though a
+  `RocksDBException` already thrown by `checkError` still passes through, per the point above);
+  `RocksDBException.wrap(String, Throwable)` is deleted outright.
+
+Because every existing call site already funnels through one static method
+(`RocksDBException.wrap(...)`), landing this is a mechanical rename across the codebase
+(`RocksDBException.wrap(` → `RocksDB.wrapInvokeFailure(`), verified by a full compile and test run —
+not a redesign repeated at every site. `MethodHandles.catchException` (composing the classification
+into every downcall handle itself, in `NativeLibrary.lookup`, instead of at each call site) was tried
+first and rejected — see Alternatives — since `invokeExact`'s `throws Throwable` is a language-level
+constraint regardless of what a given handle instance does at runtime, so javac still requires a
+`try`/`catch` at every call site either way. Composing the handle bought no reduction in call-site
+boilerplate over a plain shared method, for real added complexity.
 
 ## Consequences
 
@@ -101,41 +97,43 @@ originally proposed here.
 - Caller-supplied callbacks (`Mapper`, `EventListener`-style hooks if added later) can safely throw
   without their exceptions being mistaken for native-call failures, as long as they sit outside the
   narrow `invokeExact`-only catch — the exact bug this ADR's motivating incident exposed.
-- The real decision logic lives in exactly one place (`NativeLibrary.lookup` plus `classify`), not
-  duplicated per field or per call site — every `MH_` field gets the behavior automatically the moment
-  it's constructed through the existing shared factory.
+- The real decision logic lives in exactly one place (`RocksDB.wrapInvokeFailure`), not duplicated at
+  every call site — even though every call site still *invokes* it, per the `invokeExact` constraint
+  below.
 
 ### Negative
 
-- Every call site's `catch` body still changes (to the fixed, uniform `AssertionError(t)` form) even
-  though it no longer does any real classification work — a smaller, more mechanical edit than a
-  full rethrow-clause sweep would have been, but still touches every file with an `invokeExact` call.
+- A large, mechanical diff across the whole codebase lands in one change (every
+  `RocksDBException.wrap(` becomes `RocksDB.wrapInvokeFailure(`), which needs the full test suite as
+  the verification story rather than per-site review.
 - `AssertionError` in a library's exception path is unusual for callers not expecting `Error`-hierarchy
-  types from a supposedly `RuntimeException`-only API surface — worth calling out prominently in
-  `RocksDBException`'s and `NativeLibrary.lookup`'s own Javadoc once implemented.
-- `MethodHandles.catchException`/`throwException`-composed handles are one more LambdaForm layer over
-  a raw downcall handle; expected to be negligible next to the native call itself, but not verified
-  against this project's own benchmarks yet — worth a before/after run once implemented.
+  types from a supposedly `RuntimeException`-only API surface — called out prominently in
+  `RocksDB.wrapInvokeFailure`'s own Javadoc.
+- Every call site keeps its own `try`/`catch (Throwable t)` — `invokeExact`'s `throws Throwable` is a
+  language-level constraint no amount of centralizing the *logic* removes (see Alternatives). What
+  moves is the classification, not the syntactic wrapper.
 
 ### Risks to manage
 
-- The classification logic (`classify` in `NativeLibrary`) is now load-bearing for every single native
-  call in the library — a bug there is a bug everywhere at once. Mitigated by it being a small, pure,
-  directly unit-testable function (`Throwable -> Throwable`), unlike the ~60+ scattered catch blocks
-  it replaces.
+- Every one of the ~60+ files with an `invokeExact` catch site needs the identical mechanical edit;
+  missing one leaves that site still wrapping binding bugs as `RocksDBException`, silently
+  reintroducing the exact problem this ADR exists to close. Mitigated by deleting the old
+  `RocksDBException.wrap(...)` outright once the sweep lands (rather than leaving both paths
+  available) — the compiler finds every straggler.
 - Any future caller-supplied callback added to the library (beyond `Mapper`) must be reviewed for the
   same widened-catch mistake `withPinned`/`withPinnedCf` made — this is a pattern to watch for in
-  review, not something the type system prevents by itself, since it happens inside a method body
-  `NativeLibrary.lookup`'s wrapping has no visibility into.
+  review, not something the type system prevents by itself.
 
 ## Alternatives considered
 
-- **Rename every call site to a shared `RocksDB.wrapInvokeFailure(String, Throwable)` helper**, doing
-  the classification at each `catch (Throwable t)` block instead of inside the `MethodHandle` itself:
-  same end behavior, and still centralizes the *logic* in one method, but leaves every call site
-  needing its own custom message string and doesn't get the "automatically applied to every `MH_`
-  field via the existing factory" property — a real mechanical sweep instead of a single-method change
-  plus a cosmetic catch-body cleanup.
+- **Compose the classification into every downcall `MethodHandle` itself**, via
+  `MethodHandles.catchException`/`throwException`/`filterArguments`, applied once in
+  `NativeLibrary.lookup(...)` rather than at each call site. Tried first; rejected once it became
+  clear it doesn't actually reduce call-site boilerplate: `invokeExact`'s `throws Throwable` still
+  forces a `try`/`catch` at every syntactic call site regardless of what the specific handle instance
+  does at runtime, so the catch body just becomes a different (still mandatory) fixed line — real
+  added complexity (a `classify` combinator wired through three `MethodHandles` factory methods) for
+  no reduction in the thing actually being optimized for.
 - **Touch every call site individually** with its own explicit rethrow clause before
   `catch (Throwable t)`, no shared helper at all: same end behavior, but ~60+ places to get right
   instead of one, with no benefit over centralizing given a single chokepoint already exists.
@@ -152,6 +150,4 @@ originally proposed here.
 ## References
 
 - [explanation.md#errors-are-always-loud](../explanation.md#errors-are-always-loud)
-- `RocksDBException.java`, `RocksDB.java` (`errHolder`/`checkError`/`toNative`), `NativeLibrary.java`
-  (`lookup`)
-- `java.lang.invoke.MethodHandles#catchException`, `#throwException`, `#filterArguments`
+- `RocksDBException.java`, `RocksDB.java` (`errHolder`/`checkError`/`toNative`/`wrapInvokeFailure`)

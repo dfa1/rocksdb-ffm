@@ -1,5 +1,7 @@
 package io.github.dfa1.rocksdbffm;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
@@ -437,7 +439,7 @@ public final class RocksDB {
 			checkError(err);
 			return new ReadWriteDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openReadWrite failed", t);
+			throw RocksDB.wrapInvokeFailure("openReadWrite failed", t);
 		}
 	}
 
@@ -469,7 +471,7 @@ public final class RocksDB {
 			checkError(err);
 			return new TtlDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions(), ttl);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openTtl failed", t);
+			throw RocksDB.wrapInvokeFailure("openTtl failed", t);
 		}
 	}
 
@@ -502,7 +504,7 @@ public final class RocksDB {
 			checkError(err);
 			return new BlobDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openBlob failed", t);
+			throw RocksDB.wrapInvokeFailure("openBlob failed", t);
 		}
 	}
 
@@ -536,7 +538,7 @@ public final class RocksDB {
 			checkError(err);
 			return new ReadOnlyDB(ptr, ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openReadOnly failed", t);
+			throw RocksDB.wrapInvokeFailure("openReadOnly failed", t);
 		}
 	}
 
@@ -581,7 +583,7 @@ public final class RocksDB {
 
 			return new SecondaryDB(ptr, ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openSecondary failed", t);
+			throw RocksDB.wrapInvokeFailure("openSecondary failed", t);
 		}
 	}
 
@@ -607,7 +609,7 @@ public final class RocksDB {
 			MemorySegment baseDb = (MemorySegment) MH_TRANSACTION_GET_BASE_DB.invokeExact(ptr);
 			return new TransactionDB(ptr, baseDb, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openTransaction failed", t);
+			throw RocksDB.wrapInvokeFailure("openTransaction failed", t);
 		}
 	}
 
@@ -628,7 +630,7 @@ public final class RocksDB {
 			MemorySegment baseDb = (MemorySegment) MH_GET_BASE_DB.invokeExact(ptr);
 			return new OptimisticTransactionDB(ptr, baseDb, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openOptimistic failed", t);
+			throw RocksDB.wrapInvokeFailure("openOptimistic failed", t);
 		}
 	}
 
@@ -666,7 +668,7 @@ public final class RocksDB {
 				return ph.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("get failed", t);
+			throw RocksDB.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -690,7 +692,7 @@ public final class RocksDB {
 			value.position(value.position() + (int) valLen);
 			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("get failed", t);
+			throw RocksDB.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -713,7 +715,7 @@ public final class RocksDB {
 			}
 			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("get failed", t);
+			throw RocksDB.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -723,16 +725,10 @@ public final class RocksDB {
 
 	/// Scoped zero-copy get via `rocksdb_get_pinned_v2`. [PinnableHandle] owns the pinned
 	/// value's lifetime and every way it gets consumed.
-	static <R> Optional<R> withPinned(MemorySegment db, MemorySegment readOpts,
-	                                   MemorySegment key, Mapper<R> fn) {
+	static <R> Optional<R> withPinned(MemorySegment db, MemorySegment readOpts, MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MemorySegment handle;
-			try {
-				handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(db, readOpts, key, key.byteSize(), err);
-			} catch (Throwable t) {
-				throw RocksDBException.wrap("get_pinned failed", t);
-			}
+			MemorySegment handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(db, readOpts, key, key.byteSize(), err);
 			checkError(err);
 			if (MemorySegment.NULL.equals(handle)) {
 				return Optional.empty();
@@ -740,6 +736,8 @@ public final class RocksDB {
 			try (PinnableHandle ph = PinnableHandle.wrap(handle)) {
 				return Optional.of(ph.map(arena, fn, err));
 			}
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("get_pinned failed", t);
 		}
 	}
 
@@ -749,13 +747,8 @@ public final class RocksDB {
 	                                     MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MemorySegment handle;
-			try {
-				handle = (MemorySegment) MH_GET_PINNED_CF_V2.invokeExact(
-						db, readOpts, cf.ptr(), key, key.byteSize(), err);
-			} catch (Throwable t) {
-				throw RocksDBException.wrap("get_pinned failed", t);
-			}
+			MemorySegment handle = (MemorySegment) MH_GET_PINNED_CF_V2.invokeExact(
+					db, readOpts, cf.ptr(), key, key.byteSize(), err);
 			checkError(err);
 			if (MemorySegment.NULL.equals(handle)) {
 				return Optional.empty();
@@ -763,6 +756,8 @@ public final class RocksDB {
 			try (PinnableHandle ph = PinnableHandle.wrap(handle)) {
 				return Optional.of(ph.map(arena, fn, err));
 			}
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("get_pinned failed", t);
 		}
 	}
 
@@ -775,7 +770,7 @@ public final class RocksDB {
 			MH_PUT.invokeExact(db, writeOpts, k, (long) key.length, v, (long) value.length, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("put failed", t);
+			throw RocksDB.wrapInvokeFailure("put failed", t);
 		}
 	}
 
@@ -788,7 +783,7 @@ public final class RocksDB {
 			MH_PUT.invokeExact(db, writeOpts, k, (long) key.length, v, (long) value.length, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("put failed", t);
+			throw RocksDB.wrapInvokeFailure("put failed", t);
 		}
 	}
 
@@ -800,7 +795,7 @@ public final class RocksDB {
 			MH_PUT.invokeExact(db, writeOpts, key, keyLen, val, valLen, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("put failed", t);
+			throw RocksDB.wrapInvokeFailure("put failed", t);
 		}
 	}
 
@@ -812,7 +807,7 @@ public final class RocksDB {
 			MH_PUT.invokeExact(db, writeOpts, key, keyLen, val, valLen, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("put failed", t);
+			throw RocksDB.wrapInvokeFailure("put failed", t);
 		}
 	}
 
@@ -824,7 +819,7 @@ public final class RocksDB {
 			MH_DELETE.invokeExact(db, writeOpts, k, (long) key.length, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("delete failed", t);
+			throw RocksDB.wrapInvokeFailure("delete failed", t);
 		}
 	}
 
@@ -835,7 +830,7 @@ public final class RocksDB {
 			MH_DELETE.invokeExact(db, writeOpts, key, keyLen, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("delete failed", t);
+			throw RocksDB.wrapInvokeFailure("delete failed", t);
 		}
 	}
 
@@ -845,7 +840,7 @@ public final class RocksDB {
 			MH_FLUSH.invokeExact(db, flushOptions.ptr(), err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("flush failed", t);
+			throw RocksDB.wrapInvokeFailure("flush failed", t);
 		}
 	}
 
@@ -853,7 +848,7 @@ public final class RocksDB {
 		try {
 			MH_CANCEL_ALL_BACKGROUND_WORK.invokeExact(db, toByte(wait));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("cancelAllBackgroundWork failed", t);
+			throw RocksDB.wrapInvokeFailure("cancelAllBackgroundWork failed", t);
 		}
 	}
 
@@ -861,7 +856,7 @@ public final class RocksDB {
 		try {
 			MH_DISABLE_MANUAL_COMPACTION.invokeExact(db);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("disableManualCompaction failed", t);
+			throw RocksDB.wrapInvokeFailure("disableManualCompaction failed", t);
 		}
 	}
 
@@ -869,7 +864,7 @@ public final class RocksDB {
 		try {
 			MH_ENABLE_MANUAL_COMPACTION.invokeExact(db);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("enableManualCompaction failed", t);
+			throw RocksDB.wrapInvokeFailure("enableManualCompaction failed", t);
 		}
 	}
 
@@ -879,7 +874,7 @@ public final class RocksDB {
 			MH_WAIT_FOR_COMPACT.invokeExact(db, options.ptr(), err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("waitForCompact failed", t);
+			throw RocksDB.wrapInvokeFailure("waitForCompact failed", t);
 		}
 	}
 
@@ -888,7 +883,7 @@ public final class RocksDB {
 			long seq = (long) MH_GET_LATEST_SEQUENCE_NUMBER.invokeExact(db);
 			return SequenceNumber.of(seq);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getLatestSequenceNumber failed", t);
+			throw RocksDB.wrapInvokeFailure("getLatestSequenceNumber failed", t);
 		}
 	}
 
@@ -900,7 +895,7 @@ public final class RocksDB {
 			checkError(err);
 			return WalIterator.wrap(iterPtr);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getUpdatesSince failed", t);
+			throw RocksDB.wrapInvokeFailure("getUpdatesSince failed", t);
 		}
 	}
 
@@ -910,7 +905,7 @@ public final class RocksDB {
 			MH_FLUSH_WAL.invokeExact(db, toByte(sync), err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("flushWal failed", t);
+			throw RocksDB.wrapInvokeFailure("flushWal failed", t);
 		}
 	}
 
@@ -919,7 +914,7 @@ public final class RocksDB {
 			MemorySegment snapPtr = (MemorySegment) MH_CREATE_SNAPSHOT.invokeExact(db);
 			return new Snapshot(db, snapPtr);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getSnapshot failed", t);
+			throw RocksDB.wrapInvokeFailure("getSnapshot failed", t);
 		}
 	}
 
@@ -929,7 +924,7 @@ public final class RocksDB {
 			MemorySegment result = (MemorySegment) MH_PROPERTY_VALUE.invokeExact(db, propSeg);
 			return toOptionalString(result);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getProperty failed", t);
+			throw RocksDB.wrapInvokeFailure("getProperty failed", t);
 		}
 	}
 
@@ -943,7 +938,7 @@ public final class RocksDB {
 			}
 			return OptionalLong.of(out.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getLongProperty failed", t);
+			throw RocksDB.wrapInvokeFailure("getLongProperty failed", t);
 		}
 	}
 
@@ -960,7 +955,7 @@ public final class RocksDB {
 					toNative(arena, endKey), (long) endKey.length, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("deleteRange failed", t);
+			throw RocksDB.wrapInvokeFailure("deleteRange failed", t);
 		}
 	}
 
@@ -974,7 +969,7 @@ public final class RocksDB {
 					MemorySegment.ofBuffer(endKey), (long) endKey.remaining(), err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("deleteRange failed", t);
+			throw RocksDB.wrapInvokeFailure("deleteRange failed", t);
 		}
 	}
 
@@ -987,7 +982,7 @@ public final class RocksDB {
 					startKey, startKey.byteSize(), endKey, endKey.byteSize(), err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("deleteRange failed", t);
+			throw RocksDB.wrapInvokeFailure("deleteRange failed", t);
 		}
 	}
 
@@ -997,7 +992,7 @@ public final class RocksDB {
 			MH_WRITE.invokeExact(db, writeOpts, batch.ptr(), err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("write failed", t);
+			throw RocksDB.wrapInvokeFailure("write failed", t);
 		}
 	}
 
@@ -1007,7 +1002,7 @@ public final class RocksDB {
 			MH_WRITE.invokeExact(db, writeOpts, batch.ptr(), err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("write failed", t);
+			throw RocksDB.wrapInvokeFailure("write failed", t);
 		}
 	}
 
@@ -1018,7 +1013,7 @@ public final class RocksDB {
 					MemorySegment.NULL, MemorySegment.NULL,
 					MemorySegment.NULL, 0L, MemorySegment.NULL));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("keyMayExist failed", t);
+			throw RocksDB.wrapInvokeFailure("keyMayExist failed", t);
 		}
 	}
 
@@ -1038,7 +1033,7 @@ public final class RocksDB {
 					s, startKey == null ? 0L : (long) startKey.length,
 					e, endKey == null ? 0L : (long) endKey.length);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("compactRange failed", t);
+			throw RocksDB.wrapInvokeFailure("compactRange failed", t);
 		}
 	}
 
@@ -1050,7 +1045,7 @@ public final class RocksDB {
 					s, startKey == null ? 0L : (long) startKey.remaining(),
 					e, endKey == null ? 0L : (long) endKey.remaining());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("compactRange failed", t);
+			throw RocksDB.wrapInvokeFailure("compactRange failed", t);
 		}
 	}
 
@@ -1062,7 +1057,7 @@ public final class RocksDB {
 					s, s == MemorySegment.NULL ? 0L : s.byteSize(),
 					e, e == MemorySegment.NULL ? 0L : e.byteSize());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("compactRange failed", t);
+			throw RocksDB.wrapInvokeFailure("compactRange failed", t);
 		}
 	}
 
@@ -1074,7 +1069,7 @@ public final class RocksDB {
 					s, startKey == null ? 0L : (long) startKey.length,
 					e, endKey == null ? 0L : (long) endKey.length);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("compactRange failed", t);
+			throw RocksDB.wrapInvokeFailure("compactRange failed", t);
 		}
 	}
 
@@ -1088,7 +1083,7 @@ public final class RocksDB {
 					e, endKey == null ? 0L : (long) endKey.length, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("suggestCompactRange failed", t);
+			throw RocksDB.wrapInvokeFailure("suggestCompactRange failed", t);
 		}
 	}
 
@@ -1098,7 +1093,7 @@ public final class RocksDB {
 			MH_DISABLE_FILE_DELETIONS.invokeExact(db, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("disableFileDeletions failed", t);
+			throw RocksDB.wrapInvokeFailure("disableFileDeletions failed", t);
 		}
 	}
 
@@ -1108,7 +1103,7 @@ public final class RocksDB {
 			MH_ENABLE_FILE_DELETIONS.invokeExact(db, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("enableFileDeletions failed", t);
+			throw RocksDB.wrapInvokeFailure("enableFileDeletions failed", t);
 		}
 	}
 
@@ -1125,7 +1120,7 @@ public final class RocksDB {
 			MH_INGEST_EXTERNAL_FILE.invokeExact(db, fileArray, (long) files.size(), options.ptr(), err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("ingestExternalFile failed", t);
+			throw RocksDB.wrapInvokeFailure("ingestExternalFile failed", t);
 		}
 	}
 
@@ -1187,7 +1182,7 @@ public final class RocksDB {
 
 			return new ReadWriteDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openReadWrite failed", t);
+			throw RocksDB.wrapInvokeFailure("openReadWrite failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();
@@ -1251,7 +1246,7 @@ public final class RocksDB {
 			}
 			return new ReadOnlyDB(ptr, ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openReadOnly failed", t);
+			throw RocksDB.wrapInvokeFailure("openReadOnly failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();
@@ -1306,7 +1301,7 @@ public final class RocksDB {
 			Duration globalTtl = ttls.isEmpty() ? Duration.ZERO : ttls.getFirst();
 			return new TtlDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions(), globalTtl);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openTtl failed", t);
+			throw RocksDB.wrapInvokeFailure("openTtl failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();
@@ -1358,7 +1353,7 @@ public final class RocksDB {
 			MemorySegment baseDb = (MemorySegment) MH_TRANSACTION_GET_BASE_DB.invokeExact(ptr);
 			return new TransactionDB(ptr, baseDb, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openTransaction failed", t);
+			throw RocksDB.wrapInvokeFailure("openTransaction failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();
@@ -1407,7 +1402,7 @@ public final class RocksDB {
 			MemorySegment baseDb = (MemorySegment) MH_GET_BASE_DB.invokeExact(ptr);
 			return new OptimisticTransactionDB(ptr, baseDb, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("openOptimistic failed", t);
+			throw RocksDB.wrapInvokeFailure("openOptimistic failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();
@@ -1441,7 +1436,7 @@ public final class RocksDB {
 			MH_LIST_CF_DESTROY.invokeExact(namesPtr, count);
 			return result;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("listColumnFamilies failed", t);
+			throw RocksDB.wrapInvokeFailure("listColumnFamilies failed", t);
 		}
 	}
 
@@ -1465,7 +1460,7 @@ public final class RocksDB {
 			checkError(err);
 			return ColumnFamilyHandle.wrap(handle);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("createColumnFamily failed", t);
+			throw RocksDB.wrapInvokeFailure("createColumnFamily failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();
@@ -1479,7 +1474,7 @@ public final class RocksDB {
 			MH_DROP_CF.invokeExact(db, handle.ptr(), err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("dropColumnFamily failed", t);
+			throw RocksDB.wrapInvokeFailure("dropColumnFamily failed", t);
 		}
 	}
 
@@ -1493,7 +1488,7 @@ public final class RocksDB {
 					toNative(arena, value), (long) value.length, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("put failed", t);
+			throw RocksDB.wrapInvokeFailure("put failed", t);
 		}
 	}
 
@@ -1505,7 +1500,7 @@ public final class RocksDB {
 			MH_PUT_CF.invokeExact(db, writeOpts, cf.ptr(), key, keyLen, val, valLen, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("put failed", t);
+			throw RocksDB.wrapInvokeFailure("put failed", t);
 		}
 	}
 
@@ -1528,7 +1523,7 @@ public final class RocksDB {
 				return ph.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("get failed", t);
+			throw RocksDB.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -1553,7 +1548,7 @@ public final class RocksDB {
 			value.position(value.position() + (int) valLen);
 			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("get failed", t);
+			throw RocksDB.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -1577,7 +1572,7 @@ public final class RocksDB {
 			}
 			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("get failed", t);
+			throw RocksDB.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -1590,7 +1585,7 @@ public final class RocksDB {
 					toNative(arena, key), (long) key.length, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("delete failed", t);
+			throw RocksDB.wrapInvokeFailure("delete failed", t);
 		}
 	}
 
@@ -1602,7 +1597,7 @@ public final class RocksDB {
 			MH_DELETE_CF.invokeExact(db, writeOpts, cf.ptr(), key, keyLen, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("delete failed", t);
+			throw RocksDB.wrapInvokeFailure("delete failed", t);
 		}
 	}
 
@@ -1617,7 +1612,7 @@ public final class RocksDB {
 					toNative(arena, endKey), (long) endKey.length, err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("deleteRange failed", t);
+			throw RocksDB.wrapInvokeFailure("deleteRange failed", t);
 		}
 	}
 
@@ -1632,7 +1627,7 @@ public final class RocksDB {
 					MemorySegment.ofBuffer(endKey), (long) endKey.remaining(), err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("deleteRange failed", t);
+			throw RocksDB.wrapInvokeFailure("deleteRange failed", t);
 		}
 	}
 
@@ -1646,7 +1641,7 @@ public final class RocksDB {
 					startKey, startKey.byteSize(), endKey, endKey.byteSize(), err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("deleteRange failed", t);
+			throw RocksDB.wrapInvokeFailure("deleteRange failed", t);
 		}
 	}
 
@@ -1658,7 +1653,7 @@ public final class RocksDB {
 					MemorySegment.NULL, MemorySegment.NULL,
 					MemorySegment.NULL, 0L, MemorySegment.NULL));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("keyMayExist failed", t);
+			throw RocksDB.wrapInvokeFailure("keyMayExist failed", t);
 		}
 	}
 
@@ -1678,7 +1673,7 @@ public final class RocksDB {
 					db, readOpts, cf.ptr());
 			return RocksIterator.create(iterPtr);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("newIterator failed", t);
+			throw RocksDB.wrapInvokeFailure("newIterator failed", t);
 		}
 	}
 
@@ -1688,7 +1683,7 @@ public final class RocksDB {
 			MH_FLUSH_CF.invokeExact(db, flushOptions.ptr(), cf.ptr(), err);
 			checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("flush failed", t);
+			throw RocksDB.wrapInvokeFailure("flush failed", t);
 		}
 	}
 
@@ -1700,7 +1695,7 @@ public final class RocksDB {
 					db, cf.ptr(), propSeg);
 			return toOptionalString(result);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getProperty failed", t);
+			throw RocksDB.wrapInvokeFailure("getProperty failed", t);
 		}
 	}
 
@@ -1715,7 +1710,7 @@ public final class RocksDB {
 			}
 			return OptionalLong.of(out.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getLongProperty failed", t);
+			throw RocksDB.wrapInvokeFailure("getLongProperty failed", t);
 		}
 	}
 
@@ -1764,6 +1759,38 @@ public final class RocksDB {
 			String msg = toJavaString(errPtr);
 			throw new RocksDBException(msg);
 		}
+	}
+
+	/// Classifies a `Throwable` caught from a `catch (Throwable t)` block wrapping an
+	/// `invokeExact` call on a downcall [MethodHandle]. RocksDB itself reports operational
+	/// failures via `errptr`, checked separately by [#checkError(MemorySegment)] -- typically
+	/// called right after `invokeExact` inside the same `try`, so a genuine [RocksDBException]
+	/// it throws reaches this method too, alongside whatever `invokeExact` itself might throw.
+	/// See [ADR 0004](https://github.com/dfa1/rocksdbffm/blob/main/docs/adr/0004-error-handling.md).
+	///
+	/// Every `RuntimeException` -- a [RocksDBException] from `checkError`, or one of the small,
+	/// fixed set `invokeExact` itself throws in practice for a downcall handle
+	/// (`NullPointerException`, `IllegalStateException` including `WrongThreadException`,
+	/// `WrongMethodTypeException`, `ClassCastException`, each indicating a concrete binding bug:
+	/// wrong argument, closed/wrong-thread arena, mismatched `FunctionDescriptor`, bad cast) --
+	/// propagates unwrapped, with its original type preserved. An [IOException] (not from
+	/// `invokeExact` itself, which never throws a checked exception, but possible from other
+	/// code sharing the same `try` block, e.g. file access) becomes an [UncheckedIOException],
+	/// the standard idiom for surfacing it as unchecked. Anything else reaching this method
+	/// should never actually happen for a correctly configured downcall handle, and becomes an
+	/// [AssertionError].
+	///
+	/// @param message description used for the [UncheckedIOException]/[AssertionError] fallbacks
+	/// @param t       the throwable caught from the `invokeExact` call's `try` block
+	/// @return never returns; declared non-void so callers can write `throw wrapInvokeFailure(...)`
+	static RuntimeException wrapInvokeFailure(String message, Throwable t) {
+		if (t instanceof RuntimeException e) {
+			throw e;
+		}
+		if (t instanceof IOException e) {
+			throw new UncheckedIOException(message, e);
+		}
+		throw new AssertionError(message, t);
 	}
 
 	/// Copies `len` bytes out of a length-prefixed, non-owned native pointer (e.g. a `const

@@ -104,7 +104,7 @@ public final class Checkpoint extends NativeObject {
 			RocksDB.checkError(err);
 			return new Checkpoint(ptr);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("newCheckpoint failed", t);
+			throw RocksDB.wrapInvokeFailure("newCheckpoint failed", t);
 		}
 	}
 
@@ -126,7 +126,7 @@ public final class Checkpoint extends NativeObject {
 			MH_EXPORT.invokeExact(ptr(), dirSeg, logSizeForFlush.toBytes(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 

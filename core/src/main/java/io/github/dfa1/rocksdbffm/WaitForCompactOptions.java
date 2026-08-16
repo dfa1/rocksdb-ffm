@@ -81,7 +81,7 @@ public final class WaitForCompactOptions extends NativeObject {
 		try {
 			return new WaitForCompactOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("WaitForCompactOptions create failed", t);
+			throw RocksDB.wrapInvokeFailure("WaitForCompactOptions create failed", t);
 		}
 	}
 
@@ -96,7 +96,7 @@ public final class WaitForCompactOptions extends NativeObject {
 			MH_SET_ABORT_ON_PAUSE.invokeExact(ptr(), RocksDB.toByte(value));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setAbortOnPause failed", t);
+			throw RocksDB.wrapInvokeFailure("setAbortOnPause failed", t);
 		}
 	}
 
@@ -107,7 +107,7 @@ public final class WaitForCompactOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_ABORT_ON_PAUSE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isAbortOnPause failed", t);
+			throw RocksDB.wrapInvokeFailure("isAbortOnPause failed", t);
 		}
 	}
 
@@ -121,7 +121,7 @@ public final class WaitForCompactOptions extends NativeObject {
 			MH_SET_FLUSH.invokeExact(ptr(), RocksDB.toByte(value));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setFlush failed", t);
+			throw RocksDB.wrapInvokeFailure("setFlush failed", t);
 		}
 	}
 
@@ -132,7 +132,7 @@ public final class WaitForCompactOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_FLUSH.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isFlush failed", t);
+			throw RocksDB.wrapInvokeFailure("isFlush failed", t);
 		}
 	}
 
@@ -146,7 +146,7 @@ public final class WaitForCompactOptions extends NativeObject {
 			MH_SET_CLOSE_DB.invokeExact(ptr(), RocksDB.toByte(value));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setCloseDb failed", t);
+			throw RocksDB.wrapInvokeFailure("setCloseDb failed", t);
 		}
 	}
 
@@ -157,7 +157,7 @@ public final class WaitForCompactOptions extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_GET_CLOSE_DB.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isCloseDb failed", t);
+			throw RocksDB.wrapInvokeFailure("isCloseDb failed", t);
 		}
 	}
 
@@ -171,7 +171,7 @@ public final class WaitForCompactOptions extends NativeObject {
 			MH_SET_TIMEOUT.invokeExact(ptr(), timeout.toNanos() / 1_000L);
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setTimeout failed", t);
+			throw RocksDB.wrapInvokeFailure("setTimeout failed", t);
 		}
 	}
 
@@ -183,7 +183,7 @@ public final class WaitForCompactOptions extends NativeObject {
 			long micros = (long) MH_GET_TIMEOUT.invokeExact(ptr());
 			return Duration.ofNanos(micros * 1000L);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getTimeout failed", t);
+			throw RocksDB.wrapInvokeFailure("getTimeout failed", t);
 		}
 	}
 

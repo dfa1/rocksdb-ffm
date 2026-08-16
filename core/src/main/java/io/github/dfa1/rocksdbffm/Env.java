@@ -72,7 +72,7 @@ public final class Env extends NativeObject {
 		try {
 			return new Env((MemorySegment) MH_CREATE_DEFAULT.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Env.defaultEnv failed", t);
+			throw RocksDB.wrapInvokeFailure("Env.defaultEnv failed", t);
 		}
 	}
 
@@ -83,7 +83,7 @@ public final class Env extends NativeObject {
 		try {
 			return new Env((MemorySegment) MH_CREATE_MEM.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Env.memEnv failed", t);
+			throw RocksDB.wrapInvokeFailure("Env.memEnv failed", t);
 		}
 	}
 
@@ -96,7 +96,7 @@ public final class Env extends NativeObject {
 			MH_SET_BACKGROUND_THREADS.invokeExact(ptr(), n);
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setBackgroundThreads failed", t);
+			throw RocksDB.wrapInvokeFailure("setBackgroundThreads failed", t);
 		}
 	}
 
@@ -107,7 +107,7 @@ public final class Env extends NativeObject {
 		try {
 			return (int) MH_GET_BACKGROUND_THREADS.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getBackgroundThreads failed", t);
+			throw RocksDB.wrapInvokeFailure("getBackgroundThreads failed", t);
 		}
 	}
 
@@ -120,7 +120,7 @@ public final class Env extends NativeObject {
 			MH_SET_HIGH_PRIORITY_BACKGROUND_THREADS.invokeExact(ptr(), n);
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setHighPriorityBackgroundThreads failed", t);
+			throw RocksDB.wrapInvokeFailure("setHighPriorityBackgroundThreads failed", t);
 		}
 	}
 
@@ -131,7 +131,7 @@ public final class Env extends NativeObject {
 		try {
 			return (int) MH_GET_HIGH_PRIORITY_BACKGROUND_THREADS.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getHighPriorityBackgroundThreads failed", t);
+			throw RocksDB.wrapInvokeFailure("getHighPriorityBackgroundThreads failed", t);
 		}
 	}
 

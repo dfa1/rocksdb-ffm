@@ -149,7 +149,7 @@ public final class Transaction extends NativeObject {
 			MH_PUT.invokeExact(ptr(), k, (long) key.length, v, (long) value.length, err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -165,7 +165,7 @@ public final class Transaction extends NativeObject {
 					MemorySegment.ofBuffer(value), (long) value.remaining(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -179,7 +179,7 @@ public final class Transaction extends NativeObject {
 			MH_PUT.invokeExact(ptr(), key, key.byteSize(), value, value.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -193,7 +193,7 @@ public final class Transaction extends NativeObject {
 			MH_DELETE.invokeExact(ptr(), k, (long) key.length, err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -206,7 +206,7 @@ public final class Transaction extends NativeObject {
 			MH_DELETE.invokeExact(ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -219,7 +219,7 @@ public final class Transaction extends NativeObject {
 			MH_DELETE.invokeExact(ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -252,7 +252,7 @@ public final class Transaction extends NativeObject {
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -277,7 +277,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -302,7 +302,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -327,7 +327,7 @@ public final class Transaction extends NativeObject {
 			try {
 				pin = (MemorySegment) MH_GET_PINNED.invokeExact(ptr(), readOptions.ptr(), key, key.byteSize(), err);
 			} catch (Throwable t) {
-				throw RocksDBException.wrap("get_pinned failed", t);
+				throw RocksDB.wrapInvokeFailure("get_pinned failed", t);
 			}
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -360,7 +360,7 @@ public final class Transaction extends NativeObject {
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -388,7 +388,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -416,7 +416,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -437,7 +437,7 @@ public final class Transaction extends NativeObject {
 					RocksDB.toNative(arena, value), (long) value.length, err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -454,7 +454,7 @@ public final class Transaction extends NativeObject {
 					MemorySegment.ofBuffer(value), (long) value.remaining(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -469,7 +469,7 @@ public final class Transaction extends NativeObject {
 			MH_PUT_CF.invokeExact(ptr(), cf.ptr(), key, key.byteSize(), value, value.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -484,7 +484,7 @@ public final class Transaction extends NativeObject {
 					RocksDB.toNative(arena, key), (long) key.length, err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -499,7 +499,7 @@ public final class Transaction extends NativeObject {
 			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -513,7 +513,7 @@ public final class Transaction extends NativeObject {
 			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -541,7 +541,7 @@ public final class Transaction extends NativeObject {
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -568,7 +568,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -594,7 +594,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -618,7 +618,7 @@ public final class Transaction extends NativeObject {
 				pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
 						ptr(), readOptions.ptr(), cf.ptr(), key, key.byteSize(), err);
 			} catch (Throwable t) {
-				throw RocksDBException.wrap("get_pinned failed", t);
+				throw RocksDB.wrapInvokeFailure("get_pinned failed", t);
 			}
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -652,7 +652,7 @@ public final class Transaction extends NativeObject {
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -683,7 +683,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -713,7 +713,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -728,7 +728,7 @@ public final class Transaction extends NativeObject {
 					ptr(), readOptions.ptr(), cf.ptr());
 			return RocksIterator.create(iterPtr);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("newIterator failed", t);
+			throw RocksDB.wrapInvokeFailure("newIterator failed", t);
 		}
 	}
 
@@ -747,7 +747,7 @@ public final class Transaction extends NativeObject {
 			MemorySegment snapPtr = (MemorySegment) MH_GET_SNAPSHOT.invokeExact(ptr());
 			return new Snapshot(snapPtr); // released via rocksdb_free
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getSnapshot failed", t);
+			throw RocksDB.wrapInvokeFailure("getSnapshot failed", t);
 		}
 	}
 
@@ -762,7 +762,7 @@ public final class Transaction extends NativeObject {
 			MH_COMMIT.invokeExact(ptr(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -773,7 +773,7 @@ public final class Transaction extends NativeObject {
 			MH_ROLLBACK.invokeExact(ptr(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -782,7 +782,7 @@ public final class Transaction extends NativeObject {
 		try {
 			MH_SET_SAVEPOINT.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("transaction setSavePoint failed", t);
+			throw RocksDB.wrapInvokeFailure("transaction setSavePoint failed", t);
 		}
 	}
 
@@ -793,7 +793,7 @@ public final class Transaction extends NativeObject {
 			MH_ROLLBACK_TO_SAVEPOINT.invokeExact(ptr(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("Native call failed", t);
+			throw RocksDB.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 

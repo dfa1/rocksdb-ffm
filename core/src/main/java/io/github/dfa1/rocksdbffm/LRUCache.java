@@ -35,7 +35,7 @@ public final class LRUCache extends Cache {
 		try {
 			return new LRUCache((MemorySegment) MH_CREATE.invokeExact(capacity.toBytes()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("LRUCache create failed", t);
+			throw RocksDB.wrapInvokeFailure("LRUCache create failed", t);
 		}
 	}
 }

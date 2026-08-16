@@ -94,7 +94,7 @@ public final class WriteBatch extends NativeObject {
 		try {
 			return new WriteBatch((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch create failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch create failed", t);
 		}
 	}
 
@@ -116,7 +116,7 @@ public final class WriteBatch extends NativeObject {
 			MemorySegment v = RocksDB.toNative(arena, value);
 			MH_PUT.invokeExact(ptr(), k, (long) key.length, v, (long) value.length);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch put failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch put failed", t);
 		}
 	}
 
@@ -130,7 +130,7 @@ public final class WriteBatch extends NativeObject {
 			MemorySegment v = RocksDB.toNative(arena, value);
 			MH_PUT.invokeExact(ptr(), k, (long) key.length, v, (long) value.length);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch put failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch put failed", t);
 		}
 	}
 
@@ -144,7 +144,7 @@ public final class WriteBatch extends NativeObject {
 					MemorySegment.ofBuffer(key), (long) key.remaining(),
 					MemorySegment.ofBuffer(value), (long) value.remaining());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch put failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch put failed", t);
 		}
 	}
 
@@ -156,7 +156,7 @@ public final class WriteBatch extends NativeObject {
 		try {
 			MH_PUT.invokeExact(ptr(), key, key.byteSize(), value, value.byteSize());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch put failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch put failed", t);
 		}
 	}
 
@@ -168,7 +168,7 @@ public final class WriteBatch extends NativeObject {
 			MemorySegment k = RocksDB.toNative(arena, key);
 			MH_DELETE.invokeExact(ptr(), k, (long) key.length);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch delete failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch delete failed", t);
 		}
 	}
 
@@ -179,7 +179,7 @@ public final class WriteBatch extends NativeObject {
 		try {
 			MH_DELETE.invokeExact(ptr(), MemorySegment.ofBuffer(key), (long) key.remaining());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch delete failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch delete failed", t);
 		}
 	}
 
@@ -190,7 +190,7 @@ public final class WriteBatch extends NativeObject {
 		try {
 			MH_DELETE.invokeExact(ptr(), key, key.byteSize());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch delete failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch delete failed", t);
 		}
 	}
 
@@ -204,7 +204,7 @@ public final class WriteBatch extends NativeObject {
 					RocksDB.toNative(arena, startKey), (long) startKey.length,
 					RocksDB.toNative(arena, endKey), (long) endKey.length);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch deleteRange failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch deleteRange failed", t);
 		}
 	}
 
@@ -218,7 +218,7 @@ public final class WriteBatch extends NativeObject {
 					MemorySegment.ofBuffer(startKey), (long) startKey.remaining(),
 					MemorySegment.ofBuffer(endKey), (long) endKey.remaining());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch deleteRange failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch deleteRange failed", t);
 		}
 	}
 
@@ -232,7 +232,7 @@ public final class WriteBatch extends NativeObject {
 					startKey, startKey.byteSize(),
 					endKey, endKey.byteSize());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch deleteRange failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch deleteRange failed", t);
 		}
 	}
 
@@ -251,7 +251,7 @@ public final class WriteBatch extends NativeObject {
 					RocksDB.toNative(arena, key), (long) key.length,
 					RocksDB.toNative(arena, value), (long) value.length);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch put_cf failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch put_cf failed", t);
 		}
 	}
 
@@ -266,7 +266,7 @@ public final class WriteBatch extends NativeObject {
 					MemorySegment.ofBuffer(key), (long) key.remaining(),
 					MemorySegment.ofBuffer(value), (long) value.remaining());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch put_cf failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch put_cf failed", t);
 		}
 	}
 
@@ -280,7 +280,7 @@ public final class WriteBatch extends NativeObject {
 			MH_PUT_CF.invokeExact(ptr(), cf.ptr(),
 					key, key.byteSize(), value, value.byteSize());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch put_cf failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch put_cf failed", t);
 		}
 	}
 
@@ -293,7 +293,7 @@ public final class WriteBatch extends NativeObject {
 			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(),
 					RocksDB.toNative(arena, key), (long) key.length);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch delete_cf failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch delete_cf failed", t);
 		}
 	}
 
@@ -306,7 +306,7 @@ public final class WriteBatch extends NativeObject {
 			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch delete_cf failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch delete_cf failed", t);
 		}
 	}
 
@@ -318,7 +318,7 @@ public final class WriteBatch extends NativeObject {
 		try {
 			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(), key, key.byteSize());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch delete_cf failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch delete_cf failed", t);
 		}
 	}
 
@@ -333,7 +333,7 @@ public final class WriteBatch extends NativeObject {
 					RocksDB.toNative(arena, startKey), (long) startKey.length,
 					RocksDB.toNative(arena, endKey), (long) endKey.length);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch deleteRange_cf failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch deleteRange_cf failed", t);
 		}
 	}
 
@@ -348,7 +348,7 @@ public final class WriteBatch extends NativeObject {
 					MemorySegment.ofBuffer(startKey), (long) startKey.remaining(),
 					MemorySegment.ofBuffer(endKey), (long) endKey.remaining());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch deleteRange_cf failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch deleteRange_cf failed", t);
 		}
 	}
 
@@ -362,7 +362,7 @@ public final class WriteBatch extends NativeObject {
 			MH_DELETE_RANGE_CF.invokeExact(ptr(), cf.ptr(),
 					startKey, startKey.byteSize(), endKey, endKey.byteSize());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch deleteRange_cf failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch deleteRange_cf failed", t);
 		}
 	}
 
@@ -371,7 +371,7 @@ public final class WriteBatch extends NativeObject {
 		try {
 			MH_CLEAR.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch clear failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch clear failed", t);
 		}
 	}
 
@@ -382,7 +382,7 @@ public final class WriteBatch extends NativeObject {
 		try {
 			return (int) MH_COUNT.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("writebatch count failed", t);
+			throw RocksDB.wrapInvokeFailure("writebatch count failed", t);
 		}
 	}
 

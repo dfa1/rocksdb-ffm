@@ -177,7 +177,7 @@ public final class BackupEngine extends NativeObject {
 			RocksDB.checkError(err);
 			return new BackupEngine(ptr);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("BackupEngine.open failed", t);
+			throw RocksDB.wrapInvokeFailure("BackupEngine.open failed", t);
 		}
 	}
 
@@ -196,7 +196,7 @@ public final class BackupEngine extends NativeObject {
 			RocksDB.checkError(err);
 			return new BackupEngine(ptr);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("BackupEngine.open failed", t);
+			throw RocksDB.wrapInvokeFailure("BackupEngine.open failed", t);
 		}
 	}
 
@@ -260,7 +260,7 @@ public final class BackupEngine extends NativeObject {
 			MH_CREATE_NEW_BACKUP_FLUSH.invokeExact(ptr(), dbPtr, RocksDB.toByte(flush), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("createNewBackup failed", t);
+			throw RocksDB.wrapInvokeFailure("createNewBackup failed", t);
 		}
 	}
 
@@ -277,7 +277,7 @@ public final class BackupEngine extends NativeObject {
 			MH_PURGE_OLD_BACKUPS.invokeExact(ptr(), numBackupsToKeep, err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("purgeOldBackups failed", t);
+			throw RocksDB.wrapInvokeFailure("purgeOldBackups failed", t);
 		}
 	}
 
@@ -291,7 +291,7 @@ public final class BackupEngine extends NativeObject {
 			MH_VERIFY_BACKUP.invokeExact(ptr(), backupId.toNativeInt(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("verifyBackup failed", t);
+			throw RocksDB.wrapInvokeFailure("verifyBackup failed", t);
 		}
 	}
 
@@ -323,7 +323,7 @@ public final class BackupEngine extends NativeObject {
 			MH_RESTORE_FROM_LATEST.invokeExact(ptr(), dbDirSeg, walDirSeg, restoreOptions.ptr(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("restoreDbFromLatestBackup failed", t);
+			throw RocksDB.wrapInvokeFailure("restoreDbFromLatestBackup failed", t);
 		}
 	}
 
@@ -351,7 +351,7 @@ public final class BackupEngine extends NativeObject {
 					restoreOptions.ptr(), backupId.toNativeInt(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("restoreDbFromBackup failed", t);
+			throw RocksDB.wrapInvokeFailure("restoreDbFromBackup failed", t);
 		}
 	}
 
@@ -370,7 +370,7 @@ public final class BackupEngine extends NativeObject {
 		try {
 			infoPtr = (MemorySegment) MH_GET_BACKUP_INFO.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getBackupInfo failed", t);
+			throw RocksDB.wrapInvokeFailure("getBackupInfo failed", t);
 		}
 		try {
 			int count = (int) MH_INFO_COUNT.invokeExact(infoPtr);
@@ -384,7 +384,7 @@ public final class BackupEngine extends NativeObject {
 			}
 			return Collections.unmodifiableList(result);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getBackupInfo failed", t);
+			throw RocksDB.wrapInvokeFailure("getBackupInfo failed", t);
 		} finally {
 			try {
 				MH_INFO_DESTROY.invokeExact(infoPtr);

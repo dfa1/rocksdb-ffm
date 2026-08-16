@@ -71,7 +71,7 @@ public final class IngestExternalFileOptions extends NativeObject {
 		try {
 			return new IngestExternalFileOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("ingestexternalfileoptions create failed", t);
+			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions create failed", t);
 		}
 	}
 
@@ -84,7 +84,7 @@ public final class IngestExternalFileOptions extends NativeObject {
 			MH_SET_MOVE_FILES.invokeExact(ptr(), RocksDB.toByte(moveFiles));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("ingestexternalfileoptions setMoveFiles failed", t);
+			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions setMoveFiles failed", t);
 		}
 	}
 
@@ -97,7 +97,7 @@ public final class IngestExternalFileOptions extends NativeObject {
 			MH_SET_SNAPSHOT_CONSISTENCY.invokeExact(ptr(), RocksDB.toByte(snapshotConsistency));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("ingestexternalfileoptions setSnapshotConsistency failed", t);
+			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions setSnapshotConsistency failed", t);
 		}
 	}
 
@@ -110,7 +110,7 @@ public final class IngestExternalFileOptions extends NativeObject {
 			MH_SET_ALLOW_GLOBAL_SEQNO.invokeExact(ptr(), RocksDB.toByte(allowGlobalSeqno));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("ingestexternalfileoptions setAllowGlobalSeqno failed", t);
+			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions setAllowGlobalSeqno failed", t);
 		}
 	}
 
@@ -123,7 +123,7 @@ public final class IngestExternalFileOptions extends NativeObject {
 			MH_SET_ALLOW_BLOCKING_FLUSH.invokeExact(ptr(), RocksDB.toByte(allowBlockingFlush));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("ingestexternalfileoptions setAllowBlockingFlush failed", t);
+			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions setAllowBlockingFlush failed", t);
 		}
 	}
 
@@ -137,7 +137,7 @@ public final class IngestExternalFileOptions extends NativeObject {
 			MH_SET_INGEST_BEHIND.invokeExact(ptr(), RocksDB.toByte(ingestBehind));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("ingestexternalfileoptions setIngestBehind failed", t);
+			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions setIngestBehind failed", t);
 		}
 	}
 
@@ -150,7 +150,7 @@ public final class IngestExternalFileOptions extends NativeObject {
 			MH_SET_FAIL_IF_NOT_BOTTOMMOST_LEVEL.invokeExact(ptr(), RocksDB.toByte(failIfNotBottommostLevel));
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("ingestexternalfileoptions setFailIfNotBottommostLevel failed", t);
+			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions setFailIfNotBottommostLevel failed", t);
 		}
 	}
 

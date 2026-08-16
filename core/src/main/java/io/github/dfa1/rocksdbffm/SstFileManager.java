@@ -117,7 +117,7 @@ public final class SstFileManager extends NativeObject {
 			MemorySegment ptr = (MemorySegment) MH_CREATE.invokeExact(env.ptr());
 			return new SstFileManager(ptr);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("SstFileManager create failed", t);
+			throw RocksDB.wrapInvokeFailure("SstFileManager create failed", t);
 		}
 	}
 
@@ -133,7 +133,7 @@ public final class SstFileManager extends NativeObject {
 			MH_SET_MAX_ALLOWED_SPACE_USAGE.invokeExact(ptr(), maxAllowedSpace.toBytes());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setMaxAllowedSpaceUsage failed", t);
+			throw RocksDB.wrapInvokeFailure("setMaxAllowedSpaceUsage failed", t);
 		}
 	}
 
@@ -148,7 +148,7 @@ public final class SstFileManager extends NativeObject {
 			MH_SET_COMPACTION_BUFFER_SIZE.invokeExact(ptr(), compactionBufferSize.toBytes());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setCompactionBufferSize failed", t);
+			throw RocksDB.wrapInvokeFailure("setCompactionBufferSize failed", t);
 		}
 	}
 
@@ -159,7 +159,7 @@ public final class SstFileManager extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_IS_MAX_ALLOWED_SPACE_REACHED.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isMaxAllowedSpaceReached failed", t);
+			throw RocksDB.wrapInvokeFailure("isMaxAllowedSpaceReached failed", t);
 		}
 	}
 
@@ -171,7 +171,7 @@ public final class SstFileManager extends NativeObject {
 		try {
 			return RocksDB.fromByte((byte) MH_IS_MAX_ALLOWED_SPACE_REACHED_INCLUDING_COMPACTIONS.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("isMaxAllowedSpaceReachedIncludingCompactions failed", t);
+			throw RocksDB.wrapInvokeFailure("isMaxAllowedSpaceReachedIncludingCompactions failed", t);
 		}
 	}
 
@@ -182,7 +182,7 @@ public final class SstFileManager extends NativeObject {
 		try {
 			return MemorySize.ofBytes((long) MH_GET_TOTAL_SIZE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getTotalSize failed", t);
+			throw RocksDB.wrapInvokeFailure("getTotalSize failed", t);
 		}
 	}
 
@@ -193,7 +193,7 @@ public final class SstFileManager extends NativeObject {
 		try {
 			return MemorySize.ofBytes((long) MH_GET_TOTAL_TRASH_SIZE.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getTotalTrashSize failed", t);
+			throw RocksDB.wrapInvokeFailure("getTotalTrashSize failed", t);
 		}
 	}
 
@@ -205,7 +205,7 @@ public final class SstFileManager extends NativeObject {
 			long rate = (long) MH_GET_DELETE_RATE_BYTES_PER_SECOND.invokeExact(ptr());
 			return rate < 0 ? null : MemorySize.ofBytes(rate);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getDeleteRateBytesPerSecond failed", t);
+			throw RocksDB.wrapInvokeFailure("getDeleteRateBytesPerSecond failed", t);
 		}
 	}
 
@@ -224,7 +224,7 @@ public final class SstFileManager extends NativeObject {
 			MH_SET_DELETE_RATE_BYTES_PER_SECOND.invokeExact(ptr(), deleteRate == null ? -1L : deleteRate.toBytes());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setDeleteRateBytesPerSecond failed", t);
+			throw RocksDB.wrapInvokeFailure("setDeleteRateBytesPerSecond failed", t);
 		}
 	}
 
@@ -237,7 +237,7 @@ public final class SstFileManager extends NativeObject {
 		try {
 			return Ratio.of((double) MH_GET_MAX_TRASH_DB_RATIO.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("getMaxTrashDbRatio failed", t);
+			throw RocksDB.wrapInvokeFailure("getMaxTrashDbRatio failed", t);
 		}
 	}
 
@@ -252,7 +252,7 @@ public final class SstFileManager extends NativeObject {
 			MH_SET_MAX_TRASH_DB_RATIO.invokeExact(ptr(), ratio.toDouble());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("setMaxTrashDbRatio failed", t);
+			throw RocksDB.wrapInvokeFailure("setMaxTrashDbRatio failed", t);
 		}
 	}
 

@@ -81,11 +81,21 @@ try (Arena arena = Arena.ofConfined()) {
     MemorySegment err = RocksDB.errHolder(arena);
     MH_DO_SOMETHING.invokeExact(handle, ..., err);
     RocksDB.checkError(err);
+} catch (Throwable t) {
+    throw RocksDB.wrapInvokeFailure("doSomething failed", t);
 }
 ```
 
-`RocksDB.errHolder`, `RocksDB.checkError`, and `RocksDB.toNative` are the shared FFM plumbing used by every wrapper
-class.
+`RocksDB.errHolder`, `RocksDB.checkError`, `RocksDB.toNative`, and `RocksDB.wrapInvokeFailure` are the shared FFM
+plumbing used by every wrapper class.
+
+**`RocksDBException` is only ever constructed by `RocksDB.checkError`**, for a genuine `errptr`-reported RocksDB
+error. Never construct it — or call something you wrote yourself that would — from an `invokeExact` catch block;
+use `RocksDB.wrapInvokeFailure(message, t)` there instead, which rethrows any `RuntimeException` (including a
+`RocksDBException` `checkError` already threw earlier in the same `try`) unwrapped, an `IOException` as
+`UncheckedIOException`, and anything else — which should never happen for a correctly configured downcall handle —
+as `AssertionError`. See [ADR 0004](docs/adr/0004-error-handling.md) for why: a bug in this library's own FFM
+plumbing must never be indistinguishable from a genuine RocksDB error.
 
 ### 2. Zero-Copy Patterns
 

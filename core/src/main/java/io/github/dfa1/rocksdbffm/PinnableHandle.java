@@ -97,7 +97,7 @@ final class PinnableHandle extends NativeObject {
 		try {
 			return (MemorySegment) MH_GET_VALUE.invokeExact(ptr(), vallenOut);
 		} catch (Throwable t) {
-			throw RocksDBException.wrap("pinnable_handle_get_value failed", t);
+			throw RocksDB.wrapInvokeFailure("pinnable_handle_get_value failed", t);
 		}
 	}
 
