@@ -1748,7 +1748,7 @@ public final class RocksDB {
 		if (!MemorySegment.NULL.equals(errPtr)) {
 			String msg = errPtr.reinterpret(Long.MAX_VALUE).getString(0);
 			free(errPtr);
-			throw RocksDBException.of(msg);
+			throw new RocksDBException(msg);
 		}
 	}
 }

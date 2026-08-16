@@ -2,12 +2,15 @@ package io.github.dfa1.rocksdbffm;
 
 /// Unchecked exception thrown when a RocksDB native operation fails.
 ///
-/// No public constructors: every call site goes through [#wrap(String, Throwable)] or
-/// [#of(String)], so a [RocksDBException] can never be wrapped by itself and every
-/// construction site is one of these two, greppable entry points.
+/// No public constructors. The two-arg (message, cause) constructor is private, reachable only
+/// via [#wrap(String, Throwable)], so a [RocksDBException] can never be wrapped by itself. The
+/// single-arg (message-only) constructor is package-private instead: used directly by
+/// [RocksDB#checkError(java.lang.foreign.MemorySegment)] for RocksDB's own `errptr`-reported
+/// errors, which have no Java [Throwable] to wrap in the first place, so there is no
+/// double-wrap invariant to gate behind a factory method there.
 public class RocksDBException extends RuntimeException {
 
-	private RocksDBException(String message) {
+	RocksDBException(String message) {
 		super(message);
 	}
 
@@ -29,16 +32,5 @@ public class RocksDBException extends RuntimeException {
 	/// @return `t` cast to [RocksDBException], or a new one wrapping `t`
 	public static RocksDBException wrap(String message, Throwable t) {
 		return (t instanceof RocksDBException r) ? r : new RocksDBException(message, t);
-	}
-
-	/// Constructs an exception from a native-reported error message, with no underlying Java
-	/// [Throwable] to wrap — used for RocksDB's own `errptr`-reported errors (see
-	/// [RocksDB#checkError(java.lang.foreign.MemorySegment)]), as opposed to a failure caught
-	/// from an FFM downcall itself (see [#wrap(String, Throwable)] for that case).
-	///
-	/// @param message the native error message
-	/// @return a new [RocksDBException] with no cause
-	public static RocksDBException of(String message) {
-		return new RocksDBException(message);
 	}
 }
