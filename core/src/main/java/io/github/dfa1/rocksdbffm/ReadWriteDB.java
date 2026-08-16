@@ -215,8 +215,6 @@ public final class ReadWriteDB extends NativeObject {
 	public boolean keyMayExist(byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
 			return RocksDB.keyMayExistSegment(ptr(), readOpts.ptr(), RocksDB.toNative(arena, key), key.length);
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("keyMayExist failed", t);
 		}
 	}
 
@@ -228,8 +226,6 @@ public final class ReadWriteDB extends NativeObject {
 	public boolean keyMayExist(ReadOptions readOptions, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
 			return RocksDB.keyMayExistSegment(ptr(), readOptions.ptr(), RocksDB.toNative(arena, key), key.length);
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("keyMayExist failed", t);
 		}
 	}
 
@@ -238,11 +234,7 @@ public final class ReadWriteDB extends NativeObject {
 	/// @param key direct [ByteBuffer] containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	public boolean keyMayExist(ByteBuffer key) {
-		try {
-			return RocksDB.keyMayExistSegment(ptr(), readOpts.ptr(), MemorySegment.ofBuffer(key), key.remaining());
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("keyMayExist failed", t);
-		}
+		return RocksDB.keyMayExistSegment(ptr(), readOpts.ptr(), MemorySegment.ofBuffer(key), key.remaining());
 	}
 
 	/// Zero-copy for [MemorySegment]s.
@@ -250,11 +242,7 @@ public final class ReadWriteDB extends NativeObject {
 	/// @param key native segment containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	public boolean keyMayExist(MemorySegment key) {
-		try {
-			return RocksDB.keyMayExistSegment(ptr(), readOpts.ptr(), key, key.byteSize());
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("keyMayExist failed", t);
-		}
+		return RocksDB.keyMayExistSegment(ptr(), readOpts.ptr(), key, key.byteSize());
 	}
 
 	// -----------------------------------------------------------------------
@@ -672,8 +660,6 @@ public final class ReadWriteDB extends NativeObject {
 		try (Arena arena = Arena.ofConfined()) {
 			return RocksDB.keyMayExistCfSegment(ptr(), readOpts.ptr(), cf,
 					RocksDB.toNative(arena, key), key.length);
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("keyMayExist failed", t);
 		}
 	}
 
@@ -687,8 +673,6 @@ public final class ReadWriteDB extends NativeObject {
 		try (Arena arena = Arena.ofConfined()) {
 			return RocksDB.keyMayExistCfSegment(ptr(), readOptions.ptr(), cf,
 					RocksDB.toNative(arena, key), key.length);
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("keyMayExist failed", t);
 		}
 	}
 
@@ -698,12 +682,8 @@ public final class ReadWriteDB extends NativeObject {
 	/// @param key direct [ByteBuffer] containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	public boolean keyMayExist(ColumnFamilyHandle cf, ByteBuffer key) {
-		try {
-			return RocksDB.keyMayExistCfSegment(ptr(), readOpts.ptr(), cf,
-					MemorySegment.ofBuffer(key), key.remaining());
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("keyMayExist failed", t);
-		}
+		return RocksDB.keyMayExistCfSegment(ptr(), readOpts.ptr(), cf,
+				MemorySegment.ofBuffer(key), key.remaining());
 	}
 
 	/// Zero-copy keyMayExist in `cf` for [MemorySegment]s.
@@ -712,11 +692,7 @@ public final class ReadWriteDB extends NativeObject {
 	/// @param key native segment containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	public boolean keyMayExist(ColumnFamilyHandle cf, MemorySegment key) {
-		try {
-			return RocksDB.keyMayExistCfSegment(ptr(), readOpts.ptr(), cf, key, key.byteSize());
-		} catch (Throwable t) {
-			throw RocksDBException.wrap("keyMayExist failed", t);
-		}
+		return RocksDB.keyMayExistCfSegment(ptr(), readOpts.ptr(), cf, key, key.byteSize());
 	}
 
 	// -----------------------------------------------------------------------

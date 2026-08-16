@@ -1012,10 +1012,14 @@ public final class RocksDB {
 	}
 
 	static boolean keyMayExistSegment(MemorySegment db, MemorySegment roOpts,
-	                                  MemorySegment key, long keyLen) throws Throwable {
-		return fromByte((byte) MH_KEY_MAY_EXIST.invokeExact(db, roOpts, key, keyLen,
-				MemorySegment.NULL, MemorySegment.NULL,
-				MemorySegment.NULL, 0L, MemorySegment.NULL));
+	                                  MemorySegment key, long keyLen) {
+		try {
+			return fromByte((byte) MH_KEY_MAY_EXIST.invokeExact(db, roOpts, key, keyLen,
+					MemorySegment.NULL, MemorySegment.NULL,
+					MemorySegment.NULL, 0L, MemorySegment.NULL));
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("keyMayExist failed", t);
+		}
 	}
 
 	static void compactRangeBytes(MemorySegment db, byte[] startKey, byte[] endKey) {
@@ -1640,10 +1644,14 @@ public final class RocksDB {
 
 	static boolean keyMayExistCfSegment(MemorySegment db, MemorySegment roOpts,
 	                                    ColumnFamilyHandle cf,
-	                                    MemorySegment key, long keyLen) throws Throwable {
-		return fromByte((byte) MH_KEY_MAY_EXIST_CF.invokeExact(db, roOpts, cf.ptr(), key, keyLen,
-				MemorySegment.NULL, MemorySegment.NULL,
-				MemorySegment.NULL, 0L, MemorySegment.NULL));
+	                                    MemorySegment key, long keyLen) {
+		try {
+			return fromByte((byte) MH_KEY_MAY_EXIST_CF.invokeExact(db, roOpts, cf.ptr(), key, keyLen,
+					MemorySegment.NULL, MemorySegment.NULL,
+					MemorySegment.NULL, 0L, MemorySegment.NULL));
+		} catch (Throwable t) {
+			throw RocksDBException.wrap("keyMayExist failed", t);
+		}
 	}
 
 	static RocksIterator createIteratorCf(MemorySegment db, MemorySegment readOpts,
