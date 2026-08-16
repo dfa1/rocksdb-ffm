@@ -4,6 +4,7 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.time.Duration;
 
 /// FFM wrapper for `rocksdb_transactiondb_options_t` — global, database-wide settings for a
 /// [TransactionDB] (lock manager sizing, timeouts, and write policy). Per-transaction settings
@@ -246,40 +247,43 @@ public final class TransactionDBOptions extends NativeObject {
 		}
 	}
 
-	/// Default wait timeout (milliseconds) for acquiring a lock via [TransactionDB], used when a
-	/// transaction does not set its own [TransactionOptions#setLockTimeout(long)]. `-1` waits
-	/// forever, `0` fails immediately. Default: 1000.
+	/// Default wait timeout for acquiring a lock via [TransactionDB], used when a transaction
+	/// does not set its own [TransactionOptions#setLockTimeout(Duration)]. `null` waits
+	/// forever; [Duration#ZERO] fails immediately. Default: 1 second.
 	///
-	/// @param transactionLockTimeout lock timeout in milliseconds
+	/// @param transactionLockTimeout lock timeout, or `null` to wait forever
 	/// @return this instance for chaining
-	public TransactionDBOptions setTransactionLockTimeout(long transactionLockTimeout) {
+	/// @throws IllegalArgumentException if `transactionLockTimeout` is negative
+	public TransactionDBOptions setTransactionLockTimeout(Duration transactionLockTimeout) {
 		try {
-			MH_SET_TRANSACTION_LOCK_TIMEOUT.invokeExact(ptr(), transactionLockTimeout);
+			MH_SET_TRANSACTION_LOCK_TIMEOUT.invokeExact(ptr(), toMillisOrNoTimeout(transactionLockTimeout));
 		} catch (Throwable t) {
 			throw new RocksDBException("setTransactionLockTimeout failed", t);
 		}
 		return this;
 	}
 
-	/// Returns the default transaction lock wait timeout in milliseconds.
+	/// Returns the default transaction lock wait timeout.
 	///
-	/// @return lock timeout in milliseconds
-	public long getTransactionLockTimeout() {
+	/// @return lock timeout, or `null` if waiting forever
+	public Duration getTransactionLockTimeout() {
 		try {
-			return (long) MH_GET_TRANSACTION_LOCK_TIMEOUT.invokeExact(ptr());
+			return millisToDurationOrNull((long) MH_GET_TRANSACTION_LOCK_TIMEOUT.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw new RocksDBException("getTransactionLockTimeout failed", t);
 		}
 	}
 
-	/// Lock wait timeout (milliseconds) for non-transactional writes/reads issued directly
-	/// against the [TransactionDB] (bypassing a [Transaction]). Default: 1000.
+	/// Lock wait timeout for non-transactional writes/reads issued directly against the
+	/// [TransactionDB] (bypassing a [Transaction]). `null` waits forever; [Duration#ZERO]
+	/// fails immediately. Default: 1 second.
 	///
-	/// @param defaultLockTimeout lock timeout in milliseconds
+	/// @param defaultLockTimeout lock timeout, or `null` to wait forever
 	/// @return this instance for chaining
-	public TransactionDBOptions setDefaultLockTimeout(long defaultLockTimeout) {
+	/// @throws IllegalArgumentException if `defaultLockTimeout` is negative
+	public TransactionDBOptions setDefaultLockTimeout(Duration defaultLockTimeout) {
 		try {
-			MH_SET_DEFAULT_LOCK_TIMEOUT.invokeExact(ptr(), defaultLockTimeout);
+			MH_SET_DEFAULT_LOCK_TIMEOUT.invokeExact(ptr(), toMillisOrNoTimeout(defaultLockTimeout));
 		} catch (Throwable t) {
 			throw new RocksDBException("setDefaultLockTimeout failed", t);
 		}
@@ -288,13 +292,38 @@ public final class TransactionDBOptions extends NativeObject {
 
 	/// Returns the default lock wait timeout for direct (non-transactional) operations.
 	///
-	/// @return lock timeout in milliseconds
-	public long getDefaultLockTimeout() {
+	/// @return lock timeout, or `null` if waiting forever
+	public Duration getDefaultLockTimeout() {
 		try {
-			return (long) MH_GET_DEFAULT_LOCK_TIMEOUT.invokeExact(ptr());
+			return millisToDurationOrNull((long) MH_GET_DEFAULT_LOCK_TIMEOUT.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw new RocksDBException("getDefaultLockTimeout failed", t);
 		}
+	}
+
+	/// Converts `duration` to milliseconds for a `rocksdb_transactiondb_options_t` lock-timeout
+	/// field, or to the native "no timeout" sentinel (`-1`) if `duration` is `null`.
+	///
+	/// @param duration the timeout, or `null` for no timeout
+	/// @return milliseconds, or `-1` if `duration` is `null`
+	/// @throws IllegalArgumentException if `duration` is negative
+	private static long toMillisOrNoTimeout(Duration duration) {
+		if (duration == null) {
+			return -1;
+		}
+		if (duration.isNegative()) {
+			throw new IllegalArgumentException("duration must not be negative: " + duration);
+		}
+		return duration.toMillis();
+	}
+
+	/// Converts a `rocksdb_transactiondb_options_t` lock-timeout field's raw milliseconds to a
+	/// [Duration], or `null` if `millis` is the native "no timeout" sentinel (negative).
+	///
+	/// @param millis raw milliseconds read from the native field
+	/// @return the equivalent [Duration], or `null` if `millis` is negative
+	private static Duration millisToDurationOrNull(long millis) {
+		return millis < 0 ? null : Duration.ofMillis(millis);
 	}
 
 	/// Controls when a transaction's writes become durable. Default: [TxnDBWritePolicy#WRITE_COMMITTED].

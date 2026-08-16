@@ -2,6 +2,8 @@ package io.github.dfa1.rocksdbffm;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class TransactionDBOptionsTest {
@@ -51,10 +53,23 @@ class TransactionDBOptionsTest {
 		try (var sut = TransactionDBOptions.newTransactionDBOptions()) {
 
 			// When
-			sut.setTransactionLockTimeout(5000);
+			sut.setTransactionLockTimeout(Duration.ofSeconds(5));
 
 			// Then
-			assertThat(sut.getTransactionLockTimeout()).isEqualTo(5000);
+			assertThat(sut.getTransactionLockTimeout()).isEqualTo(Duration.ofSeconds(5));
+		}
+	}
+
+	@Test
+	void setTransactionLockTimeout_null_meansWaitForever() {
+		// Given
+		try (var sut = TransactionDBOptions.newTransactionDBOptions()) {
+
+			// When
+			sut.setTransactionLockTimeout(null);
+
+			// Then
+			assertThat(sut.getTransactionLockTimeout()).isNull();
 		}
 	}
 
@@ -64,10 +79,23 @@ class TransactionDBOptionsTest {
 		try (var sut = TransactionDBOptions.newTransactionDBOptions()) {
 
 			// When
-			sut.setDefaultLockTimeout(2000);
+			sut.setDefaultLockTimeout(Duration.ofSeconds(2));
 
 			// Then
-			assertThat(sut.getDefaultLockTimeout()).isEqualTo(2000);
+			assertThat(sut.getDefaultLockTimeout()).isEqualTo(Duration.ofSeconds(2));
+		}
+	}
+
+	@Test
+	void setDefaultLockTimeout_null_meansWaitForever() {
+		// Given
+		try (var sut = TransactionDBOptions.newTransactionDBOptions()) {
+
+			// When
+			sut.setDefaultLockTimeout(null);
+
+			// Then
+			assertThat(sut.getDefaultLockTimeout()).isNull();
 		}
 	}
 

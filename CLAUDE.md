@@ -54,6 +54,11 @@ To ensure type safety and consistent units across the API:
 - **Sequence Numbers:** Never use raw `long` for RocksDB sequence numbers. Always use the project's `SequenceNumber`
   type.
 - **BackupId:**: Never use raw uint32, use a wrapper Java type that hides this from the user.
+- **Timeouts:** Never use raw `long` for a timeout field with a negative-sentinel meaning in the C API (e.g. `-1` =
+  wait forever/disabled). Use `Duration`, with `null` — not `Duration.ZERO` — as the sentinel, since `ZERO` usually
+  already means something else ("fail immediately"). Reject a non-null negative `Duration`. Verify sentinel semantics
+  against the actual `rocksdb/utilities/**/*.h`/`.cc` source, not just existing javadoc (it can be wrong); if the C++
+  side documents no negative-sentinel meaning, still convert to `Duration` but require it non-null.
 
 ### 3. API Surface Design
 

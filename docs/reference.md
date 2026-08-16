@@ -164,7 +164,7 @@ Per-call options:
 | `WaitForCompactOptions`          | `create()`                              | `setAbortOnPause`, `setFlush`, `setCloseDb`, `setTimeout(Duration)` |
 | `IngestExternalFileOptions`      | `newIngestExternalFileOptions()`        | `setMoveFiles`, `setSnapshotConsistency`, `setAllowGlobalSeqno`, `setAllowBlockingFlush`, `setIngestBehind`, `setFailIfNotBottommostLevel` |
 | `TransactionDBOptions`           | `newTransactionDBOptions()`             | `setMaxNumLocks(long)`, `setNumStripes(long)`               |
-| `TransactionOptions`             | `newTransactionOptions()`               | `setSetSnapshot`, `setDeadlockDetect`, `setLockTimeout(long)` |
+| `TransactionOptions`             | `newTransactionOptions()`               | `setSetSnapshot`, `setDeadlockDetect`, `setLockTimeout(Duration)` |
 | `OptimisticTransactionOptions`   | `newOptimisticTransactionOptions()`     | `setSetSnapshot`                                            |
 | `RestoreOptions`                 | `create()`                              | `setKeepLogFiles(boolean)`                                  |
 

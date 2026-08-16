@@ -4,6 +4,8 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.time.Duration;
+import java.util.Objects;
 
 /// FFM wrapper for `rocksdb_transaction_options_t` — per-transaction settings passed to
 /// [TransactionDB#beginTransaction]. Database-wide settings (lock manager sizing, write
@@ -278,80 +280,118 @@ public final class TransactionOptions extends NativeObject {
 		}
 	}
 
-	/// Timeout (in milliseconds) to wait for a lock. `-1` means wait forever,
-	/// `0` means fail immediately if a lock is not available. Default: -1.
+	/// Timeout to wait for a lock. `null` falls back to
+	/// [TransactionDBOptions#setTransactionLockTimeout(Duration)] (which itself waits forever
+	/// if that is also `null`); [Duration#ZERO] fails immediately if a lock is not available.
+	/// Default: `null`.
 	///
-	/// @param lockTimeout lock timeout in milliseconds; `-1` to wait forever, `0` to fail immediately
+	/// @param lockTimeout lock timeout, or `null` to fall back to the [TransactionDB]-wide default
 	/// @return this instance for chaining
-	public TransactionOptions setLockTimeout(long lockTimeout) {
+	/// @throws IllegalArgumentException if `lockTimeout` is negative
+	public TransactionOptions setLockTimeout(Duration lockTimeout) {
 		try {
-			MH_SET_LOCK_TIMEOUT.invokeExact(ptr(), lockTimeout);
+			MH_SET_LOCK_TIMEOUT.invokeExact(ptr(), toMillisOrNoTimeout(lockTimeout));
 		} catch (Throwable t) {
 			throw new RocksDBException("setLockTimeout failed", t);
 		}
 		return this;
 	}
 
-	/// Returns the lock wait timeout in milliseconds.
+	/// Returns the lock wait timeout.
 	///
-	/// @return lock timeout in milliseconds; `-1` means wait forever, `0` means fail immediately
-	public long getLockTimeout() {
+	/// @return lock timeout, or `null` if falling back to the [TransactionDB]-wide default
+	public Duration getLockTimeout() {
 		try {
-			return (long) MH_GET_LOCK_TIMEOUT.invokeExact(ptr());
+			return millisToDurationOrNull((long) MH_GET_LOCK_TIMEOUT.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw new RocksDBException("getLockTimeout failed", t);
 		}
 	}
 
-	/// Timeout (in microseconds) for detecting deadlocks between waiting transactions. `-1`
-	/// falls back to [TransactionOptions#setLockTimeout(long)]. Default: -1.
+	/// Timeout for detecting deadlocks between waiting transactions, always clamped below
+	/// [#setLockTimeout(Duration)] internally (`std::min` of the two). Unlike the other
+	/// timeouts on this class, RocksDB documents no special meaning for a negative value here,
+	/// so this does not accept `null`. Default: 500 microseconds.
 	///
-	/// @param deadlockTimeoutUs deadlock detection timeout in microseconds
+	/// @param deadlockTimeoutUs deadlock detection timeout, at microsecond resolution
 	/// @return this instance for chaining
-	public TransactionOptions setDeadlockTimeoutUs(long deadlockTimeoutUs) {
+	/// @throws NullPointerException     if `deadlockTimeoutUs` is `null`
+	/// @throws IllegalArgumentException if `deadlockTimeoutUs` is negative
+	public TransactionOptions setDeadlockTimeoutUs(Duration deadlockTimeoutUs) {
+		Objects.requireNonNull(deadlockTimeoutUs, "deadlockTimeoutUs must not be null");
+		if (deadlockTimeoutUs.isNegative()) {
+			throw new IllegalArgumentException("deadlockTimeoutUs must not be negative: " + deadlockTimeoutUs);
+		}
 		try {
-			MH_SET_DEADLOCK_TIMEOUT_US.invokeExact(ptr(), deadlockTimeoutUs);
+			MH_SET_DEADLOCK_TIMEOUT_US.invokeExact(ptr(), deadlockTimeoutUs.toNanos() / 1_000L);
 		} catch (Throwable t) {
 			throw new RocksDBException("setDeadlockTimeoutUs failed", t);
 		}
 		return this;
 	}
 
-	/// Returns the deadlock detection timeout in microseconds.
+	/// Returns the deadlock detection timeout.
 	///
-	/// @return deadlock detection timeout in microseconds
-	public long getDeadlockTimeoutUs() {
+	/// @return deadlock detection timeout, at microsecond resolution
+	public Duration getDeadlockTimeoutUs() {
 		try {
-			return (long) MH_GET_DEADLOCK_TIMEOUT_US.invokeExact(ptr());
+			long micros = (long) MH_GET_DEADLOCK_TIMEOUT_US.invokeExact(ptr());
+			return Duration.ofNanos(micros * 1_000L);
 		} catch (Throwable t) {
 			throw new RocksDBException("getDeadlockTimeoutUs failed", t);
 		}
 	}
 
-	/// Number of seconds after which this transaction, if it has not been committed, is
-	/// considered expired and can be rolled back by another transaction's deadlock detection.
-	/// `-1` disables expiration. Default: -1.
+	/// Duration after which this transaction, if it has not been committed, is considered
+	/// expired and can be rolled back by another transaction's deadlock detection. `null`
+	/// disables expiration. Default: `null`.
 	///
-	/// @param expiration expiration in seconds; `-1` disables expiration
+	/// @param expiration expiration duration, or `null` to disable expiration
 	/// @return this instance for chaining
-	public TransactionOptions setExpiration(long expiration) {
+	/// @throws IllegalArgumentException if `expiration` is negative
+	public TransactionOptions setExpiration(Duration expiration) {
 		try {
-			MH_SET_EXPIRATION.invokeExact(ptr(), expiration);
+			MH_SET_EXPIRATION.invokeExact(ptr(), toMillisOrNoTimeout(expiration));
 		} catch (Throwable t) {
 			throw new RocksDBException("setExpiration failed", t);
 		}
 		return this;
 	}
 
-	/// Returns the transaction expiration in seconds.
+	/// Returns the transaction expiration duration.
 	///
-	/// @return expiration in seconds; `-1` means expiration is disabled
-	public long getExpiration() {
+	/// @return expiration duration, or `null` if expiration is disabled
+	public Duration getExpiration() {
 		try {
-			return (long) MH_GET_EXPIRATION.invokeExact(ptr());
+			return millisToDurationOrNull((long) MH_GET_EXPIRATION.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw new RocksDBException("getExpiration failed", t);
 		}
+	}
+
+	/// Converts `duration` to milliseconds for a `rocksdb_transaction_options_t` field, or to
+	/// the native negative sentinel (`-1`) if `duration` is `null`.
+	///
+	/// @param duration the duration, or `null` for the field's negative sentinel
+	/// @return milliseconds, or `-1` if `duration` is `null`
+	/// @throws IllegalArgumentException if `duration` is negative
+	private static long toMillisOrNoTimeout(Duration duration) {
+		if (duration == null) {
+			return -1;
+		}
+		if (duration.isNegative()) {
+			throw new IllegalArgumentException("duration must not be negative: " + duration);
+		}
+		return duration.toMillis();
+	}
+
+	/// Converts a `rocksdb_transaction_options_t` field's raw milliseconds to a [Duration], or
+	/// `null` if `millis` is negative (this class's shared negative-sentinel convention).
+	///
+	/// @param millis raw milliseconds read from the native field
+	/// @return the equivalent [Duration], or `null` if `millis` is negative
+	private static Duration millisToDurationOrNull(long millis) {
+		return millis < 0 ? null : Duration.ofMillis(millis);
 	}
 
 	/// Maximum depth of the wait-for graph traversed when detecting deadlocks. Default: 50.

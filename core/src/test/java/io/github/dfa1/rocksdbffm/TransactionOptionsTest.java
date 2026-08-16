@@ -2,7 +2,10 @@ package io.github.dfa1.rocksdbffm;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TransactionOptionsTest {
 
@@ -51,10 +54,23 @@ class TransactionOptionsTest {
 		try (var sut = TransactionOptions.newTransactionOptions()) {
 
 			// When
-			sut.setLockTimeout(5000);
+			sut.setLockTimeout(Duration.ofSeconds(5));
 
 			// Then
-			assertThat(sut.getLockTimeout()).isEqualTo(5000);
+			assertThat(sut.getLockTimeout()).isEqualTo(Duration.ofSeconds(5));
+		}
+	}
+
+	@Test
+	void setLockTimeout_null_fallsBackToTransactionDbDefault() {
+		// Given
+		try (var sut = TransactionOptions.newTransactionOptions()) {
+
+			// When
+			sut.setLockTimeout(null);
+
+			// Then
+			assertThat(sut.getLockTimeout()).isNull();
 		}
 	}
 
@@ -64,10 +80,20 @@ class TransactionOptionsTest {
 		try (var sut = TransactionOptions.newTransactionOptions()) {
 
 			// When
-			sut.setDeadlockTimeoutUs(250_000);
+			sut.setDeadlockTimeoutUs(Duration.ofMillis(250));
 
 			// Then
-			assertThat(sut.getDeadlockTimeoutUs()).isEqualTo(250_000);
+			assertThat(sut.getDeadlockTimeoutUs()).isEqualTo(Duration.ofMillis(250));
+		}
+	}
+
+	@Test
+	void setDeadlockTimeoutUs_null_throws() {
+		// Given
+		try (var sut = TransactionOptions.newTransactionOptions()) {
+
+			// When / Then
+			assertThatThrownBy(() -> sut.setDeadlockTimeoutUs(null)).isInstanceOf(NullPointerException.class);
 		}
 	}
 
@@ -77,10 +103,23 @@ class TransactionOptionsTest {
 		try (var sut = TransactionOptions.newTransactionOptions()) {
 
 			// When
-			sut.setExpiration(60);
+			sut.setExpiration(Duration.ofSeconds(60));
 
 			// Then
-			assertThat(sut.getExpiration()).isEqualTo(60);
+			assertThat(sut.getExpiration()).isEqualTo(Duration.ofSeconds(60));
+		}
+	}
+
+	@Test
+	void setExpiration_null_disablesExpiration() {
+		// Given
+		try (var sut = TransactionOptions.newTransactionOptions()) {
+
+			// When
+			sut.setExpiration(null);
+
+			// Then
+			assertThat(sut.getExpiration()).isNull();
 		}
 	}
 
