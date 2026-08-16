@@ -52,8 +52,6 @@ public final class TransactionDB extends NativeObject {
 	private static final MethodHandle MH_PUT;
 	/// `void rocksdb_transactiondb_delete(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* options, const char* key, size_t klen, char** errptr);`
 	private static final MethodHandle MH_DELETE;
-	/// `char* rocksdb_transactiondb_get(rocksdb_transactiondb_t* txn_db, const rocksdb_readoptions_t* options, const char* key, size_t klen, size_t* vlen, char** errptr);`
-	private static final MethodHandle MH_GET;
 	/// `rocksdb_pinnableslice_t* rocksdb_transactiondb_get_pinned(rocksdb_transactiondb_t* txn_db, const rocksdb_readoptions_t* options, const char* key, size_t klen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED;
 
@@ -91,12 +89,6 @@ public final class TransactionDB extends NativeObject {
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS));
-
-		MH_GET = NativeLibrary.lookup("rocksdb_transactiondb_get",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_GET_PINNED = NativeLibrary.lookup("rocksdb_transactiondb_get_pinned",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -297,7 +289,8 @@ public final class TransactionDB extends NativeObject {
 		}
 	}
 
-	/// Direct get with explicit ReadOptions (e.g. for snapshot-pinned reads). Returns `null` if not found.
+	/// Direct get with explicit ReadOptions (e.g. for snapshot-pinned reads), via PinnableSlice.
+	/// Returns `null` if not found.
 	///
 	/// @param readOptions read options (e.g. snapshot)
 	/// @param key         the key to look up
@@ -305,59 +298,46 @@ public final class TransactionDB extends NativeObject {
 	public byte[] get(ReadOptions readOptions, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment k = RocksDB.toNative(arena, key);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-
-			MemorySegment valPtr = (MemorySegment) MH_GET.invokeExact(
-					ptr(), readOptions.ptr(), k, (long) key.length, valLenSeg, err);
-
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
+					ptr(), readOptions.ptr(),
+					RocksDB.toNative(arena, key), (long) key.length, err);
 			RocksDB.checkError(err);
-
-			if (MemorySegment.NULL.equals(valPtr)) {
+			if (MemorySegment.NULL.equals(pin)) {
 				return null;
 			}
-
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			byte[] result = valPtr.reinterpret(valLen).toArray(ValueLayout.JAVA_BYTE);
-			RocksDB.free(valPtr);
-			return result;
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.toByteArray(err);
+			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
 		}
 	}
 
-	/// Direct get, reading committed data only. Returns `null` if not found. Slow path.
+	/// Direct get, reading committed data only, via PinnableSlice. Returns `null` if not found.
+	/// Slow path.
 	///
 	/// @param key the key to look up
 	/// @return value bytes, or `null` if not found
 	public byte[] get(byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment k = RocksDB.toNative(arena, key);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-
-			MemorySegment valPtr = (MemorySegment) MH_GET.invokeExact(
-					ptr(), readOpts.ptr(), k, (long) key.length, valLenSeg, err);
-
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
+					ptr(), readOpts.ptr(),
+					RocksDB.toNative(arena, key), (long) key.length, err);
 			RocksDB.checkError(err);
-
-			if (MemorySegment.NULL.equals(valPtr)) {
+			if (MemorySegment.NULL.equals(pin)) {
 				return null;
 			}
-
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			byte[] result = valPtr.reinterpret(valLen).toArray(ValueLayout.JAVA_BYTE);
-			RocksDB.free(valPtr);
-			return result;
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.toByteArray(err);
+			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
 	}
 
-	/// Single-copy get + direct output [java.nio.ByteBuffer].
-	/// Copies nothing into `value` when its remaining capacity is too small. `rocksdb_transactiondb_get`
-	/// has no fixed-capacity C variant, so the capacity check happens on the Java side after the
-	/// native call, rather than inside a single native round trip like [ReadWriteDB#get(java.nio.ByteBuffer, java.nio.ByteBuffer)].
+	/// Single-copy get + direct output [java.nio.ByteBuffer], via PinnableSlice. Copies nothing
+	/// into `value` when its remaining capacity is too small.
 	///
 	/// @param key   direct [java.nio.ByteBuffer] containing the key
 	/// @param value direct [java.nio.ByteBuffer] to write the value into
@@ -366,33 +346,23 @@ public final class TransactionDB extends NativeObject {
 	public CopyResult get(java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_GET.invokeExact(
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
 					ptr(), readOpts.ptr(),
-					MemorySegment.ofBuffer(key), (long) key.remaining(),
-					valLenSeg, err);
+					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
-			if (MemorySegment.NULL.equals(valPtr)) {
+			if (MemorySegment.NULL.equals(pin)) {
 				return new CopyResult.NotFound();
 			}
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			if (valLen > value.remaining()) {
-				RocksDB.free(valPtr);
-				return new CopyResult.NotEnoughCapacity(valLen);
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.copyInto(value, err);
 			}
-			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(valLen));
-			value.position(value.position() + (int) valLen);
-			RocksDB.free(valPtr);
-			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}
 	}
 
-	/// Single-copy get into a caller-supplied native segment. Copies nothing into `value`
-	/// when its capacity is too small. `rocksdb_transactiondb_get` has no fixed-capacity C
-	/// variant, so the capacity check happens on the Java side after the native call, rather
-	/// than inside a single native round trip like [ReadWriteDB#get(MemorySegment, MemorySegment)].
+	/// Single-copy get into a caller-supplied native segment, via PinnableSlice. Copies
+	/// nothing into `value` when its capacity is too small.
 	///
 	/// @param key   native segment containing the key
 	/// @param value native segment to write the value into
@@ -401,21 +371,15 @@ public final class TransactionDB extends NativeObject {
 	public CopyResult get(MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_GET.invokeExact(
-					ptr(), readOpts.ptr(), key, key.byteSize(), valLenSeg, err);
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
+					ptr(), readOpts.ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
-			if (MemorySegment.NULL.equals(valPtr)) {
+			if (MemorySegment.NULL.equals(pin)) {
 				return new CopyResult.NotFound();
 			}
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			if (valLen > value.byteSize()) {
-				RocksDB.free(valPtr);
-				return new CopyResult.NotEnoughCapacity(valLen);
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.copyInto(value, value.byteSize(), err);
 			}
-			value.copyFrom(valPtr.reinterpret(valLen));
-			RocksDB.free(valPtr);
-			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("get failed", t);
 		}

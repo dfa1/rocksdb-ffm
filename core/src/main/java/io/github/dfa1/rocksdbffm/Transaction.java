@@ -23,8 +23,8 @@ public final class Transaction extends NativeObject {
 
 	/// `rocksdb_pinnableslice_t* rocksdb_transaction_get_pinned_cf(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED_CF;
-	/// `char* rocksdb_transaction_get_for_update_cf(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, size_t* vlen, unsigned char exclusive, char** errptr);`
-	private static final MethodHandle MH_GET_FOR_UPDATE_CF;
+	/// `rocksdb_pinnableslice_t* rocksdb_transaction_get_pinned_for_update_cf(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, unsigned char exclusive, char** errptr);`
+	private static final MethodHandle MH_GET_PINNED_FOR_UPDATE_CF;
 	/// `void rocksdb_transaction_put_cf(rocksdb_transaction_t* txn, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, const char* val, size_t vlen, char** errptr);`
 	private static final MethodHandle MH_PUT_CF;
 	/// `void rocksdb_transaction_delete_cf(rocksdb_transaction_t* txn, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, char** errptr);`
@@ -49,8 +49,8 @@ public final class Transaction extends NativeObject {
 	private static final MethodHandle MH_DELETE;
 	/// `rocksdb_pinnableslice_t* rocksdb_transaction_get_pinned(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, const char* key, size_t klen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED;
-	/// `char* rocksdb_transaction_get_for_update(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, const char* key, size_t klen, size_t* vlen, unsigned char exclusive, char** errptr);`
-	private static final MethodHandle MH_GET_FOR_UPDATE;
+	/// `rocksdb_pinnableslice_t* rocksdb_transaction_get_pinned_for_update(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, const char* key, size_t klen, unsigned char exclusive, char** errptr);`
+	private static final MethodHandle MH_GET_PINNED_FOR_UPDATE;
 
 	static {
 		MH_COMMIT = NativeLibrary.lookup("rocksdb_transaction_commit",
@@ -87,12 +87,11 @@ public final class Transaction extends NativeObject {
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS));
 
-		MH_GET_FOR_UPDATE = NativeLibrary.lookup("rocksdb_transaction_get_for_update",
+		MH_GET_PINNED_FOR_UPDATE = NativeLibrary.lookup("rocksdb_transaction_get_pinned_for_update",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE,
-						ValueLayout.ADDRESS));
+						ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
 
 		MH_PUT_CF = NativeLibrary.lookup("rocksdb_transaction_put_cf",
@@ -114,12 +113,11 @@ public final class Transaction extends NativeObject {
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS));
 
-		MH_GET_FOR_UPDATE_CF = NativeLibrary.lookup("rocksdb_transaction_get_for_update_cf",
+		MH_GET_PINNED_FOR_UPDATE_CF = NativeLibrary.lookup("rocksdb_transaction_get_pinned_for_update_cf",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE,
-						ValueLayout.ADDRESS));
+						ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
 		MH_CREATE_ITERATOR_CF = NativeLibrary.lookup("rocksdb_transaction_create_iterator_cf",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -342,7 +340,7 @@ public final class Transaction extends NativeObject {
 	}
 
 	/// Reads the value for `key` and acquires a pessimistic lock on it for
-	/// the duration of this transaction. Returns `null` if not found.
+	/// the duration of this transaction, via PinnableSlice. Returns `null` if not found.
 	///
 	/// @param readOptions read options for this read
 	/// @param key         key bytes to look up
@@ -351,31 +349,24 @@ public final class Transaction extends NativeObject {
 	public byte[] getForUpdate(ReadOptions readOptions, byte[] key, boolean exclusive) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment k = RocksDB.toNative(arena, key);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-
-			MemorySegment valPtr = (MemorySegment) MH_GET_FOR_UPDATE.invokeExact(
-					ptr(), readOptions.ptr(), k, (long) key.length,
-					valLenSeg, exclusive ? (byte) 1 : (byte) 0, err);
-
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE.invokeExact(
+					ptr(), readOptions.ptr(), RocksDB.toNative(arena, key), (long) key.length,
+					exclusive ? (byte) 1 : (byte) 0, err);
 			RocksDB.checkError(err);
-
-			if (MemorySegment.NULL.equals(valPtr)) {
+			if (MemorySegment.NULL.equals(pin)) {
 				return null;
 			}
-
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			byte[] result = valPtr.reinterpret(valLen).toArray(ValueLayout.JAVA_BYTE);
-			RocksDB.free(valPtr);
-			return result;
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.toByteArray(err);
+			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
 		}
 	}
 
 	/// Reads `key` into a direct [ByteBuffer] and acquires a pessimistic lock on it for the
-	/// duration of this transaction. Copies nothing into `value` when its remaining capacity
-	/// is too small.
+	/// duration of this transaction, via PinnableSlice. Copies nothing into `value` when its
+	/// remaining capacity is too small.
 	///
 	/// @param readOptions read options for this read
 	/// @param key         direct [ByteBuffer] containing the key
@@ -386,31 +377,24 @@ public final class Transaction extends NativeObject {
 	public CopyResult getForUpdate(ReadOptions readOptions, ByteBuffer key, ByteBuffer value, boolean exclusive) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_GET_FOR_UPDATE.invokeExact(
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE.invokeExact(
 					ptr(), readOptions.ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(),
-					valLenSeg, exclusive ? (byte) 1 : (byte) 0, err);
+					exclusive ? (byte) 1 : (byte) 0, err);
 			RocksDB.checkError(err);
-			if (MemorySegment.NULL.equals(valPtr)) {
+			if (MemorySegment.NULL.equals(pin)) {
 				return new CopyResult.NotFound();
 			}
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			if (valLen > value.remaining()) {
-				RocksDB.free(valPtr);
-				return new CopyResult.NotEnoughCapacity(valLen);
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.copyInto(value, err);
 			}
-			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(valLen));
-			value.position(value.position() + (int) valLen);
-			RocksDB.free(valPtr);
-			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
 		}
 	}
 
 	/// Reads `key` into a caller-supplied native segment and acquires a pessimistic lock on it
-	/// for the duration of this transaction. Copies nothing into `value` when its capacity is
-	/// too small.
+	/// for the duration of this transaction, via PinnableSlice. Copies nothing into `value`
+	/// when its capacity is too small.
 	///
 	/// @param readOptions read options for this read
 	/// @param key         native segment containing the key
@@ -421,22 +405,16 @@ public final class Transaction extends NativeObject {
 	public CopyResult getForUpdate(ReadOptions readOptions, MemorySegment key, MemorySegment value, boolean exclusive) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_GET_FOR_UPDATE.invokeExact(
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE.invokeExact(
 					ptr(), readOptions.ptr(), key, key.byteSize(),
-					valLenSeg, exclusive ? (byte) 1 : (byte) 0, err);
+					exclusive ? (byte) 1 : (byte) 0, err);
 			RocksDB.checkError(err);
-			if (MemorySegment.NULL.equals(valPtr)) {
+			if (MemorySegment.NULL.equals(pin)) {
 				return new CopyResult.NotFound();
 			}
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			if (valLen > value.byteSize()) {
-				RocksDB.free(valPtr);
-				return new CopyResult.NotEnoughCapacity(valLen);
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.copyInto(value, value.byteSize(), err);
 			}
-			value.copyFrom(valPtr.reinterpret(valLen));
-			RocksDB.free(valPtr);
-			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
 		}
@@ -652,8 +630,8 @@ public final class Transaction extends NativeObject {
 		}
 	}
 
-	/// Reads `key` from `cf` and acquires a lock for the duration of this transaction.
-	/// Returns `null` if not found.
+	/// Reads `key` from `cf` and acquires a lock for the duration of this transaction, via
+	/// PinnableSlice. Returns `null` if not found.
 	///
 	/// @param cf          column family to read from
 	/// @param readOptions read options for this read
@@ -663,27 +641,24 @@ public final class Transaction extends NativeObject {
 	public byte[] getForUpdate(ColumnFamilyHandle cf, ReadOptions readOptions, byte[] key, boolean exclusive) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment k = RocksDB.toNative(arena, key);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_GET_FOR_UPDATE_CF.invokeExact(
-					ptr(), readOptions.ptr(), cf.ptr(), k, (long) key.length,
-					valLenSeg, exclusive ? (byte) 1 : (byte) 0, err);
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE_CF.invokeExact(
+					ptr(), readOptions.ptr(), cf.ptr(), RocksDB.toNative(arena, key), (long) key.length,
+					exclusive ? (byte) 1 : (byte) 0, err);
 			RocksDB.checkError(err);
-			if (MemorySegment.NULL.equals(valPtr)) {
+			if (MemorySegment.NULL.equals(pin)) {
 				return null;
 			}
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			byte[] result = valPtr.reinterpret(valLen).toArray(ValueLayout.JAVA_BYTE);
-			RocksDB.free(valPtr);
-			return result;
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.toByteArray(err);
+			}
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
 		}
 	}
 
 	/// Reads `key` from `cf` into a direct [ByteBuffer] and acquires a pessimistic lock on it
-	/// for the duration of this transaction. Copies nothing into `value` when its remaining
-	/// capacity is too small.
+	/// for the duration of this transaction, via PinnableSlice. Copies nothing into `value`
+	/// when its remaining capacity is too small.
 	///
 	/// @param cf          column family to read from
 	/// @param readOptions read options for this read
@@ -696,32 +671,25 @@ public final class Transaction extends NativeObject {
 	                                ByteBuffer key, ByteBuffer value, boolean exclusive) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_GET_FOR_UPDATE_CF.invokeExact(
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE_CF.invokeExact(
 					ptr(), readOptions.ptr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(),
-					valLenSeg, exclusive ? (byte) 1 : (byte) 0, err);
+					exclusive ? (byte) 1 : (byte) 0, err);
 			RocksDB.checkError(err);
-			if (MemorySegment.NULL.equals(valPtr)) {
+			if (MemorySegment.NULL.equals(pin)) {
 				return new CopyResult.NotFound();
 			}
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			if (valLen > value.remaining()) {
-				RocksDB.free(valPtr);
-				return new CopyResult.NotEnoughCapacity(valLen);
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.copyInto(value, err);
 			}
-			MemorySegment.ofBuffer(value).copyFrom(valPtr.reinterpret(valLen));
-			value.position(value.position() + (int) valLen);
-			RocksDB.free(valPtr);
-			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
 		}
 	}
 
 	/// Reads `key` from `cf` into a caller-supplied native segment and acquires a pessimistic
-	/// lock on it for the duration of this transaction. Copies nothing into `value` when its
-	/// capacity is too small.
+	/// lock on it for the duration of this transaction, via PinnableSlice. Copies nothing into
+	/// `value` when its capacity is too small.
 	///
 	/// @param cf          column family to read from
 	/// @param readOptions read options for this read
@@ -734,22 +702,16 @@ public final class Transaction extends NativeObject {
 	                                MemorySegment key, MemorySegment value, boolean exclusive) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
-			MemorySegment valPtr = (MemorySegment) MH_GET_FOR_UPDATE_CF.invokeExact(
+			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE_CF.invokeExact(
 					ptr(), readOptions.ptr(), cf.ptr(), key, key.byteSize(),
-					valLenSeg, exclusive ? (byte) 1 : (byte) 0, err);
+					exclusive ? (byte) 1 : (byte) 0, err);
 			RocksDB.checkError(err);
-			if (MemorySegment.NULL.equals(valPtr)) {
+			if (MemorySegment.NULL.equals(pin)) {
 				return new CopyResult.NotFound();
 			}
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
-			if (valLen > value.byteSize()) {
-				RocksDB.free(valPtr);
-				return new CopyResult.NotEnoughCapacity(valLen);
+			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
+				return slice.copyInto(value, value.byteSize(), err);
 			}
-			value.copyFrom(valPtr.reinterpret(valLen));
-			RocksDB.free(valPtr);
-			return new CopyResult.Copied();
 		} catch (Throwable t) {
 			throw RocksDBException.wrap("Native call failed", t);
 		}
