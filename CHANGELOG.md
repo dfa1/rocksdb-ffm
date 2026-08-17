@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `metadataWriteTemperature`, `walWriteTemperature`, `lastLevelTemperature`,
   `defaultWriteTemperature`, `defaultTemperature`. EXPERIMENTAL upstream; a no-op unless a
   custom `FileSystem` inspects it.
+- `Property.COMPACTION_ABORT_COUNT` (`rocksdb.compaction-abort-count`), found missing during a
+  post-version-bump audit of the mapped property set against `rocksdb/include/rocksdb/db.h`.
 
 ### Changed
 

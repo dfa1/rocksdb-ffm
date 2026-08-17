@@ -25,6 +25,7 @@ rocksdbffm wraps `rocksdb/c.h` — the official RocksDB C API — not C++ direct
 | CuckooTable options | `rocksdb_cuckoo_table_options_t` + setters | Medium | Hash-based SST format; efficient for fixed-size keys |
 | Advanced memtable config | Various `rocksdb_options_set_*` memtable setters | Low | SkipList tuning, hash-memtable variants |
 | Advanced column family options | CF-scoped option setters | Low | Per-CF compaction style, level multiplier, etc. |
+| `rocksdb.live_sst_files_size_at_temperature` property | `rocksdb_property_value()` (existing, generic) | Low | Needs a `Temperature` enum (no Java type yet, matches C++'s `kUnknown`/`kHot`/`kWarm`/`kCold`) and a suffixed-property call shape (`name:kWarm`) `getProperty(Property)`'s flat enum doesn't support — every other property is a plain constant, this one alone takes a parameter |
 
 ---
 

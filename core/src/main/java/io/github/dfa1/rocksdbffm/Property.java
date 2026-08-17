@@ -62,6 +62,8 @@ public enum Property {
 	NUM_RUNNING_COMPACTIONS("rocksdb.num-running-compactions", Type.NUMERIC),
 	/// Number of sorted runs in compactions currently running.
 	NUM_RUNNING_COMPACTION_SORTED_RUNS("rocksdb.num-running-compaction-sorted-runs", Type.NUMERIC),
+	/// Current value of the compaction abort counter.
+	COMPACTION_ABORT_COUNT("rocksdb.compaction-abort-count", Type.NUMERIC),
 	/// Accumulated number of background errors since the DB was opened.
 	BACKGROUND_ERRORS("rocksdb.background-errors", Type.NUMERIC),
 	/// Approximate size (bytes) of the active memtable.
