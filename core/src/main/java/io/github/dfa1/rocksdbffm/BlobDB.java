@@ -80,6 +80,46 @@ public final class BlobDB extends NativeObject {
 	}
 
 	// -----------------------------------------------------------------------
+	// Merge
+	// -----------------------------------------------------------------------
+
+	/// Merges `value` into `key` via the configured merge operator. Slow path: copies key/value into
+	/// native memory.
+	///
+	/// @param key the key to merge into
+	/// @param value the merge operand
+	public void merge(byte[] key, byte[] value) {
+		RocksDB.mergeBytes(ptr(), writeOpts.ptr(), key, value);
+	}
+
+	/// Merges `value` into `key` using the caller's [Arena] for native allocation.
+	///
+	/// @param arena the arena used to allocate native key/value segments
+	/// @param key the key to merge into
+	/// @param value the merge operand
+	public void merge(Arena arena, byte[] key, byte[] value) {
+		RocksDB.mergeBytes(arena, ptr(), writeOpts.ptr(), key, value);
+	}
+
+	/// Zero-copy merge: wraps the direct buffers' native memory without heap→native copy.
+	///
+	/// @param key direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the merge operand
+	public void merge(ByteBuffer key, ByteBuffer value) {
+		RocksDB.mergeSegment(ptr(), writeOpts.ptr(),
+				MemorySegment.ofBuffer(key), key.remaining(),
+				MemorySegment.ofBuffer(value), value.remaining());
+	}
+
+	/// Zero-copy merge: caller supplies pre-allocated native segments.
+	///
+	/// @param key native segment containing the key
+	/// @param value native segment containing the merge operand
+	public void merge(MemorySegment key, MemorySegment value) {
+		RocksDB.mergeSegment(ptr(), writeOpts.ptr(), key, key.byteSize(), value, value.byteSize());
+	}
+
+	// -----------------------------------------------------------------------
 	// Get
 	// -----------------------------------------------------------------------
 
