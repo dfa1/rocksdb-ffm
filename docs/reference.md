@@ -136,6 +136,11 @@ Other read/write methods on the read-write types:
 | `setEnv`                                    | `Env`                   |
 | `setRateLimiter`                            | `RateLimiter`           |
 | `setSstFileManager`                         | `SstFileManager`        |
+| `setMetadataWriteTemperature` / `getMetadataWriteTemperature` | `Temperature` |
+| `setWalWriteTemperature` / `getWalWriteTemperature` | `Temperature`   |
+| `setLastLevelTemperature` / `getLastLevelTemperature` | `Temperature` |
+| `setDefaultWriteTemperature` / `getDefaultWriteTemperature` | `Temperature` |
+| `setDefaultTemperature` / `getDefaultTemperature` | `Temperature`      |
 
 Blob options (used with `RocksDB.openBlob`, each with a matching getter):
 
@@ -322,6 +327,7 @@ listing every existing column family, `default` included.
 | `StatsLevel`                        | `DISABLE_ALL`, `EXCEPT_TICKERS`, `EXCEPT_HISTOGRAM_OR_TIMERS`, `EXCEPT_TIMERS`, `EXCEPT_DETAILED_TIMERS`, `EXCEPT_TIME_FOR_MUTEX`, `ALL` |
 | `PerfLevel`                         | `UNINITIALIZED`, `DISABLE`, `ENABLE_COUNT`, `ENABLE_TIME_EXCEPT_FOR_MUTEX`, `ENABLE_TIME`      |
 | `PrepopulateBlobCache`              | `DISABLE`, `FLUSH_ONLY`                                                                        |
+| `Temperature`                       | `UNKNOWN`, `HOT`, `WARM`, `COOL`, `COLD`, `ICE` — storage-tier hint, no-op for the default `FileSystem` |
 | `RateLimiter.Mode`                  | `READS_ONLY`, `WRITES_ONLY`, `ALL_IO`                                                          |
 | `IOPriority`                        | `LOW`, `MID`, `HIGH`, `USER`, `TOTAL`                                                          |
 | `IOActivity`                        | `FLUSH`, `COMPACTION`, `DB_OPEN`, `GET`, `MULTI_GET`, `DB_ITERATOR`, `VERIFY_DB_CHECKSUM`, `VERIFY_FILE_CHECKSUMS`, `GET_ENTITY`, `MULTI_GET_ENTITY`, `GET_FILE_CHECKSUMS_FROM_CURRENT_MANIFEST`, `UNKNOWN` |
@@ -360,6 +366,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Column families            |   ✅    | Multi-CF open for every DB type; CF overloads on all data methods and `WriteBatch`          |
 | DeleteRange                |   ✅    | Range tombstones on the DB and in `WriteBatch`; all three tiers                             |
 | Compaction control         |   ✅    | `compactRange` (+`CompactOptions`), `suggestCompactRange`, file-deletion toggles            |
+| Temperature hints          |   ✅    | `Temperature`; 5 `Options` setter/getter pairs (metadata/WAL/last-level/default-write/default). EXPERIMENTAL upstream, no-op for the default `FileSystem` |
 | SST file ingest            |   ✅    | `SstFileWriter`, `ingestExternalFile`, `IngestExternalFileOptions`                          |
 | Backup engine              |   ✅    | Incremental backup/restore, purge, verify                                                   |
 | TTL DB                     |   ✅    | `openTtl(path, Duration)`; lazy expiry via compaction                                   |
