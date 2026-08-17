@@ -186,6 +186,7 @@ instance method listed below lives on the DB type (`ReadWriteDB`, `TtlDB`, …),
 | Shared utilities        | `RocksDB.java` statics (`errHolder`, `checkError`, `toNative`), `NativeObject.java`, `NativeLibrary.java`, `MemorySize.java`, `SequenceNumber.java`, `RocksDBException.java` |
 | Compaction control      | `CompactOptions.java`, `WaitForCompactOptions.java`; `ReadWriteDB.compactRange`, `suggestCompactRange`, `disableFileDeletions`, `enableFileDeletions`, `ReadWriteDB.waitForCompact` |
 | DeleteRange             | `ReadWriteDB.deleteRange` (all three tiers), `WriteBatch.deleteRange`                                                     |
+| Merge                   | `merge()` on `ReadWriteDB`, `TtlDB`, `BlobDB`, `OptimisticTransactionDB`, `TransactionDB`, `Transaction`, `WriteBatch` (all tiers + CF variants); no merge operator configurable yet, see [c-api-gaps.md](docs/c-api-gaps.md) |
 | SST File Ingest         | `SstFileWriter.java`, `IngestExternalFileOptions.java`; `ReadWriteDB.ingestExternalFile`                                     |
 | WAL Iterator            | `WalIterator.java`, `WalBatchResult.java`; `ReadWriteDB.getUpdatesSince`, `getLatestSequenceNumber`                          |
 | Read-only DB            | `ReadOnlyDB.java`                                                                                                         |

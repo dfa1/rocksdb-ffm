@@ -52,6 +52,8 @@ public final class TransactionDB extends NativeObject {
 	private static final MethodHandle MH_PUT;
 	/// `void rocksdb_transactiondb_delete(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* options, const char* key, size_t klen, char** errptr);`
 	private static final MethodHandle MH_DELETE;
+	/// `void rocksdb_transactiondb_merge(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* options, const char* key, size_t klen, const char* val, size_t vlen, char** errptr);`
+	private static final MethodHandle MH_MERGE;
 	/// `rocksdb_pinnableslice_t* rocksdb_transactiondb_get_pinned(rocksdb_transactiondb_t* txn_db, const rocksdb_readoptions_t* options, const char* key, size_t klen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED;
 
@@ -60,6 +62,8 @@ public final class TransactionDB extends NativeObject {
 	private static final MethodHandle MH_PUT_CF;
 	/// `void rocksdb_transactiondb_delete_cf(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char** errptr);`
 	private static final MethodHandle MH_DELETE_CF;
+	/// `void rocksdb_transactiondb_merge_cf(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, const char* val, size_t vlen, char** errptr);`
+	private static final MethodHandle MH_MERGE_CF;
 	/// `rocksdb_pinnableslice_t* rocksdb_transactiondb_get_pinned_cf(rocksdb_transactiondb_t* txn_db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED_CF;
 	/// `rocksdb_iterator_t* rocksdb_transactiondb_create_iterator_cf(rocksdb_transactiondb_t* txn_db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family);`
@@ -90,6 +94,13 @@ public final class TransactionDB extends NativeObject {
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS));
 
+		MH_MERGE = NativeLibrary.lookup("rocksdb_transactiondb_merge",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS));
+
 		MH_GET_PINNED = NativeLibrary.lookup("rocksdb_transactiondb_get_pinned",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
@@ -106,6 +117,13 @@ public final class TransactionDB extends NativeObject {
 		MH_DELETE_CF = NativeLibrary.lookup("rocksdb_transactiondb_delete_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS));
+
+		MH_MERGE_CF = NativeLibrary.lookup("rocksdb_transactiondb_merge_cf",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS));
 
@@ -286,6 +304,53 @@ public final class TransactionDB extends NativeObject {
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("put failed", t);
+		}
+	}
+
+	/// Direct merge, bypassing any active transaction. Slow path: allocates native memory.
+	///
+	/// @param key   the key to merge into
+	/// @param value the merge operand
+	public void merge(byte[] key, byte[] value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment k = RocksDB.toNative(arena, key);
+			MemorySegment v = RocksDB.toNative(arena, value);
+			MH_MERGE.invokeExact(ptr(), writeOpts.ptr(), k, (long) key.length, v, (long) value.length, err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("merge failed", t);
+		}
+	}
+
+	/// Zero-copy merge: wraps the direct buffers' native memory without heap→native copy.
+	///
+	/// @param key   direct [java.nio.ByteBuffer] containing the key
+	/// @param value direct [java.nio.ByteBuffer] containing the merge operand
+	public void merge(java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_MERGE.invokeExact(ptr(), writeOpts.ptr(),
+					MemorySegment.ofBuffer(key), (long) key.remaining(),
+					MemorySegment.ofBuffer(value), (long) value.remaining(),
+					err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("merge failed", t);
+		}
+	}
+
+	/// Zero-copy merge: caller supplies pre-allocated native segments.
+	///
+	/// @param key   native segment containing the key
+	/// @param value native segment containing the merge operand
+	public void merge(MemorySegment key, MemorySegment value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_MERGE.invokeExact(ptr(), writeOpts.ptr(), key, key.byteSize(), value, value.byteSize(), err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("merge failed", t);
 		}
 	}
 
@@ -587,6 +652,60 @@ public final class TransactionDB extends NativeObject {
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("put failed", t);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Merge — column family overloads
+	// -----------------------------------------------------------------------
+
+	/// Merges `value` into `key` in `cf`, bypassing any active transaction. Slow path.
+	///
+	/// @param cf    target column family
+	/// @param key   the key to merge into
+	/// @param value the merge operand
+	public void merge(ColumnFamilyHandle cf, byte[] key, byte[] value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_MERGE_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(),
+					RocksDB.toNative(arena, key), (long) key.length,
+					RocksDB.toNative(arena, value), (long) value.length, err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("merge failed", t);
+		}
+	}
+
+	/// Zero-copy merge into `cf` for direct [java.nio.ByteBuffer]s.
+	///
+	/// @param cf    target column family
+	/// @param key   direct [java.nio.ByteBuffer] containing the key
+	/// @param value direct [java.nio.ByteBuffer] containing the merge operand
+	public void merge(ColumnFamilyHandle cf, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_MERGE_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(),
+					MemorySegment.ofBuffer(key), (long) key.remaining(),
+					MemorySegment.ofBuffer(value), (long) value.remaining(), err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("merge failed", t);
+		}
+	}
+
+	/// Zero-copy merge into `cf` for [MemorySegment]s.
+	///
+	/// @param cf    target column family
+	/// @param key   native segment containing the key
+	/// @param value native segment containing the merge operand
+	public void merge(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			MH_MERGE_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(),
+					key, key.byteSize(), value, value.byteSize(), err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("merge failed", t);
 		}
 	}
 

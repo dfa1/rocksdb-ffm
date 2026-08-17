@@ -92,6 +92,55 @@ public final class TtlDB extends NativeObject {
 	}
 
 	// -----------------------------------------------------------------------
+	// Merge
+	// -----------------------------------------------------------------------
+
+	/// Merges `value` into `key` via the configured merge operator. Slow path: copies key/value into
+	/// native memory.
+	///
+	/// @param key   the key to merge into
+	/// @param value the merge operand
+	public void merge(byte[] key, byte[] value) {
+		RocksDB.mergeBytes(ptr(), writeOpts.ptr(), key, value);
+	}
+
+	/// Merges `value` into `key` using the caller's [Arena] for native allocation.
+	///
+	/// @param arena arena for native allocations
+	/// @param key   the key to merge into
+	/// @param value the merge operand
+	public void merge(Arena arena, byte[] key, byte[] value) {
+		RocksDB.mergeBytes(arena, ptr(), writeOpts.ptr(), key, value);
+	}
+
+	/// Zero-copy merge: wraps the direct buffers' native memory without heap→native copy.
+	///
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the merge operand
+	public void merge(ByteBuffer key, ByteBuffer value) {
+		RocksDB.mergeSegment(ptr(), writeOpts.ptr(),
+				MemorySegment.ofBuffer(key), key.remaining(),
+				MemorySegment.ofBuffer(value), value.remaining());
+	}
+
+	/// Zero-copy merge: caller supplies pre-allocated native segments.
+	///
+	/// @param key   native segment containing the key
+	/// @param value native segment containing the merge operand
+	public void merge(MemorySegment key, MemorySegment value) {
+		RocksDB.mergeSegment(ptr(), writeOpts.ptr(), key, key.byteSize(), value, value.byteSize());
+	}
+
+	/// Zero-copy merge using the caller's [Arena].
+	///
+	/// @param arena arena for native allocations
+	/// @param key   native segment containing the key
+	/// @param value native segment containing the merge operand
+	public void merge(Arena arena, MemorySegment key, MemorySegment value) {
+		RocksDB.mergeSegment(arena, ptr(), writeOpts.ptr(), key, key.byteSize(), value, value.byteSize());
+	}
+
+	// -----------------------------------------------------------------------
 	// Get
 	// -----------------------------------------------------------------------
 
@@ -291,6 +340,39 @@ public final class TtlDB extends NativeObject {
 	/// @param value native segment containing the value
 	public void put(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
 		RocksDB.putCfSegment(ptr(), writeOpts.ptr(), cf, key, key.byteSize(), value, value.byteSize());
+	}
+
+	// -----------------------------------------------------------------------
+	// Merge — column family overloads
+	// -----------------------------------------------------------------------
+
+	/// Merges `value` into `key` in `cf`. Slow path: copies key/value into native memory.
+	///
+	/// @param cf    target column family
+	/// @param key   the key to merge into
+	/// @param value the merge operand
+	public void merge(ColumnFamilyHandle cf, byte[] key, byte[] value) {
+		RocksDB.mergeCfBytes(ptr(), writeOpts.ptr(), cf, key, value);
+	}
+
+	/// Zero-copy merge into `cf`: wraps the direct buffers' native memory without heap→native copy.
+	///
+	/// @param cf    target column family
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the merge operand
+	public void merge(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
+		RocksDB.mergeCfSegment(ptr(), writeOpts.ptr(), cf,
+				MemorySegment.ofBuffer(key), key.remaining(),
+				MemorySegment.ofBuffer(value), value.remaining());
+	}
+
+	/// Zero-copy merge into `cf`: caller supplies pre-allocated native segments.
+	///
+	/// @param cf    target column family
+	/// @param key   native segment containing the key
+	/// @param value native segment containing the merge operand
+	public void merge(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
+		RocksDB.mergeCfSegment(ptr(), writeOpts.ptr(), cf, key, key.byteSize(), value, value.byteSize());
 	}
 
 	// -----------------------------------------------------------------------

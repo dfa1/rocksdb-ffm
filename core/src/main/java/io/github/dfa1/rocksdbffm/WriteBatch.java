@@ -22,12 +22,16 @@ public final class WriteBatch extends NativeObject {
 	private static final MethodHandle MH_PUT;
 	/// `void rocksdb_writebatch_delete(rocksdb_writebatch_t*, const char* key, size_t klen);`
 	private static final MethodHandle MH_DELETE;
+	/// `void rocksdb_writebatch_merge(rocksdb_writebatch_t*, const char* key, size_t klen, const char* val, size_t vlen);`
+	private static final MethodHandle MH_MERGE;
 	/// `void rocksdb_writebatch_delete_range(rocksdb_writebatch_t* b, const char* start_key, size_t start_key_len, const char* end_key, size_t end_key_len);`
 	private static final MethodHandle MH_DELETE_RANGE;
 	/// `void rocksdb_writebatch_put_cf(rocksdb_writebatch_t*, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, const char* val, size_t vlen);`
 	private static final MethodHandle MH_PUT_CF;
 	/// `void rocksdb_writebatch_delete_cf(rocksdb_writebatch_t*, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen);`
 	private static final MethodHandle MH_DELETE_CF;
+	/// `void rocksdb_writebatch_merge_cf(rocksdb_writebatch_t*, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, const char* val, size_t vlen);`
+	private static final MethodHandle MH_MERGE_CF;
 	/// `void rocksdb_writebatch_delete_range_cf(rocksdb_writebatch_t* b, rocksdb_column_family_handle_t* column_family, const char* start_key, size_t start_key_len, const char* end_key, size_t end_key_len);`
 	private static final MethodHandle MH_DELETE_RANGE_CF;
 	/// `void rocksdb_writebatch_clear(rocksdb_writebatch_t*);`
@@ -53,6 +57,12 @@ public final class WriteBatch extends NativeObject {
 						ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
+		MH_MERGE = NativeLibrary.lookup("rocksdb_writebatch_merge",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
 		MH_DELETE_RANGE = NativeLibrary.lookup("rocksdb_writebatch_delete_range",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
@@ -68,6 +78,12 @@ public final class WriteBatch extends NativeObject {
 		MH_DELETE_CF = NativeLibrary.lookup("rocksdb_writebatch_delete_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_MERGE_CF = NativeLibrary.lookup("rocksdb_writebatch_merge_cf",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
 		MH_DELETE_RANGE_CF = NativeLibrary.lookup("rocksdb_writebatch_delete_range_cf",
@@ -157,6 +173,61 @@ public final class WriteBatch extends NativeObject {
 			MH_PUT.invokeExact(ptr(), key, key.byteSize(), value, value.byteSize());
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("writebatch put failed", t);
+		}
+	}
+
+	/// Queues a merge operand using the caller's [Arena] for native allocation. Slow path.
+	///
+	/// @param arena arena for native allocations
+	/// @param key   the key to merge into
+	/// @param value the merge operand
+	public void merge(Arena arena, byte[] key, byte[] value) {
+		try {
+			MemorySegment k = RocksDB.toNative(arena, key);
+			MemorySegment v = RocksDB.toNative(arena, value);
+			MH_MERGE.invokeExact(ptr(), k, (long) key.length, v, (long) value.length);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("writebatch merge failed", t);
+		}
+	}
+
+	/// Queues a merge operand. Slow path: copies key/value into native memory.
+	///
+	/// @param key   the key to merge into
+	/// @param value the merge operand
+	public void merge(byte[] key, byte[] value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment k = RocksDB.toNative(arena, key);
+			MemorySegment v = RocksDB.toNative(arena, value);
+			MH_MERGE.invokeExact(ptr(), k, (long) key.length, v, (long) value.length);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("writebatch merge failed", t);
+		}
+	}
+
+	/// Queues a merge operand. Zero-copy for direct [ByteBuffer]s.
+	///
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the merge operand
+	public void merge(ByteBuffer key, ByteBuffer value) {
+		try {
+			MH_MERGE.invokeExact(ptr(),
+					MemorySegment.ofBuffer(key), (long) key.remaining(),
+					MemorySegment.ofBuffer(value), (long) value.remaining());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("writebatch merge failed", t);
+		}
+	}
+
+	/// Queues a merge operand. Zero-copy for [MemorySegment]s.
+	///
+	/// @param key   native segment containing the key
+	/// @param value native segment containing the merge operand
+	public void merge(MemorySegment key, MemorySegment value) {
+		try {
+			MH_MERGE.invokeExact(ptr(), key, key.byteSize(), value, value.byteSize());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("writebatch merge failed", t);
 		}
 	}
 
@@ -281,6 +352,50 @@ public final class WriteBatch extends NativeObject {
 					key, key.byteSize(), value, value.byteSize());
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("writebatch put_cf failed", t);
+		}
+	}
+
+	/// Queues a merge operand into `cf`. Slow path: copies key/value into native memory.
+	///
+	/// @param cf    target column family
+	/// @param key   the key to merge into
+	/// @param value the merge operand
+	public void merge(ColumnFamilyHandle cf, byte[] key, byte[] value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MH_MERGE_CF.invokeExact(ptr(), cf.ptr(),
+					RocksDB.toNative(arena, key), (long) key.length,
+					RocksDB.toNative(arena, value), (long) value.length);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("writebatch merge_cf failed", t);
+		}
+	}
+
+	/// Queues a merge operand into `cf`. Zero-copy for direct [ByteBuffer]s.
+	///
+	/// @param cf    target column family
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the merge operand
+	public void merge(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
+		try {
+			MH_MERGE_CF.invokeExact(ptr(), cf.ptr(),
+					MemorySegment.ofBuffer(key), (long) key.remaining(),
+					MemorySegment.ofBuffer(value), (long) value.remaining());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("writebatch merge_cf failed", t);
+		}
+	}
+
+	/// Queues a merge operand into `cf`. Zero-copy for [MemorySegment]s.
+	///
+	/// @param cf    target column family
+	/// @param key   native segment containing the key
+	/// @param value native segment containing the merge operand
+	public void merge(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
+		try {
+			MH_MERGE_CF.invokeExact(ptr(), cf.ptr(),
+					key, key.byteSize(), value, value.byteSize());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("writebatch merge_cf failed", t);
 		}
 	}
 

@@ -380,7 +380,8 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Perf context               |   ✅    | `PerfContext`, `PerfLevel`, `PerfMetric`                                                    |
 | Background jobs            |   🚧    | `cancelAllBackgroundWork`, manual-compaction toggles, `waitForCompact`; Options-level tuning (FIFO/Universal) pending |
 | MultiGet                   |   ❌    | `rocksdb_multi_get()` exists in the C API; no Java wrapper yet                              |
-| Merge / MergeOperator      |   ❌    | C API exists; see [#8](https://github.com/dfa1/rocksdbffm/issues/8)                         |
+| Merge                      |   🚧    | `merge()` write op on all 7 write-capable types (byte[]/ByteBuffer/MemorySegment, CF variants), see [#8](https://github.com/dfa1/rocksdbffm/issues/8); no merge operator can be configured yet, so calls fail with `RocksDBException` until custom `MergeOperator` support lands |
+| MergeOperator               |   ❌    | `rocksdb_mergeoperator_create()` (custom `full_merge`/`partial_merge` callbacks) not wrapped; see [c-api-gaps.md](c-api-gaps.md) |
 | CompactionFilter           |   ❌    | Callback-based custom compaction logic                                                      |
 | Custom comparators         |   ❌    | `rocksdb_comparator_create()` exists in the C API                                           |
 | Advanced column family     |   ❌    | Per-CF compaction style, level multipliers                                                  |

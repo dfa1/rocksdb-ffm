@@ -69,6 +69,8 @@ public final class RocksDB {
 	private static final MethodHandle MH_PUT;
 	/// `void rocksdb_delete(rocksdb_t* db, const rocksdb_writeoptions_t* options, const char* key, size_t keylen, char** errptr);`
 	private static final MethodHandle MH_DELETE;
+	/// `void rocksdb_merge(rocksdb_t* db, const rocksdb_writeoptions_t* options, const char* key, size_t keylen, const char* val, size_t vallen, char** errptr);`
+	private static final MethodHandle MH_MERGE;
 	/// `void rocksdb_flush(rocksdb_t* db, const rocksdb_flushoptions_t* options, char** errptr);`
 	private static final MethodHandle MH_FLUSH;
 	/// `void rocksdb_flush_wal(rocksdb_t* db, unsigned char sync, char** errptr);`
@@ -132,6 +134,8 @@ public final class RocksDB {
 	private static final MethodHandle MH_GET_INTO_BUFFER_CF;
 	/// `void rocksdb_delete_cf(rocksdb_t* db, const rocksdb_writeoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char** errptr);`
 	private static final MethodHandle MH_DELETE_CF;
+	/// `void rocksdb_merge_cf(rocksdb_t* db, const rocksdb_writeoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, const char* val, size_t vallen, char** errptr);`
+	private static final MethodHandle MH_MERGE_CF;
 	/// `unsigned char rocksdb_key_may_exist_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t key_len, char** value, size_t* val_len, const char* timestamp, size_t timestamp_len, unsigned char* value_found);`
 	private static final MethodHandle MH_KEY_MAY_EXIST_CF;
 	/// `rocksdb_iterator_t* rocksdb_create_iterator_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family);`
@@ -224,6 +228,13 @@ public final class RocksDB {
 		MH_DELETE = NativeLibrary.lookup("rocksdb_delete",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS));
+
+		MH_MERGE = NativeLibrary.lookup("rocksdb_merge",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS));
 
@@ -356,6 +367,13 @@ public final class RocksDB {
 		MH_DELETE_CF = NativeLibrary.lookup("rocksdb_delete_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS));
+
+		MH_MERGE_CF = NativeLibrary.lookup("rocksdb_merge_cf",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS));
 
@@ -808,6 +826,56 @@ public final class RocksDB {
 			checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("put failed", t);
+		}
+	}
+
+	/// byte[] merge — slow path, allocates native memory.
+	static void mergeBytes(MemorySegment db, MemorySegment writeOpts, byte[] key, byte[] value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = errHolder(arena);
+			MemorySegment k = toNative(arena, key);
+			MemorySegment v = toNative(arena, value);
+			MH_MERGE.invokeExact(db, writeOpts, k, (long) key.length, v, (long) value.length, err);
+			checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("merge failed", t);
+		}
+	}
+
+	/// byte[] merge using the caller's arena.
+	static void mergeBytes(Arena arena, MemorySegment db, MemorySegment writeOpts, byte[] key, byte[] value) {
+		try {
+			MemorySegment err = errHolder(arena);
+			MemorySegment k = toNative(arena, key);
+			MemorySegment v = toNative(arena, value);
+			MH_MERGE.invokeExact(db, writeOpts, k, (long) key.length, v, (long) value.length, err);
+			checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("merge failed", t);
+		}
+	}
+
+	/// MemorySegment merge — zero-copy, caller supplies pre-allocated native segments.
+	static void mergeSegment(MemorySegment db, MemorySegment writeOpts,
+	                         MemorySegment key, long keyLen, MemorySegment val, long valLen) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = errHolder(arena);
+			MH_MERGE.invokeExact(db, writeOpts, key, keyLen, val, valLen, err);
+			checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("merge failed", t);
+		}
+	}
+
+	/// MemorySegment merge using the caller's arena.
+	static void mergeSegment(Arena arena, MemorySegment db, MemorySegment writeOpts,
+	                         MemorySegment key, long keyLen, MemorySegment val, long valLen) {
+		try {
+			MemorySegment err = errHolder(arena);
+			MH_MERGE.invokeExact(db, writeOpts, key, keyLen, val, valLen, err);
+			checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("merge failed", t);
 		}
 	}
 
@@ -1501,6 +1569,32 @@ public final class RocksDB {
 			checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("put failed", t);
+		}
+	}
+
+	/// byte[] merge with explicit column family — slow path.
+	static void mergeCfBytes(MemorySegment db, MemorySegment writeOpts, ColumnFamilyHandle cf,
+	                         byte[] key, byte[] value) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = errHolder(arena);
+			MH_MERGE_CF.invokeExact(db, writeOpts, cf.ptr(),
+					toNative(arena, key), (long) key.length,
+					toNative(arena, value), (long) value.length, err);
+			checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("merge failed", t);
+		}
+	}
+
+	/// MemorySegment merge with explicit column family — zero-copy.
+	static void mergeCfSegment(MemorySegment db, MemorySegment writeOpts, ColumnFamilyHandle cf,
+	                           MemorySegment key, long keyLen, MemorySegment val, long valLen) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = errHolder(arena);
+			MH_MERGE_CF.invokeExact(db, writeOpts, cf.ptr(), key, keyLen, val, valLen, err);
+			checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("merge failed", t);
 		}
 	}
 
