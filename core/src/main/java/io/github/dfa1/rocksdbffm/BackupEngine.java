@@ -6,6 +6,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -377,7 +378,7 @@ public final class BackupEngine extends NativeObject {
 			List<BackupInfo> result = new ArrayList<>(count);
 			for (int i = 0; i < count; i++) {
 				BackupId backupId = BackupId.fromNative((int) MH_INFO_BACKUP_ID.invokeExact(infoPtr, i));
-				long timestamp = (long) MH_INFO_TIMESTAMP.invokeExact(infoPtr, i);
+				Instant timestamp = Instant.ofEpochSecond((long) MH_INFO_TIMESTAMP.invokeExact(infoPtr, i));
 				MemorySize size = MemorySize.ofBytes((long) MH_INFO_SIZE.invokeExact(infoPtr, i));
 				long numberOfFiles = Integer.toUnsignedLong((int) MH_INFO_NUMBER_FILES.invokeExact(infoPtr, i));
 				result.add(new BackupInfo(backupId, timestamp, size, numberOfFiles));

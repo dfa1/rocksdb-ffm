@@ -1,5 +1,7 @@
 package io.github.dfa1.rocksdbffm;
 
+import java.time.Instant;
+
 /// Immutable snapshot of a single RocksDB backup entry.
 ///
 /// Instances are obtained from [BackupEngine#getBackupInfo()].
@@ -15,12 +17,12 @@ package io.github.dfa1.rocksdbffm;
 /// ```
 ///
 /// @param backupId unique identifier assigned by the engine
-/// @param timestamp Unix timestamp (seconds since epoch) when the backup was created
+/// @param timestamp point in time when the backup was created
 /// @param size total size of all files belonging to this backup
 /// @param numberOfFiles number of SST/WAL/MANIFEST files in this backup
 public record BackupInfo(
 		BackupId backupId,
-		long timestamp,
+		Instant timestamp,
 		MemorySize size,
 		long numberOfFiles
 ) {

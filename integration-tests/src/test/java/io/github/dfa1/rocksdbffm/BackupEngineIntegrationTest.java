@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,7 +31,7 @@ class BackupEngineIntegrationTest {
 			assertThat(infos).hasSize(1);
 			assertThat(infos.getFirst().backupId()).isEqualTo(BackupId.of(1));
 			assertThat(infos.getFirst().numberOfFiles()).isGreaterThan(0);
-			assertThat(infos.getFirst().timestamp()).isGreaterThan(0);
+			assertThat(infos.getFirst().timestamp()).isAfter(Instant.EPOCH);
 			assertThat(infos.getFirst().size().toBytes()).isGreaterThan(0);
 		}
 
