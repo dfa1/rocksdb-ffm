@@ -176,6 +176,7 @@ instance method listed below lives on the DB type (`ReadWriteDB`, `TtlDB`, …),
 | Checkpoints             | `Checkpoint.java`                                                                                                         |
 | Table Options           | `BlockBasedTableOptions.java`, `Cache.java`, `LRUCache.java`, `HyperClockCache.java`, `FilterPolicy.java`                 |
 | Compression             | `CompressionType.java`; `Options.setCompression`, `Options.getCompression`                                                |
+| Temperature hints       | `Temperature.java`; 5 setter/getter pairs on `Options` (metadata/WAL/last-level/default-write/default write temperature)  |
 | Iterators               | `RocksIterator.java`                                                                                                      |
 | Snapshots               | `Snapshot.java`; `ReadOptions.setSnapshot`; `ReadWriteDB.getSnapshot`, `TransactionDB.getSnapshot`, `Transaction.getSnapshot` |
 | Flush                   | `FlushOptions.java`; `ReadWriteDB.flush`, `ReadWriteDB.flushWal`, `TransactionDB.flush`, `TransactionDB.flushWal`                 |

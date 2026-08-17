@@ -99,6 +99,26 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_ENV;
 	/// `void rocksdb_options_set_sst_file_manager(rocksdb_options_t* opt, rocksdb_sst_file_manager_t* sfm);`
 	private static final MethodHandle MH_SET_SST_FILE_MANAGER;
+	/// `void rocksdb_options_set_metadata_write_temperature(rocksdb_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_METADATA_WRITE_TEMPERATURE;
+	/// `int rocksdb_options_get_metadata_write_temperature(rocksdb_options_t* opt);`
+	private static final MethodHandle MH_GET_METADATA_WRITE_TEMPERATURE;
+	/// `void rocksdb_options_set_wal_write_temperature(rocksdb_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_WAL_WRITE_TEMPERATURE;
+	/// `int rocksdb_options_get_wal_write_temperature(rocksdb_options_t* opt);`
+	private static final MethodHandle MH_GET_WAL_WRITE_TEMPERATURE;
+	/// `void rocksdb_options_set_last_level_temperature(rocksdb_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_LAST_LEVEL_TEMPERATURE;
+	/// `int rocksdb_options_get_last_level_temperature(rocksdb_options_t* opt);`
+	private static final MethodHandle MH_GET_LAST_LEVEL_TEMPERATURE;
+	/// `void rocksdb_options_set_default_write_temperature(rocksdb_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_DEFAULT_WRITE_TEMPERATURE;
+	/// `int rocksdb_options_get_default_write_temperature(rocksdb_options_t* opt);`
+	private static final MethodHandle MH_GET_DEFAULT_WRITE_TEMPERATURE;
+	/// `void rocksdb_options_set_default_temperature(rocksdb_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_DEFAULT_TEMPERATURE;
+	/// `int rocksdb_options_get_default_temperature(rocksdb_options_t* opt);`
+	private static final MethodHandle MH_GET_DEFAULT_TEMPERATURE;
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
@@ -222,6 +242,36 @@ public final class Options extends NativeObject {
 
 		MH_SET_SST_FILE_MANAGER = NativeLibrary.lookup("rocksdb_options_set_sst_file_manager",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_SET_METADATA_WRITE_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_set_metadata_write_temperature",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_METADATA_WRITE_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_get_metadata_write_temperature",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_WAL_WRITE_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_set_wal_write_temperature",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_WAL_WRITE_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_get_wal_write_temperature",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_LAST_LEVEL_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_set_last_level_temperature",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_LAST_LEVEL_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_get_last_level_temperature",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_DEFAULT_WRITE_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_set_default_write_temperature",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_DEFAULT_WRITE_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_get_default_write_temperature",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_DEFAULT_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_set_default_temperature",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_DEFAULT_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_get_default_temperature",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
 	}
 
@@ -736,6 +786,138 @@ public final class Options extends NativeObject {
 			return this;
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("setRateLimiter failed", t);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Temperature options
+	// -----------------------------------------------------------------------
+
+	/// Sets the temperature hint for metadata block-based tables (index, filter, etc.).
+	/// EXPERIMENTAL. Default: [Temperature#UNKNOWN].
+	///
+	/// @param temperature the temperature hint to use for metadata files
+	/// @return `this` for chaining
+	public Options setMetadataWriteTemperature(Temperature temperature) {
+		try {
+			MH_SET_METADATA_WRITE_TEMPERATURE.invokeExact(ptr(), temperature.getValue());
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setMetadataWriteTemperature failed", t);
+		}
+	}
+
+	/// Returns the temperature hint configured for metadata block-based tables.
+	///
+	/// @return the active [Temperature] hint for metadata files
+	public Temperature getMetadataWriteTemperature() {
+		try {
+			return Temperature.fromValue((int) MH_GET_METADATA_WRITE_TEMPERATURE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getMetadataWriteTemperature failed", t);
+		}
+	}
+
+	/// Sets the temperature hint for WAL files.
+	/// EXPERIMENTAL. Default: [Temperature#UNKNOWN].
+	///
+	/// @param temperature the temperature hint to use for WAL files
+	/// @return `this` for chaining
+	public Options setWalWriteTemperature(Temperature temperature) {
+		try {
+			MH_SET_WAL_WRITE_TEMPERATURE.invokeExact(ptr(), temperature.getValue());
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setWalWriteTemperature failed", t);
+		}
+	}
+
+	/// Returns the temperature hint configured for WAL files.
+	///
+	/// @return the active [Temperature] hint for WAL files
+	public Temperature getWalWriteTemperature() {
+		try {
+			return Temperature.fromValue((int) MH_GET_WAL_WRITE_TEMPERATURE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getWalWriteTemperature failed", t);
+		}
+	}
+
+	/// Sets the temperature hint for SST files placed on the last level.
+	/// EXPERIMENTAL. Default: [Temperature#UNKNOWN].
+	///
+	/// @param temperature the temperature hint to use for last-level files
+	/// @return `this` for chaining
+	public Options setLastLevelTemperature(Temperature temperature) {
+		try {
+			MH_SET_LAST_LEVEL_TEMPERATURE.invokeExact(ptr(), temperature.getValue());
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setLastLevelTemperature failed", t);
+		}
+	}
+
+	/// Returns the temperature hint configured for SST files on the last level.
+	///
+	/// @return the active [Temperature] hint for last-level files
+	public Temperature getLastLevelTemperature() {
+		try {
+			return Temperature.fromValue((int) MH_GET_LAST_LEVEL_TEMPERATURE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getLastLevelTemperature failed", t);
+		}
+	}
+
+	/// Sets the temperature hint used when a new SST file is written, for levels
+	/// that don't otherwise have an explicit temperature configured.
+	/// EXPERIMENTAL. Default: [Temperature#UNKNOWN].
+	///
+	/// @param temperature the temperature hint to use for newly written files
+	/// @return `this` for chaining
+	public Options setDefaultWriteTemperature(Temperature temperature) {
+		try {
+			MH_SET_DEFAULT_WRITE_TEMPERATURE.invokeExact(ptr(), temperature.getValue());
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setDefaultWriteTemperature failed", t);
+		}
+	}
+
+	/// Returns the temperature hint configured for newly written SST files.
+	///
+	/// @return the active default write [Temperature] hint
+	public Temperature getDefaultWriteTemperature() {
+		try {
+			return Temperature.fromValue((int) MH_GET_DEFAULT_WRITE_TEMPERATURE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getDefaultWriteTemperature failed", t);
+		}
+	}
+
+	/// Sets the temperature hint assumed for existing SST files that have no
+	/// temperature recorded in their metadata (e.g. files created before this
+	/// option existed).
+	/// EXPERIMENTAL. Default: [Temperature#UNKNOWN].
+	///
+	/// @param temperature the fallback temperature hint for files without a recorded temperature
+	/// @return `this` for chaining
+	public Options setDefaultTemperature(Temperature temperature) {
+		try {
+			MH_SET_DEFAULT_TEMPERATURE.invokeExact(ptr(), temperature.getValue());
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setDefaultTemperature failed", t);
+		}
+	}
+
+	/// Returns the fallback temperature hint for files without a recorded temperature.
+	///
+	/// @return the active default [Temperature] hint
+	public Temperature getDefaultTemperature() {
+		try {
+			return Temperature.fromValue((int) MH_GET_DEFAULT_TEMPERATURE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getDefaultTemperature failed", t);
 		}
 	}
 

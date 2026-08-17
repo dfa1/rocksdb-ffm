@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Temperature` enum (storage-tier hint) wired into 5 `Options` setter/getter pairs:
+  `metadataWriteTemperature`, `walWriteTemperature`, `lastLevelTemperature`,
+  `defaultWriteTemperature`, `defaultTemperature`. EXPERIMENTAL upstream; a no-op unless a
+  custom `FileSystem` inspects it.
+
 ### Changed
 
 - **Breaking:** `RateLimiter.create`/`createAutoTuned`/`createWithMode`'s refill period is now a
