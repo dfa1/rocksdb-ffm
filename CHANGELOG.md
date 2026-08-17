@@ -5,6 +5,13 @@ All notable changes to **rocksdbffm** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Breaking:** `RateLimiter.create`/`createAutoTuned`/`createWithMode`'s refill period is now a
+  `Duration` instead of a raw `long` of microseconds; rejects `null` and negative values.
+
 ## [0.8] — 2026-08-16
 
 Hermetic ZSTD/LZ4 on all five platforms including Windows, local builds now cross-compile only the

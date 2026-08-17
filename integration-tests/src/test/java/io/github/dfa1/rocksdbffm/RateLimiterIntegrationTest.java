@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,7 +48,7 @@ class RateLimiterIntegrationTest {
 	void rateLimiterWithAllIoMode(@TempDir Path dir) {
 		// Given
 		try (var limiter = RateLimiter.createWithMode(
-				MemorySize.ofMB(200), 100_000L, 10,
+				MemorySize.ofMB(200), Duration.ofMillis(100), 10,
 				RateLimiter.Mode.ALL_IO, false);
 		     var opts = Options.newOptions()
 				     .setCreateIfMissing(true)

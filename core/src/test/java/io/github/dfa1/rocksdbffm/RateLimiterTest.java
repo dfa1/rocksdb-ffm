@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,7 +28,7 @@ class RateLimiterTest {
 	@Test
 	void create_withExplicitRefillAndFairness(@TempDir Path dir) {
 		// Given
-		try (var sut = RateLimiter.create(MemorySize.ofMB(100), 50_000L, 5);
+		try (var sut = RateLimiter.create(MemorySize.ofMB(100), Duration.ofMillis(50), 5);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setRateLimiter(sut);
 		     var db = RocksDB.openReadWrite(opts, dir)) {
 
@@ -51,7 +52,7 @@ class RateLimiterTest {
 	@Test
 	void createAutoTuned_withExplicitRefillAndFairness(@TempDir Path dir) {
 		// Given
-		try (var sut = RateLimiter.createAutoTuned(MemorySize.ofMB(100), 100_000L, 10);
+		try (var sut = RateLimiter.createAutoTuned(MemorySize.ofMB(100), Duration.ofMillis(100), 10);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setRateLimiter(sut);
 		     var db = RocksDB.openReadWrite(opts, dir)) {
 
@@ -64,7 +65,7 @@ class RateLimiterTest {
 	void createWithMode_readsOnly(@TempDir Path dir) {
 		// Given
 		try (var sut = RateLimiter.createWithMode(
-				MemorySize.ofMB(100), 100_000L, 10, RateLimiter.Mode.READS_ONLY, false);
+				MemorySize.ofMB(100), Duration.ofMillis(100), 10, RateLimiter.Mode.READS_ONLY, false);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setRateLimiter(sut);
 		     var db = RocksDB.openReadWrite(opts, dir)) {
 
@@ -77,7 +78,7 @@ class RateLimiterTest {
 	void createWithMode_allIoAutoTuned(@TempDir Path dir) {
 		// Given
 		try (var sut = RateLimiter.createWithMode(
-				MemorySize.ofMB(100), 100_000L, 10, RateLimiter.Mode.ALL_IO, true);
+				MemorySize.ofMB(100), Duration.ofMillis(100), 10, RateLimiter.Mode.ALL_IO, true);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setRateLimiter(sut);
 		     var db = RocksDB.openReadWrite(opts, dir)) {
 
