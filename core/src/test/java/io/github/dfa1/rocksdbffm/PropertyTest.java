@@ -87,6 +87,15 @@ class PropertyTest {
 	}
 
 	@Test
+	void getLongProperty_compactionAbortCount_isPresent(@TempDir Path dir) {
+		try (var db = RocksDB.openReadWrite(dir)) {
+			assertThat(db.getLongProperty(Property.COMPACTION_ABORT_COUNT)).isPresent();
+			assertThat(db.getLongProperty(Property.COMPACTION_ABORT_COUNT).getAsLong())
+					.isGreaterThanOrEqualTo(0);
+		}
+	}
+
+	@Test
 	void getLongProperty_numSnapshots_incrementsWithSnapshot(@TempDir Path dir) {
 		// Given
 		try (var db = RocksDB.openReadWrite(dir)) {
