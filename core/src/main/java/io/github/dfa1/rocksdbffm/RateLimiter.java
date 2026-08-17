@@ -4,6 +4,8 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.time.Duration;
+import java.util.Objects;
 
 /// FFM wrapper for `rocksdb_ratelimiter_t`.
 ///
@@ -82,20 +84,29 @@ public final class RateLimiter extends NativeObject {
 	/// @param rateBytesPerSec maximum I/O rate in bytes per second
 	/// @return a new [RateLimiter]; caller must close it
 	public static RateLimiter create(MemorySize rateBytesPerSec) {
-		return create(rateBytesPerSec, 100_000L, 10);
+		return create(rateBytesPerSec, Duration.ofMillis(100), 10);
 	}
 
 	/// Creates a rate limiter limiting writes only.
 	///
-	/// @param rateBytesPerSec  maximum I/O rate in bytes per second
-	/// @param refillPeriodUs   refill interval in microseconds (default 100,000)
-	/// @param fairness         RateLimiter will allow at most 1 / fairness high-priority
-	///                         requests to wait when there are low-priority requests in flight (default 10)
+	/// RocksDB documents no special meaning for a negative refill period, so this does not
+	/// accept `null`.
+	///
+	/// @param rateBytesPerSec maximum I/O rate in bytes per second
+	/// @param refillPeriod    refill interval, at microsecond resolution (default 100 ms)
+	/// @param fairness        RateLimiter will allow at most 1 / fairness high-priority
+	///                        requests to wait when there are low-priority requests in flight (default 10)
 	/// @return a new [RateLimiter]; caller must close it
-	public static RateLimiter create(MemorySize rateBytesPerSec, long refillPeriodUs, int fairness) {
+	/// @throws NullPointerException     if `refillPeriod` is `null`
+	/// @throws IllegalArgumentException if `refillPeriod` is negative
+	public static RateLimiter create(MemorySize rateBytesPerSec, Duration refillPeriod, int fairness) {
+		Objects.requireNonNull(refillPeriod, "refillPeriod must not be null");
+		if (refillPeriod.isNegative()) {
+			throw new IllegalArgumentException("refillPeriod must not be negative: " + refillPeriod);
+		}
 		try {
 			MemorySegment ptr = (MemorySegment) MH_CREATE.invokeExact(
-					rateBytesPerSec.toBytes(), refillPeriodUs, fairness);
+					rateBytesPerSec.toBytes(), refillPeriod.toNanos() / 1_000L, fairness);
 			return new RateLimiter(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("RateLimiter create failed", t);
@@ -105,14 +116,23 @@ public final class RateLimiter extends NativeObject {
 	/// Creates an auto-tuned rate limiter that automatically adjusts the rate to
 	/// achieve the target rate. Limits writes only.
 	///
-	/// @param rateBytesPerSec  target I/O rate in bytes per second
-	/// @param refillPeriodUs   refill interval in microseconds (default 100,000)
-	/// @param fairness         see [#create(MemorySize, long, int)] (default 10)
+	/// RocksDB documents no special meaning for a negative refill period, so this does not
+	/// accept `null`.
+	///
+	/// @param rateBytesPerSec target I/O rate in bytes per second
+	/// @param refillPeriod    refill interval, at microsecond resolution (default 100 ms)
+	/// @param fairness        see [#create(MemorySize, Duration, int)] (default 10)
 	/// @return a new auto-tuned [RateLimiter]; caller must close it
-	public static RateLimiter createAutoTuned(MemorySize rateBytesPerSec, long refillPeriodUs, int fairness) {
+	/// @throws NullPointerException     if `refillPeriod` is `null`
+	/// @throws IllegalArgumentException if `refillPeriod` is negative
+	public static RateLimiter createAutoTuned(MemorySize rateBytesPerSec, Duration refillPeriod, int fairness) {
+		Objects.requireNonNull(refillPeriod, "refillPeriod must not be null");
+		if (refillPeriod.isNegative()) {
+			throw new IllegalArgumentException("refillPeriod must not be negative: " + refillPeriod);
+		}
 		try {
 			MemorySegment ptr = (MemorySegment) MH_CREATE_AUTO_TUNED.invokeExact(
-					rateBytesPerSec.toBytes(), refillPeriodUs, fairness);
+					rateBytesPerSec.toBytes(), refillPeriod.toNanos() / 1_000L, fairness);
 			return new RateLimiter(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("RateLimiter createAutoTuned failed", t);
@@ -125,22 +145,31 @@ public final class RateLimiter extends NativeObject {
 	/// @param rateBytesPerSec target I/O rate in bytes per second
 	/// @return a new auto-tuned [RateLimiter]; caller must close it
 	public static RateLimiter createAutoTuned(MemorySize rateBytesPerSec) {
-		return createAutoTuned(rateBytesPerSec, 100_000L, 10);
+		return createAutoTuned(rateBytesPerSec, Duration.ofMillis(100), 10);
 	}
 
 	/// Creates a rate limiter with explicit mode and auto-tuning flag.
 	///
-	/// @param rateBytesPerSec  maximum I/O rate in bytes per second
-	/// @param refillPeriodUs   refill interval in microseconds
-	/// @param fairness         see [#create(MemorySize, long, int)]
-	/// @param mode             which I/O types to rate-limit
-	/// @param autoTuned        whether to enable automatic rate adjustment
+	/// RocksDB documents no special meaning for a negative refill period, so this does not
+	/// accept `null`.
+	///
+	/// @param rateBytesPerSec maximum I/O rate in bytes per second
+	/// @param refillPeriod    refill interval, at microsecond resolution
+	/// @param fairness        see [#create(MemorySize, Duration, int)]
+	/// @param mode            which I/O types to rate-limit
+	/// @param autoTuned       whether to enable automatic rate adjustment
 	/// @return a new [RateLimiter]; caller must close it
-	public static RateLimiter createWithMode(MemorySize rateBytesPerSec, long refillPeriodUs,
+	/// @throws NullPointerException     if `refillPeriod` is `null`
+	/// @throws IllegalArgumentException if `refillPeriod` is negative
+	public static RateLimiter createWithMode(MemorySize rateBytesPerSec, Duration refillPeriod,
 			int fairness, Mode mode, boolean autoTuned) {
+		Objects.requireNonNull(refillPeriod, "refillPeriod must not be null");
+		if (refillPeriod.isNegative()) {
+			throw new IllegalArgumentException("refillPeriod must not be negative: " + refillPeriod);
+		}
 		try {
 			MemorySegment ptr = (MemorySegment) MH_CREATE_WITH_MODE.invokeExact(
-					rateBytesPerSec.toBytes(), refillPeriodUs, fairness,
+					rateBytesPerSec.toBytes(), refillPeriod.toNanos() / 1_000L, fairness,
 					mode.value, RocksDB.toByte(autoTuned));
 			return new RateLimiter(ptr);
 		} catch (Throwable t) {
