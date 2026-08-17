@@ -14,6 +14,7 @@ Every snippet omits imports; all types live in `io.github.dfa1.rocksdbffm`.
 - [Read a consistent point-in-time view](#read-a-consistent-point-in-time-view)
 - [Scan a key range](#scan-a-key-range)
 - [Delete a range of keys](#delete-a-range-of-keys)
+- [Merge values without a read-modify-write](#merge-values-without-a-read-modify-write)
 - [Run a pessimistic transaction](#run-a-pessimistic-transaction)
 - [Run an optimistic transaction](#run-an-optimistic-transaction)
 - [Expire keys automatically](#expire-keys-automatically)
@@ -217,6 +218,71 @@ try (var batch = WriteBatch.create()) {
 	db.write(batch);
 }
 ```
+
+## Merge values without a read-modify-write
+
+`merge(key, operand)` queues an operand for `key` instead of overwriting it. RocksDB folds the
+base value and all queued operands together — lazily, whenever the merged value is actually
+needed (`get()`, flush, compaction) — using a `MergeOperator` you attach via
+`Options.setMergeOperator`. Without one attached, every `merge()` call fails with
+`RocksDBException`.
+
+For counters, use the built-in operator: it sums 8-byte little-endian `uint64` operands, entirely
+on the native side.
+
+```java
+try (var opts = Options.newOptions().setCreateIfMissing(true)
+            .setMergeOperator(MergeOperator.uint64Add());
+     var db = RocksDB.openReadWrite(opts, dbPath)) {
+
+	db.merge("page-views".getBytes(), encodeUint64(1));
+	db.merge("page-views".getBytes(), encodeUint64(1));
+	db.merge("page-views".getBytes(), encodeUint64(3));
+
+	long total = decodeUint64(db.get("page-views".getBytes()));   // 5, no read-modify-write
+}
+```
+
+```java
+static byte[] encodeUint64(long value) {
+	return ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN).putLong(value).array();
+}
+
+static long decodeUint64(byte[] bytes) {
+	return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getLong();
+}
+```
+
+For anything else, `MergeOperator.custom(name, fn)` wires a Java `FullMergeFn` through RocksDB's
+callback-based merge operator. `fn` may run on RocksDB's own background threads (flush,
+compaction), so it must be thread-safe and must not throw:
+
+```java
+MergeOperator.FullMergeFn keepMax = (key, existingValue, operands) -> {
+	byte[] max = existingValue;
+	for (byte[] operand : operands) {
+		if (max == null || Arrays.compare(operand, max) > 0) {
+			max = operand;
+		}
+	}
+	return max;
+};
+
+try (var opts = Options.newOptions().setCreateIfMissing(true)
+            .setMergeOperator(MergeOperator.custom("string-max", keepMax));
+     var db = RocksDB.openReadWrite(opts, dbPath)) {
+
+	db.merge("high-score".getBytes(), "17".getBytes());
+	db.merge("high-score".getBytes(), "42".getBytes());
+	db.merge("high-score".getBytes(), "9".getBytes());
+
+	byte[] best = db.get("high-score".getBytes());   // "42"
+}
+```
+
+A `MergeOperator` is attached once per column family at `Options`-configuration time — every
+`merge()` on that column family shares the same interpretation of what merging means, so keep
+different kinds of merge semantics (a counter vs. a max-tracker) in separate column families.
 
 ## Run a pessimistic transaction
 

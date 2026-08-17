@@ -20,7 +20,6 @@ rocksdbffm wraps `rocksdb/c.h` — the official RocksDB C API — not C++ direct
 | CompactionFilter | `rocksdb_compactionfilter_create()`, `rocksdb_compactionfilterfactory_create()` | High | Callback-based; enables custom retention/deletion policies during compaction |
 | EventListener | `rocksdb_eventlistener_create()` (~12 callbacks) | High | Flush, compaction, file creation/deletion events; needed for monitoring |
 | Custom Comparator | `rocksdb_comparator_create()`, `rocksdb_comparator_with_ts_create()` | High | Custom key ordering; note: key shortening not exposed in C API |
-| Custom MergeOperator | `rocksdb_mergeoperator_create()` | Medium | C API exists; no Java side yet. The `merge()` write op itself is implemented (see [reference.md#feature-status](reference.md#feature-status)), but every call fails with `RocksDBException` until a merge operator can be configured — that requires wrapping `full_merge`/`partial_merge`/`delete_value`/`name` FFM upcalls, same class of work as `CompactionFilter`/`EventListener` |
 | JemallocNodumpAllocator | `rocksdb_jemalloc_nodump_allocator_create()` | Medium | Jemalloc allocator for caches; avoids coredump leaking sensitive data |
 | CuckooTable options | `rocksdb_cuckoo_table_options_t` + setters | Medium | Hash-based SST format; efficient for fixed-size keys |
 | Advanced memtable config | Various `rocksdb_options_set_*` memtable setters | Low | SkipList tuning, hash-memtable variants |

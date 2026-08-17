@@ -380,8 +380,8 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Perf context               |   ✅    | `PerfContext`, `PerfLevel`, `PerfMetric`                                                    |
 | Background jobs            |   🚧    | `cancelAllBackgroundWork`, manual-compaction toggles, `waitForCompact`; Options-level tuning (FIFO/Universal) pending |
 | MultiGet                   |   ❌    | `rocksdb_multi_get()` exists in the C API; no Java wrapper yet                              |
-| Merge                      |   🚧    | `merge()` write op on all 7 write-capable types (byte[]/ByteBuffer/MemorySegment, CF variants), see [#8](https://github.com/dfa1/rocksdbffm/issues/8); no merge operator can be configured yet, so calls fail with `RocksDBException` until custom `MergeOperator` support lands |
-| MergeOperator               |   ❌    | `rocksdb_mergeoperator_create()` (custom `full_merge`/`partial_merge` callbacks) not wrapped; see [c-api-gaps.md](c-api-gaps.md) |
+| Merge                      |   ✅    | `merge()` write op on all 7 write-capable types (byte[]/ByteBuffer/MemorySegment, CF variants), see [#8](https://github.com/dfa1/rocksdbffm/issues/8); requires a `MergeOperator` configured via `Options.setMergeOperator`, else calls fail with `RocksDBException` |
+| MergeOperator               |   ✅    | `MergeOperator.uint64Add()` (built-in `rocksdb_options_set_uint64add_merge_operator`) and `MergeOperator.custom(String, FullMergeFn)` (`rocksdb_mergeoperator_create()` — `full_merge` implemented in Java, `partial_merge` always declines) |
 | CompactionFilter           |   ❌    | Callback-based custom compaction logic                                                      |
 | Custom comparators         |   ❌    | `rocksdb_comparator_create()` exists in the C API                                           |
 | Advanced column family     |   ❌    | Per-CF compaction style, level multipliers                                                  |

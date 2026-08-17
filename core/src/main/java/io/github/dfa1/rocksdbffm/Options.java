@@ -789,6 +789,22 @@ public final class Options extends NativeObject {
 		}
 	}
 
+	/// Attaches a [MergeOperator] so `merge()` calls have a defined semantics for this column
+	/// family. Without one configured, every `merge()` call fails with [RocksDBException].
+	///
+	/// A [MergeOperator.Custom] transfers ownership: its `close()` becomes a no-op afterward.
+	/// [MergeOperator#uint64Add()] holds no native handle and needs no ownership transfer.
+	///
+	/// @param mergeOperator the merge operator to attach
+	/// @return `this` for chaining
+	public Options setMergeOperator(MergeOperator mergeOperator) {
+		switch (mergeOperator) {
+			case MergeOperator.Uint64Add u -> u.applyTo(ptr());
+			case MergeOperator.Custom c -> c.applyTo(ptr());
+		}
+		return this;
+	}
+
 	// -----------------------------------------------------------------------
 	// Temperature options
 	// -----------------------------------------------------------------------
