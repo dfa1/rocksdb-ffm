@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking:** `RateLimiter.create`/`createAutoTuned`/`createWithMode`'s refill period is now a
   `Duration` instead of a raw `long` of microseconds; rejects `null` and negative values.
+- **Breaking:** `BackupInfo.timestamp` is now an `Instant` instead of a raw `long` Unix timestamp.
 
 ## [0.8] — 2026-08-16
 
