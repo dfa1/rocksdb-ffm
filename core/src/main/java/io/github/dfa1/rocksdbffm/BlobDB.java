@@ -41,6 +41,27 @@ public final class BlobDB extends NativeObject {
 	}
 
 	// -----------------------------------------------------------------------
+	// Column families
+	// -----------------------------------------------------------------------
+
+	/// Creates a new column family described by `descriptor` and returns its handle.
+	/// The caller must close the returned handle when done.
+	///
+	/// @param descriptor name and options for the new column family
+	/// @return handle to the newly created column family; caller must close it
+	public ColumnFamilyHandle createColumnFamily(ColumnFamilyDescriptor descriptor) {
+		return RocksDB.createCf(ptr(), descriptor);
+	}
+
+	/// Drops the column family identified by `handle`.
+	/// The handle should be closed after this call; it is no longer valid for reads/writes.
+	///
+	/// @param handle handle of the column family to drop
+	public void dropColumnFamily(ColumnFamilyHandle handle) {
+		RocksDB.dropCf(ptr(), handle);
+	}
+
+	// -----------------------------------------------------------------------
 	// Put
 	// -----------------------------------------------------------------------
 
@@ -77,6 +98,39 @@ public final class BlobDB extends NativeObject {
 	/// @param value native segment containing the value
 	public void put(MemorySegment key, MemorySegment value) {
 		RocksDB.putSegment(ptr(), writeOpts.ptr(), key, key.byteSize(), value, value.byteSize());
+	}
+
+	// -----------------------------------------------------------------------
+	// Put — column family overloads
+	// -----------------------------------------------------------------------
+
+	/// Stores `value` under `key` in `cf`. Slow path: copies key/value into native memory.
+	///
+	/// @param cf    target column family
+	/// @param key   the key to store
+	/// @param value the value to associate with the key
+	public void put(ColumnFamilyHandle cf, byte[] key, byte[] value) {
+		RocksDB.putCfBytes(ptr(), writeOpts.ptr(), cf, key, value);
+	}
+
+	/// Zero-copy put into `cf`: wraps the direct buffers' native memory without heap→native copy.
+	///
+	/// @param cf    target column family
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the value
+	public void put(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
+		RocksDB.putCfSegment(ptr(), writeOpts.ptr(), cf,
+				MemorySegment.ofBuffer(key), key.remaining(),
+				MemorySegment.ofBuffer(value), value.remaining());
+	}
+
+	/// Zero-copy put into `cf`: caller supplies pre-allocated native segments.
+	///
+	/// @param cf    target column family
+	/// @param key   native segment containing the key
+	/// @param value native segment containing the value
+	public void put(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
+		RocksDB.putCfSegment(ptr(), writeOpts.ptr(), cf, key, key.byteSize(), value, value.byteSize());
 	}
 
 	// -----------------------------------------------------------------------
@@ -117,6 +171,39 @@ public final class BlobDB extends NativeObject {
 	/// @param value native segment containing the merge operand
 	public void merge(MemorySegment key, MemorySegment value) {
 		RocksDB.mergeSegment(ptr(), writeOpts.ptr(), key, key.byteSize(), value, value.byteSize());
+	}
+
+	// -----------------------------------------------------------------------
+	// Merge — column family overloads
+	// -----------------------------------------------------------------------
+
+	/// Merges `value` into `key` in `cf`. Slow path: copies key/value into native memory.
+	///
+	/// @param cf    target column family
+	/// @param key   the key to merge into
+	/// @param value the merge operand
+	public void merge(ColumnFamilyHandle cf, byte[] key, byte[] value) {
+		RocksDB.mergeCfBytes(ptr(), writeOpts.ptr(), cf, key, value);
+	}
+
+	/// Zero-copy merge into `cf`: wraps the direct buffers' native memory without heap→native copy.
+	///
+	/// @param cf    target column family
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the merge operand
+	public void merge(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
+		RocksDB.mergeCfSegment(ptr(), writeOpts.ptr(), cf,
+				MemorySegment.ofBuffer(key), key.remaining(),
+				MemorySegment.ofBuffer(value), value.remaining());
+	}
+
+	/// Zero-copy merge into `cf`: caller supplies pre-allocated native segments.
+	///
+	/// @param cf    target column family
+	/// @param key   native segment containing the key
+	/// @param value native segment containing the merge operand
+	public void merge(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
+		RocksDB.mergeCfSegment(ptr(), writeOpts.ptr(), cf, key, key.byteSize(), value, value.byteSize());
 	}
 
 	// -----------------------------------------------------------------------
@@ -181,6 +268,67 @@ public final class BlobDB extends NativeObject {
 	}
 
 	// -----------------------------------------------------------------------
+	// Get — column family overloads
+	// -----------------------------------------------------------------------
+
+	/// Get via PinnableSlice from `cf`. Returns `null` if not found.
+	///
+	/// @param cf  target column family
+	/// @param key the key to look up
+	/// @return value bytes, or `null` if not found
+	public byte[] get(ColumnFamilyHandle cf, byte[] key) {
+		return RocksDB.getCfBytes(ptr(), readOpts.ptr(), cf, key);
+	}
+
+	/// Get from `cf` with explicit [ReadOptions]. Returns `null` if not found.
+	///
+	/// @param cf          target column family
+	/// @param readOptions read options (e.g. snapshot)
+	/// @param key         the key to look up
+	/// @return value bytes, or `null` if not found
+	public byte[] get(ColumnFamilyHandle cf, ReadOptions readOptions, byte[] key) {
+		return RocksDB.getCfBytes(ptr(), readOptions.ptr(), cf, key);
+	}
+
+	/// Single-copy get from `cf` via `rocksdb_get_into_buffer_cf` into a direct [ByteBuffer].
+	/// Copies nothing into `value` when its remaining capacity is too small.
+	///
+	/// @param cf    target column family
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] to write the value into
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
+		return RocksDB.getCfIntoBuffer(ptr(), readOpts.ptr(), cf,
+				MemorySegment.ofBuffer(key), key.remaining(), value);
+	}
+
+	/// Single-copy get from `cf` into a caller-supplied native segment via
+	/// `rocksdb_get_into_buffer_cf`. Copies nothing into `value` when its capacity is too small.
+	///
+	/// @param cf    target column family
+	/// @param key   native segment containing the key
+	/// @param value native segment to write the value into
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	public CopyResult get(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
+		return RocksDB.getCfIntoSegment(ptr(), readOpts.ptr(), cf, key, key.byteSize(), value);
+	}
+
+	/// Scoped zero-copy get from `cf`. See [#get(MemorySegment, Mapper)] for
+	/// the lifetime contract on the view passed to `fn`.
+	///
+	/// @param <R> the type produced by `fn`
+	/// @param cf  target column family
+	/// @param key native segment containing the key
+	/// @param fn  callback invoked with a zero-copy view of the pinned value
+	/// @throws NullPointerException if `fn` returns `null`
+	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
+	public <R> Optional<R> get(ColumnFamilyHandle cf, MemorySegment key, Mapper<R> fn) {
+		return RocksDB.withPinnedCf(ptr(), readOpts.ptr(), cf, key, fn);
+	}
+
+	// -----------------------------------------------------------------------
 	// Delete
 	// -----------------------------------------------------------------------
 
@@ -203,6 +351,35 @@ public final class BlobDB extends NativeObject {
 	/// @param key native segment containing the key to remove
 	public void delete(MemorySegment key) {
 		RocksDB.deleteSegment(ptr(), writeOpts.ptr(), key, key.byteSize());
+	}
+
+	// -----------------------------------------------------------------------
+	// Delete — column family overloads
+	// -----------------------------------------------------------------------
+
+	/// Removes `key` from `cf`. Slow path: copies the key into native memory.
+	///
+	/// @param cf  target column family
+	/// @param key the key to remove
+	public void delete(ColumnFamilyHandle cf, byte[] key) {
+		RocksDB.deleteCfBytes(ptr(), writeOpts.ptr(), cf, key);
+	}
+
+	/// Zero-copy delete from `cf` for direct [ByteBuffer]s.
+	///
+	/// @param cf  target column family
+	/// @param key direct [ByteBuffer] containing the key to remove
+	public void delete(ColumnFamilyHandle cf, ByteBuffer key) {
+		RocksDB.deleteCfSegment(ptr(), writeOpts.ptr(), cf,
+				MemorySegment.ofBuffer(key), key.remaining());
+	}
+
+	/// Zero-copy delete from `cf` for [MemorySegment]s.
+	///
+	/// @param cf  target column family
+	/// @param key native segment containing the key to remove
+	public void delete(ColumnFamilyHandle cf, MemorySegment key) {
+		RocksDB.deleteCfSegment(ptr(), writeOpts.ptr(), cf, key, key.byteSize());
 	}
 
 	// -----------------------------------------------------------------------
@@ -247,6 +424,27 @@ public final class BlobDB extends NativeObject {
 	}
 
 	// -----------------------------------------------------------------------
+	// Iterator — column family overloads
+	// -----------------------------------------------------------------------
+
+	/// Returns a new iterator scoped to `cf` using the database's default read options.
+	///
+	/// @param cf target column family
+	/// @return a new [RocksIterator]; caller must close it
+	public RocksIterator newIterator(ColumnFamilyHandle cf) {
+		return RocksDB.createIteratorCf(ptr(), readOpts.ptr(), cf);
+	}
+
+	/// Returns a new iterator scoped to `cf` using the supplied [ReadOptions].
+	///
+	/// @param cf          target column family
+	/// @param readOptions read options (e.g. snapshot)
+	/// @return a new [RocksIterator]; caller must close it
+	public RocksIterator newIterator(ColumnFamilyHandle cf, ReadOptions readOptions) {
+		return RocksDB.createIteratorCf(ptr(), readOptions.ptr(), cf);
+	}
+
+	// -----------------------------------------------------------------------
 	// Flush
 	// -----------------------------------------------------------------------
 
@@ -262,6 +460,18 @@ public final class BlobDB extends NativeObject {
 	/// @param sync if `true`, performs an `fsync` after writing
 	public void flushWal(boolean sync) {
 		RocksDB.flushWal(ptr(), sync);
+	}
+
+	// -----------------------------------------------------------------------
+	// Flush — column family overloads
+	// -----------------------------------------------------------------------
+
+	/// Flushes the memtable for `cf` to SST/blob files.
+	///
+	/// @param cf           target column family
+	/// @param flushOptions options controlling flush behavior
+	public void flush(ColumnFamilyHandle cf, FlushOptions flushOptions) {
+		RocksDB.flushCf(ptr(), flushOptions, cf);
 	}
 
 	// -----------------------------------------------------------------------
@@ -283,6 +493,28 @@ public final class BlobDB extends NativeObject {
 	/// @return the property value as a `long`, or empty if not supported
 	public OptionalLong getLongProperty(Property property) {
 		return RocksDB.getLongProperty(ptr(), property);
+	}
+
+	// -----------------------------------------------------------------------
+	// DB Properties — column family overloads
+	// -----------------------------------------------------------------------
+
+	/// Returns the value of a property for `cf`, or [Optional#empty()] if not supported.
+	///
+	/// @param cf       target column family
+	/// @param property the property to query
+	/// @return the property value, or empty if not supported
+	public Optional<String> getProperty(ColumnFamilyHandle cf, Property property) {
+		return RocksDB.getPropertyCf(ptr(), cf, property);
+	}
+
+	/// Returns the value of a numeric property for `cf`, or [OptionalLong#empty()] if not supported.
+	///
+	/// @param cf       target column family
+	/// @param property the property to query
+	/// @return the numeric property value, or empty if not supported
+	public OptionalLong getLongProperty(ColumnFamilyHandle cf, Property property) {
+		return RocksDB.getLongPropertyCf(ptr(), cf, property);
 	}
 
 	// -----------------------------------------------------------------------

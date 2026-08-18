@@ -1242,6 +1242,61 @@ public final class RocksDB {
 		}
 	}
 
+	/// Opens a blob-enabled read-write database at `path` with multiple column families.
+	///
+	/// The `handles` list is cleared and populated with one [ColumnFamilyHandle] per descriptor.
+	/// Blob file options (min blob size, blob compression, ...) are set per column family via
+	/// each descriptor's [Options], same as for [#openReadWrite(Options, Path, List, List)].
+	///
+	/// @param options the database options
+	/// @param path directory where the database files are stored
+	/// @param descriptors one descriptor per column family (must include `"default"`)
+	/// @param handles output list populated with one handle per descriptor
+	/// @return a new [BlobDB] instance
+	public static BlobDB openBlob(Options options, Path path,
+	                              List<ColumnFamilyDescriptor> descriptors,
+	                              List<ColumnFamilyHandle> handles) {
+		int n = descriptors.size();
+		List<Options> tempOptions = new ArrayList<>();
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = errHolder(arena);
+			MemorySegment pathSeg = arena.allocateFrom(path.toString());
+
+			MemorySegment namesArr = arena.allocate(ValueLayout.ADDRESS, n);
+			MemorySegment optsArr = arena.allocate(ValueLayout.ADDRESS, n);
+			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
+
+			for (int i = 0; i < n; i++) {
+				ColumnFamilyDescriptor desc = descriptors.get(i);
+				namesArr.setAtIndex(ValueLayout.ADDRESS, i,
+						arena.allocateFrom(new String(desc.name(), StandardCharsets.UTF_8)));
+				Options cfOpts = desc.options();
+				if (cfOpts == null) {
+					cfOpts = Options.newOptions();
+					tempOptions.add(cfOpts);
+				}
+				optsArr.setAtIndex(ValueLayout.ADDRESS, i, cfOpts.ptr());
+			}
+
+			MemorySegment ptr = (MemorySegment) MH_OPEN_CF.invokeExact(
+					options.ptr(), pathSeg, n, namesArr, optsArr, handlesArr, err);
+			checkError(err);
+
+			handles.clear();
+			for (int i = 0; i < n; i++) {
+				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
+			}
+
+			return new BlobDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("openBlob failed", t);
+		} finally {
+			for (Options o : tempOptions) {
+				o.close();
+			}
+		}
+	}
+
 	/// Opens a read-only database at `path` with multiple column families.
 	///
 	/// The `handles` list is cleared and populated with one [ColumnFamilyHandle] per descriptor.
