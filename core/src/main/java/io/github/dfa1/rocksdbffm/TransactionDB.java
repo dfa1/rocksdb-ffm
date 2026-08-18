@@ -313,13 +313,7 @@ public final class TransactionDB extends NativeObject {
 	/// @param value the merge operand
 	public void merge(byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment k = RocksDB.toNative(arena, key);
-			MemorySegment v = RocksDB.toNative(arena, value);
-			MH_MERGE.invokeExact(ptr(), writeOpts.ptr(), k, (long) key.length, v, (long) value.length, err);
-			RocksDB.checkError(err);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("merge failed", t);
+			merge(arena, RocksDB.toNative(arena, key), RocksDB.toNative(arena, value));
 		}
 	}
 
@@ -329,14 +323,7 @@ public final class TransactionDB extends NativeObject {
 	/// @param value direct [java.nio.ByteBuffer] containing the merge operand
 	public void merge(java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
-			MH_MERGE.invokeExact(ptr(), writeOpts.ptr(),
-					MemorySegment.ofBuffer(key), (long) key.remaining(),
-					MemorySegment.ofBuffer(value), (long) value.remaining(),
-					err);
-			RocksDB.checkError(err);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("merge failed", t);
+			merge(arena, MemorySegment.ofBuffer(key), MemorySegment.ofBuffer(value));
 		}
 	}
 
@@ -346,6 +333,13 @@ public final class TransactionDB extends NativeObject {
 	/// @param value native segment containing the merge operand
 	public void merge(MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
+			merge(arena, key, value);
+		}
+	}
+
+	/// Merge core using the caller's arena — every tier above builds its segments then delegates here.
+	private void merge(Arena arena, MemorySegment key, MemorySegment value) {
+		try {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MH_MERGE.invokeExact(ptr(), writeOpts.ptr(), key, key.byteSize(), value, value.byteSize(), err);
 			RocksDB.checkError(err);
@@ -666,13 +660,7 @@ public final class TransactionDB extends NativeObject {
 	/// @param value the merge operand
 	public void merge(ColumnFamilyHandle cf, byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
-			MH_MERGE_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(),
-					RocksDB.toNative(arena, key), (long) key.length,
-					RocksDB.toNative(arena, value), (long) value.length, err);
-			RocksDB.checkError(err);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("merge failed", t);
+			merge(arena, cf, RocksDB.toNative(arena, key), RocksDB.toNative(arena, value));
 		}
 	}
 
@@ -683,13 +671,7 @@ public final class TransactionDB extends NativeObject {
 	/// @param value direct [java.nio.ByteBuffer] containing the merge operand
 	public void merge(ColumnFamilyHandle cf, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
-			MH_MERGE_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(),
-					MemorySegment.ofBuffer(key), (long) key.remaining(),
-					MemorySegment.ofBuffer(value), (long) value.remaining(), err);
-			RocksDB.checkError(err);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("merge failed", t);
+			merge(arena, cf, MemorySegment.ofBuffer(key), MemorySegment.ofBuffer(value));
 		}
 	}
 
@@ -700,6 +682,13 @@ public final class TransactionDB extends NativeObject {
 	/// @param value native segment containing the merge operand
 	public void merge(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
+			merge(arena, cf, key, value);
+		}
+	}
+
+	/// Merge-into-cf core using the caller's arena — every tier above delegates here.
+	private void merge(Arena arena, ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
+		try {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MH_MERGE_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(),
 					key, key.byteSize(), value, value.byteSize(), err);
