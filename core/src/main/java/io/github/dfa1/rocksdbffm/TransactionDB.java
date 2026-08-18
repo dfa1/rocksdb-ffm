@@ -171,11 +171,11 @@ public final class TransactionDB extends NativeObject {
 	private final WriteOptions writeOpts; // default write options for direct ops
 	private final ReadOptions readOpts;  // default read options for direct ops
 
-	TransactionDB(MemorySegment ptr, MemorySegment baseDb, WriteOptions writeOpts, ReadOptions readOpts) {
+	TransactionDB(MemorySegment ptr, MemorySegment baseDb) {
 		super(ptr);
 		this.baseDb = baseDb;
-		this.writeOpts = writeOpts;
-		this.readOpts = readOpts;
+		this.writeOpts = RocksDB.DEFAULT_WRITE_OPTIONS;
+		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
 	}
 
 	// -----------------------------------------------------------------------
@@ -941,8 +941,6 @@ public final class TransactionDB extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
-		writeOpts.close();
-		readOpts.close();
 		MH_CLOSE.invokeExact(ptr);
 	}
 

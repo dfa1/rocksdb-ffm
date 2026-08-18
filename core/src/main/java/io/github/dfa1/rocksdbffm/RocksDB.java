@@ -438,6 +438,12 @@ public final class RocksDB {
 		// no instances
 	}
 
+	// A get/put call only reads the options struct it's given, never mutates it, so one
+	// instance safely serves every open DB in the process. Never closed — closing it would
+	// break every other DB still using it, so no DB's tryClose may call close() on these.
+	static final WriteOptions DEFAULT_WRITE_OPTIONS = WriteOptions.newWriteOptions();
+	static final ReadOptions DEFAULT_READ_OPTIONS = ReadOptions.newReadOptions();
+
 	// -----------------------------------------------------------------------
 	// Factory — read-write
 	// -----------------------------------------------------------------------
@@ -455,7 +461,7 @@ public final class RocksDB {
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
 			MemorySegment ptr = (MemorySegment) MH_OPEN.invokeExact(options.ptr(), pathSeg, err);
 			checkError(err);
-			return new ReadWriteDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
+			return new ReadWriteDB(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openReadWrite failed", t);
 		}
@@ -487,7 +493,7 @@ public final class RocksDB {
 			MemorySegment ptr = (MemorySegment) MH_OPEN_WITH_TTL.invokeExact(
 					options.ptr(), pathSeg, (int) ttl.toSeconds(), err);
 			checkError(err);
-			return new TtlDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions(), ttl);
+			return new TtlDB(ptr, ttl);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openTtl failed", t);
 		}
@@ -520,7 +526,7 @@ public final class RocksDB {
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
 			MemorySegment ptr = (MemorySegment) MH_OPEN.invokeExact(options.ptr(), pathSeg, err);
 			checkError(err);
-			return new BlobDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
+			return new BlobDB(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openBlob failed", t);
 		}
@@ -554,7 +560,7 @@ public final class RocksDB {
 			MemorySegment ptr = (MemorySegment) MH_OPEN_FOR_READ_ONLY.invokeExact(
 					options.ptr(), pathSeg, toByte(errorIfWalFileExists), err);
 			checkError(err);
-			return new ReadOnlyDB(ptr, ReadOptions.newReadOptions());
+			return new ReadOnlyDB(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openReadOnly failed", t);
 		}
@@ -599,7 +605,7 @@ public final class RocksDB {
 					options.ptr(), primary, secondary, err);
 			checkError(err);
 
-			return new SecondaryDB(ptr, ReadOptions.newReadOptions());
+			return new SecondaryDB(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openSecondary failed", t);
 		}
@@ -625,7 +631,7 @@ public final class RocksDB {
 			checkError(err);
 
 			MemorySegment baseDb = (MemorySegment) MH_TRANSACTION_GET_BASE_DB.invokeExact(ptr);
-			return new TransactionDB(ptr, baseDb, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
+			return new TransactionDB(ptr, baseDb);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openTransaction failed", t);
 		}
@@ -646,7 +652,7 @@ public final class RocksDB {
 			checkError(err);
 
 			MemorySegment baseDb = (MemorySegment) MH_GET_BASE_DB.invokeExact(ptr);
-			return new OptimisticTransactionDB(ptr, baseDb, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
+			return new OptimisticTransactionDB(ptr, baseDb);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openOptimistic failed", t);
 		}
@@ -1232,7 +1238,7 @@ public final class RocksDB {
 				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
 			}
 
-			return new ReadWriteDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
+			return new ReadWriteDB(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openReadWrite failed", t);
 		} finally {
@@ -1287,7 +1293,7 @@ public final class RocksDB {
 				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
 			}
 
-			return new BlobDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
+			return new BlobDB(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openBlob failed", t);
 		} finally {
@@ -1351,7 +1357,7 @@ public final class RocksDB {
 			for (int i = 0; i < n; i++) {
 				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
 			}
-			return new ReadOnlyDB(ptr, ReadOptions.newReadOptions());
+			return new ReadOnlyDB(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openReadOnly failed", t);
 		} finally {
@@ -1406,7 +1412,7 @@ public final class RocksDB {
 				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
 			}
 			Duration globalTtl = ttls.isEmpty() ? Duration.ZERO : ttls.getFirst();
-			return new TtlDB(ptr, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions(), globalTtl);
+			return new TtlDB(ptr, globalTtl);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openTtl failed", t);
 		} finally {
@@ -1458,7 +1464,7 @@ public final class RocksDB {
 				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
 			}
 			MemorySegment baseDb = (MemorySegment) MH_TRANSACTION_GET_BASE_DB.invokeExact(ptr);
-			return new TransactionDB(ptr, baseDb, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
+			return new TransactionDB(ptr, baseDb);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openTransaction failed", t);
 		} finally {
@@ -1507,7 +1513,7 @@ public final class RocksDB {
 				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
 			}
 			MemorySegment baseDb = (MemorySegment) MH_GET_BASE_DB.invokeExact(ptr);
-			return new OptimisticTransactionDB(ptr, baseDb, WriteOptions.newWriteOptions(), ReadOptions.newReadOptions());
+			return new OptimisticTransactionDB(ptr, baseDb);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openOptimistic failed", t);
 		} finally {
@@ -1934,6 +1940,22 @@ public final class RocksDB {
 			throw new UncheckedIOException(message, e);
 		}
 		throw new AssertionError(message, t);
+	}
+
+	/// Invokes a void-returning, single-`MemorySegment`-argument destroy handle, swallowing
+	/// any failure. Deliberate exception to the "never pass a `MethodHandle` as a parameter"
+	/// rule: close() is not a hot path, so losing `invokeExact`'s constant-folding here doesn't
+	/// matter, and the alternative — nested try/finally at every multi-resource `tryClose` — is
+	/// worse for a destructor that must attempt every release regardless of earlier failures.
+	///
+	/// @param destroy single-`MemorySegment`-argument native destroy handle
+	/// @param ptr     the native pointer to release
+	static void closeQuietly(MethodHandle destroy, MemorySegment ptr) {
+		try {
+			destroy.invokeExact(ptr);
+		} catch (Throwable t) {
+			// ignored — best-effort cleanup, matches NativeObject#close()
+		}
 	}
 
 	/// Copies `len` bytes out of a length-prefixed, non-owned native pointer (e.g. a `const

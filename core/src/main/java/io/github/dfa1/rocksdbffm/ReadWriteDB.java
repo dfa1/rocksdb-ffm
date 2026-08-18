@@ -23,10 +23,10 @@ public final class ReadWriteDB extends NativeObject {
 	private final WriteOptions writeOpts;
 	private final ReadOptions readOpts;
 
-	ReadWriteDB(MemorySegment ptr, WriteOptions writeOpts, ReadOptions readOpts) {
+	ReadWriteDB(MemorySegment ptr) {
 		super(ptr);
-		this.writeOpts = writeOpts;
-		this.readOpts = readOpts;
+		this.writeOpts = RocksDB.DEFAULT_WRITE_OPTIONS;
+		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
 	}
 
 	// -----------------------------------------------------------------------
@@ -828,8 +828,6 @@ public final class ReadWriteDB extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
-		writeOpts.close();
-		readOpts.close();
 		RocksDB.close(ptr);
 	}
 }
