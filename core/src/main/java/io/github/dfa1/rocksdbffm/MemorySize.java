@@ -5,7 +5,7 @@ package io.github.dfa1.rocksdbffm;
 /// Use the named factory methods to make the unit explicit at the call site:
 ///
 /// ```
-/// new LRUCache(MemorySize.ofMB(64))          // unambiguous
+/// LRUCache.newLRUCache(MemorySize.ofMB(64))  // unambiguous
 /// tbl.setBlockSize(MemorySize.ofKB(16))      // no raw-long guesswork
 /// ```
 ///

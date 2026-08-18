@@ -15,7 +15,7 @@ import java.lang.invoke.MethodHandle;
 ///
 /// ```
 /// try (var filter = FilterPolicy.newBloom(10);
-///      var tbl = new BlockBasedTableConfig().setFilterPolicy(filter);
+///      var tbl = BlockBasedTableOptions.newBlockBasedConfig().setFilterPolicy(filter);
 ///      var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl)) {
 ///     // filter.close() called automatically — no-op because ownership transferred
 /// }
