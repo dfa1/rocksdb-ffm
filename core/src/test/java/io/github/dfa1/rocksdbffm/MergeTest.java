@@ -12,13 +12,15 @@ import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/// Covers `merge()` across every write-capable type. This library does not yet wrap
-/// `rocksdb_mergeoperator_create` (see `docs/c-api-gaps.md`), so no test here can configure a
-/// merge operator — every direct `merge()` call is expected to surface RocksDB's own
+/// Covers `merge()` across every write-capable type when no [MergeOperator] is configured — the
+/// default state for any [Options] that never calls `setMergeOperator`. Every direct `merge()`
+/// call is expected to surface RocksDB's own
 /// `Status::InvalidArgument("Merge requires ColumnFamilyOptions::merge_operator != nullptr")`
 /// as a [RocksDBException], confirmed against `rocksdb/db/write_batch.cc`'s
 /// `MemTableInserter::Merge`. `Transaction` and `WriteBatch` only queue a merge record and don't
 /// touch the memtable until `commit()`/`write()`, so those two throw later than the others.
+/// For the configured-operator case (merges that actually merge something), see
+/// `MergeOperatorTest`.
 class MergeTest {
 
 	// -----------------------------------------------------------------------
