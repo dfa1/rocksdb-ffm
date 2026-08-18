@@ -838,15 +838,9 @@ public final class RocksDB {
 
 	/// byte[] merge using the caller's arena.
 	static void mergeBytes(Arena arena, MemorySegment db, MemorySegment writeOpts, byte[] key, byte[] value) {
-		try {
-			MemorySegment err = errHolder(arena);
-			MemorySegment k = toNative(arena, key);
-			MemorySegment v = toNative(arena, value);
-			MH_MERGE.invokeExact(db, writeOpts, k, (long) key.length, v, (long) value.length, err);
-			checkError(err);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("merge failed", t);
-		}
+		MemorySegment k = toNative(arena, key);
+		MemorySegment v = toNative(arena, value);
+		mergeSegment(arena, db, writeOpts, k, (long) key.length, v, (long) value.length);
 	}
 
 	/// MemorySegment merge — zero-copy, caller supplies pre-allocated native segments.
@@ -1573,15 +1567,9 @@ public final class RocksDB {
 	/// byte[] merge with explicit column family using the caller's arena.
 	static void mergeCfBytes(Arena arena, MemorySegment db, MemorySegment writeOpts, ColumnFamilyHandle cf,
 	                         byte[] key, byte[] value) {
-		try {
-			MemorySegment err = errHolder(arena);
-			MH_MERGE_CF.invokeExact(db, writeOpts, cf.ptr(),
-					toNative(arena, key), (long) key.length,
-					toNative(arena, value), (long) value.length, err);
-			checkError(err);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("merge failed", t);
-		}
+		MemorySegment k = toNative(arena, key);
+		MemorySegment v = toNative(arena, value);
+		mergeCfSegment(arena, db, writeOpts, cf, k, (long) key.length, v, (long) value.length);
 	}
 
 	/// MemorySegment merge with explicit column family — zero-copy.
