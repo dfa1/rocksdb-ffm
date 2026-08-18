@@ -76,7 +76,7 @@ public sealed interface MergeOperator {
 	/// the [Options] in a single native call.
 	record Uint64Add() implements MergeOperator {
 
-		/// `void rocksdb_options_set_uint64add_merge_operator(rocksdb_options_t*)`
+		/// `void rocksdb_options_set_uint64add_merge_operator(rocksdb_options_t*);`
 		private static final MethodHandle MH_SET_UINT64ADD_MERGE_OPERATOR = NativeLibrary.lookup(
 				"rocksdb_options_set_uint64add_merge_operator",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
@@ -93,7 +93,7 @@ public sealed interface MergeOperator {
 	/// A Java-implemented merge operator, backed by a real `rocksdb_mergeoperator_t*` handle.
 	final class Custom extends NativeObject implements MergeOperator {
 
-		/// `rocksdb_mergeoperator_t* rocksdb_mergeoperator_create(void* state, void (*destructor)(void*), char* (*full_merge)(void*, const char*, size_t, const char*, size_t, const char* const*, const size_t*, int, unsigned char*, size_t*), char* (*partial_merge)(void*, const char*, size_t, const char* const*, const size_t*, int, unsigned char*, size_t*), void (*delete_value)(void*, const char*, size_t), const char* (*name)(void*))`
+		/// `rocksdb_mergeoperator_t* rocksdb_mergeoperator_create(void* state, void (*destructor)(void*), char* (*full_merge)(void*, const char* key, size_t key_length, const char* existing_value, size_t existing_value_length, const char* const* operands_list, const size_t* operands_list_length, int num_operands, unsigned char* success, size_t* new_value_length), char* (*partial_merge)(void*, const char* key, size_t key_length, const char* const* operands_list, const size_t* operands_list_length, int num_operands, unsigned char* success, size_t* new_value_length), void (*delete_value)(void*, const char* value, size_t value_length), const char* (*name)(void*));`
 		private static final MethodHandle MH_MERGEOPERATOR_CREATE = NativeLibrary.lookup(
 				"rocksdb_mergeoperator_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -104,12 +104,12 @@ public sealed interface MergeOperator {
 						ValueLayout.ADDRESS,  // delete_value
 						ValueLayout.ADDRESS)); // name
 
-		/// `void rocksdb_mergeoperator_destroy(rocksdb_mergeoperator_t*)`
+		/// `void rocksdb_mergeoperator_destroy(rocksdb_mergeoperator_t*);`
 		private static final MethodHandle MH_MERGEOPERATOR_DESTROY = NativeLibrary.lookup(
 				"rocksdb_mergeoperator_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		/// `void rocksdb_options_set_merge_operator(rocksdb_options_t*, rocksdb_mergeoperator_t*)`
+		/// `void rocksdb_options_set_merge_operator(rocksdb_options_t*, rocksdb_mergeoperator_t*);`
 		private static final MethodHandle MH_SET_MERGE_OPERATOR = NativeLibrary.lookup(
 				"rocksdb_options_set_merge_operator",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
@@ -243,9 +243,12 @@ public sealed interface MergeOperator {
 			if (MemorySegment.NULL.equals(ptr) || len <= 0) {
 				return new byte[0];
 			}
-			byte[] bytes = new byte[(int) len];
-			MemorySegment.copy(ptr.reinterpret(len), ValueLayout.JAVA_BYTE, 0, bytes, 0, (int) len);
-			return bytes;
+			return RocksDB.toByteArray(ptr, len);
+		}
+
+		private static void writeMergeFailure(MemorySegment successPtr, MemorySegment newValueLenPtr) {
+			successPtr.set(ValueLayout.JAVA_BYTE, 0, (byte) 0);
+			newValueLenPtr.set(ValueLayout.JAVA_LONG, 0, 0L);
 		}
 
 		private static List<byte[]> readOperands(MemorySegment operandsList, MemorySegment operandsLen, int numOperands) {
@@ -281,8 +284,7 @@ public sealed interface MergeOperator {
 				// (assertions are on by default under Surefire) would abort the JVM, not just
 				// this call, so report failure to RocksDB instead of asserting.
 				t.printStackTrace();
-				successPtr.set(ValueLayout.JAVA_BYTE, 0, (byte) 0);
-				newValueLenPtr.set(ValueLayout.JAVA_LONG, 0, 0L);
+				writeMergeFailure(successPtr, newValueLenPtr);
 				return mallocCopy(new byte[0]);
 			}
 		}
@@ -292,9 +294,17 @@ public sealed interface MergeOperator {
 		private static MemorySegment partialMergeDispatch(MemorySegment state, MemorySegment key, long keyLen,
 				MemorySegment operandsList, MemorySegment operandsLen, int numOperands,
 				MemorySegment success, MemorySegment newValueLen) {
-			success.reinterpret(ValueLayout.JAVA_BYTE.byteSize()).set(ValueLayout.JAVA_BYTE, 0, (byte) 0);
-			newValueLen.reinterpret(ValueLayout.JAVA_LONG.byteSize()).set(ValueLayout.JAVA_LONG, 0, 0L);
-			return mallocCopy(new byte[0]);
+			MemorySegment successPtr = success.reinterpret(ValueLayout.JAVA_BYTE.byteSize());
+			MemorySegment newValueLenPtr = newValueLen.reinterpret(ValueLayout.JAVA_LONG.byteSize());
+			try {
+				writeMergeFailure(successPtr, newValueLenPtr);
+				return mallocCopy(new byte[0]);
+			} catch (Throwable t) {
+				// same "must not throw" contract as fullMergeDispatch.
+				t.printStackTrace();
+				writeMergeFailure(successPtr, newValueLenPtr);
+				return mallocCopy(new byte[0]);
+			}
 		}
 
 		/// Called from [#DESTRUCTOR_STUB] when RocksDB's internal `shared_ptr` refcount hits zero.

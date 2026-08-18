@@ -17,9 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   post-version-bump audit of the mapped property set against `rocksdb/include/rocksdb/db.h`.
 - `merge()` (byte[]/ByteBuffer/MemorySegment, plus column-family variants) on `ReadWriteDB`,
   `TtlDB`, `BlobDB`, `OptimisticTransactionDB`, `TransactionDB`, `Transaction`, and `WriteBatch`
-  (closes [#8](https://github.com/dfa1/rocksdbffm/issues/8)). No merge operator can be configured
-  yet, so every call fails with `RocksDBException` until custom `MergeOperator` support lands
-  (tracked in `docs/c-api-gaps.md`).
+  (closes [#8](https://github.com/dfa1/rocksdbffm/issues/8)).
+- `MergeOperator`: `uint64Add()` wraps the built-in little-endian-uint64-sum operator;
+  `custom(String, FullMergeFn)` wraps RocksDB's general callback-based merge operator, so
+  `merge()` can be given real semantics instead of always failing with `RocksDBException`.
+  Attached via `Options.setMergeOperator`.
 
 ### Changed
 
