@@ -8,13 +8,13 @@ import java.lang.invoke.MethodHandle;
 /// FFM wrapper for `rocksdb_block_based_table_options_t`.
 ///
 /// Configure and pass to [Options#setTableFormatConfig(BlockBasedTableOptions)].
-/// `BlockBasedTableConfig` may be closed once the options have been applied —
+/// `BlockBasedTableOptions` may be closed once the options have been applied —
 /// RocksDB internally copies everything it needs.
 ///
 /// ```
 /// try (LRUCache cache = LRUCache.newLRUCache(MemorySize.ofMB(64));
-///      BlockBasedTableConfig tbl = new BlockBasedTableConfig()
-///          .setBlockSize(16 * 1024)
+///      BlockBasedTableOptions tbl = BlockBasedTableOptions.newBlockBasedConfig()
+///          .setBlockSize(MemorySize.ofKB(16))
 ///          .setFilterPolicy(FilterPolicy.newBloom(10))
 ///          .setBlockCache(cache)
 ///          .setCacheIndexAndFilterBlocks(true);
