@@ -157,11 +157,10 @@ public final class Logger extends NativeObject {
 			if (msg.equals(MemorySegment.NULL) || len <= 0) {
 				message = "";
 			} else {
-				// msg arrives as a zero-size segment; reinterpret to give it bounds
-				// so it is not possible to use msg.getString(0), that works only for zero terminated strings
-				byte[] bytes = new byte[(int) len];
-				msg.reinterpret(len).asByteBuffer().get(bytes, 0, (int) len);
-				message = new String(bytes, 0, (int) len, StandardCharsets.UTF_8);
+				// msg is not NUL-terminated, so RocksDB.toJavaString (getString-based) does not
+				// apply; it is also not owned by us, so RocksDB.toByteArray (borrowed,
+				// length-prefixed pointer) is the right fit.
+				message = new String(RocksDB.toByteArray(msg, len), StandardCharsets.UTF_8);
 			}
 			message = dropTrailingNewline(message);
 			cb.log(level, message);
