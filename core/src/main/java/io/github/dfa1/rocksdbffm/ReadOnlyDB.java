@@ -18,9 +18,9 @@ public final class ReadOnlyDB extends NativeObject {
 
 	private final ReadOptions readOpts;
 
-	ReadOnlyDB(MemorySegment ptr, ReadOptions readOpts) {
+	ReadOnlyDB(MemorySegment ptr) {
 		super(ptr);
-		this.readOpts = readOpts;
+		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
 	}
 
 	// -----------------------------------------------------------------------
@@ -233,7 +233,6 @@ public final class ReadOnlyDB extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
-		readOpts.close();
 		RocksDB.close(ptr);
 	}
 }

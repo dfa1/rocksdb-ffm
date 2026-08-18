@@ -61,12 +61,11 @@ public final class OptimisticTransactionDB extends NativeObject {
 	private final WriteOptions writeOpts;
 	private final ReadOptions readOpts;
 
-	OptimisticTransactionDB(MemorySegment ptr, MemorySegment baseDb,
-	                        WriteOptions writeOpts, ReadOptions readOpts) {
+	OptimisticTransactionDB(MemorySegment ptr, MemorySegment baseDb) {
 		super(ptr);
 		this.baseDb = baseDb;
-		this.writeOpts = writeOpts;
-		this.readOpts = readOpts;
+		this.writeOpts = RocksDB.DEFAULT_WRITE_OPTIONS;
+		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
 	}
 
 	// -----------------------------------------------------------------------
@@ -599,9 +598,7 @@ public final class OptimisticTransactionDB extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
-		writeOpts.close();
-		readOpts.close();
-		MH_CLOSE_BASE_DB.invokeExact(baseDb);
+		RocksDB.closeQuietly(MH_CLOSE_BASE_DB, baseDb);
 		MH_CLOSE.invokeExact(ptr);
 	}
 }

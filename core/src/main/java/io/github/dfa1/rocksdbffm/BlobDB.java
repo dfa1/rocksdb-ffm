@@ -34,10 +34,10 @@ public final class BlobDB extends NativeObject {
 	private final WriteOptions writeOpts;
 	private final ReadOptions readOpts;
 
-	BlobDB(MemorySegment ptr, WriteOptions writeOpts, ReadOptions readOpts) {
+	BlobDB(MemorySegment ptr) {
 		super(ptr);
-		this.writeOpts = writeOpts;
-		this.readOpts = readOpts;
+		this.writeOpts = RocksDB.DEFAULT_WRITE_OPTIONS;
+		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
 	}
 
 	// -----------------------------------------------------------------------
@@ -535,8 +535,6 @@ public final class BlobDB extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
-		writeOpts.close();
-		readOpts.close();
 		RocksDB.close(ptr);
 	}
 }

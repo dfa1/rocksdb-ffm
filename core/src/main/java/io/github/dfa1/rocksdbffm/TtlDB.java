@@ -28,10 +28,10 @@ public final class TtlDB extends NativeObject {
 	private final ReadOptions readOpts;
 	private final Duration ttl;
 
-	TtlDB(MemorySegment ptr, WriteOptions writeOpts, ReadOptions readOpts, Duration ttl) {
+	TtlDB(MemorySegment ptr, Duration ttl) {
 		super(ptr);
-		this.writeOpts = writeOpts;
-		this.readOpts = readOpts;
+		this.writeOpts = RocksDB.DEFAULT_WRITE_OPTIONS;
+		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
 		this.ttl = ttl;
 	}
 
@@ -784,8 +784,6 @@ public final class TtlDB extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
-		writeOpts.close();
-		readOpts.close();
 		RocksDB.close(ptr);
 	}
 }
