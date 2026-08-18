@@ -832,13 +832,7 @@ public final class RocksDB {
 	/// byte[] merge — slow path, allocates native memory.
 	static void mergeBytes(MemorySegment db, MemorySegment writeOpts, byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = errHolder(arena);
-			MemorySegment k = toNative(arena, key);
-			MemorySegment v = toNative(arena, value);
-			MH_MERGE.invokeExact(db, writeOpts, k, (long) key.length, v, (long) value.length, err);
-			checkError(err);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("merge failed", t);
+			mergeBytes(arena, db, writeOpts, key, value);
 		}
 	}
 
@@ -859,11 +853,7 @@ public final class RocksDB {
 	static void mergeSegment(MemorySegment db, MemorySegment writeOpts,
 	                         MemorySegment key, long keyLen, MemorySegment val, long valLen) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = errHolder(arena);
-			MH_MERGE.invokeExact(db, writeOpts, key, keyLen, val, valLen, err);
-			checkError(err);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("merge failed", t);
+			mergeSegment(arena, db, writeOpts, key, keyLen, val, valLen);
 		}
 	}
 
@@ -1576,6 +1566,14 @@ public final class RocksDB {
 	static void mergeCfBytes(MemorySegment db, MemorySegment writeOpts, ColumnFamilyHandle cf,
 	                         byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
+			mergeCfBytes(arena, db, writeOpts, cf, key, value);
+		}
+	}
+
+	/// byte[] merge with explicit column family using the caller's arena.
+	static void mergeCfBytes(Arena arena, MemorySegment db, MemorySegment writeOpts, ColumnFamilyHandle cf,
+	                         byte[] key, byte[] value) {
+		try {
 			MemorySegment err = errHolder(arena);
 			MH_MERGE_CF.invokeExact(db, writeOpts, cf.ptr(),
 					toNative(arena, key), (long) key.length,
@@ -1590,6 +1588,14 @@ public final class RocksDB {
 	static void mergeCfSegment(MemorySegment db, MemorySegment writeOpts, ColumnFamilyHandle cf,
 	                           MemorySegment key, long keyLen, MemorySegment val, long valLen) {
 		try (Arena arena = Arena.ofConfined()) {
+			mergeCfSegment(arena, db, writeOpts, cf, key, keyLen, val, valLen);
+		}
+	}
+
+	/// MemorySegment merge with explicit column family using the caller's arena.
+	static void mergeCfSegment(Arena arena, MemorySegment db, MemorySegment writeOpts, ColumnFamilyHandle cf,
+	                           MemorySegment key, long keyLen, MemorySegment val, long valLen) {
+		try {
 			MemorySegment err = errHolder(arena);
 			MH_MERGE_CF.invokeExact(db, writeOpts, cf.ptr(), key, keyLen, val, valLen, err);
 			checkError(err);
