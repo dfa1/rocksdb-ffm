@@ -73,7 +73,7 @@ Column families are not a separate method name — every factory that supports t
 | `openReadWrite(Path)` / `(Options, Path)`                                      | yes               | `ReadWriteDB` (creates if missing) |
 | `openReadOnly(Path)` / `(Options, Path)` / `(Options, Path, boolean errorIfWalFileExists)` | yes  | `ReadOnlyDB`  |
 | `openTtl(Path, Duration)` / `(Options, Path, Duration)`                        | yes               | `TtlDB`                   |
-| `openBlob(Path)` / `(Options, Path)`                                           | no                | `BlobDB`                  |
+| `openBlob(Path)` / `(Options, Path)`                                           | yes               | `BlobDB`                  |
 | `openSecondary(Options, Path primary, Path secondary)`                         | no                | `SecondaryDB`             |
 | `openTransaction(Options, TransactionDBOptions, Path)`                         | yes               | `TransactionDB`           |
 | `openOptimistic(Options, Path)`                                                | yes               | `OptimisticTransactionDB` |
@@ -92,7 +92,7 @@ Each type exposes only the operations that are valid for it — see
 | `ReadWriteDB`             |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
 | `ReadOnlyDB`              |  —    |  ✅  |   ✅    |    ✅    |  —    |   —     |   —    | ✅  |
 | `TtlDB`                   |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
-| `BlobDB`                  |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   —     |   ✅   | —   |
+| `BlobDB`                  |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   —     |   ✅   | ✅  |
 | `SecondaryDB`             |  —    |  ✅  |   ✅    |    ✅    |  —    |   —     |   —    | —   |
 | `TransactionDB`           |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   —     |   —    | ✅  |
 | `OptimisticTransactionDB` |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   —     |   —    | ✅  |
@@ -255,7 +255,7 @@ compaction, so close them promptly.
 | `ColumnFamilyHandle`     | Live handle; `getId()`, `getName()`; `AutoCloseable`               |
 
 `createColumnFamily(ColumnFamilyDescriptor)` and `dropColumnFamily(handle)` exist on `ReadWriteDB`,
-`TtlDB`, `TransactionDB`, and `OptimisticTransactionDB`. Every data method
+`TtlDB`, `BlobDB`, `TransactionDB`, and `OptimisticTransactionDB`. Every data method
 (`put`/`get`/`delete`/`deleteRange`/`keyMayExist`/`flush`/`getProperty`/`newIterator`) has a
 first-argument `ColumnFamilyHandle` overload across all three access tiers. Reopening requires
 listing every existing column family, `default` included.
