@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class WalIteratorTest {
 
@@ -113,13 +115,14 @@ class WalIteratorTest {
 		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			SequenceNumber start = SequenceNumber.of(0);
-
-			// When
 			WalIterator it = db.getUpdatesSince(start);
 			it.close();
-			it.close();
+
+			// When
+			ThrowingCallable secondClose = it::close;
 
 			// Then — double close must not crash
+			assertThatCode(secondClose).doesNotThrowAnyException();
 		}
 	}
 }

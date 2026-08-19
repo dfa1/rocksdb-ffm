@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class TransactionDBTest {
 
@@ -734,9 +736,10 @@ class TransactionDBTest {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
-			db.flush(cf, fo);
+			ThrowingCallable action = () -> db.flush(cf, fo);
 
-			// Then — no exception means flush succeeded
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}

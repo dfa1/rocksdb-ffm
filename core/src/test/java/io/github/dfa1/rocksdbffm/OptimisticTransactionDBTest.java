@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class OptimisticTransactionDBTest {
@@ -478,9 +480,10 @@ class OptimisticTransactionDBTest {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
-			db.flush(cf, fo);
+			ThrowingCallable action = () -> db.flush(cf, fo);
 
-			// Then — no exception
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -528,7 +531,11 @@ class OptimisticTransactionDBTest {
 			db.dropColumnFamily(cf);
 			cf.close();
 
-			// Then — no exception means drop succeeded
+			// Then — family list should only contain default
+			try (var listOpts = Options.newOptions()) {
+				List<byte[]> families = RocksDB.listColumnFamilies(listOpts, dir);
+				assertThat(families).hasSize(1);
+			}
 		}
 	}
 
@@ -744,9 +751,10 @@ class OptimisticTransactionDBTest {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
-			db.flush(fo);
+			ThrowingCallable action = () -> db.flush(fo);
 
-			// Then — no exception
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 

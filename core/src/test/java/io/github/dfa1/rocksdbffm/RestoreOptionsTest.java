@@ -1,8 +1,10 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class RestoreOptionsTest {
 
@@ -31,13 +33,14 @@ class RestoreOptionsTest {
 
 	@Test
 	void close_isIdempotent() {
-		// Given
+		// Given — an already-closed instance
 		var sut = RestoreOptions.create();
+		sut.close();
 
 		// When
-		sut.close();
+		ThrowingCallable secondClose = sut::close;
 
 		// Then — closing twice must not crash the JVM
-		sut.close();
+		assertThatCode(secondClose).doesNotThrowAnyException();
 	}
 }

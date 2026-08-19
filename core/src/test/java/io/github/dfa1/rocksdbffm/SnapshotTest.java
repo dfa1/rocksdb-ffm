@@ -1,11 +1,13 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class SnapshotTest {
 
@@ -168,12 +170,16 @@ class SnapshotTest {
 
 	@Test
 	void snapshot_double_close(@TempDir Path dir) {
-		// Given
+		// Given — an already-closed snapshot
 		try (var db = RocksDB.openReadWrite(dir)) {
-			final Snapshot snap = db.getSnapshot();
+			Snapshot snap = db.getSnapshot();
 			snap.close();
-			// normally this would trigger a JVM crash
-			snap.close();
+
+			// When
+			ThrowingCallable secondClose = snap::close;
+
+			// Then — normally this would trigger a JVM crash
+			assertThatCode(secondClose).doesNotThrowAnyException();
 		}
 	}
 }

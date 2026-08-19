@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -11,6 +12,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class KeyMayExistTest {
 
@@ -54,9 +56,10 @@ class KeyMayExistTest {
 			db.delete("k".getBytes());
 
 			// When
-			db.keyMayExist("k".getBytes());
+			ThrowingCallable action = () -> db.keyMayExist("k".getBytes());
 
 			// Then — result is unspecified but must not throw
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 

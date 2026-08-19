@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -7,6 +8,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class BackupEngineTest {
@@ -212,16 +214,17 @@ class BackupEngineTest {
 
 	@Test
 	void close_isIdempotent(@TempDir Path dir) {
-		// Given
+		// Given — an already-closed instance
 		var opts = Options.newOptions().setCreateIfMissing(true);
 		var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
 		var engine = BackupEngine.open(opts, dir.resolve("backup"));
+		engine.close();
 
 		// When
-		engine.close();
+		ThrowingCallable secondClose = engine::close;
 
 		// Then — closing twice must not crash the JVM
-		engine.close();
+		assertThatCode(secondClose).doesNotThrowAnyException();
 
 		db.close();
 		opts.close();

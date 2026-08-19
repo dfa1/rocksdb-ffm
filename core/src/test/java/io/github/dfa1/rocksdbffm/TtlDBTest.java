@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class TtlDBTest {
 
@@ -436,9 +438,10 @@ class TtlDBTest {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
-			db.flush(fo);
+			ThrowingCallable action = () -> db.flush(fo);
 
-			// Then — no exception means flush succeeded
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -449,9 +452,10 @@ class TtlDBTest {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
-			db.flushWal(true);
+			ThrowingCallable action = () -> db.flushWal(true);
 
-			// Then — no exception means flush succeeded
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -585,9 +589,10 @@ class TtlDBTest {
 			db.put("z".getBytes(), "2".getBytes());
 
 			// When
-			db.suggestCompactRange("a".getBytes(), "z".getBytes());
+			ThrowingCallable action = () -> db.suggestCompactRange("a".getBytes(), "z".getBytes());
 
-			// Then — hint only; no guarantee of compaction, no exception
+			// Then — hint only; no guarantee of compaction, just that it doesn't throw
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -632,11 +637,12 @@ class TtlDBTest {
 			writer.finish();
 		}
 
-		// When
 		try (var db = RocksDB.openTtl(dbPath, Duration.ofSeconds(60))) {
-			db.ingestExternalFile(sstPath);
+			// When
+			ThrowingCallable action = () -> db.ingestExternalFile(sstPath);
 
-			// Then — no exception means the ingest call itself succeeded
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -653,12 +659,13 @@ class TtlDBTest {
 			writer.finish();
 		}
 
-		// When
 		try (var db = RocksDB.openTtl(dbPath, Duration.ofSeconds(60));
 		     var ingestOpts = IngestExternalFileOptions.newIngestExternalFileOptions().setMoveFiles(true)) {
-			db.ingestExternalFile(sstPath, ingestOpts);
+			// When
+			ThrowingCallable action = () -> db.ingestExternalFile(sstPath, ingestOpts);
 
-			// Then — no exception means the ingest call itself succeeded
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -669,9 +676,10 @@ class TtlDBTest {
 		     var ingestOpts = IngestExternalFileOptions.newIngestExternalFileOptions()) {
 
 			// When
-			db.ingestExternalFile(List.of(), ingestOpts);
+			ThrowingCallable action = () -> db.ingestExternalFile(List.of(), ingestOpts);
 
-			// Then — no exception
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -704,7 +712,11 @@ class TtlDBTest {
 			db.dropColumnFamily(cf);
 			cf.close();
 
-			// Then — no exception means drop succeeded
+			// Then — family list should only contain default
+			try (var listOpts = Options.newOptions()) {
+				List<byte[]> families = RocksDB.listColumnFamilies(listOpts, dir);
+				assertThat(families).hasSize(1);
+			}
 		}
 	}
 
@@ -1003,9 +1015,10 @@ class TtlDBTest {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
-			db.flush(cf, fo);
+			ThrowingCallable action = () -> db.flush(cf, fo);
 
-			// Then — no exception means flush succeeded
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
