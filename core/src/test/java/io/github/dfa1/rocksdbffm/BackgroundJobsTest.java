@@ -128,7 +128,7 @@ class BackgroundJobsTest {
 
 	// -----------------------------------------------------------------------
 	// BlobDB — cancelAllBackgroundWork / manual compaction / waitForCompact
-	// (gained via RocksDbWriteOps)
+	// (gained via WriteOperations)
 	// -----------------------------------------------------------------------
 
 	@Test

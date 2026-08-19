@@ -7,9 +7,10 @@ import java.util.OptionalLong;
 
 /// Shared read-only operations, scoped to the default column family, for every wrapper
 /// around a plain `rocksdb_t*`: read-write, read-only, TTL, blob, and secondary instances
-/// all expose this identical surface. See [RocksDbCfReadOps] for the column-family-scoped
-/// overloads, implemented only by types that can actually obtain a [ColumnFamilyHandle] for
-/// themselves — notably not [SecondaryDB], which has no multi-column-family open path.
+/// all expose this identical surface. See [ReadColumnFamilyOperations] for the
+/// column-family-scoped overloads, implemented only by types that can actually obtain a
+/// [ColumnFamilyHandle] for themselves — notably not [SecondaryDB], which has no
+/// multi-column-family open path.
 ///
 /// Every method here is a direct, zero-logic forward into the matching package-private
 /// `RocksDB` helper — implementors only need to supply the native pointer.
@@ -18,7 +19,7 @@ import java.util.OptionalLong;
 /// (non-transactional) operations bind their own `MethodHandle`s instead of sharing these
 /// helpers, per the project convention that a `MethodHandle` must never be routed through a
 /// shared call site (it defeats `invokeExact`'s compile-time constant folding).
-public interface RocksDbReadOps {
+public interface ReadOperations {
 
 	/// Returns the native `rocksdb_t*` pointer to operate on. Equivalent to the
 	/// [NativeObject#ptr()] every implementor already has — a separate accessor only

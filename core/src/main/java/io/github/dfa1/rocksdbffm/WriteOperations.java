@@ -6,18 +6,33 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.List;
 
-/// Shared write/administrative operations for every wrapper around a mutable plain
-/// `rocksdb_t*`: read-write, TTL, and blob instances all expose the identical surface.
-/// Extends [RocksDbCfReadOps] since every writable instance also supports opening or
-/// creating column families for itself, and is therefore readable both directly and
-/// per-column-family.
+/// Shared write/administrative operations, including column-family-scoped overloads, for
+/// every wrapper around a mutable plain `rocksdb_t*`: read-write, TTL, and blob instances
+/// all expose the identical surface and, unlike [ReadOnlyDB], all support opening or
+/// creating column families for themselves.
+///
+/// Deliberately does not extend [ReadOperations]/[ReadColumnFamilyOperations] — a class
+/// that is both readable and writable (every current implementor) implements both this
+/// interface and [ReadColumnFamilyOperations] directly, rather than the write interface
+/// inheriting the read one. This keeps the two independently reusable: [ReadOnlyDB] and
+/// [SecondaryDB] need a read interface with no write methods at all.
 ///
 /// Every method here is a direct, zero-logic forward into the matching package-private
-/// `RocksDB` helper — implementors only need to supply the native pointer (see
-/// [RocksDbReadOps#dbPtr()]).
+/// `RocksDB` helper — implementors only need to supply the native pointer.
 ///
-/// Not implemented by [TransactionDB] or [OptimisticTransactionDB] — see [RocksDbReadOps].
-public interface RocksDbWriteOps extends RocksDbCfReadOps {
+/// Not implemented by [TransactionDB] or [OptimisticTransactionDB]: their direct
+/// (non-transactional) operations bind their own `MethodHandle`s instead of sharing these
+/// helpers, per the project convention that a `MethodHandle` must never be routed through a
+/// shared call site (it defeats `invokeExact`'s compile-time constant folding).
+public interface WriteOperations {
+
+	/// Returns the native `rocksdb_t*` pointer to operate on. Redeclared from
+	/// [ReadOperations#dbPtr()] since this interface does not extend it; every implementor
+	/// also implements [ReadColumnFamilyOperations] and provides a single override
+	/// satisfying both.
+	///
+	/// @return the native database pointer
+	MemorySegment dbPtr();
 
 	/// Returns the [WriteOptions] used when no explicit options are supplied. Every current
 	/// implementor shares the same never-closed [RocksDB#DEFAULT_WRITE_OPTIONS] instance;

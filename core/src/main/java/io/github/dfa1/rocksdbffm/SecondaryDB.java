@@ -26,7 +26,7 @@ import java.lang.invoke.MethodHandle;
 ///     byte[] value = secondary.get("key".getBytes());
 /// }
 /// ```
-public final class SecondaryDB extends NativeObject implements RocksDbReadOps {
+public final class SecondaryDB extends NativeObject implements ReadOperations {
 
 	// -----------------------------------------------------------------------
 	// Method handles unique to SecondaryDB

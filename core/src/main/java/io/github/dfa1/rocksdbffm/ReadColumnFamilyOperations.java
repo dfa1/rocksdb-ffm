@@ -5,15 +5,16 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.OptionalLong;
 
-/// Column-family-scoped counterparts of [RocksDbReadOps]'s read operations.
+/// Column-family-scoped counterparts of [ReadOperations]'s read operations.
 ///
-/// Separated from [RocksDbReadOps] rather than folded into it because not every readable
+/// Separated from [ReadOperations] rather than folded into it because not every readable
 /// instance can obtain a [ColumnFamilyHandle] scoped to itself: [SecondaryDB] has no
 /// multi-column-family open path, so passing it any [ColumnFamilyHandle] (necessarily
 /// obtained from a different `rocksdb_t*`) is undefined behavior at the C++ level. Only
-/// [ReadWriteDB], [TtlDB], [BlobDB] (via [RocksDbWriteOps]) and [ReadOnlyDB] — all of which
-/// support opening or creating column families for themselves — implement this interface.
-public interface RocksDbCfReadOps extends RocksDbReadOps {
+/// [ReadWriteDB], [TtlDB], [BlobDB] (which also implement [WriteOperations]) and
+/// [ReadOnlyDB] — all of which support opening or creating column families for
+/// themselves — implement this interface.
+public interface ReadColumnFamilyOperations extends ReadOperations {
 
 	/// Returns the value for `key` in `cf`, or `null` if not found.
 	///
@@ -59,7 +60,7 @@ public interface RocksDbCfReadOps extends RocksDbReadOps {
 		return RocksDB.getCfIntoSegment(dbPtr(), defaultReadOpts().ptr(), cf, key, key.byteSize(), value);
 	}
 
-	/// Scoped zero-copy get from `cf`. See [RocksDbReadOps#get(MemorySegment, Mapper)] for
+	/// Scoped zero-copy get from `cf`. See [ReadOperations#get(MemorySegment, Mapper)] for
 	/// the lifetime contract on the view passed to `fn`.
 	///
 	/// @param <R> the type produced by `fn`
