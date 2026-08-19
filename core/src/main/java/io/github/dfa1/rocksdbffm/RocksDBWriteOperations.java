@@ -20,10 +20,8 @@ import java.util.List;
 /// Every method here is a direct, zero-logic forward into the matching package-private
 /// `RocksDB` helper — implementors only need to supply the native pointer.
 ///
-/// Not implemented by [TransactionDB] or [OptimisticTransactionDB]: their direct
-/// (non-transactional) operations bind their own `MethodHandle`s instead of sharing these
-/// helpers, per the project convention that a `MethodHandle` must never be routed through a
-/// shared call site (it defeats `invokeExact`'s compile-time constant folding).
+/// Not implemented by [TransactionDB] or [OptimisticTransactionDB] — see
+/// [RocksDBReadOperations] for why.
 public interface RocksDBWriteOperations {
 
 	/// Returns the native `rocksdb_t*` pointer to operate on. Redeclared from
