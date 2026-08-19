@@ -82,17 +82,17 @@ class MemorySizeTest {
 	void compareTo_ordersCorrectly() {
 		assertThat(MemorySize.ofKB(1)).isLessThan(MemorySize.ofMB(1));
 		assertThat(MemorySize.ofGB(1)).isGreaterThan(MemorySize.ofMB(1));
-		assertThat(MemorySize.ofMB(1).compareTo(MemorySize.ofKB(1024))).isZero();
+		assertThat(MemorySize.ofMB(1)).isEqualByComparingTo(MemorySize.ofKB(1024));
 	}
 
 	@Test
 	void toString_showsLargestEvenUnit() {
-		assertThat(MemorySize.ofGB(1).toString()).isEqualTo("1 GB");
-		assertThat(MemorySize.ofMB(64).toString()).isEqualTo("64 MB");
-		assertThat(MemorySize.ofKB(16).toString()).isEqualTo("16 KB");
-		assertThat(MemorySize.ofBytes(100).toString()).isEqualTo("100 B");
-		assertThat(MemorySize.ZERO.toString()).isEqualTo("0 B");
+		assertThat(MemorySize.ofGB(1)).hasToString("1 GB");
+		assertThat(MemorySize.ofMB(64)).hasToString("64 MB");
+		assertThat(MemorySize.ofKB(16)).hasToString("16 KB");
+		assertThat(MemorySize.ofBytes(100)).hasToString("100 B");
+		assertThat(MemorySize.ZERO).hasToString("0 B");
 		// 1536 = 1.5 KB — not evenly divisible by KB
-		assertThat(MemorySize.ofBytes(1536).toString()).isEqualTo("1536 B");
+		assertThat(MemorySize.ofBytes(1536)).hasToString("1536 B");
 	}
 }

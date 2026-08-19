@@ -775,8 +775,7 @@ class OptimisticTransactionDBTest {
 			var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).isPresent();
-			assertThat(result.get()).isEqualTo("v".getBytes());
+			assertThat(result).contains("v".getBytes());
 		}
 	}
 
@@ -810,8 +809,7 @@ class OptimisticTransactionDBTest {
 			var result = db.get(cf, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).isPresent();
-			assertThat(result.get()).isEqualTo("v".getBytes());
+			assertThat(result).contains("v".getBytes());
 		}
 	}
 

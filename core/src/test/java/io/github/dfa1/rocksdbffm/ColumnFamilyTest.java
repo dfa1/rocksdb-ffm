@@ -153,7 +153,7 @@ class ColumnFamilyTest {
 			int id = handles.get(0).getId();
 
 			// Then
-			assertThat(id).isEqualTo(0);
+			assertThat(id).isZero();
 			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
