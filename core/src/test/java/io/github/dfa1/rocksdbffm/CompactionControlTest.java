@@ -244,7 +244,7 @@ class CompactionControlTest {
 
 	// -----------------------------------------------------------------------
 	// BlobDB — compactRange / suggestCompactRange / file deletions
-	// (gained via WriteOperations)
+	// (gained via RocksDBWriteOperations)
 	// -----------------------------------------------------------------------
 
 	@Test
