@@ -18,30 +18,16 @@ import java.time.Duration;
 /// ```
 public final class TtlDB extends NativeObject implements RocksDbWriteOps {
 
-	private final WriteOptions writeOpts;
-	private final ReadOptions readOpts;
 	private final Duration ttl;
 
 	TtlDB(MemorySegment ptr, Duration ttl) {
 		super(ptr);
-		this.writeOpts = RocksDB.DEFAULT_WRITE_OPTIONS;
-		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
 		this.ttl = ttl;
 	}
 
 	@Override
 	public MemorySegment dbPtr() {
 		return ptr();
-	}
-
-	@Override
-	public WriteOptions defaultWriteOpts() {
-		return writeOpts;
-	}
-
-	@Override
-	public ReadOptions defaultReadOpts() {
-		return readOpts;
 	}
 
 	/// Returns the TTL configured when this database was opened.

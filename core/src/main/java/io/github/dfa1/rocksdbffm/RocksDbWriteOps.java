@@ -8,20 +8,25 @@ import java.util.List;
 
 /// Shared write/administrative operations for every wrapper around a mutable plain
 /// `rocksdb_t*`: read-write, TTL, and blob instances all expose the identical surface.
-/// Extends [RocksDbReadOps] since every writable instance is also readable.
+/// Extends [RocksDbCfReadOps] since every writable instance also supports opening or
+/// creating column families for itself, and is therefore readable both directly and
+/// per-column-family.
 ///
 /// Every method here is a direct, zero-logic forward into the matching package-private
-/// `RocksDB` helper — implementors only need to supply the native pointer and the
-/// [WriteOptions] to use by default (see [RocksDbReadOps#dbPtr()] and
-/// [RocksDbReadOps#defaultReadOpts()] for the read-side accessors).
+/// `RocksDB` helper — implementors only need to supply the native pointer (see
+/// [RocksDbReadOps#dbPtr()]).
 ///
 /// Not implemented by [TransactionDB] or [OptimisticTransactionDB] — see [RocksDbReadOps].
-public interface RocksDbWriteOps extends RocksDbReadOps {
+public interface RocksDbWriteOps extends RocksDbCfReadOps {
 
-	/// Returns the [WriteOptions] used when no explicit options are supplied.
+	/// Returns the [WriteOptions] used when no explicit options are supplied. Every current
+	/// implementor shares the same never-closed [RocksDB#DEFAULT_WRITE_OPTIONS] instance;
+	/// override if a future implementor ever needs its own.
 	///
 	/// @return the default write options
-	WriteOptions defaultWriteOpts();
+	default WriteOptions defaultWriteOpts() {
+		return RocksDB.DEFAULT_WRITE_OPTIONS;
+	}
 
 	// -----------------------------------------------------------------------
 	// Put
