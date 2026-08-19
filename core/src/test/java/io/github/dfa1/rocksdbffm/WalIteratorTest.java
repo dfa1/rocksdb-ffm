@@ -127,7 +127,7 @@ class WalIteratorTest {
 	}
 
 	// -----------------------------------------------------------------------
-	// BlobDB — WAL iteration (gained via WriteOperations)
+	// BlobDB — WAL iteration (gained via RocksDBWriteOperations)
 	// -----------------------------------------------------------------------
 
 	@Test

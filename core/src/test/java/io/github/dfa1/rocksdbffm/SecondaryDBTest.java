@@ -8,6 +8,8 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -346,6 +348,37 @@ class SecondaryDBTest {
 			secondary.tryCatchUpWithPrimary();
 
 			assertThat(secondary.getLongProperty(Property.ESTIMATE_NUM_KEYS)).isPresent();
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Multi-column-family open
+	// -----------------------------------------------------------------------
+
+	@Test
+	void openSecondary_withColumnFamilies_readsFromNonDefaultFamily(
+			@TempDir Path primaryDir, @TempDir Path secondaryDir) {
+		// Given — primary creates a non-default column family and writes/flushes data into it
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var primary = RocksDB.openReadWrite(opts, primaryDir);
+		     var cf1 = primary.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var fo = FlushOptions.newFlushOptions()) {
+			primary.put(cf1, "k".getBytes(), "v".getBytes());
+			primary.flush(cf1, fo);
+		}
+
+		// When — the secondary opens the same column families and catches up
+		List<ColumnFamilyHandle> secondaryHandles = new ArrayList<>();
+		try (var opts = Options.newOptions();
+		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir,
+				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     secondaryHandles)) {
+			secondary.tryCatchUpWithPrimary();
+			var cf1 = secondaryHandles.get(1);
+
+			// Then — reading through the secondary's own cf1 handle sees the primary's write
+			assertThat(secondary.get(cf1, "k".getBytes())).isEqualTo("v".getBytes());
+			secondaryHandles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 }

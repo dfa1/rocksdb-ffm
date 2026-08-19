@@ -8,14 +8,14 @@ import java.util.List;
 
 /// Shared write/administrative operations, including column-family-scoped overloads, for
 /// every wrapper around a mutable plain `rocksdb_t*`: read-write, TTL, and blob instances
-/// all expose the identical surface and, unlike [ReadOnlyDB], all support opening or
-/// creating column families for themselves.
+/// all expose the identical surface and all support opening or creating column families
+/// for themselves.
 ///
-/// Deliberately does not extend [ReadOperations]/[ReadColumnFamilyOperations] — a class
-/// that is both readable and writable (every current implementor) implements both this
-/// interface and [ReadColumnFamilyOperations] directly, rather than the write interface
-/// inheriting the read one. This keeps the two independently reusable: [ReadOnlyDB] and
-/// [SecondaryDB] need a read interface with no write methods at all.
+/// Deliberately does not extend [RocksDBReadOperations] — a class that is both readable
+/// and writable (every current implementor) implements both interfaces directly, rather
+/// than the write interface inheriting the read one. This keeps the two independently
+/// reusable: [ReadOnlyDB] and [SecondaryDB] need a read interface with no write methods
+/// at all.
 ///
 /// Every method here is a direct, zero-logic forward into the matching package-private
 /// `RocksDB` helper — implementors only need to supply the native pointer.
@@ -24,11 +24,11 @@ import java.util.List;
 /// (non-transactional) operations bind their own `MethodHandle`s instead of sharing these
 /// helpers, per the project convention that a `MethodHandle` must never be routed through a
 /// shared call site (it defeats `invokeExact`'s compile-time constant folding).
-public interface WriteOperations {
+public interface RocksDBWriteOperations {
 
 	/// Returns the native `rocksdb_t*` pointer to operate on. Redeclared from
-	/// [ReadOperations#dbPtr()] since this interface does not extend it; every implementor
-	/// also implements [ReadColumnFamilyOperations] and provides a single override
+	/// [RocksDBReadOperations#dbPtr()] since this interface does not extend it; every
+	/// implementor also implements [RocksDBReadOperations] and provides a single override
 	/// satisfying both.
 	///
 	/// @return the native database pointer

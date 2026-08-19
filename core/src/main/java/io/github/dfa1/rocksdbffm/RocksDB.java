@@ -148,6 +148,8 @@ public final class RocksDB {
 	private static final MethodHandle MH_PROPERTY_INT_CF;
 	/// `rocksdb_t* rocksdb_open_for_read_only_column_families(const rocksdb_options_t* options, const char* name, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, unsigned char error_if_wal_file_exists, char** errptr);`
 	private static final MethodHandle MH_OPEN_FOR_READ_ONLY_CF;
+	/// `rocksdb_t* rocksdb_open_as_secondary_column_families(const rocksdb_options_t* options, const char* name, const char* secondary_path, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, char** errptr);`
+	private static final MethodHandle MH_OPEN_SECONDARY_CF;
 	/// `rocksdb_t* rocksdb_open_column_families_with_ttl(const rocksdb_options_t* options, const char* name, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, const int* ttls, char** errptr);`
 	private static final MethodHandle MH_OPEN_CF_WITH_TTL;
 	/// `rocksdb_transactiondb_t* rocksdb_transactiondb_open_column_families(const rocksdb_options_t* options, const rocksdb_transactiondb_options_t* txn_db_options, const char* name, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, char** errptr);`
@@ -409,6 +411,13 @@ public final class RocksDB {
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
+		MH_OPEN_SECONDARY_CF = NativeLibrary.lookup("rocksdb_open_as_secondary_column_families",
+				FunctionDescriptor.of(ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.JAVA_INT,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
 		MH_OPEN_CF_WITH_TTL = NativeLibrary.lookup("rocksdb_open_column_families_with_ttl",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
@@ -608,6 +617,60 @@ public final class RocksDB {
 			return new SecondaryDB(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openSecondary failed", t);
+		}
+	}
+
+	/// Opens a secondary (read-only replica) instance at `primaryPath` with multiple column
+	/// families. The `handles` list is cleared and populated with one [ColumnFamilyHandle]
+	/// per descriptor, each legitimately scoped to this secondary instance — unlike a handle
+	/// obtained from the primary or any other `rocksdb_t*`, safe to pass to this instance's
+	/// column-family-scoped reads.
+	///
+	/// @param options      the database options
+	/// @param primaryPath   directory of the primary database
+	/// @param secondaryPath a dedicated directory for this secondary's own MANIFEST/WAL tails
+	/// @param descriptors   one descriptor per column family (must include `"default"`)
+	/// @param handles       output list populated with one handle per descriptor
+	/// @return a new [SecondaryDB] instance
+	public static SecondaryDB openSecondary(Options options, Path primaryPath, Path secondaryPath,
+	                                        List<ColumnFamilyDescriptor> descriptors,
+	                                        List<ColumnFamilyHandle> handles) {
+		int n = descriptors.size();
+		List<Options> tempOptions = new ArrayList<>();
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = errHolder(arena);
+			MemorySegment primary = arena.allocateFrom(primaryPath.toString());
+			MemorySegment secondary = arena.allocateFrom(secondaryPath.toString());
+			MemorySegment namesArr = arena.allocate(ValueLayout.ADDRESS, n);
+			MemorySegment optsArr = arena.allocate(ValueLayout.ADDRESS, n);
+			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
+			for (int i = 0; i < n; i++) {
+				ColumnFamilyDescriptor desc = descriptors.get(i);
+				namesArr.setAtIndex(ValueLayout.ADDRESS, i,
+						arena.allocateFrom(new String(desc.name(), StandardCharsets.UTF_8)));
+				Options cfOpts = desc.options();
+				if (cfOpts == null) {
+					cfOpts = Options.newOptions();
+					tempOptions.add(cfOpts);
+				}
+				optsArr.setAtIndex(ValueLayout.ADDRESS, i, cfOpts.ptr());
+			}
+
+			MemorySegment ptr = (MemorySegment) MH_OPEN_SECONDARY_CF.invokeExact(
+					options.ptr(), primary, secondary, n, namesArr, optsArr, handlesArr, err);
+			checkError(err);
+
+			handles.clear();
+			for (int i = 0; i < n; i++) {
+				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
+			}
+			return new SecondaryDB(ptr);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("openSecondary failed", t);
+		} finally {
+			for (Options o : tempOptions) {
+				o.close();
+			}
 		}
 	}
 

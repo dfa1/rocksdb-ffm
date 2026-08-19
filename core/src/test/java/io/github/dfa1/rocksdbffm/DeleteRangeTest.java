@@ -221,7 +221,7 @@ class DeleteRangeTest {
 	}
 
 	// -----------------------------------------------------------------------
-	// BlobDB.deleteRange (gained via WriteOperations)
+	// BlobDB.deleteRange (gained via RocksDBWriteOperations)
 	// -----------------------------------------------------------------------
 
 	@Test
