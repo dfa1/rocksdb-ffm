@@ -88,7 +88,7 @@ class BlobDBIntegrationTest {
 			assertThat(enableBlobGc).isTrue();
 			assertThat(blobGcAgeCutoff).isEqualTo(Ratio.of(0.25));
 			assertThat(blobGcForceThreshold).isEqualTo(Ratio.of(0.8));
-			assertThat(blobFileStartingLevel).isEqualTo(0);
+			assertThat(blobFileStartingLevel).isZero();
 
 			try (var db = RocksDB.openBlob(opts, dir)) {
 				db.put("k".getBytes(), VALUE_64KB);

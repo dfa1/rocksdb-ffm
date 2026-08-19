@@ -254,7 +254,7 @@ class ColumnFamilyIntegrationTest {
 			// Then — memtable should be empty (or reduced) after flush
 			var entries = db.getLongProperty(cf, Property.NUM_ENTRIES_ACTIVE_MEM_TABLE);
 			assertThat(entries).isPresent();
-			assertThat(entries.getAsLong()).isEqualTo(0L);
+			assertThat(entries.getAsLong()).isZero();
 		}
 	}
 

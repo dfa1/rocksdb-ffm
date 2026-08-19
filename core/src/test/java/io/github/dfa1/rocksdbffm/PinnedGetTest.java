@@ -33,8 +33,7 @@ class PinnedGetTest {
 				var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 				// Then
-				assertThat(result).isPresent();
-				assertThat(result.get()).isEqualTo("v".getBytes());
+				assertThat(result).contains("v".getBytes());
 			}
 		}
 	}
@@ -173,8 +172,7 @@ class PinnedGetTest {
 				// And a later, independent call still succeeds — proving the handle and
 				// arena from the failed call were destroyed/closed rather than leaked
 				var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
-				assertThat(result).isPresent();
-				assertThat(result.get()).isEqualTo("v".getBytes());
+				assertThat(result).contains("v".getBytes());
 			}
 		}
 	}
@@ -220,8 +218,7 @@ class PinnedGetTest {
 				var result = db.get(cf, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 				// Then
-				assertThat(result).isPresent();
-				assertThat(result.get()).isEqualTo("v".getBytes());
+				assertThat(result).contains("v".getBytes());
 			}
 		}
 	}

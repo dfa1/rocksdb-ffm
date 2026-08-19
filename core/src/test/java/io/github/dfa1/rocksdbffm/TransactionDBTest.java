@@ -118,8 +118,7 @@ class TransactionDBTest {
 			var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).isPresent();
-			assertThat(result.get()).isEqualTo("v".getBytes());
+			assertThat(result).contains("v".getBytes());
 		}
 	}
 
@@ -153,8 +152,7 @@ class TransactionDBTest {
 			var result = txn.get(ro, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).isPresent();
-			assertThat(result.get()).isEqualTo("v".getBytes());
+			assertThat(result).contains("v".getBytes());
 			txn.commit();
 		}
 	}
