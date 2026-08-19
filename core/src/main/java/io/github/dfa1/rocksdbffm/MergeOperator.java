@@ -193,6 +193,9 @@ public sealed interface MergeOperator {
 		// can outlive this Java wrapper.
 		private static final ConcurrentHashMap<Long, State> REGISTRY = new ConcurrentHashMap<>();
 		private static final AtomicLong NEXT_ID = new AtomicLong(1);
+		// Fully-qualified because io.github.dfa1.rocksdbffm.Logger (this package's RocksDB
+		// logger wrapper) would otherwise shadow the unqualified name.
+		private static final System.Logger LOG = System.getLogger(Custom.class.getName());
 
 		private Custom(MemorySegment ptr) {
 			super(ptr);
@@ -283,7 +286,7 @@ public sealed interface MergeOperator {
 				// must not throw across the upcall boundary — an escaping AssertionError here
 				// (assertions are on by default under Surefire) would abort the JVM, not just
 				// this call, so report failure to RocksDB instead of asserting.
-				t.printStackTrace();
+				LOG.log(System.Logger.Level.ERROR, "fullMerge callback failed", t);
 				writeMergeFailure(successPtr, newValueLenPtr);
 				return mallocCopy(new byte[0]);
 			}
@@ -301,7 +304,7 @@ public sealed interface MergeOperator {
 				return mallocCopy(new byte[0]);
 			} catch (Throwable t) {
 				// same "must not throw" contract as fullMergeDispatch.
-				t.printStackTrace();
+				LOG.log(System.Logger.Level.ERROR, "partialMerge callback failed", t);
 				writeMergeFailure(successPtr, newValueLenPtr);
 				return mallocCopy(new byte[0]);
 			}
