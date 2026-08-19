@@ -12,7 +12,7 @@ import java.lang.foreign.MemorySegment;
 ///     byte[] value = db.get("key".getBytes());
 /// }
 /// ```
-public final class ReadWriteDB extends NativeObject implements RocksDbWriteOps {
+public final class ReadWriteDB extends NativeObject implements ReadColumnFamilyOperations, WriteOperations {
 
 	ReadWriteDB(MemorySegment ptr) {
 		super(ptr);

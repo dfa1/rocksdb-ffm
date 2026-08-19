@@ -430,7 +430,7 @@ class KeyMayExistTest {
 	}
 
 	// -----------------------------------------------------------------------
-	// keyMayExist — BlobDB, ReadOnlyDB, SecondaryDB (gained via RocksDbReadOps)
+	// keyMayExist — BlobDB, ReadOnlyDB, SecondaryDB (gained via ReadOperations)
 	// -----------------------------------------------------------------------
 
 	@Test

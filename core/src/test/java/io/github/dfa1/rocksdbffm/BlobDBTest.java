@@ -172,7 +172,7 @@ class BlobDBTest {
 
 	@Test
 	void write_arena_appliesBatchAtomically(@TempDir Path dir) {
-		// Given — gained via RocksDbWriteOps
+		// Given — gained via WriteOperations
 		try (var db = RocksDB.openBlob(dir);
 		     var batch = WriteBatch.create();
 		     Arena arena = Arena.ofConfined()) {
@@ -362,7 +362,7 @@ class BlobDBTest {
 
 	@Test
 	void ingestExternalFile_singleFile_defaultOptions_keysAreReadable(@TempDir Path dir) {
-		// Given — single-file/default-options convenience overloads, gained via RocksDbWriteOps
+		// Given — single-file/default-options convenience overloads, gained via WriteOperations
 		Path sstPath = dir.resolve("data.sst");
 		Path dbPath = dir.resolve("db");
 
