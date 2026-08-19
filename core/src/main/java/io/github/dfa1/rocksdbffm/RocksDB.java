@@ -641,36 +641,19 @@ public final class RocksDB {
 			MemorySegment err = errHolder(arena);
 			MemorySegment primary = arena.allocateFrom(primaryPath.toString());
 			MemorySegment secondary = arena.allocateFrom(secondaryPath.toString());
-			MemorySegment namesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			MemorySegment optsArr = arena.allocate(ValueLayout.ADDRESS, n);
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			for (int i = 0; i < n; i++) {
-				ColumnFamilyDescriptor desc = descriptors.get(i);
-				namesArr.setAtIndex(ValueLayout.ADDRESS, i,
-						arena.allocateFrom(new String(desc.name(), StandardCharsets.UTF_8)));
-				Options cfOpts = desc.options();
-				if (cfOpts == null) {
-					cfOpts = Options.newOptions();
-					tempOptions.add(cfOpts);
-				}
-				optsArr.setAtIndex(ValueLayout.ADDRESS, i, cfOpts.ptr());
-			}
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, tempOptions);
 
 			MemorySegment ptr = (MemorySegment) MH_OPEN_SECONDARY_CF.invokeExact(
-					options.ptr(), primary, secondary, n, namesArr, optsArr, handlesArr, err);
+					options.ptr(), primary, secondary, n, cfArrays.names(), cfArrays.options(), handlesArr, err);
 			checkError(err);
 
-			handles.clear();
-			for (int i = 0; i < n; i++) {
-				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
-			}
+			collectCfHandles(handlesArr, n, handles);
 			return new SecondaryDB(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openSecondary failed", t);
 		} finally {
-			for (Options o : tempOptions) {
-				o.close();
-			}
+			closeTempOptions(tempOptions);
 		}
 	}
 
@@ -1275,39 +1258,19 @@ public final class RocksDB {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
-
-			MemorySegment namesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			MemorySegment optsArr = arena.allocate(ValueLayout.ADDRESS, n);
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
-
-			for (int i = 0; i < n; i++) {
-				ColumnFamilyDescriptor desc = descriptors.get(i);
-				namesArr.setAtIndex(ValueLayout.ADDRESS, i,
-						arena.allocateFrom(new String(desc.name(), StandardCharsets.UTF_8)));
-				Options cfOpts = desc.options();
-				if (cfOpts == null) {
-					cfOpts = Options.newOptions();
-					tempOptions.add(cfOpts);
-				}
-				optsArr.setAtIndex(ValueLayout.ADDRESS, i, cfOpts.ptr());
-			}
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, tempOptions);
 
 			MemorySegment ptr = (MemorySegment) MH_OPEN_CF.invokeExact(
-					options.ptr(), pathSeg, n, namesArr, optsArr, handlesArr, err);
+					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, err);
 			checkError(err);
 
-			handles.clear();
-			for (int i = 0; i < n; i++) {
-				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
-			}
-
+			collectCfHandles(handlesArr, n, handles);
 			return new ReadWriteDB(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openReadWrite failed", t);
 		} finally {
-			for (Options o : tempOptions) {
-				o.close();
-			}
+			closeTempOptions(tempOptions);
 		}
 	}
 
@@ -1330,39 +1293,19 @@ public final class RocksDB {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
-
-			MemorySegment namesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			MemorySegment optsArr = arena.allocate(ValueLayout.ADDRESS, n);
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
-
-			for (int i = 0; i < n; i++) {
-				ColumnFamilyDescriptor desc = descriptors.get(i);
-				namesArr.setAtIndex(ValueLayout.ADDRESS, i,
-						arena.allocateFrom(new String(desc.name(), StandardCharsets.UTF_8)));
-				Options cfOpts = desc.options();
-				if (cfOpts == null) {
-					cfOpts = Options.newOptions();
-					tempOptions.add(cfOpts);
-				}
-				optsArr.setAtIndex(ValueLayout.ADDRESS, i, cfOpts.ptr());
-			}
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, tempOptions);
 
 			MemorySegment ptr = (MemorySegment) MH_OPEN_CF.invokeExact(
-					options.ptr(), pathSeg, n, namesArr, optsArr, handlesArr, err);
+					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, err);
 			checkError(err);
 
-			handles.clear();
-			for (int i = 0; i < n; i++) {
-				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
-			}
-
+			collectCfHandles(handlesArr, n, handles);
 			return new BlobDB(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openBlob failed", t);
 		} finally {
-			for (Options o : tempOptions) {
-				o.close();
-			}
+			closeTempOptions(tempOptions);
 		}
 	}
 
@@ -1398,35 +1341,18 @@ public final class RocksDB {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
-			MemorySegment namesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			MemorySegment optsArr = arena.allocate(ValueLayout.ADDRESS, n);
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			for (int i = 0; i < n; i++) {
-				ColumnFamilyDescriptor desc = descriptors.get(i);
-				namesArr.setAtIndex(ValueLayout.ADDRESS, i,
-						arena.allocateFrom(new String(desc.name(), StandardCharsets.UTF_8)));
-				Options cfOpts = desc.options();
-				if (cfOpts == null) {
-					cfOpts = Options.newOptions();
-					tempOptions.add(cfOpts);
-				}
-				optsArr.setAtIndex(ValueLayout.ADDRESS, i, cfOpts.ptr());
-			}
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, tempOptions);
 			MemorySegment ptr = (MemorySegment) MH_OPEN_FOR_READ_ONLY_CF.invokeExact(
-					options.ptr(), pathSeg, n, namesArr, optsArr, handlesArr,
+					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr,
 					toByte(errorIfWalFileExists), err);
 			checkError(err);
-			handles.clear();
-			for (int i = 0; i < n; i++) {
-				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
-			}
+			collectCfHandles(handlesArr, n, handles);
 			return new ReadOnlyDB(ptr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openReadOnly failed", t);
 		} finally {
-			for (Options o : tempOptions) {
-				o.close();
-			}
+			closeTempOptions(tempOptions);
 		}
 	}
 
@@ -1451,37 +1377,22 @@ public final class RocksDB {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
-			MemorySegment namesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			MemorySegment optsArr = arena.allocate(ValueLayout.ADDRESS, n);
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
 			MemorySegment ttlsArr = arena.allocate(ValueLayout.JAVA_INT, n);
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, tempOptions);
 			for (int i = 0; i < n; i++) {
-				ColumnFamilyDescriptor desc = descriptors.get(i);
-				namesArr.setAtIndex(ValueLayout.ADDRESS, i,
-						arena.allocateFrom(new String(desc.name(), StandardCharsets.UTF_8)));
-				Options cfOpts = desc.options();
-				if (cfOpts == null) {
-					cfOpts = Options.newOptions();
-					tempOptions.add(cfOpts);
-				}
-				optsArr.setAtIndex(ValueLayout.ADDRESS, i, cfOpts.ptr());
 				ttlsArr.setAtIndex(ValueLayout.JAVA_INT, i, (int) ttls.get(i).toSeconds());
 			}
 			MemorySegment ptr = (MemorySegment) MH_OPEN_CF_WITH_TTL.invokeExact(
-					options.ptr(), pathSeg, n, namesArr, optsArr, handlesArr, ttlsArr, err);
+					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, ttlsArr, err);
 			checkError(err);
-			handles.clear();
-			for (int i = 0; i < n; i++) {
-				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
-			}
+			collectCfHandles(handlesArr, n, handles);
 			Duration globalTtl = ttls.isEmpty() ? Duration.ZERO : ttls.getFirst();
 			return new TtlDB(ptr, globalTtl);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openTtl failed", t);
 		} finally {
-			for (Options o : tempOptions) {
-				o.close();
-			}
+			closeTempOptions(tempOptions);
 		}
 	}
 
@@ -1505,35 +1416,18 @@ public final class RocksDB {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
-			MemorySegment namesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			MemorySegment optsArr = arena.allocate(ValueLayout.ADDRESS, n);
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			for (int i = 0; i < n; i++) {
-				ColumnFamilyDescriptor desc = descriptors.get(i);
-				namesArr.setAtIndex(ValueLayout.ADDRESS, i,
-						arena.allocateFrom(new String(desc.name(), StandardCharsets.UTF_8)));
-				Options cfOpts = desc.options();
-				if (cfOpts == null) {
-					cfOpts = Options.newOptions();
-					tempOptions.add(cfOpts);
-				}
-				optsArr.setAtIndex(ValueLayout.ADDRESS, i, cfOpts.ptr());
-			}
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, tempOptions);
 			MemorySegment ptr = (MemorySegment) MH_OPEN_TRANSACTION_CF.invokeExact(
-					options.ptr(), txnDbOptions.ptr(), pathSeg, n, namesArr, optsArr, handlesArr, err);
+					options.ptr(), txnDbOptions.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, err);
 			checkError(err);
-			handles.clear();
-			for (int i = 0; i < n; i++) {
-				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
-			}
+			collectCfHandles(handlesArr, n, handles);
 			MemorySegment baseDb = (MemorySegment) MH_TRANSACTION_GET_BASE_DB.invokeExact(ptr);
 			return new TransactionDB(ptr, baseDb);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openTransaction failed", t);
 		} finally {
-			for (Options o : tempOptions) {
-				o.close();
-			}
+			closeTempOptions(tempOptions);
 		}
 	}
 
@@ -1554,35 +1448,18 @@ public final class RocksDB {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
-			MemorySegment namesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			MemorySegment optsArr = arena.allocate(ValueLayout.ADDRESS, n);
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			for (int i = 0; i < n; i++) {
-				ColumnFamilyDescriptor desc = descriptors.get(i);
-				namesArr.setAtIndex(ValueLayout.ADDRESS, i,
-						arena.allocateFrom(new String(desc.name(), StandardCharsets.UTF_8)));
-				Options cfOpts = desc.options();
-				if (cfOpts == null) {
-					cfOpts = Options.newOptions();
-					tempOptions.add(cfOpts);
-				}
-				optsArr.setAtIndex(ValueLayout.ADDRESS, i, cfOpts.ptr());
-			}
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, tempOptions);
 			MemorySegment ptr = (MemorySegment) MH_OPEN_OPTIMISTIC_CF.invokeExact(
-					options.ptr(), pathSeg, n, namesArr, optsArr, handlesArr, err);
+					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, err);
 			checkError(err);
-			handles.clear();
-			for (int i = 0; i < n; i++) {
-				handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
-			}
+			collectCfHandles(handlesArr, n, handles);
 			MemorySegment baseDb = (MemorySegment) MH_GET_BASE_DB.invokeExact(ptr);
 			return new OptimisticTransactionDB(ptr, baseDb);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("openOptimistic failed", t);
 		} finally {
-			for (Options o : tempOptions) {
-				o.close();
-			}
+			closeTempOptions(tempOptions);
 		}
 	}
 
@@ -1619,6 +1496,61 @@ public final class RocksDB {
 	// -----------------------------------------------------------------------
 	// Package-private CF helpers
 	// -----------------------------------------------------------------------
+
+	/// The parallel `char* names[]` / `rocksdb_options_t* options[]` arrays a
+	/// `*_column_families` C API call expects, one entry per descriptor.
+	private record CfNamesAndOptions(MemorySegment names, MemorySegment options) {
+	}
+
+	/// Allocates and fills the parallel names/options arrays every `*_column_families` open
+	/// call marshals, one entry per `descriptors[i]`. A descriptor with no explicit
+	/// [ColumnFamilyDescriptor#options()] gets a fresh, disposable [Options] instance,
+	/// appended to `tempOptions` so the caller can close it once the native call returns.
+	///
+	/// @param arena       arena backing the returned native arrays (and any allocated names)
+	/// @param descriptors one descriptor per column family
+	/// @param tempOptions appended with any default [Options] created here; caller must close them
+	/// @return the names and options arrays, both length `descriptors.size()`
+	private static CfNamesAndOptions buildCfArrays(Arena arena, List<ColumnFamilyDescriptor> descriptors,
+	                                               List<Options> tempOptions) {
+		int n = descriptors.size();
+		MemorySegment namesArr = arena.allocate(ValueLayout.ADDRESS, n);
+		MemorySegment optsArr = arena.allocate(ValueLayout.ADDRESS, n);
+		for (int i = 0; i < n; i++) {
+			ColumnFamilyDescriptor desc = descriptors.get(i);
+			namesArr.setAtIndex(ValueLayout.ADDRESS, i,
+					arena.allocateFrom(new String(desc.name(), StandardCharsets.UTF_8)));
+			Options cfOpts = desc.options();
+			if (cfOpts == null) {
+				cfOpts = Options.newOptions();
+				tempOptions.add(cfOpts);
+			}
+			optsArr.setAtIndex(ValueLayout.ADDRESS, i, cfOpts.ptr());
+		}
+		return new CfNamesAndOptions(namesArr, optsArr);
+	}
+
+	/// Reads a native `rocksdb_column_family_handle_t*[]` array populated by a
+	/// `*_column_families` open call back into `handles`, wrapping each entry.
+	///
+	/// @param handlesArr native array of `n` column family handle pointers
+	/// @param n          number of handles
+	/// @param handles    output list; cleared then populated with one handle per entry
+	private static void collectCfHandles(MemorySegment handlesArr, int n, List<ColumnFamilyHandle> handles) {
+		handles.clear();
+		for (int i = 0; i < n; i++) {
+			handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
+		}
+	}
+
+	/// Closes every [Options] a [#buildCfArrays] call appended to `tempOptions`.
+	///
+	/// @param tempOptions options to close, as populated by [#buildCfArrays]
+	private static void closeTempOptions(List<Options> tempOptions) {
+		for (Options o : tempOptions) {
+			o.close();
+		}
+	}
 
 	static ColumnFamilyHandle createCf(MemorySegment db, ColumnFamilyDescriptor descriptor) {
 		List<Options> tempOptions = new ArrayList<>(1);

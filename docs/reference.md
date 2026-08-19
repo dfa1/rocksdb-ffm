@@ -74,7 +74,7 @@ Column families are not a separate method name — every factory that supports t
 | `openReadOnly(Path)` / `(Options, Path)` / `(Options, Path, boolean errorIfWalFileExists)` | yes  | `ReadOnlyDB`  |
 | `openTtl(Path, Duration)` / `(Options, Path, Duration)`                        | yes               | `TtlDB`                   |
 | `openBlob(Path)` / `(Options, Path)`                                           | yes               | `BlobDB`                  |
-| `openSecondary(Options, Path primary, Path secondary)`                         | no                | `SecondaryDB`             |
+| `openSecondary(Options, Path primary, Path secondary)`                         | yes               | `SecondaryDB`             |
 | `openTransaction(Options, TransactionDBOptions, Path)`                         | yes               | `TransactionDB`           |
 | `openOptimistic(Options, Path)`                                                | yes               | `OptimisticTransactionDB` |
 | `listColumnFamilies(Options, Path)`                                            | —                 | `List<byte[]>`            |
@@ -92,8 +92,8 @@ Each type exposes only the operations that are valid for it — see
 | `ReadWriteDB`             |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
 | `ReadOnlyDB`              |  —    |  ✅  |   ✅    |    ✅    |  —    |   —     |   —    | ✅  |
 | `TtlDB`                   |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
-| `BlobDB`                  |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   —     |   ✅   | ✅  |
-| `SecondaryDB`             |  —    |  ✅  |   ✅    |    ✅    |  —    |   —     |   —    | —   |
+| `BlobDB`                  |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
+| `SecondaryDB`             |  —    |  ✅  |   ✅    |    ✅    |  —    |   —     |   —    | ✅  |
 | `TransactionDB`           |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   —     |   —    | ✅  |
 | `OptimisticTransactionDB` |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   —     |   —    | ✅  |
 
@@ -255,10 +255,12 @@ compaction, so close them promptly.
 | `ColumnFamilyHandle`     | Live handle; `getId()`, `getName()`; `AutoCloseable`               |
 
 `createColumnFamily(ColumnFamilyDescriptor)` and `dropColumnFamily(handle)` exist on `ReadWriteDB`,
-`TtlDB`, `BlobDB`, `TransactionDB`, and `OptimisticTransactionDB`. Every data method
-(`put`/`get`/`delete`/`deleteRange`/`keyMayExist`/`flush`/`getProperty`/`newIterator`) has a
-first-argument `ColumnFamilyHandle` overload across all three access tiers. Reopening requires
-listing every existing column family, `default` included.
+`TtlDB`, `BlobDB`, `TransactionDB`, and `OptimisticTransactionDB`. Every read method
+(`get`/`keyMayExist`/`newIterator`/`getProperty`) has a first-argument `ColumnFamilyHandle`
+overload across all three access tiers on those five types plus `ReadOnlyDB`; write methods
+(`put`/`delete`/`deleteRange`/`flush`) add the same overload on the five writable types.
+Reopening requires listing every existing column family, `default` included — for
+`SecondaryDB`, via `openSecondary(Options, Path primary, Path secondary, List<ColumnFamilyDescriptor>, List<ColumnFamilyHandle>)`.
 
 ## Backup, checkpoint, ingest
 
