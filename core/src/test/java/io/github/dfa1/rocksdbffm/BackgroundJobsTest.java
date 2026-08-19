@@ -127,6 +127,53 @@ class BackgroundJobsTest {
 	}
 
 	// -----------------------------------------------------------------------
+	// BlobDB — cancelAllBackgroundWork / manual compaction / waitForCompact
+	// (gained via RocksDbWriteOps)
+	// -----------------------------------------------------------------------
+
+	@Test
+	void cancelAllBackgroundWork_blobDb_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openBlob(dir)) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			assertThatNoException().isThrownBy(() -> db.cancelAllBackgroundWork(false));
+
+			// Then — no exception
+		}
+	}
+
+	@Test
+	void disableAndEnableManualCompaction_blobDb_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openBlob(dir)) {
+
+			// When
+			assertThatNoException().isThrownBy(() -> {
+				db.disableManualCompaction();
+				db.enableManualCompaction();
+			});
+
+			// Then — no exception
+		}
+	}
+
+	@Test
+	void waitForCompact_blobDb_defaultOptions_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openBlob(dir);
+		     var opts = WaitForCompactOptions.create()) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			assertThatNoException().isThrownBy(() -> db.waitForCompact(opts));
+
+			// Then — no exception
+		}
+	}
+
+	// -----------------------------------------------------------------------
 	// WaitForCompactOptions round-trips
 	// -----------------------------------------------------------------------
 

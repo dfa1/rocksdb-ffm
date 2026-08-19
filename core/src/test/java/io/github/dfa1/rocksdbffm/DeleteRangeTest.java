@@ -219,4 +219,28 @@ class DeleteRangeTest {
 			assertThat(db.get("c".getBytes())).isNull();
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// BlobDB.deleteRange (gained via RocksDbWriteOps)
+	// -----------------------------------------------------------------------
+
+	@Test
+	void deleteRange_blobDb_removesKeysInRange(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openBlob(dir)) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("b".getBytes(), "2".getBytes());
+			db.put("c".getBytes(), "3".getBytes());
+			db.put("d".getBytes(), "4".getBytes());
+
+			// When — delete [b, d) i.e. b and c but not d
+			db.deleteRange("b".getBytes(), "d".getBytes());
+
+			// Then
+			assertThat(db.get("a".getBytes())).isEqualTo("1".getBytes());
+			assertThat(db.get("b".getBytes())).isNull();
+			assertThat(db.get("c".getBytes())).isNull();
+			assertThat(db.get("d".getBytes())).isEqualTo("4".getBytes());
+		}
+	}
 }

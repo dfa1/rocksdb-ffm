@@ -125,4 +125,32 @@ class WalIteratorTest {
 			assertThatCode(secondClose).doesNotThrowAnyException();
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// BlobDB — WAL iteration (gained via RocksDbWriteOps)
+	// -----------------------------------------------------------------------
+
+	@Test
+	void getUpdatesSince_blobDb_yieldsWrittenBatches(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openBlob(dir)) {
+			SequenceNumber start = db.getLatestSequenceNumber();
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("b".getBytes(), "2".getBytes());
+
+			// When
+			List<SequenceNumber> seqs = new ArrayList<>();
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				for (; it.isValid(); it.next()) {
+					try (WalBatchResult result = it.getBatch()) {
+						seqs.add(result.sequenceNumber());
+					}
+				}
+				it.checkStatus();
+			}
+
+			// Then
+			assertThat(seqs).hasSize(2);
+		}
+	}
 }

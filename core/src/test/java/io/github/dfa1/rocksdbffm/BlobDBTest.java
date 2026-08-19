@@ -170,6 +170,24 @@ class BlobDBTest {
 		}
 	}
 
+	@Test
+	void write_arena_appliesBatchAtomically(@TempDir Path dir) {
+		// Given — gained via RocksDbWriteOps
+		try (var db = RocksDB.openBlob(dir);
+		     var batch = WriteBatch.create();
+		     Arena arena = Arena.ofConfined()) {
+			batch.put("k1".getBytes(), "v1".getBytes());
+			batch.put("k2".getBytes(), "v2".getBytes());
+
+			// When
+			db.write(arena, batch);
+
+			// Then
+			assertThat(db.get("k1".getBytes())).isEqualTo("v1".getBytes());
+			assertThat(db.get("k2".getBytes())).isEqualTo("v2".getBytes());
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// Snapshot
 	// -----------------------------------------------------------------------
@@ -339,6 +357,28 @@ class BlobDBTest {
 
 			// Then
 			assertThatCode(action).doesNotThrowAnyException();
+		}
+	}
+
+	@Test
+	void ingestExternalFile_singleFile_defaultOptions_keysAreReadable(@TempDir Path dir) {
+		// Given — single-file/default-options convenience overloads, gained via RocksDbWriteOps
+		Path sstPath = dir.resolve("data.sst");
+		Path dbPath = dir.resolve("db");
+
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var writer = SstFileWriter.newSstFileWriter(opts)) {
+			writer.open(sstPath);
+			writer.put("aaa".getBytes(), "val1".getBytes());
+			writer.finish();
+		}
+
+		// When
+		try (var db = RocksDB.openBlob(dbPath)) {
+			db.ingestExternalFile(sstPath);
+
+			// Then
+			assertThat(db.get("aaa".getBytes())).isEqualTo("val1".getBytes());
 		}
 	}
 
