@@ -241,4 +241,57 @@ class CompactionControlTest {
 			assertThat(db.get("k2".getBytes())).isEqualTo("v2".getBytes());
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// BlobDB — compactRange / suggestCompactRange / file deletions
+	// (gained via RocksDbWriteOps)
+	// -----------------------------------------------------------------------
+
+	@Test
+	void compactRange_blobDb_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openBlob(dir)) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("b".getBytes(), "2".getBytes());
+
+			// When
+			db.compactRange();
+
+			// Then
+			assertThat(db.get("a".getBytes())).isEqualTo("1".getBytes());
+			assertThat(db.get("b".getBytes())).isEqualTo("2".getBytes());
+		}
+	}
+
+	@Test
+	void suggestCompactRange_blobDb_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openBlob(dir)) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("z".getBytes(), "2".getBytes());
+
+			// When
+			ThrowingCallable action = () -> db.suggestCompactRange("a".getBytes(), "z".getBytes());
+
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
+		}
+	}
+
+	@Test
+	void disableAndEnableFileDeletions_blobDb_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openBlob(dir)) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When — disable, do some work, re-enable
+			db.disableFileDeletions();
+			db.put("k2".getBytes(), "v2".getBytes());
+			db.enableFileDeletions();
+
+			// Then
+			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
+			assertThat(db.get("k2".getBytes())).isEqualTo("v2".getBytes());
+		}
+	}
 }

@@ -428,4 +428,58 @@ class KeyMayExistTest {
 			assertThat(result).isTrue();
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// keyMayExist — BlobDB, ReadOnlyDB, SecondaryDB (gained via RocksDbReadOps)
+	// -----------------------------------------------------------------------
+
+	@Test
+	void keyMayExist_blobDb_returnsTrue_forPresentKey(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openBlob(dir)) {
+			db.put("hi".getBytes(), "there".getBytes());
+
+			// When
+			var result = db.keyMayExist("hi".getBytes());
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void keyMayExist_readOnlyDb_returnsTrue_forPresentKey(@TempDir Path dir) {
+		// Given
+		try (var rw = RocksDB.openReadWrite(dir)) {
+			rw.put("hi".getBytes(), "there".getBytes());
+		}
+
+		// When
+		try (var ro = RocksDB.openReadOnly(dir)) {
+			var result = ro.keyMayExist("hi".getBytes());
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void keyMayExist_secondaryDb_returnsTrue_forPresentKey(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var primary = RocksDB.openReadWrite(opts, primaryDir)) {
+			primary.put("hi".getBytes(), "there".getBytes());
+		}
+
+		try (var opts = Options.newOptions();
+		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir)) {
+			secondary.tryCatchUpWithPrimary();
+
+			// When
+			var result = secondary.keyMayExist("hi".getBytes());
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
 }
