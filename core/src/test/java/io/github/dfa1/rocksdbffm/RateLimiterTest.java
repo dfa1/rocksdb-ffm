@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -7,6 +8,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class RateLimiterTest {
 
@@ -100,23 +102,25 @@ class RateLimiterTest {
 		// Given — RateLimiter is not owned by Options; both may be closed independently
 		var sut = RateLimiter.create(MemorySize.ofMB(10));
 		var opts = Options.newOptions().setCreateIfMissing(true).setRateLimiter(sut);
-
-		// When
 		opts.close();
 
+		// When
+		ThrowingCallable action = sut::close;
+
 		// Then — the limiter itself is still usable/closable after Options is gone
-		sut.close();
+		assertThatCode(action).doesNotThrowAnyException();
 	}
 
 	@Test
 	void close_isIdempotent() {
-		// Given
+		// Given — an already-closed instance
 		var sut = RateLimiter.create(MemorySize.ofMB(10));
+		sut.close();
 
 		// When
-		sut.close();
+		ThrowingCallable secondClose = sut::close;
 
 		// Then — closing twice must not crash the JVM
-		sut.close();
+		assertThatCode(secondClose).doesNotThrowAnyException();
 	}
 }

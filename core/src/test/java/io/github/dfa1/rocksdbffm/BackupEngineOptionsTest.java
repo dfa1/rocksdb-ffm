@@ -1,11 +1,13 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class BackupEngineOptionsTest {
 
@@ -162,8 +164,11 @@ class BackupEngineOptionsTest {
 		var otherDir = dir.resolve("elsewhere");
 		try (var sut = BackupEngineOptions.create(dir)) {
 
-			// When / Then — no exception is thrown when repointing the backup directory
-			sut.setBackupDir(otherDir);
+			// When
+			ThrowingCallable action = () -> sut.setBackupDir(otherDir);
+
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -173,8 +178,11 @@ class BackupEngineOptionsTest {
 		try (var env = Env.defaultEnv();
 		     var sut = BackupEngineOptions.create(dir)) {
 
-			// When / Then — no exception is thrown when wiring an explicit Env
-			sut.setEnv(env);
+			// When
+			ThrowingCallable action = () -> sut.setEnv(env);
+
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -193,13 +201,14 @@ class BackupEngineOptionsTest {
 
 	@Test
 	void close_isIdempotent(@TempDir Path dir) {
-		// Given
+		// Given — an already-closed instance
 		var sut = BackupEngineOptions.create(dir);
+		sut.close();
 
 		// When
-		sut.close();
+		ThrowingCallable secondClose = sut::close;
 
 		// Then — closing twice must not crash the JVM
-		sut.close();
+		assertThatCode(secondClose).doesNotThrowAnyException();
 	}
 }

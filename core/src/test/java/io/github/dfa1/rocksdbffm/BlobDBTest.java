@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class BlobDBTest {
 
@@ -244,9 +246,10 @@ class BlobDBTest {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
-			db.flush(fo);
+			ThrowingCallable action = () -> db.flush(fo);
 
-			// Then — no exception means flush succeeded
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -257,9 +260,10 @@ class BlobDBTest {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
-			db.flushWal(true);
+			ThrowingCallable action = () -> db.flushWal(true);
 
-			// Then — no exception means flush succeeded
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -331,9 +335,10 @@ class BlobDBTest {
 		     var ingestOpts = IngestExternalFileOptions.newIngestExternalFileOptions()) {
 
 			// When
-			db.ingestExternalFile(List.of(), ingestOpts);
+			ThrowingCallable action = () -> db.ingestExternalFile(List.of(), ingestOpts);
 
-			// Then — no exception
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 

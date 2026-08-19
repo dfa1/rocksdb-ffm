@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class PerfContextIntegrationTest {
 
@@ -122,13 +124,16 @@ class PerfContextIntegrationTest {
 	void allPerfLevelsAreSettable() {
 		// Given — any PerfLevel value
 
-		// When — each level is applied
-		for (PerfLevel level : PerfLevel.values()) {
-			PerfContext.setPerfLevel(level);
-		}
+		// When — each level is applied in turn, ending on a specific level (restore for @AfterEach)
+		ThrowingCallable action = () -> {
+			for (PerfLevel level : PerfLevel.values()) {
+				PerfContext.setPerfLevel(level);
+			}
+			PerfContext.setPerfLevel(PerfLevel.ENABLE_COUNT);
+		};
 
-		// Then — no exception was thrown (restore for @AfterEach)
-		PerfContext.setPerfLevel(PerfLevel.ENABLE_COUNT);
+		// Then
+		assertThatCode(action).doesNotThrowAnyException();
 	}
 
 	@Test

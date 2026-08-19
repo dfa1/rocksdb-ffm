@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -7,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class CompactionControlTest {
 
@@ -196,9 +198,10 @@ class CompactionControlTest {
 			db.put("z".getBytes(), "2".getBytes());
 
 			// When
-			db.suggestCompactRange("a".getBytes(), "z".getBytes());
+			ThrowingCallable action = () -> db.suggestCompactRange("a".getBytes(), "z".getBytes());
 
-			// Then — hint only; no guarantee of compaction, no exception
+			// Then — hint only; no guarantee of compaction, just that it doesn't throw
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -210,9 +213,10 @@ class CompactionControlTest {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
-			db.suggestCompactRange(null, null);
+			ThrowingCallable action = () -> db.suggestCompactRange(null, null);
 
-			// Then — no exception
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 

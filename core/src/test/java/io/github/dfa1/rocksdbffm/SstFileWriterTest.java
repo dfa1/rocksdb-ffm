@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class SstFileWriterTest {
@@ -380,10 +382,17 @@ class SstFileWriterTest {
 
 	@Test
 	void ingestExternalFileOptions_setMoveFiles_doesNotThrow() {
-		// Given / When / Then
+		// Given
 		try (var opts = IngestExternalFileOptions.newIngestExternalFileOptions()) {
-			opts.setMoveFiles(true);
-			opts.setMoveFiles(false);
+
+			// When
+			ThrowingCallable action = () -> {
+				opts.setMoveFiles(true);
+				opts.setMoveFiles(false);
+			};
+
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -410,9 +419,10 @@ class SstFileWriterTest {
 		// Given
 		try (var db = RocksDB.openReadWrite(dir)) {
 			// When
-			db.ingestExternalFile(List.of());
+			ThrowingCallable action = () -> db.ingestExternalFile(List.of());
 
-			// Then — no exception
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 

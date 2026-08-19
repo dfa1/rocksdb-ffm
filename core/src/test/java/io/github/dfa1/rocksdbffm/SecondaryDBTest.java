@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -9,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class SecondaryDBTest {
 
@@ -49,9 +51,10 @@ class SecondaryDBTest {
 		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir)) {
 
 			// When
-			secondary.tryCatchUpWithPrimary();
+			ThrowingCallable action = secondary::tryCatchUpWithPrimary;
 
-			// Then — no exception
+			// Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 

@@ -1,11 +1,13 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class SstFileManagerTest {
 
@@ -171,15 +173,16 @@ class SstFileManagerTest {
 
 	@Test
 	void close_isIdempotent() {
-		// Given
+		// Given — an already-closed instance
 		var env = Env.defaultEnv();
 		var sut = SstFileManager.create(env);
+		sut.close();
 
 		// When
-		sut.close();
+		ThrowingCallable secondClose = sut::close;
 
 		// Then — closing twice must not crash the JVM
-		sut.close();
+		assertThatCode(secondClose).doesNotThrowAnyException();
 
 		env.close();
 	}

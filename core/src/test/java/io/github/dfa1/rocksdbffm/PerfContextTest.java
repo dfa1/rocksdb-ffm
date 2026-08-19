@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class PerfContextTest {
 
@@ -118,13 +120,14 @@ class PerfContextTest {
 
 	@Test
 	void close_isIdempotent() {
-		// Given
+		// Given — an already-closed instance
 		var sut = PerfContext.newPerfContext();
+		sut.close();
 
 		// When
-		sut.close();
+		ThrowingCallable secondClose = sut::close;
 
 		// Then — closing twice must not crash the JVM
-		sut.close();
+		assertThatCode(secondClose).doesNotThrowAnyException();
 	}
 }
