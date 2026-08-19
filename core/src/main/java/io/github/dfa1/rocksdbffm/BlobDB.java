@@ -25,28 +25,13 @@ import java.lang.foreign.MemorySegment;
 /// [Property#NUM_BLOB_FILES], [Property#TOTAL_BLOB_FILE_SIZE], etc.
 public final class BlobDB extends NativeObject implements RocksDbWriteOps {
 
-	private final WriteOptions writeOpts;
-	private final ReadOptions readOpts;
-
 	BlobDB(MemorySegment ptr) {
 		super(ptr);
-		this.writeOpts = RocksDB.DEFAULT_WRITE_OPTIONS;
-		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
 	}
 
 	@Override
 	public MemorySegment dbPtr() {
 		return ptr();
-	}
-
-	@Override
-	public WriteOptions defaultWriteOpts() {
-		return writeOpts;
-	}
-
-	@Override
-	public ReadOptions defaultReadOpts() {
-		return readOpts;
 	}
 
 	// -----------------------------------------------------------------------

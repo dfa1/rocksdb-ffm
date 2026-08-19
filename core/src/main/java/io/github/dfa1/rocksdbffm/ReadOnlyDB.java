@@ -11,23 +11,15 @@ import java.lang.foreign.MemorySegment;
 ///     byte[] value = db.get("key".getBytes());
 /// }
 /// ```
-public final class ReadOnlyDB extends NativeObject implements RocksDbReadOps {
-
-	private final ReadOptions readOpts;
+public final class ReadOnlyDB extends NativeObject implements RocksDbCfReadOps {
 
 	ReadOnlyDB(MemorySegment ptr) {
 		super(ptr);
-		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
 	}
 
 	@Override
 	public MemorySegment dbPtr() {
 		return ptr();
-	}
-
-	@Override
-	public ReadOptions defaultReadOpts() {
-		return readOpts;
 	}
 
 	// -----------------------------------------------------------------------

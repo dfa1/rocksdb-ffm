@@ -40,21 +40,13 @@ public final class SecondaryDB extends NativeObject implements RocksDbReadOps {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
-	private final ReadOptions readOpts;
-
 	SecondaryDB(MemorySegment ptr) {
 		super(ptr);
-		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
 	}
 
 	@Override
 	public MemorySegment dbPtr() {
 		return ptr();
-	}
-
-	@Override
-	public ReadOptions defaultReadOpts() {
-		return readOpts;
 	}
 
 	// -----------------------------------------------------------------------
