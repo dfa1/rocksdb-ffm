@@ -5,9 +5,6 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
-import java.nio.ByteBuffer;
-import java.util.Optional;
-import java.util.OptionalLong;
 
 /// FFM wrapper for a RocksDB secondary instance (`rocksdb_t*` opened via
 /// `rocksdb_open_as_secondary`).
@@ -29,7 +26,7 @@ import java.util.OptionalLong;
 ///     byte[] value = secondary.get("key".getBytes());
 /// }
 /// ```
-public final class SecondaryDB extends NativeObject {
+public final class SecondaryDB extends NativeObject implements RocksDbReadOps {
 
 	// -----------------------------------------------------------------------
 	// Method handles unique to SecondaryDB
@@ -50,6 +47,16 @@ public final class SecondaryDB extends NativeObject {
 		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
 	}
 
+	@Override
+	public MemorySegment dbPtr() {
+		return ptr();
+	}
+
+	@Override
+	public ReadOptions defaultReadOpts() {
+		return readOpts;
+	}
+
 	// -----------------------------------------------------------------------
 	// Catch-up
 	// -----------------------------------------------------------------------
@@ -67,120 +74,6 @@ public final class SecondaryDB extends NativeObject {
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("tryCatchUpWithPrimary failed", t);
 		}
-	}
-
-	// -----------------------------------------------------------------------
-	// Get
-	// -----------------------------------------------------------------------
-
-	/// Returns the value for `key`, or `null` if the key does not exist.
-	/// Uses PinnableSlice to avoid an intermediate copy from the block cache.
-	///
-	/// @param key key bytes to look up
-	/// @return value bytes, or `null` if the key does not exist
-	public byte[] get(byte[] key) {
-		return RocksDB.getBytes(ptr(), readOpts.ptr(), key);
-	}
-
-	/// Get with explicit [ReadOptions], e.g. for snapshot-pinned reads. Returns `null` if not found.
-	///
-	/// @param readOptions read options, e.g. containing a snapshot
-	/// @param key         key bytes to look up
-	/// @return value bytes, or `null` if the key does not exist
-	public byte[] get(ReadOptions readOptions, byte[] key) {
-		return RocksDB.getBytes(ptr(), readOptions.ptr(), key);
-	}
-
-	/// Single-copy get via `rocksdb_get_into_buffer` + direct output [ByteBuffer].
-	/// Copies nothing into `value` when its remaining capacity is too small.
-	///
-	/// @param key   direct [ByteBuffer] containing the key
-	/// @param value direct [ByteBuffer] to write the value into
-	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
-	/// small, or [CopyResult.NotFound] if the key is absent
-	public CopyResult get(ByteBuffer key, ByteBuffer value) {
-		return RocksDB.getIntoBuffer(ptr(), readOpts.ptr(),
-				MemorySegment.ofBuffer(key), key.remaining(), value);
-	}
-
-	/// Single-copy get into a caller-supplied native segment via `rocksdb_get_into_buffer`.
-	/// Copies nothing into `value` when its capacity is too small.
-	///
-	/// @param key   native segment containing the key
-	/// @param value native segment to write the value into
-	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
-	/// small, or [CopyResult.NotFound] if the key is absent
-	public CopyResult get(MemorySegment key, MemorySegment value) {
-		return RocksDB.getIntoSegment(ptr(), readOpts.ptr(), key, key.byteSize(), value);
-	}
-
-	/// Scoped zero-copy get: reads `key` via a `rocksdb_pinnable_handle_t` and passes a
-	/// read-only view of the value directly to `fn`, with no intermediate copy.
-	///
-	/// The view passed to `fn` is bound to an arena that is closed the moment `fn`
-	/// returns, so it must not be retained beyond the call — doing so throws
-	/// `IllegalStateException` (used after this call returns) or `WrongThreadException`
-	/// (used from another thread) rather than reading freed memory.
-	///
-	/// @param <R> the type produced by `fn`
-	/// @param key native segment containing the key
-	/// @param fn  callback invoked with a zero-copy view of the pinned value
-	/// @throws NullPointerException if `fn` returns `null`
-	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
-	public <R> Optional<R> get(MemorySegment key, Mapper<R> fn) {
-		return RocksDB.withPinned(ptr(), readOpts.ptr(), key, fn);
-	}
-
-	// -----------------------------------------------------------------------
-	// Iterator
-	// -----------------------------------------------------------------------
-
-	/// Returns a new iterator over the secondary's current view.
-	/// Call [#tryCatchUpWithPrimary()] first if you need the latest data.
-	///
-	/// @return a new [RocksIterator]; caller must close it
-	public RocksIterator newIterator() {
-		return RocksIterator.create(ptr(), readOpts.ptr());
-	}
-
-	/// Returns a new iterator using the supplied [ReadOptions].
-	///
-	/// @param readOptions read options, e.g. containing a snapshot
-	/// @return a new [RocksIterator]; caller must close it
-	public RocksIterator newIterator(ReadOptions readOptions) {
-		return RocksIterator.create(ptr(), readOptions.ptr());
-	}
-
-	// -----------------------------------------------------------------------
-	// Snapshot
-	// -----------------------------------------------------------------------
-
-	/// Creates a point-in-time snapshot of the secondary's current view.
-	/// Must be closed after use.
-	///
-	/// @return a new [Snapshot]; caller must close it
-	public Snapshot getSnapshot() {
-		return RocksDB.createSnapshot(ptr());
-	}
-
-	// -----------------------------------------------------------------------
-	// DB Properties
-	// -----------------------------------------------------------------------
-
-	/// Returns the value of a DB property as a string, or [Optional#empty()] if not supported.
-	///
-	/// @param property the property to query
-	/// @return the property value, or [Optional#empty()] if not supported
-	public Optional<String> getProperty(Property property) {
-		return RocksDB.getProperty(ptr(), property);
-	}
-
-	/// Returns the value of a numeric DB property, or [OptionalLong#empty()] if not supported.
-	///
-	/// @param property the property to query
-	/// @return the numeric property value, or [OptionalLong#empty()] if not supported
-	public OptionalLong getLongProperty(Property property) {
-		return RocksDB.getLongProperty(ptr(), property);
 	}
 
 	// -----------------------------------------------------------------------
