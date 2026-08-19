@@ -160,26 +160,17 @@ public final class Logger extends NativeObject {
 				// msg is not NUL-terminated, so RocksDB.toJavaString (getString-based) does not
 				// apply; it is also not owned by us, so RocksDB.toByteArray (borrowed,
 				// length-prefixed pointer) is the right fit.
-				message = new String(RocksDB.toByteArray(msg, len), StandardCharsets.UTF_8);
+				MemorySegment bounded = msg.reinterpret(len);
+				// sometimes the callback is invoked with a message without \n but most of the
+				// time with it -- normalize away the trailing newline before decoding, so
+				// logging frameworks are happy
+				long trimmedLen = bounded.get(ValueLayout.JAVA_BYTE, len - 1) == '\n' ? len - 1 : len;
+				message = new String(RocksDB.toByteArray(bounded, trimmedLen), StandardCharsets.UTF_8);
 			}
-			message = dropTrailingNewline(message);
 			cb.log(level, message);
 		} catch (Throwable throwable) {
 			// exceptions must not escape into native code, but they must be shown to the user somehow
 			assert false; // fail at least the build
 		}
-	}
-
-	// sometimes callback is invoked with a message without \n but most of the time, with it
-	// normalize the message to always drop the last newline (so logging framework are happy)
-	private static String dropTrailingNewline(String message) {
-		if (message.isEmpty()) {
-			return message;
-		}
-		final int lastCharIndex = message.length() - 1;
-		if (message.charAt(lastCharIndex) == '\n') {
-			message = message.substring(0, lastCharIndex);
-		}
-		return message;
 	}
 }
