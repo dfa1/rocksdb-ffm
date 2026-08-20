@@ -93,7 +93,7 @@ public final class OptimisticTransactionDB extends NativeObject {
 		try {
 			MemorySegment txnPtr = (MemorySegment) MH_BEGIN.invokeExact(
 					ptr(), writeOptions.ptr(), txnOptions.ptr(), MemorySegment.NULL);
-			return new Transaction(txnPtr);
+			return new Transaction(txnPtr, txnOptions.getSetSnapshot());
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("beginTransaction failed", t);
 		}

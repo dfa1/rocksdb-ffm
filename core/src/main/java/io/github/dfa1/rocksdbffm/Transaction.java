@@ -146,9 +146,19 @@ public final class Transaction extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
-	/// Package-private: created by TransactionDB.
-	Transaction(MemorySegment ptr) {
+	/// Whether this transaction was begun with `setSetSnapshot(true)`. RocksDB's C API
+	/// returns a non-null wrapper from `rocksdb_transaction_get_snapshot` either way, but
+	/// its internal `rep` is null unless this is true — dereferencing that null `rep` (e.g.
+	/// via [Snapshot#sequenceNumber()] or a read through [ReadOptions#setSnapshot]) crashes
+	/// the JVM instead of raising a Java exception, since the C API does not null-check.
+	private final boolean hasSnapshot;
+
+	/// Package-private: created by TransactionDB or OptimisticTransactionDB.
+	///
+	/// @param hasSnapshot whether this transaction was begun with `setSetSnapshot(true)`
+	Transaction(MemorySegment ptr, boolean hasSnapshot) {
 		super(ptr);
+		this.hasSnapshot = hasSnapshot;
 	}
 
 	// -----------------------------------------------------------------------
@@ -839,13 +849,21 @@ public final class Transaction extends NativeObject {
 	// Snapshot
 	// -----------------------------------------------------------------------
 
-	/// Returns the snapshot associated with this transaction. `rocksdb_transaction_get_snapshot`
-	/// always allocates a wrapper, even when no snapshot was set via [TransactionOptions], so this
-	/// never returns `null` — the returned [Snapshot] must always be closed after use (freed via
-	/// `rocksdb_free`).
+	/// Returns the snapshot associated with this transaction. The returned [Snapshot] must
+	/// always be closed after use (freed via `rocksdb_free`).
 	///
 	/// @return the transaction's snapshot
+	/// @throws IllegalStateException if this transaction was not begun with
+	///                                `setSetSnapshot(true)` on its [TransactionOptions]
+	///                                (or [OptimisticTransactionOptions]) — RocksDB's C API
+	///                                would otherwise hand back a snapshot wrapper whose use
+	///                                crashes the JVM instead of raising a Java exception
 	public Snapshot getSnapshot() {
+		if (!hasSnapshot) {
+			throw new IllegalStateException("no snapshot: begin this transaction with "
+					+ "TransactionOptions.setSetSnapshot(true) (or the OptimisticTransactionOptions "
+					+ "equivalent) before calling getSnapshot()");
+		}
 		try {
 			MemorySegment snapPtr = (MemorySegment) MH_GET_SNAPSHOT.invokeExact(ptr());
 			return new Snapshot(snapPtr); // released via rocksdb_free

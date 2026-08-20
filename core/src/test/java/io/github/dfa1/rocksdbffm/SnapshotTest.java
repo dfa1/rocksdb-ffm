@@ -8,6 +8,7 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class SnapshotTest {
 
@@ -180,6 +181,72 @@ class SnapshotTest {
 
 			// Then — normally this would trigger a JVM crash
 			assertThatCode(secondClose).doesNotThrowAnyException();
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Transaction snapshot — dbPtr-less variant, released via rocksdb_free
+	// -----------------------------------------------------------------------
+
+	@Test
+	void transaction_snapshot_isolation(@TempDir Path dir) {
+		// Given
+		try (var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
+		     var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir);
+		     var wo = WriteOptions.newWriteOptions();
+		     var txnOpts = TransactionOptions.newTransactionOptions().setSetSnapshot(true)) {
+
+			db.put("key".getBytes(), "before".getBytes());
+
+			// When
+			try (Transaction txn = db.beginTransaction(wo, txnOpts);
+			     Snapshot snap = txn.getSnapshot();
+			     ReadOptions ro = ReadOptions.newReadOptions().setSnapshot(snap)) {
+
+				db.put("key".getBytes(), "after".getBytes());
+
+				// Then — snapshot taken at transaction start still sees the pre-write value
+				assertThat(db.get(ro, "key".getBytes())).isEqualTo("before".getBytes());
+			}
+		}
+	}
+
+	@Test
+	void transaction_snapshot_sequenceNumberIsNonNegative(@TempDir Path dir) {
+		// Given
+		try (var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
+		     var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir);
+		     var wo = WriteOptions.newWriteOptions();
+		     var txnOpts = TransactionOptions.newTransactionOptions().setSetSnapshot(true)) {
+
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			try (Transaction txn = db.beginTransaction(wo, txnOpts);
+			     Snapshot snap = txn.getSnapshot()) {
+
+				// Then
+				assertThat(snap.sequenceNumber().toLong()).isGreaterThan(0);
+			}
+		}
+	}
+
+	@Test
+	void transaction_getSnapshot_withoutSetSnapshot_throwsInsteadOfCrashing(@TempDir Path dir) {
+		// Given — a transaction begun with default TransactionOptions (setSetSnapshot defaults
+		// to false); RocksDB's C API would otherwise hand back a snapshot wrapper whose `rep` is
+		// null, and any use of it (e.g. sequenceNumber()) segfaults the JVM instead of raising
+		// a Java exception
+		try (var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
+		     var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir);
+		     var wo = WriteOptions.newWriteOptions();
+		     var txn = db.beginTransaction(wo)) {
+
+			// When / Then
+			assertThatThrownBy(txn::getSnapshot).isInstanceOf(IllegalStateException.class);
 		}
 	}
 }

@@ -17,6 +17,8 @@ public final class OptimisticTransactionOptions extends NativeObject {
 	private static final MethodHandle MH_DESTROY;
 	/// `void rocksdb_optimistictransaction_options_set_set_snapshot(rocksdb_optimistictransaction_options_t* opt, unsigned char v);`
 	private static final MethodHandle MH_SET_SET_SNAPSHOT;
+	/// `unsigned char rocksdb_optimistictransaction_options_get_set_snapshot(rocksdb_optimistictransaction_options_t* opt);`
+	private static final MethodHandle MH_GET_SET_SNAPSHOT;
 
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_optimistictransaction_options_create",
@@ -28,6 +30,10 @@ public final class OptimisticTransactionOptions extends NativeObject {
 		MH_SET_SET_SNAPSHOT = NativeLibrary.lookup(
 				"rocksdb_optimistictransaction_options_set_set_snapshot",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_SET_SNAPSHOT = NativeLibrary.lookup(
+				"rocksdb_optimistictransaction_options_get_set_snapshot",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 	}
 
 	private OptimisticTransactionOptions(MemorySegment ptr) {
@@ -59,6 +65,17 @@ public final class OptimisticTransactionOptions extends NativeObject {
 			throw RocksDB.wrapInvokeFailure("setSetSnapshot failed", t);
 		}
 		return this;
+	}
+
+	/// Returns whether a snapshot is taken at the start of the transaction.
+	///
+	/// @return `true` if a snapshot is taken at transaction start
+	public boolean getSetSnapshot() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_SET_SNAPSHOT.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getSetSnapshot failed", t);
+		}
 	}
 
 	@Override
