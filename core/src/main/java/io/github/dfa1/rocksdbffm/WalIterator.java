@@ -109,7 +109,7 @@ public final class WalIterator extends NativeObject {
 	///                                instead of raising a Java exception
 	public WalBatchResult getBatch() {
 		if (!isValid()) {
-			throw new IllegalStateException("wal iterator is not valid; call isValid() before getBatch()");
+			throw new IllegalStateException("wal iterator is not valid: getBatch() can only be called while isValid() is true");
 		}
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment seqHolder = arena.allocate(ValueLayout.JAVA_LONG);
