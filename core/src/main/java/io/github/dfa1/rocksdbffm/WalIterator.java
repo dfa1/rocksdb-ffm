@@ -101,10 +101,16 @@ public final class WalIterator extends NativeObject {
 
 	/// Returns the current [WriteBatch] and the [SequenceNumber] of its first transaction.
 	/// The caller owns the returned [WalBatchResult] and must close it.
-	/// Only call when [#isValid()] is `true`.
 	///
 	/// @return the current batch and its sequence number
+	/// @throws IllegalStateException if [#isValid()] is `false` — RocksDB's C API
+	///                                (`rocksdb_wal_iter_get_batch`) dereferences a null
+	///                                internal pointer in that case and crashes the JVM
+	///                                instead of raising a Java exception
 	public WalBatchResult getBatch() {
+		if (!isValid()) {
+			throw new IllegalStateException("wal iterator is not valid; call isValid() before getBatch()");
+		}
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment seqHolder = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment batchPtr = (MemorySegment) MH_GET_BATCH.invokeExact(ptr(), seqHolder);

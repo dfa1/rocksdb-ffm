@@ -10,6 +10,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class WalIteratorTest {
 
@@ -106,6 +107,21 @@ class WalIteratorTest {
 				// Then
 				assertThat(it.isValid()).isFalse();
 			}
+		}
+	}
+
+	@Test
+	void getBatch_onFreshEmptyDb_throwsInsteadOfCrashing(@TempDir Path dir) {
+		// Given — a brand-new DB with no writes at all: the WAL iterator never finds a
+		// batch to seek to, so isValid() is false from construction. RocksDB's C API
+		// (rocksdb_wal_iter_get_batch) would otherwise dereference a null internal
+		// pointer in this state and crash the JVM instead of raising a Java exception.
+		try (var db = RocksDB.openReadWrite(dir);
+		     WalIterator it = db.getUpdatesSince(SequenceNumber.of(0))) {
+
+			// When / Then
+			assertThat(it.isValid()).isFalse();
+			assertThatThrownBy(it::getBatch).isInstanceOf(IllegalStateException.class);
 		}
 	}
 
