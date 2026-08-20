@@ -10,8 +10,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 /// A merge operator, attached to a database or column family via [Options#setMergeOperator(MergeOperator)].
 ///
@@ -191,8 +189,7 @@ public sealed interface MergeOperator {
 		// Unregistered from destructorDispatch, not from tryClose: once ownership transfers to
 		// Options via applyTo, the native shared_ptr controls this object's real lifetime, which
 		// can outlive this Java wrapper.
-		private static final ConcurrentHashMap<Long, State> REGISTRY = new ConcurrentHashMap<>();
-		private static final AtomicLong NEXT_ID = new AtomicLong(1);
+		private static final UpcallRegistry<State> REGISTRY = new UpcallRegistry<>();
 		// Fully-qualified because io.github.dfa1.rocksdbffm.Logger (this package's RocksDB
 		// logger wrapper) would otherwise shadow the unqualified name.
 		private static final System.Logger LOG = System.getLogger(Custom.class.getName());
@@ -202,17 +199,15 @@ public sealed interface MergeOperator {
 		}
 
 		static Custom create(String name, FullMergeFn fn) {
-			long id = NEXT_ID.getAndIncrement();
 			MemorySegment nameSeg = Arena.global().allocateFrom(name);
-			REGISTRY.put(id, new State(fn, nameSeg));
+			MemorySegment statePtr = REGISTRY.register(new State(fn, nameSeg));
 			try {
-				MemorySegment statePtr = MemorySegment.ofAddress(id);
 				MemorySegment ptr = (MemorySegment) MH_MERGEOPERATOR_CREATE.invokeExact(
 						statePtr, DESTRUCTOR_STUB, FULL_MERGE_STUB, PARTIAL_MERGE_STUB,
 						MemorySegment.NULL, NAME_STUB);
 				return new Custom(ptr);
 			} catch (Throwable t) {
-				REGISTRY.remove(id);
+				REGISTRY.unregister(statePtr);
 				throw RocksDB.wrapInvokeFailure("MergeOperator.custom failed", t);
 			}
 		}
@@ -274,7 +269,7 @@ public sealed interface MergeOperator {
 			MemorySegment successPtr = success.reinterpret(ValueLayout.JAVA_BYTE.byteSize());
 			MemorySegment newValueLenPtr = newValueLen.reinterpret(ValueLayout.JAVA_LONG.byteSize());
 			try {
-				State s = REGISTRY.get(state.address());
+				State s = REGISTRY.get(state);
 				byte[] keyBytes = readBytes(key, keyLen);
 				byte[] existing = MemorySegment.NULL.equals(existingValue) ? null : readBytes(existingValue, existingValueLen);
 				List<byte[]> operands = readOperands(operandsList, operandsLen, numOperands);
@@ -314,12 +309,12 @@ public sealed interface MergeOperator {
 		/// This is the only reliable unregistration point: ownership transfer via [#applyTo] means
 		/// [#tryClose(MemorySegment)] may never run for this instance. Must not throw.
 		private static void destructorDispatch(MemorySegment state) {
-			REGISTRY.remove(state.address());
+			REGISTRY.unregister(state);
 		}
 
 		/// Called from [#NAME_STUB]. Must not throw.
 		private static MemorySegment nameDispatch(MemorySegment state) {
-			State s = REGISTRY.get(state.address());
+			State s = REGISTRY.get(state);
 			return s != null ? s.nameSeg() : MemorySegment.NULL;
 		}
 	}

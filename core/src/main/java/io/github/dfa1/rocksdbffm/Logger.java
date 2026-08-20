@@ -9,8 +9,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 /// FFM wrapper for `rocksdb_logger_t`.
 ///
@@ -62,10 +60,8 @@ public final class Logger extends NativeObject {
 			ValueLayout.JAVA_LONG  // size_t len
 	);
 
-	// Registry: callback ID → LogCallback.
-	// IDs are used as the priv pointer value; no real memory is accessed at that address.
-	private static final ConcurrentHashMap<Long, LogCallback> REGISTRY = new ConcurrentHashMap<>();
-	private static final AtomicLong NEXT_ID = new AtomicLong(1);
+	// Registry: callback ID (smuggled through the priv pointer) → LogCallback.
+	private static final UpcallRegistry<LogCallback> REGISTRY = new UpcallRegistry<>();
 
 	// One global upcall stub shared by all callback loggers.
 	// Lives for the JVM lifetime so the function pointer is always valid.
@@ -123,15 +119,13 @@ public final class Logger extends NativeObject {
 	/// @param callback receives each log message
 	/// @return a new [Logger] that dispatches to `callback`; caller must close it
 	public static Logger newCallbackLogger(LogLevel minLevel, LogCallback callback) {
-		long id = NEXT_ID.getAndIncrement();
-		REGISTRY.put(id, callback);
+		// Pass the registry id as the priv pointer value (address, not dereferenced).
+		MemorySegment privPtr = REGISTRY.register(callback);
 		try {
-			// Pass the ID as the priv pointer value (address, not dereferenced).
-			MemorySegment privPtr = MemorySegment.ofAddress(id);
 			MemorySegment ptr = (MemorySegment) MH_CREATE_CALLBACK.invokeExact(minLevel.value, GLOBAL_STUB, privPtr);
-			return new Logger(ptr, id);
+			return new Logger(ptr, privPtr.address());
 		} catch (Throwable t) {
-			REGISTRY.remove(id);
+			REGISTRY.unregister(privPtr);
 			throw RocksDB.wrapInvokeFailure("Logger.newCallbackLogger failed", t);
 		}
 	}
@@ -140,7 +134,7 @@ public final class Logger extends NativeObject {
 	protected void tryClose(MemorySegment ptr) throws Throwable {
 		if (callbackId != STDERR_CALLBACK_ID) {
 			// Unregister first so any concurrent native invocation after destroy becomes a no-op.
-			REGISTRY.remove(callbackId);
+			REGISTRY.unregister(MemorySegment.ofAddress(callbackId));
 		}
 		MH_DESTROY.invokeExact(ptr);
 	}
@@ -148,7 +142,7 @@ public final class Logger extends NativeObject {
 	/// Called from the single global upcall stub. Must not throw.
 	private static void dispatch(MemorySegment priv, int lev, MemorySegment msg, long len) {
 		try {
-			LogCallback cb = REGISTRY.get(priv.address());
+			LogCallback cb = REGISTRY.get(priv);
 			if (cb == null) {
 				return;
 			}
