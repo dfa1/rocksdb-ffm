@@ -14,6 +14,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TransactionDBTest {
 
@@ -838,6 +839,69 @@ class TransactionDBTest {
 			// Then
 			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
 		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Calling methods after close() must throw, not crash the JVM
+	// -----------------------------------------------------------------------
+	// dropColumnFamily/getProperty(ColumnFamilyHandle,...)/getLongProperty(ColumnFamilyHandle,...)
+	// operate on a second native pointer (the "base DB", see NativeObjectWithBaseDb) that would
+	// otherwise bypass NativeObject's own closed-check — verify each is guarded.
+
+	@Test
+	void dropColumnFamily_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
+		// Given
+		var db = openDb(dir);
+		ColumnFamilyHandle cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		db.close();
+
+		// When
+		ThrowingCallable callable = () -> db.dropColumnFamily(cf);
+
+		// Then
+		assertThatThrownBy(callable).isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	void getProperty_columnFamily_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
+		// Given
+		var db = openDb(dir);
+		ColumnFamilyHandle cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		db.close();
+
+		// When
+		ThrowingCallable callable = () -> db.getProperty(cf, Property.STATS);
+
+		// Then
+		assertThatThrownBy(callable).isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	void getLongProperty_columnFamily_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
+		// Given
+		var db = openDb(dir);
+		ColumnFamilyHandle cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		db.close();
+
+		// When
+		ThrowingCallable callable = () -> db.getLongProperty(cf, Property.ESTIMATE_NUM_KEYS);
+
+		// Then
+		assertThatThrownBy(callable).isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	void close_isIdempotent(@TempDir Path dir) {
+		// Given — an already-closed TransactionDB; close() must have released both the
+		// primary pointer and the base DB pointer (NativeObjectWithBaseDb#tryCloseBaseDb)
+		var db = openDb(dir);
+		db.close();
+
+		// When
+		ThrowingCallable secondClose = db::close;
+
+		// Then — normally a double-free would crash the JVM
+		assertThatCode(secondClose).doesNotThrowAnyException();
 	}
 
 	// -----------------------------------------------------------------------

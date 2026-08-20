@@ -832,4 +832,87 @@ class OptimisticTransactionDBTest {
 			assertThat(result).isPresent();
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// Calling methods after close() must throw, not crash the JVM
+	// -----------------------------------------------------------------------
+	// Direct ops go through a second native pointer (the "base DB") that RocksDB frees
+	// separately when this OptimisticTransactionDB closes; verify it's guarded.
+
+	@Test
+	void put_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
+		// Given
+		var opts = Options.newOptions().setCreateIfMissing(true);
+		var db = RocksDB.openOptimistic(opts, dir);
+		db.close();
+		opts.close();
+
+		// When
+		ThrowingCallable callable = () -> db.put("k".getBytes(), "v".getBytes());
+
+		// Then
+		assertThatThrownBy(callable).isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	void get_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
+		// Given
+		var opts = Options.newOptions().setCreateIfMissing(true);
+		var db = RocksDB.openOptimistic(opts, dir);
+		db.put("k".getBytes(), "v".getBytes());
+		db.close();
+		opts.close();
+
+		// When
+		ThrowingCallable callable = () -> db.get("k".getBytes());
+
+		// Then
+		assertThatThrownBy(callable).isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	void getProperty_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
+		// Given
+		var opts = Options.newOptions().setCreateIfMissing(true);
+		var db = RocksDB.openOptimistic(opts, dir);
+		db.close();
+		opts.close();
+
+		// When
+		ThrowingCallable callable = () -> db.getProperty(Property.STATS);
+
+		// Then
+		assertThatThrownBy(callable).isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	void newIterator_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
+		// Given
+		var opts = Options.newOptions().setCreateIfMissing(true);
+		var db = RocksDB.openOptimistic(opts, dir);
+		db.close();
+		opts.close();
+
+		// When
+		ThrowingCallable callable = db::newIterator;
+
+		// Then
+		assertThatThrownBy(callable).isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	void close_isIdempotent(@TempDir Path dir) {
+		// Given — an already-closed OptimisticTransactionDB; close() must have released both
+		// the primary pointer and the base DB pointer (NativeObjectWithBaseDb#tryCloseBaseDb)
+		var opts = Options.newOptions().setCreateIfMissing(true);
+		var db = RocksDB.openOptimistic(opts, dir);
+		db.close();
+		opts.close();
+
+		// When
+		ThrowingCallable secondClose = db::close;
+
+		// Then — normally a double-free would crash the JVM
+		assertThatCode(secondClose).doesNotThrowAnyException();
+	}
 }

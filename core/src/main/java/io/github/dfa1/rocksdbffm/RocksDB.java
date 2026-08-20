@@ -1937,22 +1937,6 @@ public final class RocksDB {
 		throw new AssertionError(message, t);
 	}
 
-	/// Invokes a void-returning, single-`MemorySegment`-argument destroy handle, swallowing
-	/// any failure. Deliberate exception to the "never pass a `MethodHandle` as a parameter"
-	/// rule: close() is not a hot path, so losing `invokeExact`'s constant-folding here doesn't
-	/// matter, and the alternative — nested try/finally at every multi-resource `tryClose` — is
-	/// worse for a destructor that must attempt every release regardless of earlier failures.
-	///
-	/// @param destroy single-`MemorySegment`-argument native destroy handle
-	/// @param ptr     the native pointer to release
-	static void closeQuietly(MethodHandle destroy, MemorySegment ptr) {
-		try {
-			destroy.invokeExact(ptr);
-		} catch (Throwable t) {
-			// ignored — best-effort cleanup, matches NativeObject#close()
-		}
-	}
-
 	/// Copies `len` bytes out of a length-prefixed, non-owned native pointer (e.g. a `const
 	/// char*` + separate `size_t*` out-param) into a new Java array. Unlike [#toJavaString],
 	/// this does not free `ptr` -- use it for borrowed views the C API still owns, such as a

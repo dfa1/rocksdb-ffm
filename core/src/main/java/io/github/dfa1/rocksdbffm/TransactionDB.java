@@ -24,7 +24,7 @@ import java.util.OptionalLong;
 ///     }
 /// }
 /// ```
-public final class TransactionDB extends NativeObject {
+public final class TransactionDB extends NativeObjectWithBaseDb {
 
 	// -----------------------------------------------------------------------
 	// Method handles
@@ -32,6 +32,8 @@ public final class TransactionDB extends NativeObject {
 
 	/// `void rocksdb_transactiondb_close(rocksdb_transactiondb_t* txn_db);`
 	private static final MethodHandle MH_CLOSE;
+	/// `void rocksdb_transactiondb_close_base_db(rocksdb_t* base_db);`
+	private static final MethodHandle MH_CLOSE_BASE_DB;
 	/// `rocksdb_transaction_t* rocksdb_transaction_begin(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* write_options, const rocksdb_transaction_options_t* txn_options, rocksdb_transaction_t* old_txn);`
 	private static final MethodHandle MH_BEGIN;
 	/// `const rocksdb_snapshot_t* rocksdb_transactiondb_create_snapshot(rocksdb_transactiondb_t* txn_db);`
@@ -74,6 +76,9 @@ public final class TransactionDB extends NativeObject {
 
 	static {
 		MH_CLOSE = NativeLibrary.lookup("rocksdb_transactiondb_close",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+
+		MH_CLOSE_BASE_DB = NativeLibrary.lookup("rocksdb_transactiondb_close_base_db",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
 		MH_BEGIN = NativeLibrary.lookup("rocksdb_transaction_begin",
@@ -167,13 +172,11 @@ public final class TransactionDB extends NativeObject {
 	// Instance state
 	// -----------------------------------------------------------------------
 
-	private final MemorySegment baseDb;  // rocksdb_t* — for CF management and CF property queries
 	private final WriteOptions writeOpts; // default write options for direct ops
 	private final ReadOptions readOpts;  // default read options for direct ops
 
 	TransactionDB(MemorySegment ptr, MemorySegment baseDb) {
-		super(ptr);
-		this.baseDb = baseDb;
+		super(ptr, baseDb);
 		this.writeOpts = RocksDB.DEFAULT_WRITE_OPTIONS;
 		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
 	}
@@ -592,7 +595,7 @@ public final class TransactionDB extends NativeObject {
 	///
 	/// @param handle handle of the column family to drop
 	public void dropColumnFamily(ColumnFamilyHandle handle) {
-		RocksDB.dropCf(baseDb, handle);
+		RocksDB.dropCf(dbPtr(), handle);
 	}
 
 	// -----------------------------------------------------------------------
@@ -923,7 +926,7 @@ public final class TransactionDB extends NativeObject {
 	/// @param property the property to query
 	/// @return the property value, or empty if not supported
 	public Optional<String> getProperty(ColumnFamilyHandle cf, Property property) {
-		return RocksDB.getPropertyCf(baseDb, cf, property);
+		return RocksDB.getPropertyCf(dbPtr(), cf, property);
 	}
 
 	/// Returns the value of a numeric property for `cf`, or [OptionalLong#empty()] if not supported.
@@ -932,7 +935,7 @@ public final class TransactionDB extends NativeObject {
 	/// @param property the property to query
 	/// @return the numeric property value, or empty if not supported
 	public OptionalLong getLongProperty(ColumnFamilyHandle cf, Property property) {
-		return RocksDB.getLongPropertyCf(baseDb, cf, property);
+		return RocksDB.getLongPropertyCf(dbPtr(), cf, property);
 	}
 
 	// -----------------------------------------------------------------------
@@ -940,7 +943,12 @@ public final class TransactionDB extends NativeObject {
 	// -----------------------------------------------------------------------
 
 	@Override
-	protected void tryClose(MemorySegment ptr) throws Throwable {
+	protected void tryCloseBaseDb(MemorySegment baseDb) throws Throwable {
+		MH_CLOSE_BASE_DB.invokeExact(baseDb);
+	}
+
+	@Override
+	protected void tryClosePrimary(MemorySegment ptr) throws Throwable {
 		MH_CLOSE.invokeExact(ptr);
 	}
 
