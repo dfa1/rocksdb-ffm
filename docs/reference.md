@@ -317,6 +317,7 @@ Reopening requires listing every existing column family, `default` included — 
 | `CopyResult`      | Sealed: `Copied()`, `NotEnoughCapacity(long required)`, `NotFound()`                         |
 | `RocksDBException`| Unchecked; thrown for a genuine RocksDB-reported error (see [explanation.md#errors-are-always-loud](explanation.md#errors-are-always-loud)) |
 | `NativeObject`    | Base class of every native wrapper; `ptr()`, `close()` (idempotent), abstract `tryClose`      |
+| `NativeObjectWithBaseDb` | `NativeObject` subclass for wrappers with a second owned pointer (`TransactionDB`/`OptimisticTransactionDB`'s `rocksdb_t*` "base DB"); guarded `dbPtr()`, hooks `tryCloseBaseDb`/`tryClosePrimary` — see [explanation.md](explanation.md#lifecycle-and-ownership) |
 
 `Path` is used for every filesystem argument; there is no `String` path overload anywhere.
 

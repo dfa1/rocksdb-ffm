@@ -97,6 +97,20 @@ consumed which pointer. Determining *which* calls transfer ownership is not gues
 off `db/c.cc` (does `rocksdb_block_based_options_destroy` delete the filter policy?), the C API
 docs, or how `rocksdbjni` handles the same object.
 
+The third hazard is a *second owned pointer on the same object*. `TransactionDB` and
+`OptimisticTransactionDB` each hold a `rocksdb_t*` "base DB" handle (from
+`rocksdb_transactiondb_get_base_db` / `rocksdb_optimistictransactiondb_get_base_db`) that most of
+their data-plane methods use directly instead of their own primary handle. A private field read
+directly from within the class bypasses `NativeObject`'s closed-check entirely — nothing stops a
+method from touching a dangling pointer after `close()`, no matter what the field is named, since a
+private field is visible to every method in its own class. Renaming it doesn't help: the fix has to
+put the pointer somewhere the subclass genuinely cannot see it. `NativeObjectWithBaseDb` is that
+place — a `NativeObject` subclass holding the base DB pointer as a private field of *its own*, with
+the only access being `dbPtr()`, which calls `ptr()` first and therefore throws
+`IllegalStateException` once the object is closed, exactly like every other native call already
+does. A future class with the same "second owned pointer" shape should extend it rather than
+re-inventing a guard.
+
 ## Only valid operations
 
 Each way of opening a database gets its own Java type, exposing only the operations that are
