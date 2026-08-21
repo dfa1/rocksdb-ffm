@@ -19,7 +19,10 @@ import java.util.List;
 ///   No callback involved; the cheapest option for a counter.
 /// - [#custom(String, FullMergeFn)] — a merge operator implemented in Java, wired through
 ///   RocksDB's general callback-based `rocksdb_mergeoperator_create`. Use this for anything the
-///   built-in doesn't cover (string concatenation, min/max, JSON patching, ...).
+///   built-in doesn't cover (string concatenation, min/max, JSON patching, ...). `fn` receives
+///   zero-copy [MemorySegment] views of the key, existing value, and operands rather than copied
+///   `byte[]`s — benchmarking (`MergeOperatorBenchmark`, #94) showed `byte[]` copies dominating
+///   once operands exceed ~1KB, so there is no separate copying tier to opt out of.
 ///
 /// ```
 /// try (var opts = Options.newOptions().setCreateIfMissing(true)
@@ -43,30 +46,39 @@ public sealed interface MergeOperator {
 	///
 	/// @param name stable identifier for this operator; RocksDB persists and checks it against the
 	///             column family's stored options on every open, so it must not change across runs
-	/// @param fn   folds merge operands into a value; see [FullMergeFn] for the threading contract
+	/// @param fn   folds merge operands into a value; see [FullMergeFn] for the threading and
+	///             lifetime contract
 	/// @return a new merge operator backed by `fn`; caller must pass it to
 	/// [Options#setMergeOperator(MergeOperator)] or close it
 	static MergeOperator custom(String name, FullMergeFn fn) {
 		return Custom.create(name, fn);
 	}
 
-	/// Folds RocksDB merge operands into a value, in Java.
+	/// Folds RocksDB merge operands into a value, in Java, from zero-copy native views.
 	///
 	/// Invoked whenever RocksDB needs the merged value for a key — on `get()`, and internally
 	/// during flush/compaction — including from RocksDB's own background threads. Implementations
 	/// must be thread-safe and must not throw: an exception here is caught and reported to
 	/// RocksDB as a merge failure (surfaces as corruption to the caller) rather than crashing
 	/// the JVM.
+	///
+	/// `key`, `existingValue`, and every view in `operands` are read-only and bound to an arena
+	/// that is closed as soon as [#fullMerge(MemorySegment, MemorySegment, List)] returns; they
+	/// — and any view derived from them — must not be retained past the call, per [Mapper]'s
+	/// contract. Copy into a `byte[]` via `segment.toArray(ValueLayout.JAVA_BYTE)` if you need
+	/// the data to outlive the call.
 	@FunctionalInterface
 	interface FullMergeFn {
 
 		/// Folds `operands` (oldest first) into `existingValue`.
 		///
-		/// @param key           the key being merged
-		/// @param existingValue the current value, or `null` if the key does not exist yet
-		/// @param operands      merge operands queued for this key, oldest first
-		/// @return the folded value to store
-		byte[] fullMerge(byte[] key, byte[] existingValue, List<byte[]> operands);
+		/// @param key           zero-copy view of the key being merged
+		/// @param existingValue zero-copy view of the current value, or `null` if the key does
+		///                      not exist yet
+		/// @param operands      zero-copy views of merge operands queued for this key, oldest first
+		/// @return the folded value to store; still copied into a malloc'd buffer once on the way
+		/// out, since RocksDB takes ownership of the returned pointer
+		byte[] fullMerge(MemorySegment key, MemorySegment existingValue, List<MemorySegment> operands);
 	}
 
 	/// RocksDB's built-in `uint64add` merge operator. Stateless — has no native handle of its own,
@@ -237,11 +249,14 @@ public sealed interface MergeOperator {
 			}
 		}
 
-		private static byte[] readBytes(MemorySegment ptr, long len) {
+		/// Builds a zero-copy, read-only view of a borrowed native buffer, bound to `arena` so
+		/// use past the call throws rather than reading freed/reused memory (same pattern as
+		/// [PinnableHandle#map(Arena, Mapper, MemorySegment)]).
+		private static MemorySegment view(MemorySegment ptr, long len, Arena arena) {
 			if (MemorySegment.NULL.equals(ptr) || len <= 0) {
-				return new byte[0];
+				return MemorySegment.ofArray(new byte[0]).asReadOnly();
 			}
-			return RocksDB.toByteArray(ptr, len);
+			return ptr.reinterpret(len, arena, null).asReadOnly();
 		}
 
 		private static void writeMergeFailure(MemorySegment successPtr, MemorySegment newValueLenPtr) {
@@ -249,15 +264,16 @@ public sealed interface MergeOperator {
 			newValueLenPtr.set(ValueLayout.JAVA_LONG, 0, 0L);
 		}
 
-		private static List<byte[]> readOperands(MemorySegment operandsList, MemorySegment operandsLen, int numOperands) {
-			List<byte[]> operands = new ArrayList<>(numOperands);
+		private static List<MemorySegment> readOperandViews(MemorySegment operandsList, MemorySegment operandsLen,
+				int numOperands, Arena arena) {
+			List<MemorySegment> operands = new ArrayList<>(numOperands);
 			if (numOperands == 0) {
 				return operands;
 			}
 			MemorySegment listArr = operandsList.reinterpret(ValueLayout.ADDRESS.byteSize() * numOperands);
 			MemorySegment lenArr = operandsLen.reinterpret(ValueLayout.JAVA_LONG.byteSize() * numOperands);
 			for (int i = 0; i < numOperands; i++) {
-				operands.add(readBytes(listArr.getAtIndex(ValueLayout.ADDRESS, i), lenArr.getAtIndex(ValueLayout.JAVA_LONG, i)));
+				operands.add(view(listArr.getAtIndex(ValueLayout.ADDRESS, i), lenArr.getAtIndex(ValueLayout.JAVA_LONG, i), arena));
 			}
 			return operands;
 		}
@@ -268,12 +284,12 @@ public sealed interface MergeOperator {
 				MemorySegment operandsLen, int numOperands, MemorySegment success, MemorySegment newValueLen) {
 			MemorySegment successPtr = success.reinterpret(ValueLayout.JAVA_BYTE.byteSize());
 			MemorySegment newValueLenPtr = newValueLen.reinterpret(ValueLayout.JAVA_LONG.byteSize());
-			try {
+			try (Arena arena = Arena.ofConfined()) {
 				State s = REGISTRY.get(state);
-				byte[] keyBytes = readBytes(key, keyLen);
-				byte[] existing = MemorySegment.NULL.equals(existingValue) ? null : readBytes(existingValue, existingValueLen);
-				List<byte[]> operands = readOperands(operandsList, operandsLen, numOperands);
-				byte[] result = s.fn().fullMerge(keyBytes, existing, operands);
+				MemorySegment keyView = view(key, keyLen, arena);
+				MemorySegment existingView = MemorySegment.NULL.equals(existingValue) ? null : view(existingValue, existingValueLen, arena);
+				List<MemorySegment> operandViews = readOperandViews(operandsList, operandsLen, numOperands, arena);
+				byte[] result = s.fn().fullMerge(keyView, existingView, operandViews);
 				successPtr.set(ValueLayout.JAVA_BYTE, 0, (byte) 1);
 				newValueLenPtr.set(ValueLayout.JAVA_LONG, 0, (long) result.length);
 				return mallocCopy(result);

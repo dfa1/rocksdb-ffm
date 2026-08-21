@@ -21,6 +21,8 @@ import org.openjdk.jmh.profile.GCProfiler;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.io.IOException;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
@@ -28,10 +30,13 @@ import java.nio.file.Path;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-/// Answers issue #94: is `MergeOperator.custom`'s `byte[]`-copying `FullMergeFn` actually the
-/// bottleneck in `merge()` + `get()`, or is the cost elsewhere (the upcall itself, or RocksDB's
-/// own merge machinery)? Only worth adding a zero-copy `MemorySegment` `FullMergeFn` overload if
-/// the copies show up here.
+/// Originally answered issue #94: was `MergeOperator.custom`'s (then `byte[]`-copying)
+/// `FullMergeFn` actually the bottleneck in `merge()` + `get()`, or was the cost elsewhere (the
+/// upcall itself, or RocksDB's own merge machinery)? It was — copies dominated once operands
+/// exceeded ~1KB — so `custom()` now hands `fn` zero-copy `MemorySegment` views directly (no
+/// separate copying tier survived). [#TRIVIAL] and [#CONCAT] below call `.toArray(JAVA_BYTE)`
+/// themselves where they need `byte[]`, making the copy an explicit choice in Java rather than
+/// something `fullMergeDispatch` always paid before calling `fn`.
 ///
 /// `get()` is measured, not `merge()`: `full_merge` runs on read (and during flush/compaction),
 /// never on write — `rocksdb_merge` just appends an operand to the memtable/WAL. So the copies
@@ -44,14 +49,14 @@ import java.util.concurrent.TimeUnit;
 ///   - [#getAfterMerges_uint64Add] — RocksDB's built-in operator: no Java callback at all. Fixed
 ///     8-byte operands regardless of `valueSize`, so this row is a flat reference line across the
 ///     sweep -- the floor for "RocksDB's own merge machinery" with zero FFM involvement.
-///   - [#getAfterMerges_customTrivial] — [MergeOperator#custom] with a `FullMergeFn` that returns
-///     the last operand untouched: minimal Java-side work, so its cost is (RocksDB machinery) +
-///     (upcall dispatch) + (the `byte[]` copies `fullMergeDispatch` does regardless of what the
-///     function does with them). If this row tracks flat across `valueSize`, the copies are not
-///     the bottleneck -- dispatch/machinery is. If it climbs with `valueSize`, they are.
-///   - [#getAfterMerges_customConcat] — same copies and dispatch, plus a `FullMergeFn` that
-///     actually allocates (concatenates every operand): shows what doing real work in Java costs
-///     on top of trivial, for context on how much headroom the copies leave.
+///   - [#getAfterMerges_customTrivial] — [MergeOperator#custom] with a `FullMergeFn` that copies
+///     only the last operand out to `byte[]`: minimal Java-side work, so its cost is (RocksDB
+///     machinery) + (upcall dispatch) + (one `byte[]` copy). If this row tracks flat across
+///     `valueSize`, that single copy is not the bottleneck -- dispatch/machinery is. If it climbs
+///     with `valueSize`, it is.
+///   - [#getAfterMerges_customConcat] — same dispatch, plus a `FullMergeFn` that actually
+///     allocates (copies every operand out and concatenates them): shows what doing real work in
+///     Java costs on top of trivial, for context on how much headroom a single copy leaves.
 ///
 /// Read [BenchmarkRunner]'s and [FfmValueSizeBenchmark]'s class docs first for the same
 /// "compare within a row, not throughput across unrelated rows" caveat -- it applies here too.
@@ -84,22 +89,24 @@ public class MergeOperatorBenchmark {
 	private ReadWriteDB customConcatDb;
 
 	private static final MergeOperator.FullMergeFn TRIVIAL = (key, existingValue, operands) ->
-			operands.get(operands.size() - 1);
+			operands.get(operands.size() - 1).toArray(ValueLayout.JAVA_BYTE);
 
 	private static final MergeOperator.FullMergeFn CONCAT = (key, existingValue, operands) -> {
-		int total = existingValue != null ? existingValue.length : 0;
-		for (byte[] operand : operands) {
-			total += operand.length;
+		long total = existingValue != null ? existingValue.byteSize() : 0;
+		for (MemorySegment operand : operands) {
+			total += operand.byteSize();
 		}
-		byte[] result = new byte[total];
+		byte[] result = new byte[(int) total];
 		int pos = 0;
 		if (existingValue != null) {
-			System.arraycopy(existingValue, 0, result, 0, existingValue.length);
-			pos = existingValue.length;
+			int len = (int) existingValue.byteSize();
+			MemorySegment.copy(existingValue, ValueLayout.JAVA_BYTE, 0, result, 0, len);
+			pos = len;
 		}
-		for (byte[] operand : operands) {
-			System.arraycopy(operand, 0, result, pos, operand.length);
-			pos += operand.length;
+		for (MemorySegment operand : operands) {
+			int len = (int) operand.byteSize();
+			MemorySegment.copy(operand, ValueLayout.JAVA_BYTE, 0, result, pos, len);
+			pos += len;
 		}
 		return result;
 	};

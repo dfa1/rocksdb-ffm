@@ -215,24 +215,27 @@ class MergeOperatorTest {
 	}
 
 	// -----------------------------------------------------------------------
-	// custom — StringMax / StringMin, built on MergeOperator.custom(...)
+	// custom — StringMax / StringMin, built on MergeOperator.custom(...); fn receives
+	// zero-copy MemorySegment views, so these convert to byte[] only where the assertions need it.
 	// -----------------------------------------------------------------------
 
 	private static final MergeOperator.FullMergeFn STRING_MAX = (key, existingValue, operands) -> {
-		byte[] max = existingValue;
-		for (byte[] operand : operands) {
-			if (max == null || Arrays.compare(operand, max) > 0) {
-				max = operand;
+		byte[] max = existingValue == null ? null : existingValue.toArray(ValueLayout.JAVA_BYTE);
+		for (var operand : operands) {
+			byte[] candidate = operand.toArray(ValueLayout.JAVA_BYTE);
+			if (max == null || Arrays.compare(candidate, max) > 0) {
+				max = candidate;
 			}
 		}
 		return max;
 	};
 
 	private static final MergeOperator.FullMergeFn STRING_MIN = (key, existingValue, operands) -> {
-		byte[] min = existingValue;
-		for (byte[] operand : operands) {
-			if (min == null || Arrays.compare(operand, min) < 0) {
-				min = operand;
+		byte[] min = existingValue == null ? null : existingValue.toArray(ValueLayout.JAVA_BYTE);
+		for (var operand : operands) {
+			byte[] candidate = operand.toArray(ValueLayout.JAVA_BYTE);
+			if (min == null || Arrays.compare(candidate, min) < 0) {
+				min = candidate;
 			}
 		}
 		return min;
@@ -296,8 +299,8 @@ class MergeOperatorTest {
 		// Given
 		var seen = new java.util.concurrent.atomic.AtomicReference<List<byte[]>>();
 		MergeOperator.FullMergeFn capturing = (key, existingValue, operands) -> {
-			seen.set(operands);
-			return operands.get(operands.size() - 1);
+			seen.set(operands.stream().map(o -> o.toArray(ValueLayout.JAVA_BYTE)).toList());
+			return operands.get(operands.size() - 1).toArray(ValueLayout.JAVA_BYTE);
 		};
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.custom("capturing", capturing));
