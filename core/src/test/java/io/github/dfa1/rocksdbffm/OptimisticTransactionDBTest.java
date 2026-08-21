@@ -834,6 +834,186 @@ class OptimisticTransactionDBTest {
 	}
 
 	// -----------------------------------------------------------------------
+	// Capability gained from implementing RocksDBReadOperations/RocksDBWriteOperations
+	// -----------------------------------------------------------------------
+	// Not previously exposed on OptimisticTransactionDB; smoke-tested here since the shared
+	// interfaces' default methods themselves already have thorough coverage elsewhere
+	// (BackgroundJobsTest, CompactionControlTest, WalIteratorTest, KeyMayExistTest, ...).
+
+	@Test
+	void keyMayExist_returnsFalse_whenKeyAbsent(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir)) {
+
+			// When
+			var result = db.keyMayExist("missing".getBytes());
+
+			// Then
+			assertThat(result).isFalse();
+		}
+	}
+
+	@Test
+	void keyMayExist_returnsTrue_whenKeyPresent(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir)) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			var result = db.keyMayExist("k".getBytes());
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void write_appliesBatchAtomically(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var batch = WriteBatch.create()) {
+			batch.put("a".getBytes(), "1".getBytes());
+			batch.put("b".getBytes(), "2".getBytes());
+
+			// When
+			db.write(batch);
+
+			// Then
+			assertThat(db.get("a".getBytes())).isEqualTo("1".getBytes());
+			assertThat(db.get("b".getBytes())).isEqualTo("2".getBytes());
+		}
+	}
+
+	@Test
+	void cancelAllBackgroundWork_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir)) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When / Then — no exception
+			db.cancelAllBackgroundWork(false);
+		}
+	}
+
+	@Test
+	void disableAndEnableManualCompaction_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir)) {
+
+			// When / Then — no exception
+			db.disableManualCompaction();
+			db.enableManualCompaction();
+		}
+	}
+
+	@Test
+	void waitForCompact_defaultOptions_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir);
+		     var waitOpts = WaitForCompactOptions.create()) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When / Then — no exception
+			db.waitForCompact(waitOpts);
+		}
+	}
+
+	@Test
+	void getLatestSequenceNumber_advancesAfterWrites(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir)) {
+			var before = db.getLatestSequenceNumber();
+
+			// When
+			db.put("k".getBytes(), "v".getBytes());
+			var after = db.getLatestSequenceNumber();
+
+			// Then
+			assertThat(after.isAfter(before)).isTrue();
+		}
+	}
+
+	@Test
+	void getUpdatesSince_yieldsWrittenBatch(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir)) {
+			var start = db.getLatestSequenceNumber();
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			int count = 0;
+			try (var it = db.getUpdatesSince(start)) {
+				for (; it.isValid(); it.next()) {
+					try (var result = it.getBatch()) {
+						count += result.writeBatch().count();
+					}
+				}
+				it.checkStatus();
+			}
+
+			// Then
+			assertThat(count).isEqualTo(1);
+		}
+	}
+
+	@Test
+	void disableAndEnableFileDeletions_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir)) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When / Then — no exception
+			db.disableFileDeletions();
+			db.enableFileDeletions();
+		}
+	}
+
+	@Test
+	void compactRange_noArgs_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dir)) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When / Then — no exception
+			db.compactRange();
+		}
+	}
+
+	@Test
+	void ingestExternalFile_keysAreReadable(@TempDir Path dir) {
+		// Given
+		Path sstPath = dir.resolve("data.sst");
+		Path dbPath = dir.resolve("db");
+
+		try (var writerOpts = Options.newOptions().setCreateIfMissing(true);
+		     var writer = SstFileWriter.newSstFileWriter(writerOpts)) {
+			writer.open(sstPath);
+			writer.put("a".getBytes(), "1".getBytes());
+			writer.finish();
+		}
+
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(opts, dbPath)) {
+
+			// When
+			db.ingestExternalFile(sstPath);
+
+			// Then
+			assertThat(db.get("a".getBytes())).isEqualTo("1".getBytes());
+		}
+	}
+
+	// -----------------------------------------------------------------------
 	// Calling methods after close() must throw, not crash the JVM
 	// -----------------------------------------------------------------------
 	// Direct ops go through a second native pointer (the "base DB") that RocksDB frees

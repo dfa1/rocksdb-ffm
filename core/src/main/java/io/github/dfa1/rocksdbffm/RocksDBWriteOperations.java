@@ -7,9 +7,9 @@ import java.nio.file.Path;
 import java.util.List;
 
 /// Shared write/administrative operations, including column-family-scoped overloads, for
-/// every wrapper around a mutable plain `rocksdb_t*`: read-write, TTL, and blob instances
-/// all expose the identical surface and all support opening or creating column families
-/// for themselves.
+/// every wrapper around a mutable plain `rocksdb_t*`: read-write, TTL, blob, and
+/// optimistic-transaction instances all expose the identical surface and all support opening
+/// or creating column families for themselves.
 ///
 /// Deliberately does not extend [RocksDBReadOperations] — a class that is both readable
 /// and writable (every current implementor) implements both interfaces directly, rather
@@ -20,8 +20,8 @@ import java.util.List;
 /// Every method here is a direct, zero-logic forward into the matching package-private
 /// `RocksDB` helper — implementors only need to supply the native pointer.
 ///
-/// Not implemented by [TransactionDB] or [OptimisticTransactionDB] — see
-/// [RocksDBReadOperations] for why.
+/// Not implemented by [TransactionDB] — see [RocksDBReadOperations] for why.
+/// [OptimisticTransactionDB] implements it directly.
 public interface RocksDBWriteOperations {
 
 	/// Returns the native `rocksdb_t*` pointer to operate on. Redeclared from
