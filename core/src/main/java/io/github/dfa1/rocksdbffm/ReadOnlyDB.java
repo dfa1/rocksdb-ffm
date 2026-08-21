@@ -11,7 +11,7 @@ import java.lang.foreign.MemorySegment;
 ///     byte[] value = db.get("key".getBytes());
 /// }
 /// ```
-public final class ReadOnlyDB extends NativeObject implements RocksDBReadOperations {
+public final class ReadOnlyDB extends NativeObjectWithChildren implements RocksDBReadOperations {
 
 	ReadOnlyDB(MemorySegment ptr) {
 		super(ptr);
@@ -27,7 +27,7 @@ public final class ReadOnlyDB extends NativeObject implements RocksDBReadOperati
 	// -----------------------------------------------------------------------
 
 	@Override
-	protected void tryClose(MemorySegment ptr) throws Throwable {
+	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
 		RocksDB.close(ptr);
 	}
 }

@@ -111,6 +111,24 @@ the only access being `dbPtr()`, which calls `ptr()` first and therefore throws
 does. A future class with the same "second owned pointer" shape should extend it rather than
 re-inventing a guard.
 
+The fourth hazard is a *borrowed pointer from a different object*. `Snapshot` needs its owning
+DB's pointer to call `rocksdb_release_snapshot`, but doesn't own that pointer or control its
+lifetime — closing the DB before the snapshot leaves `Snapshot` holding a dangling reference to
+memory it never owned in the first place. This is not the same shape as the third hazard: there
+the second pointer belongs to the *same* object, so `NativeObjectWithBaseDb`'s guard (check
+`ptr()` before returning it) is enough. Here the pointer's owner is a *different* object whose
+lifetime `Snapshot` can't observe from the outside.
+
+`NativeObjectWithChildren` solves this the other direction: instead of the child defensively
+checking whether its parent is still alive, the parent tracks every child it has handed a
+borrowed pointer to and closes them itself — synchronously, while its own pointer is still
+valid — before running its own real `tryClose`. A `Snapshot` registers with its owning DB at
+construction and unregisters when closed on its own; if the DB closes first, the still-registered
+snapshot is released as part of that same `close()` call, using the DB's pointer before it's
+freed, not after. This removes the ordering hazard by construction rather than by runtime detection: `Snapshot`'s
+own release code never has to ask "is my pointer still good?" because the design guarantees it
+always is by the time that code runs.
+
 ## Only valid operations
 
 Each way of opening a database gets its own Java type, exposing only the operations that are
