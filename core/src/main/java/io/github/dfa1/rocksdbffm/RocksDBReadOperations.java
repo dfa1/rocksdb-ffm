@@ -277,7 +277,10 @@ public interface RocksDBReadOperations {
 	///
 	/// @return a new [Snapshot]; caller must close it
 	default Snapshot getSnapshot() {
-		return RocksDB.createSnapshot(dbPtr());
+		// Every implementor is a NativeObject (see #dbPtr()); passed through so the returned
+		// Snapshot can detect this DB being closed before the snapshot is, rather than
+		// releasing against a dangling pointer.
+		return RocksDB.createSnapshot((NativeObject) this, dbPtr());
 	}
 
 	// -----------------------------------------------------------------------

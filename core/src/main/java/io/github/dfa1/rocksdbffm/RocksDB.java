@@ -1013,10 +1013,10 @@ public final class RocksDB {
 		}
 	}
 
-	static Snapshot createSnapshot(MemorySegment db) {
+	static Snapshot createSnapshot(NativeObject owningDb, MemorySegment db) {
 		try {
 			MemorySegment snapPtr = (MemorySegment) MH_CREATE_SNAPSHOT.invokeExact(db);
-			return new Snapshot(db, snapPtr);
+			return new Snapshot(owningDb, db, snapPtr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("getSnapshot failed", t);
 		}
