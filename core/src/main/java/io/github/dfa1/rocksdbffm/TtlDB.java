@@ -16,7 +16,7 @@ import java.time.Duration;
 ///     byte[] value = db.get("key".getBytes());
 /// }
 /// ```
-public final class TtlDB extends NativeObject implements RocksDBReadOperations, RocksDBWriteOperations {
+public final class TtlDB extends NativeObjectWithChildren implements RocksDBReadOperations, RocksDBWriteOperations {
 
 	private final Duration ttl;
 
@@ -43,7 +43,7 @@ public final class TtlDB extends NativeObject implements RocksDBReadOperations, 
 	// -----------------------------------------------------------------------
 
 	@Override
-	protected void tryClose(MemorySegment ptr) throws Throwable {
+	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
 		RocksDB.close(ptr);
 	}
 }

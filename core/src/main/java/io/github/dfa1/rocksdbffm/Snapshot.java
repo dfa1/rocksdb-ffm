@@ -11,13 +11,14 @@ import java.lang.invoke.MethodHandle;
 /// Reads performed with a snapshot set on [ReadOptions] see only data
 /// that was committed before the snapshot was taken.
 ///
-/// Obtain via [RocksDBReadOperations#getSnapshot()] (implemented by [ReadWriteDB], [TtlDB],
-/// [BlobDB], and [OptimisticTransactionDB]), [TransactionDB#getSnapshot()], or
-/// [Transaction#getSnapshot()]. Always close after use to release the underlying native
-/// snapshot — and close it before closing the DB (or transaction) that produced it; closing
-/// out of order is not an error (the release is silently skipped, since the DB's own teardown
-/// already destroyed the snapshot internally), but the snapshot's data is only guaranteed
-/// valid while the DB itself is still open.
+/// Obtain via [RocksDBReadOperations#getSnapshot()] (implemented by [ReadWriteDB],
+/// [ReadOnlyDB], [TtlDB], [BlobDB], [SecondaryDB], and [OptimisticTransactionDB]),
+/// [TransactionDB#getSnapshot()], or [Transaction#getSnapshot()]. Always close after use to
+/// release the underlying native snapshot. Closing the owning DB (or transaction) first is
+/// safe — the DB registers every snapshot it produces as a [NativeObjectWithChildren] child and
+/// releases any still-outstanding ones itself, synchronously, before destroying its own native
+/// handle — so a snapshot never outlives the pointer its release call needs, whichever side
+/// closes first.
 ///
 /// ```
 /// try (Snapshot snap = db.getSnapshot();
@@ -47,27 +48,26 @@ public final class Snapshot extends NativeObject {
 	/// should be used instead (transaction snapshot ownership model).
 	private final MemorySegment dbPtr;
 
-	/// The DB object that produced this snapshot, used only as a liveness check in
-	/// [#tryClose(MemorySegment)] — NULL for transaction-owned snapshots, which have no such
-	/// hazard (`rocksdb_free` doesn't touch the DB at all).
-	///
-	/// If that DB is closed before this snapshot is, `dbPtr` becomes a dangling pointer: the
-	/// DB's own teardown already destroyed every snapshot it owned internally, and calling
-	/// `rocksdb_release_snapshot` again would be a use-after-free. Checking `owningDb.ptr()`
-	/// first turns that into a clean skip instead: it throws `IllegalStateException`, which
-	/// propagates out of `tryClose` and is caught by `NativeObject#close()`'s catch-all, so the
-	/// (already-unnecessary) release call is simply never made.
-	private final NativeObject owningDb;
+	/// The DB object that produced this snapshot — NULL for transaction-owned snapshots, which
+	/// register with nothing (`rocksdb_free` doesn't touch the DB at all, so there is no
+	/// ordering hazard to guard against). Used in [#tryClose(MemorySegment)] only to
+	/// unregister this snapshot from the DB's child set once released on its own, so a
+	/// long-lived DB doesn't accumulate strong references to every snapshot it ever produced —
+	/// registration itself happens in the constructor below, via
+	/// [NativeObjectWithChildren#registerChild(NativeObject)].
+	private final NativeObjectWithChildren owningDb;
 
-	/// Creates a snapshot owned by a RocksDB or TransactionDB instance.
+	/// Creates a snapshot owned by a RocksDB or TransactionDB instance, and registers it with
+	/// `owningDb` so it is released automatically if `owningDb` closes first.
 	///
-	/// @param owningDb the DB object `dbPtr` belongs to, checked for liveness before release
+	/// @param owningDb the DB object `dbPtr` belongs to
 	/// @param dbPtr    native pointer passed to `rocksdb_release_snapshot`
 	/// @param ptr      the native snapshot pointer
-	Snapshot(NativeObject owningDb, MemorySegment dbPtr, MemorySegment ptr) {
+	Snapshot(NativeObjectWithChildren owningDb, MemorySegment dbPtr, MemorySegment ptr) {
 		super(ptr);
 		this.owningDb = owningDb;
 		this.dbPtr = dbPtr;
+		owningDb.registerChild(this);
 	}
 
 	/// Creates a snapshot owned by a Transaction instance.
@@ -96,7 +96,11 @@ public final class Snapshot extends NativeObject {
 			RocksDB.free(ptr);
 			return;
 		}
-		owningDb.ptr(); // liveness check: throws if the owning DB is already closed
+		// Unregister first: if this runs because owningDb's own close() is sweeping its
+		// children (owningDb closed first), dbPtr is still valid — owningDb captures its raw
+		// pointer before nulling its own AtomicReference and only then closes children — so
+		// this release call is always safe, whichever side closed first.
+		owningDb.unregisterChild(this);
 		MH_RELEASE.invokeExact(dbPtr, ptr);
 	}
 

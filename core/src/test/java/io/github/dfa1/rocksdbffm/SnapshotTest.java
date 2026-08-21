@@ -186,16 +186,20 @@ class SnapshotTest {
 
 	@Test
 	void snapshot_closedAfterOwningDb_doesNotCrash(@TempDir Path dir) {
-		// Given — the owning DB is closed before the snapshot it produced
+		// Given — a snapshot that is never explicitly closed by the caller
 		var db = RocksDB.openReadWrite(dir);
 		Snapshot snap = db.getSnapshot();
+
+		// When — closing the DB must release the still-outstanding snapshot itself
+		// (synchronously, before its own native handle is destroyed) rather than leaving a
+		// dangling pointer for a later snap.close() to crash on
 		db.close();
 
-		// When — releasing against the DB's now-dangling pointer would otherwise be a
-		// use-after-free; normally this would trigger a JVM crash
-		ThrowingCallable closeAfterDb = snap::close;
+		// Then — the snapshot is already closed as a side effect of db.close()
+		assertThatThrownBy(snap::ptr).isInstanceOf(IllegalStateException.class);
 
-		// Then
+		// And closing it again explicitly is still a safe no-op
+		ThrowingCallable closeAfterDb = snap::close;
 		assertThatCode(closeAfterDb).doesNotThrowAnyException();
 	}
 

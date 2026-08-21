@@ -26,7 +26,7 @@ import java.lang.invoke.MethodHandle;
 ///     byte[] value = secondary.get("key".getBytes());
 /// }
 /// ```
-public final class SecondaryDB extends NativeObject implements RocksDBReadOperations {
+public final class SecondaryDB extends NativeObjectWithChildren implements RocksDBReadOperations {
 
 	// -----------------------------------------------------------------------
 	// Method handles unique to SecondaryDB
@@ -73,7 +73,7 @@ public final class SecondaryDB extends NativeObject implements RocksDBReadOperat
 	// -----------------------------------------------------------------------
 
 	@Override
-	protected void tryClose(MemorySegment ptr) throws Throwable {
+	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
 		RocksDB.close(ptr);
 	}
 }
