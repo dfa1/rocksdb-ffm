@@ -95,7 +95,7 @@ Each type exposes only the operations that are valid for it — see
 | `BlobDB`                  |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
 | `SecondaryDB`             |  —    |  ✅  |   ✅    |    ✅    |  —    |   —     |   —    | ✅  |
 | `TransactionDB`           |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   —     |   —    | ✅  |
-| `OptimisticTransactionDB` |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   —     |   —    | ✅  |
+| `OptimisticTransactionDB` |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
 
 `SecondaryDB` adds `tryCatchUpWithPrimary()`. `TtlDB` adds `getTtl()`. `TransactionDB` and
 `OptimisticTransactionDB` add `beginTransaction(...)`.
