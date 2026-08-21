@@ -7,6 +7,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -510,6 +511,185 @@ class TransactionDBTest {
 	}
 
 	// -----------------------------------------------------------------------
+	// direct operations — get, not-found tiers
+	// -----------------------------------------------------------------------
+
+	@Test
+	void directGet_withReadOptions_returnsNull_whenKeyAbsent(@TempDir Path dir) {
+		// Given
+		try (var db = openDb(dir);
+		     var ro = ReadOptions.newReadOptions()) {
+
+			// When
+			var result = db.get(ro, "missing".getBytes());
+
+			// Then
+			assertThat(result).isNull();
+		}
+	}
+
+	@Test
+	void directGet_byteBuffer_returnsNotFound_whenKeyAbsent(@TempDir Path dir) {
+		// Given
+		try (var db = openDb(dir)) {
+			var key = ByteBuffer.allocateDirect(7).put("missing".getBytes()).flip();
+			var out = ByteBuffer.allocateDirect(32);
+
+			// When
+			CopyResult result = db.get(key, out);
+
+			// Then
+			assertThat(result).isEqualTo(CopyResult.NotFound.INSTANCE);
+		}
+	}
+
+	@Test
+	void directGet_memorySegment_returnsNotFound_whenKeyAbsent(@TempDir Path dir) {
+		// Given
+		try (var db = openDb(dir);
+		     Arena arena = Arena.ofConfined()) {
+			var key = arena.allocateFrom("missing");
+			var out = arena.allocate(32);
+
+			// When
+			CopyResult result = db.get(key.asSlice(0, 7), out);
+
+			// Then
+			assertThat(result).isEqualTo(CopyResult.NotFound.INSTANCE);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// direct operations — merge
+	// -----------------------------------------------------------------------
+
+	private static TransactionDB openDbWithMergeOperator(Path path) {
+		try (var opts = Options.newOptions().setCreateIfMissing(true)
+				.setMergeOperator(MergeOperator.uint64Add());
+		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions()) {
+			return RocksDB.openTransaction(opts, txnDbOpts, path);
+		}
+	}
+
+	private static long decodeUint64(byte[] bytes) {
+		return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getLong();
+	}
+
+	private static byte[] encodeUint64(long value) {
+		return ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN).putLong(value).array();
+	}
+
+	@Test
+	void directMerge_sumsOperands(@TempDir Path dir) {
+		// Given
+		try (var db = openDbWithMergeOperator(dir)) {
+			db.merge("views".getBytes(), encodeUint64(1));
+
+			// When
+			db.merge("views".getBytes(), encodeUint64(4));
+
+			// Then
+			assertThat(decodeUint64(db.get("views".getBytes()))).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void directMerge_byteBuffer_sumsOperands(@TempDir Path dir) {
+		// Given
+		try (var db = openDbWithMergeOperator(dir)) {
+			var key = ByteBuffer.allocateDirect(5).put("views".getBytes()).flip();
+			db.merge(key.duplicate(), directBuffer(encodeUint64(1)));
+
+			// When
+			db.merge(key.duplicate(), directBuffer(encodeUint64(4)));
+
+			// Then
+			assertThat(decodeUint64(db.get("views".getBytes()))).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void directMerge_memorySegment_sumsOperands(@TempDir Path dir) {
+		// Given
+		try (var db = openDbWithMergeOperator(dir);
+		     var arena = Arena.ofConfined()) {
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
+			db.merge(key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(1)));
+
+			// When
+			db.merge(key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(4)));
+
+			// Then
+			assertThat(decodeUint64(db.get("views".getBytes()))).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void directMerge_columnFamily_sumsOperands(@TempDir Path dir) {
+		// Given — the merge operator is per-column-family, not inherited from the DB-open
+		// Options, so it must also be set on the new CF's own descriptor options.
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithMergeOperator(dir);
+		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add())) {
+			handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts)));
+			var cf = handles.get(0);
+			db.merge(cf, "views".getBytes(), encodeUint64(1));
+
+			// When
+			db.merge(cf, "views".getBytes(), encodeUint64(4));
+
+			// Then
+			assertThat(decodeUint64(db.get(cf, "views".getBytes()))).isEqualTo(5);
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void directMerge_columnFamily_byteBuffer_sumsOperands(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithMergeOperator(dir);
+		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add())) {
+			handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts)));
+			var cf = handles.get(0);
+			var key = ByteBuffer.allocateDirect(5).put("views".getBytes()).flip();
+			db.merge(cf, key.duplicate(), directBuffer(encodeUint64(1)));
+
+			// When
+			db.merge(cf, key.duplicate(), directBuffer(encodeUint64(4)));
+
+			// Then
+			assertThat(decodeUint64(db.get(cf, "views".getBytes()))).isEqualTo(5);
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void directMerge_columnFamily_memorySegment_sumsOperands(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithMergeOperator(dir);
+		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
+		     var arena = Arena.ofConfined()) {
+			handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts)));
+			var cf = handles.get(0);
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
+			db.merge(cf, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(1)));
+
+			// When
+			db.merge(cf, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(4)));
+
+			// Then
+			assertThat(decodeUint64(db.get(cf, "views".getBytes()))).isEqualTo(5);
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	private static ByteBuffer directBuffer(byte[] bytes) {
+		return (ByteBuffer) ByteBuffer.allocateDirect(bytes.length).put(bytes).flip();
+	}
+
+	// -----------------------------------------------------------------------
 	// direct operations — column family overloads
 	// -----------------------------------------------------------------------
 
@@ -600,6 +780,43 @@ class TransactionDBTest {
 
 			// Then
 			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void directGet_columnFamily_memorySegment_returnsNotFound_whenKeyAbsent(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles);
+		     Arena arena = Arena.ofConfined()) {
+			var cf = handles.get(0);
+			var key = arena.allocateFrom("missing");
+			var value = arena.allocate(64);
+
+			// When
+			CopyResult result = db.get(cf, key.asSlice(0, 7), value);
+
+			// Then
+			assertThat(result).isEqualTo(CopyResult.NotFound.INSTANCE);
+			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void directGet_columnFamily_zeroCopy_returnsEmpty_whenKeyAbsent(@TempDir Path dir) {
+		// Given
+		List<ColumnFamilyHandle> handles = new ArrayList<>();
+		try (var db = openDbWithCf(dir, handles);
+		     Arena arena = Arena.ofConfined()) {
+			var cf = handles.get(0);
+			var key = arena.allocateFrom("missing");
+
+			// When
+			var result = db.get(cf, key.asSlice(0, 7), value -> value.toArray(ValueLayout.JAVA_BYTE));
+
+			// Then
+			assertThat(result).isEmpty();
 			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
@@ -740,6 +957,46 @@ class TransactionDBTest {
 			// Then
 			assertThatCode(action).doesNotThrowAnyException();
 			handles.forEach(ColumnFamilyHandle::close);
+		}
+	}
+
+	@Test
+	void getProperty_returnsValue(@TempDir Path dir) {
+		// Given
+		try (var db = openDb(dir)) {
+
+			// When
+			var result = db.getProperty(Property.NUM_ENTRIES_ACTIVE_MEM_TABLE);
+
+			// Then
+			assertThat(result).isPresent();
+		}
+	}
+
+	@Test
+	void getLongProperty_returnsValue(@TempDir Path dir) {
+		// Given
+		try (var db = openDb(dir)) {
+
+			// When
+			var result = db.getLongProperty(Property.ESTIMATE_NUM_KEYS);
+
+			// Then
+			assertThat(result).isPresent();
+		}
+	}
+
+	@Test
+	void getLongProperty_returnsEmpty_forAStringOnlyProperty(@TempDir Path dir) {
+		// Given — STATS is a string-valued property, not a numeric one; the native
+		// `rocksdb_transactiondb_property_int` call reports failure (rc != 0) for it.
+		try (var db = openDb(dir)) {
+
+			// When
+			var result = db.getLongProperty(Property.STATS);
+
+			// Then
+			assertThat(result).isEmpty();
 		}
 	}
 
