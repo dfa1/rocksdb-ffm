@@ -9,6 +9,14 @@ import java.util.concurrent.atomic.AtomicReference;
 /// the reference is atomically swapped to [MemorySegment#NULL], ensuring
 /// [#tryClose(MemorySegment)] is called exactly once even under
 /// concurrent or repeated close() calls.
+///
+/// That guarantee is narrower than it might read: it covers concurrent or repeated calls to
+/// [#close()] itself, not `close()` racing a concurrent call to any *other* method. Nothing
+/// synchronizes `close()` against a live call to, say, a `get`/`put` method on another thread —
+/// one thread's [#ptr()] succeeding does not stop a second thread's `close()` from freeing that
+/// same memory immediately afterward, before the native call that read `ptr()` actually runs.
+/// Do not call `close()` on one thread while another thread might still be calling any method on
+/// the same object; synchronize externally if your usage can't rule that out.
 public abstract class NativeObject implements AutoCloseable {
 
 	private final AtomicReference<MemorySegment> owningPointer;
