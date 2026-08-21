@@ -77,6 +77,19 @@ Java-level stack trace and no exception to catch. `NativeObject` holds the point
 exactly once no matter how many times or from how many threads `close()` is called. Using the
 pointer afterwards throws `IllegalStateException` instead of dereferencing freed memory.
 
+That guarantee is narrower than it might read: it covers concurrent or repeated calls to
+`close()` itself, not `close()` racing a concurrent call to any *other* method. There is no lock
+between `close()` and, say, `get()`/`put()` running on another thread — one thread's `ptr()`
+succeeding does not stop a second thread's `close()` from freeing that same memory immediately
+afterward, before the native call that read `ptr()` actually runs. Every method on every
+`NativeObject` has this same narrow window; it is a property of the base class, not something
+specific to any one wrapper. Closing it fully would mean a lock around every native call site in
+the codebase (e.g. a read/write lock — every method takes a read lock, `close()` takes a write
+lock), at a real cost to a library whose design otherwise leans on zero-copy, lock-free FFM
+calls. Until that trade is made deliberately: do not call `close()` on one thread while another
+thread might still be calling any method on the same object — synchronize externally if your
+usage can't rule that out.
+
 The second hazard is *ownership transfer*. Several C API calls hand a pointer's ownership to another
 native object: `rocksdb_block_based_options_set_filter_policy` makes the table options responsible
 for destroying the filter policy. Closing the Java wrapper afterwards would be a double free. The
