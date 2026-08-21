@@ -3,6 +3,7 @@ package io.github.dfa1.rocksdbffm;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
@@ -136,6 +137,101 @@ class RocksIteratorTest {
 				// Then — "d" doesn't exist, should land on "c"
 				assertThat(it.isValid()).isTrue();
 				assertThat(it.key()).isEqualTo("c".getBytes());
+			}
+		}
+	}
+
+	@Test
+	void seekForPrev_atExactMatch_positionsAtTarget(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir)) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("c".getBytes(), "3".getBytes());
+			db.put("e".getBytes(), "5".getBytes());
+
+			// When
+			try (RocksIterator it = db.newIterator()) {
+				it.seekForPrev("c".getBytes());
+
+				// Then
+				assertThat(it.isValid()).isTrue();
+				assertThat(it.key()).isEqualTo("c".getBytes());
+			}
+		}
+	}
+
+	@Test
+	void seekForPrev_belowAllKeys_isInvalid(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir)) {
+			db.put("c".getBytes(), "3".getBytes());
+			db.put("e".getBytes(), "5".getBytes());
+
+			// When
+			try (RocksIterator it = db.newIterator()) {
+				it.seekForPrev("a".getBytes());
+
+				// Then — no key <= "a" exists
+				assertThat(it.isValid()).isFalse();
+				it.checkError();
+			}
+		}
+	}
+
+	@Test
+	void seekForPrev_aboveAllKeys_positionsAtLastKey(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir)) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("c".getBytes(), "3".getBytes());
+
+			// When
+			try (RocksIterator it = db.newIterator()) {
+				it.seekForPrev("z".getBytes());
+
+				// Then
+				assertThat(it.isValid()).isTrue();
+				assertThat(it.key()).isEqualTo("c".getBytes());
+			}
+		}
+	}
+
+	@Test
+	void seekForPrev_withDirectByteBuffer(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir)) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("c".getBytes(), "3".getBytes());
+
+			// When
+			ByteBuffer target = ByteBuffer.allocateDirect(1);
+			target.put((byte) 'b').flip();
+			try (RocksIterator it = db.newIterator()) {
+				it.seekForPrev(target);
+
+				// Then — "b" doesn't exist, should land on "a"
+				assertThat(it.isValid()).isTrue();
+				assertThat(it.key()).isEqualTo("a".getBytes());
+			}
+		}
+	}
+
+	@Test
+	void seekForPrev_withMemorySegment(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var arena = Arena.ofConfined()) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("c".getBytes(), "3".getBytes());
+
+			// When
+			MemorySegment target = arena.allocateFrom(ValueLayout.JAVA_BYTE, "b".getBytes());
+			try (RocksIterator it = db.newIterator()) {
+				it.seekForPrev(target);
+
+				// Then — "b" doesn't exist, should land on "a"
+				assertThat(it.isValid()).isTrue();
+				assertThat(it.key()).isEqualTo("a".getBytes());
 			}
 		}
 	}
