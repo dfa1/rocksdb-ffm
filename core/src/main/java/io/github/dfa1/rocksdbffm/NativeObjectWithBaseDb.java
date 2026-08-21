@@ -28,13 +28,17 @@ abstract class NativeObjectWithBaseDb extends NativeObject {
 	}
 
 	/// Returns the base `rocksdb_t*` pointer, after checking (via [#ptr()]) that this object
-	/// has not been closed. Public — not `protected` — so a subclass can satisfy
-	/// [RocksDBReadOperations#dbPtr()] / [RocksDBWriteOperations#dbPtr()] by inheriting this
-	/// method directly, the same way [ReadWriteDB#dbPtr()] and friends already expose it.
+	/// has not been closed. `protected`, not `public`: most subclasses (e.g. [TransactionDB])
+	/// have no reason to expose the raw native pointer publicly. A subclass that implements
+	/// [RocksDBReadOperations]/[RocksDBWriteOperations] (currently only
+	/// [OptimisticTransactionDB]) must override this as `public final MemorySegment dbPtr() {
+	/// return super.dbPtr(); }` to satisfy those interfaces' `dbPtr()` contract — deliberately
+	/// not `final` here so that override is possible. Not abstract either: the guarded
+	/// implementation belongs here once, not duplicated per subclass.
 	///
 	/// @return the base DB pointer
 	/// @throws IllegalStateException if this object has been closed
-	public final MemorySegment dbPtr() {
+	protected MemorySegment dbPtr() {
 		ptr();
 		return baseDb;
 	}

@@ -62,6 +62,17 @@ public final class OptimisticTransactionDB extends NativeObjectWithBaseDb
 		super(ptr, baseDb);
 	}
 
+	/// Returns the base `rocksdb_t*` pointer. Overridden only to widen visibility to `public`,
+	/// satisfying [RocksDBReadOperations#dbPtr()]/[RocksDBWriteOperations#dbPtr()] — the guard
+	/// itself lives in [NativeObjectWithBaseDb#dbPtr()].
+	///
+	/// @return the base DB pointer
+	/// @throws IllegalStateException if this optimistic transaction DB has been closed
+	@Override
+	public final MemorySegment dbPtr() {
+		return super.dbPtr();
+	}
+
 	// -----------------------------------------------------------------------
 	// Transaction API
 	// -----------------------------------------------------------------------
