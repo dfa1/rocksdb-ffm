@@ -28,11 +28,13 @@ abstract class NativeObjectWithBaseDb extends NativeObject {
 	}
 
 	/// Returns the base `rocksdb_t*` pointer, after checking (via [#ptr()]) that this object
-	/// has not been closed.
+	/// has not been closed. Public — not `protected` — so a subclass can satisfy
+	/// [RocksDBReadOperations#dbPtr()] / [RocksDBWriteOperations#dbPtr()] by inheriting this
+	/// method directly, the same way [ReadWriteDB#dbPtr()] and friends already expose it.
 	///
 	/// @return the base DB pointer
 	/// @throws IllegalStateException if this object has been closed
-	protected final MemorySegment dbPtr() {
+	public final MemorySegment dbPtr() {
 		ptr();
 		return baseDb;
 	}

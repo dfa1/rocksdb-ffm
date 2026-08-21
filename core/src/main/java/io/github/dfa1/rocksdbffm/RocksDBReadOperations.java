@@ -6,17 +6,20 @@ import java.util.Optional;
 import java.util.OptionalLong;
 
 /// Shared read operations, including column-family-scoped overloads, for every wrapper
-/// around a plain `rocksdb_t*`: read-write, read-only, TTL, blob, and secondary instances
-/// all expose this identical surface and all support opening or creating column families
-/// for themselves.
+/// around a plain `rocksdb_t*`: read-write, read-only, TTL, blob, secondary, and
+/// optimistic-transaction instances all expose this identical surface and all support
+/// opening or creating column families for themselves.
 ///
 /// Every method here is a direct, zero-logic forward into the matching package-private
 /// `RocksDB` helper — implementors only need to supply the native pointer.
 ///
-/// Not implemented by [TransactionDB] or [OptimisticTransactionDB]: their direct
-/// (non-transactional) operations bind their own `MethodHandle`s instead of sharing these
-/// helpers, per the project convention that a `MethodHandle` must never be routed through a
-/// shared call site (it defeats `invokeExact`'s compile-time constant folding).
+/// Not implemented by [TransactionDB]: its direct (non-transactional) operations bind their
+/// own `MethodHandle`s instead of sharing these helpers (`rocksdb_transactiondb_put` etc. are
+/// genuinely different native symbols than the ones these defaults call), per the project
+/// convention that a `MethodHandle` must never be routed through a shared call site (it
+/// defeats `invokeExact`'s compile-time constant folding). [OptimisticTransactionDB] has no
+/// such dedicated C API for direct ops — it always goes through the base `rocksdb_t*` — so it
+/// implements this interface directly instead.
 public interface RocksDBReadOperations {
 
 	/// Returns the native `rocksdb_t*` pointer to operate on. Equivalent to the
