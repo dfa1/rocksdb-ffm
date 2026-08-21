@@ -7,91 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** `MergeOperator.custom`'s `FullMergeFn` now receives zero-copy `MemorySegment`
+  views of the key, existing value, and operands instead of copied `byte[]`s — benchmarking
+  showed the copies dominating once operands exceed ~1KB, so there's no separate copying tier.
+  (closes [#94](https://github.com/dfa1/rocksdbffm/issues/94))
+
 ## [0.9] — 2026-08-21
 
-Four JVM-crash fixes — the headline reason to upgrade from 0.8 — plus `OptimisticTransactionDB`
-gaining the full shared read/write surface (`compactRange`, `keyMayExist`, WAL iteration,
-`ingestExternalFile`, and more), `merge()` across every write-capable type, and a new
-`MergeOperator`.
+Four JVM-crash fixes, `OptimisticTransactionDB` gaining the full shared read/write surface,
+`merge()` across every write-capable type, and a new `MergeOperator`.
 
 ### Added
 
-- `Temperature` enum (storage-tier hint) wired into 5 `Options` setter/getter pairs:
-  `metadataWriteTemperature`, `walWriteTemperature`, `lastLevelTemperature`,
-  `defaultWriteTemperature`, `defaultTemperature`. EXPERIMENTAL upstream; a no-op unless a
-  custom `FileSystem` inspects it.
-- `Property.COMPACTION_ABORT_COUNT` (`rocksdb.compaction-abort-count`), found missing during a
-  post-version-bump audit of the mapped property set against `rocksdb/include/rocksdb/db.h`.
-- `merge()` (byte[]/ByteBuffer/MemorySegment, plus column-family variants) on `ReadWriteDB`,
-  `TtlDB`, `BlobDB`, `OptimisticTransactionDB`, `TransactionDB`, `Transaction`, and `WriteBatch`
+- `Temperature` enum (storage-tier hint) wired into 5 `Options` setter/getter pairs. EXPERIMENTAL
+  upstream; a no-op unless a custom `FileSystem` inspects it.
+- `Property.COMPACTION_ABORT_COUNT`, found missing during a property-set audit against
+  `rocksdb/include/rocksdb/db.h`.
+- `merge()` (all three tiers + CF variants) on `ReadWriteDB`, `TtlDB`, `BlobDB`,
+  `OptimisticTransactionDB`, `TransactionDB`, `Transaction`, `WriteBatch`
   (closes [#8](https://github.com/dfa1/rocksdbffm/issues/8)).
-- `MergeOperator`: `uint64Add()` wraps the built-in little-endian-uint64-sum operator;
-  `custom(String, FullMergeFn)` wraps RocksDB's general callback-based merge operator, so
-  `merge()` can be given real semantics instead of always failing with `RocksDBException`.
-  Attached via `Options.setMergeOperator`.
-- `RocksDB.openSecondary` gains a column-family-descriptor overload, via
-  `rocksdb_open_as_secondary_column_families`. ([52c9bbd](https://github.com/dfa1/rocksdbffm/commit/52c9bbd))
+- `MergeOperator`: `uint64Add()` (built-in sum) and `custom(String, FullMergeFn)` (Java-callback),
+  attached via `Options.setMergeOperator`.
+- `RocksDB.openSecondary` gains a column-family-descriptor overload.
+  ([52c9bbd](https://github.com/dfa1/rocksdbffm/commit/52c9bbd))
 - `OptimisticTransactionDB` now implements `RocksDBReadOperations`/`RocksDBWriteOperations`
-  (same shared interfaces `ReadWriteDB`/`TtlDB`/`BlobDB` already used) instead of ~50
-  hand-duplicated methods, gaining capability it never exposed before: `keyMayExist`,
-  `write(WriteBatch)`, `cancelAllBackgroundWork`, `disableManualCompaction`/
-  `enableManualCompaction`, `waitForCompact`, `getLatestSequenceNumber`/`getUpdatesSince` (WAL
-  iteration), `compactRange`/`suggestCompactRange`, `disableFileDeletions`/
-  `enableFileDeletions`, and `ingestExternalFile`.
+  instead of ~50 hand-duplicated methods, gaining `keyMayExist`, `write(WriteBatch)`, compaction
+  control, WAL iteration, `ingestExternalFile`, and more.
   ([#105](https://github.com/dfa1/rocksdbffm/pull/105))
 
 ### Changed
 
-- **Breaking:** `RateLimiter.create`/`createAutoTuned`/`createWithMode`'s refill period is now a
-  `Duration` instead of a raw `long` of microseconds; rejects `null` and negative values.
-- **Breaking:** `BackupInfo.timestamp` is now an `Instant` instead of a raw `long` Unix timestamp.
+- **Breaking:** `RateLimiter`'s refill period is now a `Duration` instead of a raw microsecond
+  `long`.
+- **Breaking:** `BackupInfo.timestamp` is now an `Instant` instead of a raw `long`.
 - `RocksDBReadOperations`/`RocksDBWriteOperations` extracted: shared default-method interfaces
-  for the direct put/get/merge/delete/iterate/flush/compaction/CF-management surface, previously
-  duplicated per DB type. `RocksDBWriteOperations` deliberately does not extend the read
-  interface, so `ReadOnlyDB`/`SecondaryDB` can implement read-only.
+  for the direct DB surface, replacing per-type duplication.
   ([53416ca](https://github.com/dfa1/rocksdbffm/commit/53416ca) and follow-ups)
-- `UpcallRegistry<T>` extracted: the id-registry pattern smuggling a Java callback through a
-  native `void*` state pointer, shared by `Logger` and `MergeOperator.Custom` instead of each
-  hand-rolling it. ([0b4d21a](https://github.com/dfa1/rocksdbffm/commit/0b4d21a))
-- `NativeObjectWithBaseDb` extracted: guards the second native pointer `TransactionDB`/
-  `OptimisticTransactionDB` each hold (the `rocksdb_t*` "base DB") behind a checked accessor a
-  subclass has no unchecked name for, instead of a private field any method could read directly.
-  `NativeObjectWithChildren` extracted alongside it: a DB now tracks the `Snapshot`s it
-  produces and releases any still-outstanding ones itself, synchronously, before its own native
-  handle is destroyed. ([#101](https://github.com/dfa1/rocksdbffm/pull/101),
+- `UpcallRegistry<T>` extracted: shared id-registry for native-callback state, used by `Logger`
+  and `MergeOperator.Custom`. ([0b4d21a](https://github.com/dfa1/rocksdbffm/commit/0b4d21a))
+- `NativeObjectWithBaseDb`/`NativeObjectWithChildren` extracted: checked access to
+  `TransactionDB`/`OptimisticTransactionDB`'s base-DB pointer, and automatic snapshot cleanup on
+  DB close. ([#101](https://github.com/dfa1/rocksdbffm/pull/101),
   [#106](https://github.com/dfa1/rocksdbffm/pull/106))
 
 ### Fixed
 
-- **`Transaction.getSnapshot()` crashed the JVM** when called on a transaction begun without
-  `TransactionOptions.setSetSnapshot(true)` (or the `OptimisticTransactionOptions` equivalent) —
-  `rocksdb_transaction_get_snapshot` always mallocs a wrapper, but its internal pointer is null
-  in that case, and any use of the returned `Snapshot` (e.g. `sequenceNumber()`) segfaulted
-  instead of raising a Java exception. Now throws `IllegalStateException` from `getSnapshot()`
-  itself. ([cfb0bf7](https://github.com/dfa1/rocksdbffm/commit/cfb0bf7))
-- **`WalIterator.getBatch()` crashed the JVM** when called on an exhausted or empty iterator
-  (e.g. `getUpdatesSince` on a fresh DB with no writes yet) — `rocksdb_wal_iter_get_batch`
-  dereferences a null pointer in that state, with the C++-side `assert` that would have caught
-  it compiled out of the release build. Now throws `IllegalStateException` instead of calling
-  through. ([659d897](https://github.com/dfa1/rocksdbffm/commit/659d897),
-  [ef80fd2](https://github.com/dfa1/rocksdbffm/commit/ef80fd2))
-- **`TransactionDB`/`OptimisticTransactionDB` crashed the JVM when used after `close()`** — most
-  data-plane methods read a second native pointer (the base DB) directly from a private field,
-  bypassing the closed-check every other method already had; `OptimisticTransactionDB.close()`
-  frees that pointer explicitly, so any of ~30 affected methods called afterward operated on a
-  dangling pointer. Also fixed a separate native memory leak found in the process: `TransactionDB`
-  never freed the small wrapper struct RocksDB allocates for the base DB pointer.
-  ([#101](https://github.com/dfa1/rocksdbffm/pull/101))
-- **`Snapshot` crashed the JVM if its owning DB was closed first** — `close(); snap.close();`
-  released against an already-freed pointer. Fixed properly rather than just guarded: the owning
-  DB now tracks every snapshot it produces and releases any still-outstanding ones itself before
-  destroying its own handle, so the ordering hazard is eliminated by construction rather than a
-  defensive check that would otherwise have traded the crash for a memory leak and a narrow race.
-  ([#106](https://github.com/dfa1/rocksdbffm/pull/106))
+- **4 JVM crashes:** `Transaction.getSnapshot()` on a transaction without snapshot support
+  ([cfb0bf7](https://github.com/dfa1/rocksdbffm/commit/cfb0bf7)); `WalIterator.getBatch()` on an
+  exhausted iterator ([659d897](https://github.com/dfa1/rocksdbffm/commit/659d897),
+  [ef80fd2](https://github.com/dfa1/rocksdbffm/commit/ef80fd2)); `TransactionDB`/
+  `OptimisticTransactionDB` used after `close()`, also fixing a native leak found in the process
+  ([#101](https://github.com/dfa1/rocksdbffm/pull/101)); `Snapshot.close()` after its owning DB
+  was already closed — the DB now tracks and releases its own snapshots first
+  ([#106](https://github.com/dfa1/rocksdbffm/pull/106)).
 - `printStackTrace` replaced with `System.Logger` in the one place it had leaked through.
   ([7d99f03](https://github.com/dfa1/rocksdbffm/commit/7d99f03))
-- SonarCloud findings: missing assertions in two tests (`java:S2699`), non-dedicated AssertJ
-  assertions (`java:S5838`). ([67ac576](https://github.com/dfa1/rocksdbffm/commit/67ac576),
+- SonarCloud findings: missing test assertions, non-dedicated AssertJ assertions.
+  ([67ac576](https://github.com/dfa1/rocksdbffm/commit/67ac576),
   [e8ea801](https://github.com/dfa1/rocksdbffm/commit/e8ea801))
 
 ## [0.8] — 2026-08-16
