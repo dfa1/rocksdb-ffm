@@ -184,6 +184,21 @@ class SnapshotTest {
 		}
 	}
 
+	@Test
+	void snapshot_closedAfterOwningDb_doesNotCrash(@TempDir Path dir) {
+		// Given — the owning DB is closed before the snapshot it produced
+		var db = RocksDB.openReadWrite(dir);
+		Snapshot snap = db.getSnapshot();
+		db.close();
+
+		// When — releasing against the DB's now-dangling pointer would otherwise be a
+		// use-after-free; normally this would trigger a JVM crash
+		ThrowingCallable closeAfterDb = snap::close;
+
+		// Then
+		assertThatCode(closeAfterDb).doesNotThrowAnyException();
+	}
+
 	// -----------------------------------------------------------------------
 	// Transaction snapshot — dbPtr-less variant, released via rocksdb_free
 	// -----------------------------------------------------------------------

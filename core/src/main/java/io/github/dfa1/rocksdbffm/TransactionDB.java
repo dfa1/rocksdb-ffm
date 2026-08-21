@@ -223,7 +223,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	public Snapshot getSnapshot() {
 		try {
 			MemorySegment snapPtr = (MemorySegment) MH_CREATE_SNAPSHOT.invokeExact(ptr());
-			return new Snapshot(ptr(), snapPtr);
+			return new Snapshot(this, ptr(), snapPtr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("getSnapshot failed", t);
 		}
