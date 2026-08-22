@@ -44,6 +44,15 @@ public interface RocksDBWriteOperations {
 		RocksDB.putBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
 	}
 
+	/// [#put(byte\[\], byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to store
+	/// @param value        the value to associate with the key
+	default void put(WriteOptions writeOptions, byte[] key, byte[] value) {
+		RocksDB.putBytes(this, writeOptions, key, value);
+	}
+
 	/// Stores `value` under `key` using the caller's [Arena] for native allocation.
 	///
 	/// @param arena arena used for temporary native allocations
@@ -51,6 +60,16 @@ public interface RocksDBWriteOperations {
 	/// @param value the value to associate with the key
 	default void put(Arena arena, byte[] key, byte[] value) {
 		RocksDB.putBytes(arena, this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
+	}
+
+	/// [#put(Arena, byte\[\], byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param arena        arena used for temporary native allocations
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to store
+	/// @param value        the value to associate with the key
+	default void put(Arena arena, WriteOptions writeOptions, byte[] key, byte[] value) {
+		RocksDB.putBytes(arena, this, writeOptions, key, value);
 	}
 
 	/// Zero-copy put: wraps the direct buffers' native memory without heap→native copy.
@@ -63,12 +82,32 @@ public interface RocksDBWriteOperations {
 				MemorySegment.ofBuffer(value));
 	}
 
+	/// [#put(ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          direct [ByteBuffer] containing the key
+	/// @param value        direct [ByteBuffer] containing the value
+	default void put(WriteOptions writeOptions, ByteBuffer key, ByteBuffer value) {
+		RocksDB.putSegment(this, writeOptions,
+				MemorySegment.ofBuffer(key),
+				MemorySegment.ofBuffer(value));
+	}
+
 	/// Zero-copy put: caller supplies pre-allocated native segments.
 	///
 	/// @param key   native segment containing the key
 	/// @param value native segment containing the value
 	default void put(MemorySegment key, MemorySegment value) {
 		RocksDB.putSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
+	}
+
+	/// [#put(MemorySegment, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key
+	/// @param value        native segment containing the value
+	default void put(WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
+		RocksDB.putSegment(this, writeOptions, key, value);
 	}
 
 	/// Zero-copy put using the caller's [Arena].
@@ -80,6 +119,16 @@ public interface RocksDBWriteOperations {
 		RocksDB.putSegment(arena, this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
 	}
 
+	/// [#put(Arena, MemorySegment, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param arena        arena used for temporary native allocations
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key
+	/// @param value        native segment containing the value
+	default void put(Arena arena, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
+		RocksDB.putSegment(arena, this, writeOptions, key, value);
+	}
+
 	/// Stores `value` under `key` in `cf`. Slow path: copies key/value into native memory.
 	///
 	/// @param cf    target column family
@@ -87,6 +136,16 @@ public interface RocksDBWriteOperations {
 	/// @param value the value to associate with the key
 	default void put(ColumnFamilyHandle cf, byte[] key, byte[] value) {
 		RocksDB.putCfBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, key, value);
+	}
+
+	/// [#put(ColumnFamilyHandle, byte\[\], byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to store
+	/// @param value        the value to associate with the key
+	default void put(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] key, byte[] value) {
+		RocksDB.putCfBytes(this, writeOptions, cf, key, value);
 	}
 
 	/// Zero-copy put into `cf`: wraps the direct buffers' native memory without heap→native copy.
@@ -100,6 +159,18 @@ public interface RocksDBWriteOperations {
 				MemorySegment.ofBuffer(value));
 	}
 
+	/// [#put(ColumnFamilyHandle, ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          direct [ByteBuffer] containing the key
+	/// @param value        direct [ByteBuffer] containing the value
+	default void put(ColumnFamilyHandle cf, WriteOptions writeOptions, ByteBuffer key, ByteBuffer value) {
+		RocksDB.putCfSegment(this, writeOptions, cf,
+				MemorySegment.ofBuffer(key),
+				MemorySegment.ofBuffer(value));
+	}
+
 	/// Zero-copy put into `cf`: caller supplies pre-allocated native segments.
 	///
 	/// @param cf    target column family
@@ -107,6 +178,16 @@ public interface RocksDBWriteOperations {
 	/// @param value native segment containing the value
 	default void put(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
 		RocksDB.putCfSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, key, value);
+	}
+
+	/// [#put(ColumnFamilyHandle, MemorySegment, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key
+	/// @param value        native segment containing the value
+	default void put(ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
+		RocksDB.putCfSegment(this, writeOptions, cf, key, value);
 	}
 
 	// -----------------------------------------------------------------------
@@ -122,6 +203,15 @@ public interface RocksDBWriteOperations {
 		RocksDB.mergeBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
 	}
 
+	/// [#merge(byte\[\], byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to merge into
+	/// @param value        the merge operand
+	default void merge(WriteOptions writeOptions, byte[] key, byte[] value) {
+		RocksDB.mergeBytes(this, writeOptions, key, value);
+	}
+
 	/// Merges `value` into `key` using the caller's [Arena] for native allocation.
 	///
 	/// @param arena arena used for temporary native allocations
@@ -129,6 +219,16 @@ public interface RocksDBWriteOperations {
 	/// @param value the merge operand
 	default void merge(Arena arena, byte[] key, byte[] value) {
 		RocksDB.mergeBytes(arena, this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
+	}
+
+	/// [#merge(Arena, byte\[\], byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param arena        arena used for temporary native allocations
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to merge into
+	/// @param value        the merge operand
+	default void merge(Arena arena, WriteOptions writeOptions, byte[] key, byte[] value) {
+		RocksDB.mergeBytes(arena, this, writeOptions, key, value);
 	}
 
 	/// Zero-copy merge: wraps the direct buffers' native memory without heap→native copy.
@@ -141,12 +241,32 @@ public interface RocksDBWriteOperations {
 				MemorySegment.ofBuffer(value));
 	}
 
+	/// [#merge(ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          direct [ByteBuffer] containing the key
+	/// @param value        direct [ByteBuffer] containing the merge operand
+	default void merge(WriteOptions writeOptions, ByteBuffer key, ByteBuffer value) {
+		RocksDB.mergeSegment(this, writeOptions,
+				MemorySegment.ofBuffer(key),
+				MemorySegment.ofBuffer(value));
+	}
+
 	/// Zero-copy merge: caller supplies pre-allocated native segments.
 	///
 	/// @param key   native segment containing the key
 	/// @param value native segment containing the merge operand
 	default void merge(MemorySegment key, MemorySegment value) {
 		RocksDB.mergeSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
+	}
+
+	/// [#merge(MemorySegment, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key
+	/// @param value        native segment containing the merge operand
+	default void merge(WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
+		RocksDB.mergeSegment(this, writeOptions, key, value);
 	}
 
 	/// Zero-copy merge using the caller's [Arena].
@@ -158,6 +278,16 @@ public interface RocksDBWriteOperations {
 		RocksDB.mergeSegment(arena, this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
 	}
 
+	/// [#merge(Arena, MemorySegment, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param arena        arena used for temporary native allocations
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key
+	/// @param value        native segment containing the merge operand
+	default void merge(Arena arena, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
+		RocksDB.mergeSegment(arena, this, writeOptions, key, value);
+	}
+
 	/// Merges `value` into `key` in `cf`. Slow path: copies key/value into native memory.
 	///
 	/// @param cf    target column family
@@ -165,6 +295,16 @@ public interface RocksDBWriteOperations {
 	/// @param value the merge operand
 	default void merge(ColumnFamilyHandle cf, byte[] key, byte[] value) {
 		RocksDB.mergeCfBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, key, value);
+	}
+
+	/// [#merge(ColumnFamilyHandle, byte\[\], byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to merge into
+	/// @param value        the merge operand
+	default void merge(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] key, byte[] value) {
+		RocksDB.mergeCfBytes(this, writeOptions, cf, key, value);
 	}
 
 	/// Zero-copy merge into `cf`: wraps the direct buffers' native memory without heap→native copy.
@@ -178,6 +318,18 @@ public interface RocksDBWriteOperations {
 				MemorySegment.ofBuffer(value));
 	}
 
+	/// [#merge(ColumnFamilyHandle, ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          direct [ByteBuffer] containing the key
+	/// @param value        direct [ByteBuffer] containing the merge operand
+	default void merge(ColumnFamilyHandle cf, WriteOptions writeOptions, ByteBuffer key, ByteBuffer value) {
+		RocksDB.mergeCfSegment(this, writeOptions, cf,
+				MemorySegment.ofBuffer(key),
+				MemorySegment.ofBuffer(value));
+	}
+
 	/// Zero-copy merge into `cf`: caller supplies pre-allocated native segments.
 	///
 	/// @param cf    target column family
@@ -185,6 +337,16 @@ public interface RocksDBWriteOperations {
 	/// @param value native segment containing the merge operand
 	default void merge(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
 		RocksDB.mergeCfSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, key, value);
+	}
+
+	/// [#merge(ColumnFamilyHandle, MemorySegment, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key
+	/// @param value        native segment containing the merge operand
+	default void merge(ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
+		RocksDB.mergeCfSegment(this, writeOptions, cf, key, value);
 	}
 
 	// -----------------------------------------------------------------------
@@ -198,11 +360,27 @@ public interface RocksDBWriteOperations {
 		RocksDB.deleteBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, key);
 	}
 
+	/// [#delete(byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to remove
+	default void delete(WriteOptions writeOptions, byte[] key) {
+		RocksDB.deleteBytes(this, writeOptions, key);
+	}
+
 	/// Zero-copy for direct [ByteBuffer]s.
 	///
 	/// @param key direct [ByteBuffer] containing the key to remove
 	default void delete(ByteBuffer key) {
 		RocksDB.deleteSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, MemorySegment.ofBuffer(key));
+	}
+
+	/// [#delete(ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          direct [ByteBuffer] containing the key to remove
+	default void delete(WriteOptions writeOptions, ByteBuffer key) {
+		RocksDB.deleteSegment(this, writeOptions, MemorySegment.ofBuffer(key));
 	}
 
 	/// Zero-copy native-first path.
@@ -212,12 +390,29 @@ public interface RocksDBWriteOperations {
 		RocksDB.deleteSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, key);
 	}
 
+	/// [#delete(MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key to remove
+	default void delete(WriteOptions writeOptions, MemorySegment key) {
+		RocksDB.deleteSegment(this, writeOptions, key);
+	}
+
 	/// Removes `key` from `cf`. Slow path: copies the key into native memory.
 	///
 	/// @param cf  target column family
 	/// @param key the key to remove
 	default void delete(ColumnFamilyHandle cf, byte[] key) {
 		RocksDB.deleteCfBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, key);
+	}
+
+	/// [#delete(ColumnFamilyHandle, byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to remove
+	default void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] key) {
+		RocksDB.deleteCfBytes(this, writeOptions, cf, key);
 	}
 
 	/// Zero-copy delete from `cf` for direct [ByteBuffer]s.
@@ -229,12 +424,31 @@ public interface RocksDBWriteOperations {
 				MemorySegment.ofBuffer(key));
 	}
 
+	/// [#delete(ColumnFamilyHandle, ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          direct [ByteBuffer] containing the key to remove
+	default void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, ByteBuffer key) {
+		RocksDB.deleteCfSegment(this, writeOptions, cf,
+				MemorySegment.ofBuffer(key));
+	}
+
 	/// Zero-copy delete from `cf` for [MemorySegment]s.
 	///
 	/// @param cf  target column family
 	/// @param key native segment containing the key to remove
 	default void delete(ColumnFamilyHandle cf, MemorySegment key) {
 		RocksDB.deleteCfSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, key);
+	}
+
+	/// [#delete(ColumnFamilyHandle, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key to remove
+	default void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key) {
+		RocksDB.deleteCfSegment(this, writeOptions, cf, key);
 	}
 
 	// -----------------------------------------------------------------------
@@ -250,6 +464,15 @@ public interface RocksDBWriteOperations {
 		RocksDB.deleteRangeCfBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, startKey, endKey);
 	}
 
+	/// [#deleteRange(byte\[\], byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param startKey     inclusive lower bound
+	/// @param endKey       exclusive upper bound
+	default void deleteRange(WriteOptions writeOptions, byte[] startKey, byte[] endKey) {
+		RocksDB.deleteRangeCfBytes(this, writeOptions, startKey, endKey);
+	}
+
 	/// Zero-copy for direct [ByteBuffer]s.
 	///
 	/// @param startKey direct [ByteBuffer] with inclusive lower bound
@@ -258,12 +481,30 @@ public interface RocksDBWriteOperations {
 		RocksDB.deleteRangeCfBuffer(this, RocksDB.DEFAULT_WRITE_OPTIONS, startKey, endKey);
 	}
 
+	/// [#deleteRange(ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param startKey     direct [ByteBuffer] with inclusive lower bound
+	/// @param endKey       direct [ByteBuffer] with exclusive upper bound
+	default void deleteRange(WriteOptions writeOptions, ByteBuffer startKey, ByteBuffer endKey) {
+		RocksDB.deleteRangeCfBuffer(this, writeOptions, startKey, endKey);
+	}
+
 	/// Zero-copy native-first path.
 	///
 	/// @param startKey native segment with inclusive lower bound
 	/// @param endKey   native segment with exclusive upper bound
 	default void deleteRange(MemorySegment startKey, MemorySegment endKey) {
 		RocksDB.deleteRangeCfSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, startKey, endKey);
+	}
+
+	/// [#deleteRange(MemorySegment, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param startKey     native segment with inclusive lower bound
+	/// @param endKey       native segment with exclusive upper bound
+	default void deleteRange(WriteOptions writeOptions, MemorySegment startKey, MemorySegment endKey) {
+		RocksDB.deleteRangeCfSegment(this, writeOptions, startKey, endKey);
 	}
 
 	/// Deletes all keys in the half-open range [`startKey`, `endKey`) from `cf`. Slow path.
@@ -275,6 +516,16 @@ public interface RocksDBWriteOperations {
 		RocksDB.deleteRangeCfBytesExplicit(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, startKey, endKey);
 	}
 
+	/// [#deleteRange(ColumnFamilyHandle, byte\[\], byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param startKey     inclusive lower bound
+	/// @param endKey       exclusive upper bound
+	default void deleteRange(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] startKey, byte[] endKey) {
+		RocksDB.deleteRangeCfBytesExplicit(this, writeOptions, cf, startKey, endKey);
+	}
+
 	/// Zero-copy deleteRange from `cf` for direct [ByteBuffer]s.
 	///
 	/// @param cf       target column family
@@ -284,6 +535,16 @@ public interface RocksDBWriteOperations {
 		RocksDB.deleteRangeCfBufferExplicit(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, startKey, endKey);
 	}
 
+	/// [#deleteRange(ColumnFamilyHandle, ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param startKey     direct [ByteBuffer] with inclusive lower bound
+	/// @param endKey       direct [ByteBuffer] with exclusive upper bound
+	default void deleteRange(ColumnFamilyHandle cf, WriteOptions writeOptions, ByteBuffer startKey, ByteBuffer endKey) {
+		RocksDB.deleteRangeCfBufferExplicit(this, writeOptions, cf, startKey, endKey);
+	}
+
 	/// Zero-copy deleteRange from `cf` for [MemorySegment]s.
 	///
 	/// @param cf       target column family
@@ -291,6 +552,17 @@ public interface RocksDBWriteOperations {
 	/// @param endKey   native segment with exclusive upper bound
 	default void deleteRange(ColumnFamilyHandle cf, MemorySegment startKey, MemorySegment endKey) {
 		RocksDB.deleteRangeCfSegmentExplicit(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, startKey, endKey);
+	}
+
+	/// [#deleteRange(ColumnFamilyHandle, MemorySegment, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param startKey     native segment with inclusive lower bound
+	/// @param endKey       native segment with exclusive upper bound
+	default void deleteRange(ColumnFamilyHandle cf, WriteOptions writeOptions,
+	                          MemorySegment startKey, MemorySegment endKey) {
+		RocksDB.deleteRangeCfSegmentExplicit(this, writeOptions, cf, startKey, endKey);
 	}
 
 	// -----------------------------------------------------------------------
@@ -304,12 +576,29 @@ public interface RocksDBWriteOperations {
 		RocksDB.writeBatch(this, RocksDB.DEFAULT_WRITE_OPTIONS, batch);
 	}
 
+	/// [#write(WriteBatch)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param batch        the write batch to apply
+	default void write(WriteOptions writeOptions, WriteBatch batch) {
+		RocksDB.writeBatch(this, writeOptions, batch);
+	}
+
 	/// Applies all mutations in `batch` atomically, using the caller's [Arena] for native allocation.
 	///
 	/// @param arena arena used for temporary native allocations
 	/// @param batch the write batch to apply
 	default void write(Arena arena, WriteBatch batch) {
 		RocksDB.writeBatch(arena, this, RocksDB.DEFAULT_WRITE_OPTIONS, batch);
+	}
+
+	/// [#write(Arena, WriteBatch)] with explicit [WriteOptions].
+	///
+	/// @param arena        arena used for temporary native allocations
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param batch        the write batch to apply
+	default void write(Arena arena, WriteOptions writeOptions, WriteBatch batch) {
+		RocksDB.writeBatch(arena, this, writeOptions, batch);
 	}
 
 	// -----------------------------------------------------------------------
