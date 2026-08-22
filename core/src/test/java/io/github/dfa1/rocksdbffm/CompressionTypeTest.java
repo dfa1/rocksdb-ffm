@@ -110,24 +110,28 @@ class CompressionTypeTest {
 		assertThat(compressedSize).isLessThan(uncompressedSize / 2);
 	}
 
-	// SNAPPY is force-disabled in the bundled native library (see
-	// scripts/build-rocksdb.sh), so this exercises RocksDB's own
-	// ColumnFamilyData::ValidateOptions -> CheckCompressionSupported check: DB::Open
-	// rejects a compression type that isn't linked into the binary with
-	// Status::InvalidArgument, rather than silently opening and no-op'ing the
-	// compression, so misconfiguration is caught at open time, not discovered later
-	// as an unexplained lack of compression.
-	@Test
-	void openDb_withUnsupportedCompression_throws(@TempDir Path dir) {
-		// Given
-		try (Options opts = Options.newOptions()
-				.setCreateIfMissing(true)
-				.setCompression(CompressionType.SNAPPY)) {
+	// SNAPPY, ZLIB, BZLIB2, and XPRESS are not linked into the bundled native library
+	// (see scripts/build-rocksdb.sh); setCompression/setBlobCompressionType reject them
+	// eagerly rather than letting RocksDB::Open fail later with an opaque native error.
+	@ParameterizedTest
+	@EnumSource(value = CompressionType.class, names = {"SNAPPY", "ZLIB", "BZLIB2", "XPRESS"})
+	void setCompression_withUnsupportedType_throws(CompressionType type) {
+		try (Options opts = Options.newOptions()) {
 
-			// When / Then
-			assertThatThrownBy(() -> RocksDB.openReadWrite(opts, dir))
-					.isInstanceOf(RocksDBException.class)
-					.hasMessageContaining("not linked with the binary");
+			// Given / When / Then
+			assertThatThrownBy(() -> opts.setCompression(type))
+					.isInstanceOf(UnsupportedOperationException.class);
+		}
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = CompressionType.class, names = {"SNAPPY", "ZLIB", "BZLIB2", "XPRESS"})
+	void setBlobCompressionType_withUnsupportedType_throws(CompressionType type) {
+		try (Options opts = Options.newOptions()) {
+
+			// Given / When / Then
+			assertThatThrownBy(() -> opts.setBlobCompressionType(type))
+					.isInstanceOf(UnsupportedOperationException.class);
 		}
 	}
 }

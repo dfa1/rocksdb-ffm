@@ -396,7 +396,11 @@ public final class Options extends NativeObject {
 	///
 	/// @param type the compression algorithm to use
 	/// @return `this` for chaining
+	/// @throws UnsupportedOperationException if `type` isn't linked into the bundled native library
 	public Options setCompression(CompressionType type) {
+		if (!type.isSupported()) {
+			throw new UnsupportedOperationException(type + " compression is not linked into the bundled native library");
+		}
 		try {
 			MH_SET_COMPRESSION.invokeExact(ptr(), type.getValue());
 			return this;
@@ -515,7 +519,11 @@ public final class Options extends NativeObject {
 	///
 	/// @param type the compression algorithm for blob values
 	/// @return `this` for chaining
+	/// @throws UnsupportedOperationException if `type` isn't linked into the bundled native library
 	public Options setBlobCompressionType(CompressionType type) {
+		if (!type.isSupported()) {
+			throw new UnsupportedOperationException(type + " compression is not linked into the bundled native library");
+		}
 		try {
 			MH_SET_BLOB_COMPRESSION_TYPE.invokeExact(ptr(), type.getValue());
 			return this;

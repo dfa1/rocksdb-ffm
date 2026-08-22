@@ -4,7 +4,9 @@ package io.github.dfa1.rocksdbffm;
 ///
 /// Integer values match the `rocksdb_*_compression` constants in `rocksdb/c.h`.
 ///
-/// Not every algorithm is available in every RocksDB build.
+/// `SNAPPY`, `ZLIB`, `BZLIB2`, and `XPRESS` aren't linked into the bundled native library yet;
+/// [Options#setCompression(CompressionType)] and [Options#setBlobCompressionType(CompressionType)]
+/// throw [UnsupportedOperationException] for those values.
 ///
 /// ```
 /// try (Options opts = Options.newOptions().setCompression(CompressionType.LZ4)) { ... }
@@ -15,15 +17,12 @@ public enum CompressionType {
 	NO_COMPRESSION(0),
 
 	/// Snappy compression.
-	/// TODO: not supported yet
 	SNAPPY(1),
 
 	/// zlib compression.
-	/// TODO: not supported yet
 	ZLIB(2),
 
 	/// bzip2 compression.
-	/// TODO: not supported yet
 	BZLIB2(3),
 
 	/// LZ4 compression.
@@ -33,7 +32,6 @@ public enum CompressionType {
 	LZ4HC(5),
 
 	/// Express compression (Windows only).
-	/// TODO: not supported yet
 	XPRESS(6),
 
 	/// Zstandard compression.
@@ -48,6 +46,16 @@ public enum CompressionType {
 	// don't expose the raw value
 	int getValue() {
 		return value;
+	}
+
+	/// Whether this algorithm is linked into the bundled native library.
+	///
+	/// @return `true` if usable, `false` if setting it throws `UnsupportedOperationException`
+	boolean isSupported() {
+		return switch (this) {
+			case SNAPPY, ZLIB, BZLIB2, XPRESS -> false;
+			case NO_COMPRESSION, LZ4, LZ4HC, ZSTD -> true;
+		};
 	}
 
 	static CompressionType fromValue(int value) {
