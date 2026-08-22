@@ -25,7 +25,7 @@ class PerfContextTest {
 		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			db.put("k".getBytes(), "v".getBytes());
-			try (var warmup = PerfContext.newPerfContext()) {
+			try (var _ = PerfContext.newPerfContext()) {
 				db.get("k".getBytes());
 			}
 
@@ -45,7 +45,7 @@ class PerfContextTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openReadWrite(opts, dir)) {
 
-			try (var warmup = PerfContext.newPerfContext()) {
+			try (var _ = PerfContext.newPerfContext()) {
 				db.put("k".getBytes(), "v".getBytes());
 				db.get("k".getBytes());
 

@@ -97,7 +97,7 @@ class WalIteratorTest {
 			try (WalIterator it = db.getUpdatesSince(after)) {
 				// Move past any batch at exactly `after`, then check exhausted
 				while (it.isValid()) {
-					try (WalBatchResult ignored = it.getBatch()) {
+					try (var _ = it.getBatch()) {
 						// consume
 					}
 					it.next();

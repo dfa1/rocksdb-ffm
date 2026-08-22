@@ -71,13 +71,11 @@ class SstFileManagerTest {
 	}
 
 	@Test
-	void setDeleteRateBytesPerSecond_roundTrips(@TempDir Path dir) {
+	void setDeleteRateBytesPerSecond_roundTrips() {
 		// Given
 		try (var env = Env.defaultEnv();
 		     var sut = SstFileManager.create(env)
-				     .setDeleteRateBytesPerSecond(MemorySize.ofMB(64));
-		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+				     .setDeleteRateBytesPerSecond(MemorySize.ofMB(64))) {
 
 			// When
 			var result = sut.getDeleteRateBytesPerSecond();
@@ -88,12 +86,10 @@ class SstFileManagerTest {
 	}
 
 	@Test
-	void setDeleteRateBytesPerSecond_null_roundTripsAsUnlimited(@TempDir Path dir) {
+	void setDeleteRateBytesPerSecond_null_roundTripsAsUnlimited() {
 		// Given
 		try (var env = Env.defaultEnv();
-		     var sut = SstFileManager.create(env).setDeleteRateBytesPerSecond(null);
-		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var sut = SstFileManager.create(env).setDeleteRateBytesPerSecond(null)) {
 
 			// When
 			var result = sut.getDeleteRateBytesPerSecond();
@@ -104,12 +100,10 @@ class SstFileManagerTest {
 	}
 
 	@Test
-	void setDeleteRateBytesPerSecond_zero_roundTripsAsSynchronous(@TempDir Path dir) {
+	void setDeleteRateBytesPerSecond_zero_roundTripsAsSynchronous() {
 		// Given
 		try (var env = Env.defaultEnv();
-		     var sut = SstFileManager.create(env).setDeleteRateBytesPerSecond(MemorySize.ZERO);
-		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var sut = SstFileManager.create(env).setDeleteRateBytesPerSecond(MemorySize.ZERO)) {
 
 			// When
 			var result = sut.getDeleteRateBytesPerSecond();
@@ -120,12 +114,10 @@ class SstFileManagerTest {
 	}
 
 	@Test
-	void setMaxTrashDbRatio_roundTrips(@TempDir Path dir) {
+	void setMaxTrashDbRatio_roundTrips() {
 		// Given
 		try (var env = Env.defaultEnv();
-		     var sut = SstFileManager.create(env).setMaxTrashDbRatio(Ratio.of(0.5));
-		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var sut = SstFileManager.create(env).setMaxTrashDbRatio(Ratio.of(0.5))) {
 
 			// When
 			var result = sut.getMaxTrashDbRatio();

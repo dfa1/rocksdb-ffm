@@ -19,6 +19,8 @@ import java.util.concurrent.atomic.AtomicReference;
 /// the same object; synchronize externally if your usage can't rule that out.
 public abstract class NativeObject implements AutoCloseable {
 
+	private static final System.Logger LOG = System.getLogger(NativeObject.class.getName());
+
 	private final AtomicReference<MemorySegment> owningPointer;
 
 	/// Initializes this wrapper with the given native pointer.
@@ -47,7 +49,10 @@ public abstract class NativeObject implements AutoCloseable {
 			try {
 				tryClose(ptr);
 			} catch (Throwable throwable) {
-				// ignored
+				// close() must never throw — a failure here must not stop the rest of a
+				// try-with-resources chain from closing — but a failure to release a native
+				// resource is still worth knowing about.
+				LOG.log(System.Logger.Level.ERROR, getClass().getSimpleName() + ".close() failed", throwable);
 			}
 		}
 	}
@@ -66,6 +71,7 @@ public abstract class NativeObject implements AutoCloseable {
 	/// Implementations must release the native resource.
 	///
 	/// @param ptr the non-NULL native pointer to release
-	/// @throws Throwable if the native destroy call fails (exception is silently swallowed by [#close()])
+	/// @throws Throwable if the native destroy call fails; [#close()] catches it, logs it, and
+	///                    does not rethrow, so the rest of a try-with-resources chain still closes
 	protected abstract void tryClose(MemorySegment ptr) throws Throwable;
 }

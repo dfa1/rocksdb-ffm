@@ -158,7 +158,7 @@ class CompactionControlTest {
 	// -----------------------------------------------------------------------
 
 	@Test
-	void compactOptions_defaults(@TempDir Path dir) {
+	void compactOptions_defaults() {
 		// Given / When
 		try (var opts = CompactOptions.newCompactOptions()) {
 			// Then — verify getters don't throw and return consistent boolean values

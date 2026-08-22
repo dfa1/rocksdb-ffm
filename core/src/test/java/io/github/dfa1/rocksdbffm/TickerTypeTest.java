@@ -21,8 +21,8 @@ class TickerTypeTest {
 		}
 
 		// Then
-		assertThat(distinctValues).hasSize(tickers.length);
-		assertThat(distinctValues).allSatisfy(v -> assertThat(v).isNotNegative());
+		assertThat(distinctValues).hasSize(tickers.length)
+				.allSatisfy(v -> assertThat(v).isNotNegative());
 	}
 
 	@Test

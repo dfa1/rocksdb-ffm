@@ -265,7 +265,6 @@ class ColumnFamilyIntegrationTest {
 	@Test
 	void columnFamilyHandles_haveUniqueIds(@TempDir Path dir) {
 		// Given
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cf1 = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));

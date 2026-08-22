@@ -23,7 +23,7 @@ class ColumnFamilyTest {
 	void listColumnFamilies_returnsDefaultOnly_onNewDb(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var _ = RocksDB.openReadWrite(opts, dir)) {
 			// When
 			List<byte[]> families = RocksDB.listColumnFamilies(opts, dir);
 
@@ -145,7 +145,7 @@ class ColumnFamilyTest {
 		// Given
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir,
+		     var _ = RocksDB.openReadWrite(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default")),
 				     handles)) {
 

@@ -321,7 +321,7 @@ class BackupEngineIntegrationTest {
 	}
 
 	@Test
-	void restoreOptions_keepLogFiles(@TempDir Path dir) {
+	void restoreOptions_keepLogFiles() {
 		// Given / When / Then — RestoreOptions can be created and configured
 		try (var restOpts = RestoreOptions.create().setKeepLogFiles(true)) {
 			assertThat(restOpts).isNotNull();

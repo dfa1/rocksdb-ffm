@@ -1089,7 +1089,7 @@ class TtlDBTest {
 		// When
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.openTtl(opts, dir,
+		     var _ = RocksDB.openTtl(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
 				     List.of(Duration.ZERO, Duration.ZERO),
 				     handles)) {
