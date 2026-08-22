@@ -722,14 +722,14 @@ public final class RocksDB {
 	/// [PinnableSlice].
 	///
 	/// Returns `null` if not found.
-	static byte[] getBytes(MemorySegment db, MemorySegment readOpts, byte[] key) {
+	static byte[] getBytes(RocksDBReadOperations db, ReadOptions readOpts, byte[] key) {
 		// Single arena: it already needs one to marshal `key`, and withPinned would open
 		// its own, paying for two Arena.ofConfined() per get instead of one.
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment k = toNative(arena, key);
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(
-					db, readOpts, k, (long) key.length, err);
+					db.dbPtr(), readOpts.ptr(), k, (long) key.length, err);
 			checkError(err);
 			if (MemorySegment.NULL.equals(handle)) {
 				return null;
@@ -744,12 +744,12 @@ public final class RocksDB {
 
 	/// ByteBuffer get via `rocksdb_get_into_buffer` — copies directly into the caller's buffer,
 	/// with no intermediate PinnableSlice. Copies nothing when the buffer is too small.
-	static CopyResult getIntoBuffer(MemorySegment db, MemorySegment readOpts, MemorySegment key, long keyLen, ByteBuffer value) {
+	static CopyResult getIntoBuffer(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, long keyLen, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
-			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db, readOpts, key, keyLen,
+			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db.dbPtr(), readOpts.ptr(), key, keyLen,
 					MemorySegment.ofBuffer(value), (long) value.remaining(), valLenSeg, foundSeg, err);
 			checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
@@ -768,12 +768,12 @@ public final class RocksDB {
 
 	/// MemorySegment get via `rocksdb_get_into_buffer` — copies directly into the caller's
 	/// segment, with no intermediate PinnableSlice. Copies nothing when `value` is too small.
-	static CopyResult getIntoSegment(MemorySegment db, MemorySegment readOpts, MemorySegment key, long keyLen, MemorySegment value) {
+	static CopyResult getIntoSegment(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, long keyLen, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
-			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db, readOpts, key, keyLen,
+			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db.dbPtr(), readOpts.ptr(), key, keyLen,
 					value, value.byteSize(), valLenSeg, foundSeg, err);
 			checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
@@ -795,10 +795,10 @@ public final class RocksDB {
 
 	/// Scoped zero-copy get via `rocksdb_get_pinned_v2`. [PinnableHandle] owns the pinned
 	/// value's lifetime and every way it gets consumed.
-	static <R> Optional<R> withPinned(MemorySegment db, MemorySegment readOpts, MemorySegment key, Mapper<R> fn) {
+	static <R> Optional<R> withPinned(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MemorySegment handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(db, readOpts, key, key.byteSize(), err);
+			MemorySegment handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(db.dbPtr(), readOpts.ptr(), key, key.byteSize(), err);
 			checkError(err);
 			if (MemorySegment.NULL.equals(handle)) {
 				return Optional.empty();
@@ -813,12 +813,12 @@ public final class RocksDB {
 
 	/// Scoped zero-copy get from `cf` via `rocksdb_get_pinned_cf_v2`. See [#withPinned]
 	/// for the lifetime contract.
-	static <R> Optional<R> withPinnedCf(MemorySegment db, MemorySegment readOpts, ColumnFamilyHandle cf,
+	static <R> Optional<R> withPinnedCf(RocksDBReadOperations db, ReadOptions readOpts, ColumnFamilyHandle cf,
 	                                     MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_CF_V2.invokeExact(
-					db, readOpts, cf.ptr(), key, key.byteSize(), err);
+					db.dbPtr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
 			checkError(err);
 			if (MemorySegment.NULL.equals(handle)) {
 				return Optional.empty();
@@ -1022,21 +1022,21 @@ public final class RocksDB {
 		}
 	}
 
-	static Optional<String> getProperty(MemorySegment db, Property property) {
+	static Optional<String> getProperty(RocksDBReadOperations db, Property property) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment propSeg = arena.allocateFrom(property.propertyName());
-			MemorySegment result = (MemorySegment) MH_PROPERTY_VALUE.invokeExact(db, propSeg);
+			MemorySegment result = (MemorySegment) MH_PROPERTY_VALUE.invokeExact(db.dbPtr(), propSeg);
 			return toOptionalString(result);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("getProperty failed", t);
 		}
 	}
 
-	static OptionalLong getLongProperty(MemorySegment db, Property property) {
+	static OptionalLong getLongProperty(RocksDBReadOperations db, Property property) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment propSeg = arena.allocateFrom(property.propertyName());
 			MemorySegment out = arena.allocate(ValueLayout.JAVA_LONG);
-			int rc = (int) MH_PROPERTY_INT.invokeExact(db, propSeg, out);
+			int rc = (int) MH_PROPERTY_INT.invokeExact(db.dbPtr(), propSeg, out);
 			if (rc != 0) {
 				return OptionalLong.empty();
 			}
@@ -1110,10 +1110,10 @@ public final class RocksDB {
 		}
 	}
 
-	static boolean keyMayExistSegment(MemorySegment db, MemorySegment roOpts,
+	static boolean keyMayExistSegment(RocksDBReadOperations db, ReadOptions roOpts,
 	                                  MemorySegment key, long keyLen) {
 		try {
-			return fromByte((byte) MH_KEY_MAY_EXIST.invokeExact(db, roOpts, key, keyLen,
+			return fromByte((byte) MH_KEY_MAY_EXIST.invokeExact(db.dbPtr(), roOpts.ptr(), key, keyLen,
 					MemorySegment.NULL, MemorySegment.NULL,
 					MemorySegment.NULL, 0L, MemorySegment.NULL));
 		} catch (Throwable t) {
@@ -1123,7 +1123,7 @@ public final class RocksDB {
 
 	/// [#keyMayExistSegment] for a `byte[]` key: marshals `key` into a scratch [Arena]
 	/// before delegating.
-	static boolean keyMayExistBytes(MemorySegment db, MemorySegment roOpts, byte[] key) {
+	static boolean keyMayExistBytes(RocksDBReadOperations db, ReadOptions roOpts, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
 			return keyMayExistSegment(db, roOpts, toNative(arena, key), key.length);
 		}
@@ -1651,14 +1651,14 @@ public final class RocksDB {
 	/// Single-copy byte[] get from `cf` via `rocksdb_get_pinned_cf_v2`. See [#getBytes] for
 	/// why this pins rather than calling `rocksdb_get`, and why it uses the `_v2` handle.
 	/// Returns `null` if not found.
-	static byte[] getCfBytes(MemorySegment db, MemorySegment readOpts, ColumnFamilyHandle cf,
+	static byte[] getCfBytes(RocksDBReadOperations db, ReadOptions readOpts, ColumnFamilyHandle cf,
 	                         byte[] key) {
 		// Single arena, same reasoning as getBytes above.
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment k = toNative(arena, key);
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_CF_V2.invokeExact(
-					db, readOpts, cf.ptr(), k, (long) key.length, err);
+					db.dbPtr(), readOpts.ptr(), cf.ptr(), k, (long) key.length, err);
 			checkError(err);
 			if (MemorySegment.NULL.equals(handle)) {
 				return null;
@@ -1673,13 +1673,13 @@ public final class RocksDB {
 
 	/// ByteBuffer get with explicit column family via `rocksdb_get_into_buffer_cf`.
 	/// Copies nothing when the buffer is too small.
-	static CopyResult getCfIntoBuffer(MemorySegment db, MemorySegment readOpts, ColumnFamilyHandle cf,
+	static CopyResult getCfIntoBuffer(RocksDBReadOperations db, ReadOptions readOpts, ColumnFamilyHandle cf,
 	                                  MemorySegment key, long keyLen, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
-			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db, readOpts, cf.ptr(), key, keyLen,
+			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db.dbPtr(), readOpts.ptr(), cf.ptr(), key, keyLen,
 					MemorySegment.ofBuffer(value), (long) value.remaining(), valLenSeg, foundSeg, err);
 			checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
@@ -1698,13 +1698,13 @@ public final class RocksDB {
 
 	/// MemorySegment get with explicit column family via `rocksdb_get_into_buffer_cf` —
 	/// copies directly into the caller's segment. Copies nothing when `value` is too small.
-	static CopyResult getCfIntoSegment(MemorySegment db, MemorySegment readOpts, ColumnFamilyHandle cf,
+	static CopyResult getCfIntoSegment(RocksDBReadOperations db, ReadOptions readOpts, ColumnFamilyHandle cf,
 	                                   MemorySegment key, long keyLen, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
-			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db, readOpts, cf.ptr(), key, keyLen,
+			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db.dbPtr(), readOpts.ptr(), cf.ptr(), key, keyLen,
 					value, value.byteSize(), valLenSeg, foundSeg, err);
 			checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
@@ -1789,11 +1789,11 @@ public final class RocksDB {
 		}
 	}
 
-	static boolean keyMayExistCfSegment(MemorySegment db, MemorySegment roOpts,
+	static boolean keyMayExistCfSegment(RocksDBReadOperations db, ReadOptions roOpts,
 	                                    ColumnFamilyHandle cf,
 	                                    MemorySegment key, long keyLen) {
 		try {
-			return fromByte((byte) MH_KEY_MAY_EXIST_CF.invokeExact(db, roOpts, cf.ptr(), key, keyLen,
+			return fromByte((byte) MH_KEY_MAY_EXIST_CF.invokeExact(db.dbPtr(), roOpts.ptr(), cf.ptr(), key, keyLen,
 					MemorySegment.NULL, MemorySegment.NULL,
 					MemorySegment.NULL, 0L, MemorySegment.NULL));
 		} catch (Throwable t) {
@@ -1803,18 +1803,18 @@ public final class RocksDB {
 
 	/// [#keyMayExistCfSegment] for a `byte[]` key: marshals `key` into a scratch [Arena]
 	/// before delegating.
-	static boolean keyMayExistCfBytes(MemorySegment db, MemorySegment roOpts,
+	static boolean keyMayExistCfBytes(RocksDBReadOperations db, ReadOptions roOpts,
 	                                  ColumnFamilyHandle cf, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
 			return keyMayExistCfSegment(db, roOpts, cf, toNative(arena, key), key.length);
 		}
 	}
 
-	static RocksIterator createIteratorCf(MemorySegment db, MemorySegment readOpts,
+	static RocksIterator createIteratorCf(RocksDBReadOperations db, ReadOptions readOpts,
 	                                      ColumnFamilyHandle cf) {
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE_ITERATOR_CF.invokeExact(
-					db, readOpts, cf.ptr());
+					db.dbPtr(), readOpts.ptr(), cf.ptr());
 			return RocksIterator.create(iterPtr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("newIterator failed", t);
