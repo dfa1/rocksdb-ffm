@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -216,6 +217,106 @@ class BackupEngineIntegrationTest {
 		try (var opts = Options.newOptions();
 		     var db = RocksDB.openReadWrite(opts, restoreDir)) {
 			assertThat(db.get("key".getBytes())).isEqualTo("value".getBytes());
+		}
+	}
+
+	@Test
+	void backupAndRestoreBlobDb(@TempDir Path dir) {
+		var dbDir = dir.resolve("db");
+		var backupDir = dir.resolve("backup");
+		var restoreDir = dir.resolve("restore");
+		var value = new byte[(int) MemorySize.ofKB(64).toBytes()];
+
+		// Given — a BlobDB with a value large enough to land in a blob file
+		try (var opts = Options.newOptions()
+				.setCreateIfMissing(true)
+				.setEnableBlobFiles(true)
+				.setMinBlobSize(MemorySize.ofBytes(0));
+		     var db = RocksDB.openBlob(opts, dbDir);
+		     var engine = BackupEngine.open(opts, backupDir)) {
+
+			db.put("k".getBytes(), value);
+
+			// When
+			engine.createNewBackup(db, true);
+
+			// Then — backup is recorded
+			assertThat(engine.getBackupInfo()).hasSize(1);
+
+			try (var restOpts = RestoreOptions.create()) {
+				engine.restoreDbFromLatestBackup(restoreDir, restOpts);
+			}
+		}
+
+		// Then — restored BlobDB contains the original value
+		try (var opts = Options.newOptions();
+		     var restored = RocksDB.openBlob(opts, restoreDir)) {
+			assertThat(restored.get("k".getBytes())).isEqualTo(value);
+		}
+	}
+
+	@Test
+	void backupAndRestoreTtlDb(@TempDir Path dir) {
+		var dbDir = dir.resolve("db");
+		var backupDir = dir.resolve("backup");
+		var restoreDir = dir.resolve("restore");
+		var ttl = Duration.ofSeconds(60);
+
+		// Given — a TtlDB
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openTtl(opts, dbDir, ttl);
+		     var engine = BackupEngine.open(opts, backupDir)) {
+
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			engine.createNewBackup(db);
+
+			// Then — backup is recorded
+			assertThat(engine.getBackupInfo()).hasSize(1);
+
+			try (var restOpts = RestoreOptions.create()) {
+				engine.restoreDbFromLatestBackup(restoreDir, restOpts);
+			}
+		}
+
+		// Then — restored TtlDB contains the original value
+		try (var opts = Options.newOptions();
+		     var restored = RocksDB.openTtl(opts, restoreDir, ttl)) {
+			assertThat(restored.get("k".getBytes())).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void restoreDbFromBackup_withSeparateWalDir(@TempDir Path dir) {
+		var dbDir = dir.resolve("db");
+		var backupDir = dir.resolve("backup");
+		var restoreDir = dir.resolve("restore");
+		var walDir = dir.resolve("wal");
+
+		// Given — two backups with different content, flushed so the restored DB
+		// (opened without pointing back at walDir) can still see the data
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openReadWrite(opts, dbDir);
+		     var engine = BackupEngine.open(opts, backupDir)) {
+
+			db.put("k".getBytes(), "first".getBytes());
+			engine.createNewBackup(db, true);
+
+			db.put("k".getBytes(), "second".getBytes());
+			engine.createNewBackup(db, true);
+
+			// When — restore the first backup specifically, with WAL files
+			// redirected to a separate directory
+			try (var restOpts = RestoreOptions.create()) {
+				engine.restoreDbFromBackup(BackupId.of(1), restoreDir, walDir, restOpts);
+			}
+		}
+
+		// Then — restored DB reflects the state of the selected backup
+		try (var opts = Options.newOptions();
+		     var restored = RocksDB.openReadWrite(opts, restoreDir)) {
+			assertThat(restored.get("k".getBytes())).isEqualTo("first".getBytes());
 		}
 	}
 

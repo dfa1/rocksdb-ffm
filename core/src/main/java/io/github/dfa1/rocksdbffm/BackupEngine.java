@@ -207,52 +207,22 @@ public final class BackupEngine extends NativeObject {
 
 	/// Creates a new incremental backup of `db`.
 	///
+	/// Accepts any mutable direct-DB type — [ReadWriteDB], [BlobDB], [TtlDB], and
+	/// [OptimisticTransactionDB] all implement [RocksDBWriteOperations].
+	///
 	/// @param db the database to back up
 	/// @param flushBeforeBackup if `true`, the memtable is flushed to SST before
 	///                          the backup so that the backup does not include WAL entries
-	public void createNewBackup(ReadWriteDB db, boolean flushBeforeBackup) {
-		createBackup(db.ptr(), flushBeforeBackup);
+	public void createNewBackup(RocksDBWriteOperations db, boolean flushBeforeBackup) {
+		createBackup(db.dbPtr(), flushBeforeBackup);
 	}
 
 	/// Creates a new incremental backup without pre-flushing the memtable.
 	///
 	/// @param db the database to back up
-	public void createNewBackup(ReadWriteDB db) {
-		createBackup(db.ptr(), false);
-	}
-
-	/// Creates a new incremental backup of a [BlobDB].
-	///
-	/// @param db the blob database to back up
-	/// @param flushBeforeBackup if `true`, flushes the memtable before backup
-	/// @see #createNewBackup(ReadWriteDB, boolean)
-	public void createNewBackup(BlobDB db, boolean flushBeforeBackup) {
-		createBackup(db.ptr(), flushBeforeBackup);
-	}
-
-	/// Creates a new incremental backup of a [BlobDB] without pre-flushing the memtable.
-	///
-	/// @param db the blob database to back up
-	/// @see #createNewBackup(ReadWriteDB)
-	public void createNewBackup(BlobDB db) {
-		createBackup(db.ptr(), false);
-	}
-
-	/// Creates a new incremental backup of a [TtlDB].
-	///
-	/// @param db the TTL database to back up
-	/// @param flushBeforeBackup if `true`, flushes the memtable before backup
-	/// @see #createNewBackup(ReadWriteDB, boolean)
-	public void createNewBackup(TtlDB db, boolean flushBeforeBackup) {
-		createBackup(db.ptr(), flushBeforeBackup);
-	}
-
-	/// Creates a new incremental backup of a [TtlDB] without pre-flushing the memtable.
-	///
-	/// @param db the TTL database to back up
-	/// @see #createNewBackup(ReadWriteDB)
-	public void createNewBackup(TtlDB db) {
-		createBackup(db.ptr(), false);
+	/// @see #createNewBackup(RocksDBWriteOperations, boolean)
+	public void createNewBackup(RocksDBWriteOperations db) {
+		createBackup(db.dbPtr(), false);
 	}
 
 	private void createBackup(MemorySegment dbPtr, boolean flush) {
