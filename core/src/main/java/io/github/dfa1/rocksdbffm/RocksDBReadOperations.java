@@ -60,7 +60,7 @@ public interface RocksDBReadOperations {
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ByteBuffer key, ByteBuffer value) {
 		return RocksDB.getIntoBuffer(this, RocksDB.DEFAULT_READ_OPTIONS,
-				MemorySegment.ofBuffer(key), key.remaining(), value);
+				MemorySegment.ofBuffer(key), value);
 	}
 
 	/// [#get(ByteBuffer, ByteBuffer)] with explicit [ReadOptions].
@@ -72,7 +72,7 @@ public interface RocksDBReadOperations {
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ReadOptions readOptions, ByteBuffer key, ByteBuffer value) {
 		return RocksDB.getIntoBuffer(this, readOptions,
-				MemorySegment.ofBuffer(key), key.remaining(), value);
+				MemorySegment.ofBuffer(key), value);
 	}
 
 	/// Single-copy get into a caller-supplied native segment via `rocksdb_get_into_buffer`.
@@ -83,7 +83,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(MemorySegment key, MemorySegment value) {
-		return RocksDB.getIntoSegment(this, RocksDB.DEFAULT_READ_OPTIONS, key, key.byteSize(), value);
+		return RocksDB.getIntoSegment(this, RocksDB.DEFAULT_READ_OPTIONS, key, value);
 	}
 
 	/// [#get(MemorySegment, MemorySegment)] with explicit [ReadOptions].
@@ -94,7 +94,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ReadOptions readOptions, MemorySegment key, MemorySegment value) {
-		return RocksDB.getIntoSegment(this, readOptions, key, key.byteSize(), value);
+		return RocksDB.getIntoSegment(this, readOptions, key, value);
 	}
 
 	/// Scoped zero-copy get: reads `key` via a `rocksdb_pinnable_handle_t` and passes a
@@ -155,7 +155,7 @@ public interface RocksDBReadOperations {
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
 		return RocksDB.getCfIntoBuffer(this, RocksDB.DEFAULT_READ_OPTIONS, cf,
-				MemorySegment.ofBuffer(key), key.remaining(), value);
+				MemorySegment.ofBuffer(key), value);
 	}
 
 	/// [#get(ColumnFamilyHandle, ByteBuffer, ByteBuffer)] with explicit [ReadOptions].
@@ -168,7 +168,7 @@ public interface RocksDBReadOperations {
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ColumnFamilyHandle cf, ReadOptions readOptions, ByteBuffer key, ByteBuffer value) {
 		return RocksDB.getCfIntoBuffer(this, readOptions, cf,
-				MemorySegment.ofBuffer(key), key.remaining(), value);
+				MemorySegment.ofBuffer(key), value);
 	}
 
 	/// Single-copy get from `cf` into a caller-supplied native segment via
@@ -180,7 +180,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
-		return RocksDB.getCfIntoSegment(this, RocksDB.DEFAULT_READ_OPTIONS, cf, key, key.byteSize(), value);
+		return RocksDB.getCfIntoSegment(this, RocksDB.DEFAULT_READ_OPTIONS, cf, key, value);
 	}
 
 	/// [#get(ColumnFamilyHandle, MemorySegment, MemorySegment)] with explicit [ReadOptions].
@@ -192,7 +192,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ColumnFamilyHandle cf, ReadOptions readOptions, MemorySegment key, MemorySegment value) {
-		return RocksDB.getCfIntoSegment(this, readOptions, cf, key, key.byteSize(), value);
+		return RocksDB.getCfIntoSegment(this, readOptions, cf, key, value);
 	}
 
 	/// Scoped zero-copy get from `cf`. See [#get(MemorySegment, Mapper)] for
@@ -248,7 +248,7 @@ public interface RocksDBReadOperations {
 	/// @param key direct [ByteBuffer] containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ByteBuffer key) {
-		return RocksDB.keyMayExistSegment(this, RocksDB.DEFAULT_READ_OPTIONS, MemorySegment.ofBuffer(key), key.remaining());
+		return RocksDB.keyMayExistSegment(this, RocksDB.DEFAULT_READ_OPTIONS, MemorySegment.ofBuffer(key));
 	}
 
 	/// Zero-copy for [MemorySegment]s.
@@ -256,7 +256,7 @@ public interface RocksDBReadOperations {
 	/// @param key native segment containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(MemorySegment key) {
-		return RocksDB.keyMayExistSegment(this, RocksDB.DEFAULT_READ_OPTIONS, key, key.byteSize());
+		return RocksDB.keyMayExistSegment(this, RocksDB.DEFAULT_READ_OPTIONS, key);
 	}
 
 	/// Returns `false` if the key definitely does not exist in `cf`; `true` means it _may_ exist.
@@ -285,7 +285,7 @@ public interface RocksDBReadOperations {
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ColumnFamilyHandle cf, ByteBuffer key) {
 		return RocksDB.keyMayExistCfSegment(this, RocksDB.DEFAULT_READ_OPTIONS, cf,
-				MemorySegment.ofBuffer(key), key.remaining());
+				MemorySegment.ofBuffer(key));
 	}
 
 	/// Zero-copy keyMayExist in `cf` for [MemorySegment]s.
@@ -294,7 +294,7 @@ public interface RocksDBReadOperations {
 	/// @param key native segment containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ColumnFamilyHandle cf, MemorySegment key) {
-		return RocksDB.keyMayExistCfSegment(this, RocksDB.DEFAULT_READ_OPTIONS, cf, key, key.byteSize());
+		return RocksDB.keyMayExistCfSegment(this, RocksDB.DEFAULT_READ_OPTIONS, cf, key);
 	}
 
 	// -----------------------------------------------------------------------
