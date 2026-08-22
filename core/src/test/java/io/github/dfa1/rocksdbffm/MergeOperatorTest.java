@@ -202,6 +202,159 @@ class MergeOperatorTest {
 		}
 	}
 
+	// -----------------------------------------------------------------------
+	// merge() with explicit WriteOptions — same 7 tiers, the WriteOptions-taking overloads
+	// added alongside #109's write-side WriteOptions overloads.
+	// -----------------------------------------------------------------------
+
+	@Test
+	void uint64Add_viaCallerArena_withExplicitWriteOptions_sumsOperands(@TempDir Path dir) throws RocksDBException {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true)
+				.setMergeOperator(MergeOperator.uint64Add());
+		     var db = RocksDB.openReadWrite(opts, dir);
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions()) {
+			db.merge(arena, wo, "views".getBytes(), encodeUint64(1));
+			db.merge(arena, wo, "views".getBytes(), encodeUint64(4));
+
+			// When
+			long total = decodeUint64(db.get("views".getBytes()));
+
+			// Then
+			assertThat(total).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void uint64Add_viaByteBuffer_withExplicitWriteOptions_sumsOperands(@TempDir Path dir) throws RocksDBException {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true)
+				.setMergeOperator(MergeOperator.uint64Add());
+		     var db = RocksDB.openReadWrite(opts, dir);
+		     var wo = WriteOptions.newWriteOptions()) {
+			ByteBuffer key = ByteBuffer.allocateDirect(5).put("views".getBytes()).flip();
+			db.merge(wo, key.duplicate(), directBuffer(encodeUint64(1)));
+			db.merge(wo, key.duplicate(), directBuffer(encodeUint64(4)));
+
+			// When
+			long total = decodeUint64(db.get("views".getBytes()));
+
+			// Then
+			assertThat(total).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void uint64Add_viaMemorySegment_withExplicitWriteOptions_sumsOperands(@TempDir Path dir) throws RocksDBException {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true)
+				.setMergeOperator(MergeOperator.uint64Add());
+		     var db = RocksDB.openReadWrite(opts, dir);
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions()) {
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
+			db.merge(wo, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(1)));
+			db.merge(wo, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(4)));
+
+			// When
+			long total = decodeUint64(db.get("views".getBytes()));
+
+			// Then
+			assertThat(total).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void uint64Add_viaCallerArenaMemorySegment_withExplicitWriteOptions_sumsOperands(@TempDir Path dir)
+			throws RocksDBException {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true)
+				.setMergeOperator(MergeOperator.uint64Add());
+		     var db = RocksDB.openReadWrite(opts, dir);
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions()) {
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
+			db.merge(arena, wo, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(1)));
+			db.merge(arena, wo, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(4)));
+
+			// When
+			long total = decodeUint64(db.get("views".getBytes()));
+
+			// Then
+			assertThat(total).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void uint64Add_columnFamily_bytes_withExplicitWriteOptions_sumsOperands(@TempDir Path dir)
+			throws RocksDBException {
+		// Given — the merge operator is per-column-family, not inherited from the DB-open
+		// Options, so it must also be set on the new CF's own descriptor options.
+		try (var opts = Options.newOptions().setCreateIfMissing(true)
+				.setMergeOperator(MergeOperator.uint64Add());
+		     var db = RocksDB.openReadWrite(opts, dir);
+		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var wo = WriteOptions.newWriteOptions()) {
+			db.merge(cf, wo, "views".getBytes(), encodeUint64(1));
+			db.merge(cf, wo, "views".getBytes(), encodeUint64(4));
+
+			// When
+			long total = decodeUint64(db.get(cf, "views".getBytes()));
+
+			// Then
+			assertThat(total).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void uint64Add_columnFamily_byteBuffer_withExplicitWriteOptions_sumsOperands(@TempDir Path dir)
+			throws RocksDBException {
+		// Given — the merge operator is per-column-family, not inherited from the DB-open
+		// Options, so it must also be set on the new CF's own descriptor options.
+		try (var opts = Options.newOptions().setCreateIfMissing(true)
+				.setMergeOperator(MergeOperator.uint64Add());
+		     var db = RocksDB.openReadWrite(opts, dir);
+		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var wo = WriteOptions.newWriteOptions()) {
+			ByteBuffer key = ByteBuffer.allocateDirect(5).put("views".getBytes()).flip();
+			db.merge(cf, wo, key.duplicate(), directBuffer(encodeUint64(1)));
+			db.merge(cf, wo, key.duplicate(), directBuffer(encodeUint64(4)));
+
+			// When
+			long total = decodeUint64(db.get(cf, "views".getBytes()));
+
+			// Then
+			assertThat(total).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void uint64Add_columnFamily_memorySegment_withExplicitWriteOptions_sumsOperands(@TempDir Path dir)
+			throws RocksDBException {
+		// Given — the merge operator is per-column-family, not inherited from the DB-open
+		// Options, so it must also be set on the new CF's own descriptor options.
+		try (var opts = Options.newOptions().setCreateIfMissing(true)
+				.setMergeOperator(MergeOperator.uint64Add());
+		     var db = RocksDB.openReadWrite(opts, dir);
+		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions()) {
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
+			db.merge(cf, wo, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(1)));
+			db.merge(cf, wo, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(4)));
+
+			// When
+			long total = decodeUint64(db.get(cf, "views".getBytes()));
+
+			// Then
+			assertThat(total).isEqualTo(5);
+		}
+	}
+
 	private static ByteBuffer directBuffer(byte[] bytes) {
 		return (ByteBuffer) ByteBuffer.allocateDirect(bytes.length).put(bytes).flip();
 	}
