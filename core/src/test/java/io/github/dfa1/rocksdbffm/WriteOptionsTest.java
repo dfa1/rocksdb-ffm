@@ -3,6 +3,9 @@ package io.github.dfa1.rocksdbffm;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.ValueLayout;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -191,6 +194,130 @@ class WriteOptionsTest {
 	}
 
 	@Test
+	void put_arena_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			SequenceNumber start = db.getLatestSequenceNumber();
+
+			// When
+			db.put(arena, wo, "k".getBytes(), "v".getBytes());
+
+			// Then
+			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void put_byteBuffer_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			SequenceNumber start = db.getLatestSequenceNumber();
+			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			ByteBuffer value = ByteBuffer.allocateDirect(1).put((byte) 'v').flip();
+
+			// When
+			db.put(wo, key, value);
+
+			// Then
+			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void put_memorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			SequenceNumber start = db.getLatestSequenceNumber();
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "k".getBytes());
+			var value = arena.allocateFrom(ValueLayout.JAVA_BYTE, "v".getBytes());
+
+			// When
+			db.put(wo, key, value);
+
+			// Then
+			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void put_arenaMemorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			SequenceNumber start = db.getLatestSequenceNumber();
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "k".getBytes());
+			var value = arena.allocateFrom(ValueLayout.JAVA_BYTE, "v".getBytes());
+
+			// When
+			db.put(arena, wo, key, value);
+
+			// Then
+			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void put_cfScoped_byteBuffer_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			SequenceNumber start = db.getLatestSequenceNumber();
+			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			ByteBuffer value = ByteBuffer.allocateDirect(1).put((byte) 'v').flip();
+
+			// When
+			db.put(cf, wo, key, value);
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isEqualTo("v".getBytes());
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void put_cfScoped_memorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			SequenceNumber start = db.getLatestSequenceNumber();
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "k".getBytes());
+			var value = arena.allocateFrom(ValueLayout.JAVA_BYTE, "v".getBytes());
+
+			// When
+			db.put(cf, wo, key, value);
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isEqualTo("v".getBytes());
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
 	void merge_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true).setMergeOperator(MergeOperator.uint64Add());
@@ -231,6 +358,114 @@ class WriteOptionsTest {
 	}
 
 	@Test
+	void delete_byteBuffer_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			// Setup write is itself WAL-disabled — see comment in
+			// delete_withExplicitDisableWal_isAbsentFromWal for why.
+			db.put(wo, "k".getBytes(), "v".getBytes());
+			SequenceNumber start = db.getLatestSequenceNumber();
+			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+
+			// When
+			db.delete(wo, key);
+
+			// Then
+			assertThat(db.get("k".getBytes())).isNull();
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void delete_memorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			// Setup write is itself WAL-disabled — see comment in
+			// delete_withExplicitDisableWal_isAbsentFromWal for why.
+			db.put(wo, "k".getBytes(), "v".getBytes());
+			SequenceNumber start = db.getLatestSequenceNumber();
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "k".getBytes());
+
+			// When
+			db.delete(wo, key);
+
+			// Then
+			assertThat(db.get("k".getBytes())).isNull();
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void delete_cfScoped_bytes_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			db.put(cf, wo, "k".getBytes(), "v".getBytes());
+			SequenceNumber start = db.getLatestSequenceNumber();
+
+			// When
+			db.delete(cf, wo, "k".getBytes());
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isNull();
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void delete_cfScoped_byteBuffer_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			db.put(cf, wo, "k".getBytes(), "v".getBytes());
+			SequenceNumber start = db.getLatestSequenceNumber();
+			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+
+			// When
+			db.delete(cf, wo, key);
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isNull();
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void delete_cfScoped_memorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			db.put(cf, wo, "k".getBytes(), "v".getBytes());
+			SequenceNumber start = db.getLatestSequenceNumber();
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "k".getBytes());
+
+			// When
+			db.delete(cf, wo, key);
+
+			// Then
+			assertThat(db.get(cf, "k".getBytes())).isNull();
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
 	void deleteRange_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
 		try (var db = RocksDB.openReadWrite(dir);
@@ -253,6 +488,119 @@ class WriteOptionsTest {
 	}
 
 	@Test
+	void deleteRange_byteBuffer_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			db.put(wo, "a".getBytes(), "1".getBytes());
+			db.put(wo, "b".getBytes(), "2".getBytes());
+			SequenceNumber start = db.getLatestSequenceNumber();
+			ByteBuffer startKey = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
+			ByteBuffer endKey = ByteBuffer.allocateDirect(1).put((byte) 'c').flip();
+
+			// When
+			db.deleteRange(wo, startKey, endKey);
+
+			// Then
+			assertThat(db.get("a".getBytes())).isNull();
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void deleteRange_memorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			db.put(wo, "a".getBytes(), "1".getBytes());
+			db.put(wo, "b".getBytes(), "2".getBytes());
+			SequenceNumber start = db.getLatestSequenceNumber();
+			var startKey = arena.allocateFrom(ValueLayout.JAVA_BYTE, "a".getBytes());
+			var endKey = arena.allocateFrom(ValueLayout.JAVA_BYTE, "c".getBytes());
+
+			// When
+			db.deleteRange(wo, startKey, endKey);
+
+			// Then
+			assertThat(db.get("a".getBytes())).isNull();
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void deleteRange_cfScoped_bytes_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			db.put(cf, wo, "a".getBytes(), "1".getBytes());
+			db.put(cf, wo, "b".getBytes(), "2".getBytes());
+			SequenceNumber start = db.getLatestSequenceNumber();
+
+			// When
+			db.deleteRange(cf, wo, "a".getBytes(), "c".getBytes());
+
+			// Then
+			assertThat(db.get(cf, "a".getBytes())).isNull();
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void deleteRange_cfScoped_byteBuffer_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			db.put(cf, wo, "a".getBytes(), "1".getBytes());
+			db.put(cf, wo, "b".getBytes(), "2".getBytes());
+			SequenceNumber start = db.getLatestSequenceNumber();
+			ByteBuffer startKey = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
+			ByteBuffer endKey = ByteBuffer.allocateDirect(1).put((byte) 'c').flip();
+
+			// When
+			db.deleteRange(cf, wo, startKey, endKey);
+
+			// Then
+			assertThat(db.get(cf, "a".getBytes())).isNull();
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void deleteRange_cfScoped_memorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
+			db.put(cf, wo, "a".getBytes(), "1".getBytes());
+			db.put(cf, wo, "b".getBytes(), "2".getBytes());
+			SequenceNumber start = db.getLatestSequenceNumber();
+			var startKey = arena.allocateFrom(ValueLayout.JAVA_BYTE, "a".getBytes());
+			var endKey = arena.allocateFrom(ValueLayout.JAVA_BYTE, "c".getBytes());
+
+			// When
+			db.deleteRange(cf, wo, startKey, endKey);
+
+			// Then
+			assertThat(db.get(cf, "a".getBytes())).isNull();
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
 	void write_batch_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
 		try (var db = RocksDB.openReadWrite(dir);
@@ -263,6 +611,27 @@ class WriteOptionsTest {
 
 			// When
 			db.write(wo, batch);
+
+			// Then
+			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isFalse();
+			}
+		}
+	}
+
+	@Test
+	void write_batch_arena_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var arena = Arena.ofConfined();
+		     var wo = WriteOptions.newWriteOptions().setDisableWal(true);
+		     var batch = WriteBatch.create()) {
+			batch.put("k".getBytes(), "v".getBytes());
+			SequenceNumber start = db.getLatestSequenceNumber();
+
+			// When
+			db.write(arena, wo, batch);
 
 			// Then
 			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
