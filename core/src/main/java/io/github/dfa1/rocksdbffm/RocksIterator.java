@@ -109,9 +109,9 @@ public final class RocksIterator extends NativeObject {
 	}
 
 	/// Package-private factory called by RocksDB.
-	static RocksIterator create(MemorySegment dbPtr, MemorySegment readOptions) {
+	static RocksIterator create(RocksDBReadOperations db, ReadOptions readOptions) {
 		try {
-			MemorySegment iterPtr = (MemorySegment) MH_CREATE.invokeExact(dbPtr, readOptions);
+			MemorySegment iterPtr = (MemorySegment) MH_CREATE.invokeExact(db.dbPtr(), readOptions.ptr());
 			return new RocksIterator(iterPtr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("iterator create failed", t);
