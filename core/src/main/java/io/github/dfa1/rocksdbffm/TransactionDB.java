@@ -268,11 +268,20 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param key   the key to store
 	/// @param value the value to associate with the key
 	public void put(byte[] key, byte[] value) {
+		put(writeOpts, key, value);
+	}
+
+	/// [#put(byte\[\], byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to store
+	/// @param value        the value to associate with the key
+	public void put(WriteOptions writeOptions, byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment k = RocksDB.toNative(arena, key);
 			MemorySegment v = RocksDB.toNative(arena, value);
-			MH_PUT.invokeExact(ptr(), writeOpts.ptr(), k, (long) key.length, v, (long) value.length, err);
+			MH_PUT.invokeExact(ptr(), writeOptions.ptr(), k, (long) key.length, v, (long) value.length, err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("put failed", t);
@@ -284,9 +293,18 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param key   direct [java.nio.ByteBuffer] containing the key
 	/// @param value direct [java.nio.ByteBuffer] containing the value
 	public void put(java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+		put(writeOpts, key, value);
+	}
+
+	/// [#put(ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          direct [java.nio.ByteBuffer] containing the key
+	/// @param value        direct [java.nio.ByteBuffer] containing the value
+	public void put(WriteOptions writeOptions, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_PUT.invokeExact(ptr(), writeOpts.ptr(),
+			MH_PUT.invokeExact(ptr(), writeOptions.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(),
 					MemorySegment.ofBuffer(value), (long) value.remaining(),
 					err);
@@ -301,9 +319,18 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param key   native segment containing the key
 	/// @param value native segment containing the value
 	public void put(MemorySegment key, MemorySegment value) {
+		put(writeOpts, key, value);
+	}
+
+	/// [#put(MemorySegment, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key
+	/// @param value        native segment containing the value
+	public void put(WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_PUT.invokeExact(ptr(), writeOpts.ptr(), key, key.byteSize(), value, value.byteSize(), err);
+			MH_PUT.invokeExact(ptr(), writeOptions.ptr(), key, key.byteSize(), value, value.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("put failed", t);
@@ -316,7 +343,18 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param value the merge operand
 	public void merge(byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
-			merge(arena, RocksDB.toNative(arena, key), RocksDB.toNative(arena, value));
+			merge(arena, writeOpts, RocksDB.toNative(arena, key), RocksDB.toNative(arena, value));
+		}
+	}
+
+	/// [#merge(byte\[\], byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to merge into
+	/// @param value        the merge operand
+	public void merge(WriteOptions writeOptions, byte[] key, byte[] value) {
+		try (Arena arena = Arena.ofConfined()) {
+			merge(arena, writeOptions, RocksDB.toNative(arena, key), RocksDB.toNative(arena, value));
 		}
 	}
 
@@ -326,7 +364,18 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param value direct [java.nio.ByteBuffer] containing the merge operand
 	public void merge(java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
-			merge(arena, MemorySegment.ofBuffer(key), MemorySegment.ofBuffer(value));
+			merge(arena, writeOpts, MemorySegment.ofBuffer(key), MemorySegment.ofBuffer(value));
+		}
+	}
+
+	/// [#merge(ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          direct [java.nio.ByteBuffer] containing the key
+	/// @param value        direct [java.nio.ByteBuffer] containing the merge operand
+	public void merge(WriteOptions writeOptions, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+		try (Arena arena = Arena.ofConfined()) {
+			merge(arena, writeOptions, MemorySegment.ofBuffer(key), MemorySegment.ofBuffer(value));
 		}
 	}
 
@@ -336,15 +385,26 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param value native segment containing the merge operand
 	public void merge(MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
-			merge(arena, key, value);
+			merge(arena, writeOpts, key, value);
+		}
+	}
+
+	/// [#merge(MemorySegment, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key
+	/// @param value        native segment containing the merge operand
+	public void merge(WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
+		try (Arena arena = Arena.ofConfined()) {
+			merge(arena, writeOptions, key, value);
 		}
 	}
 
 	/// Merge core using the caller's arena — every tier above builds its segments then delegates here.
-	private void merge(Arena arena, MemorySegment key, MemorySegment value) {
+	private void merge(Arena arena, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
 		try {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_MERGE.invokeExact(ptr(), writeOpts.ptr(), key, key.byteSize(), value, value.byteSize(), err);
+			MH_MERGE.invokeExact(ptr(), writeOptions.ptr(), key, key.byteSize(), value, value.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("merge failed", t);
@@ -519,10 +579,18 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	///
 	/// @param key the key to remove
 	public void delete(byte[] key) {
+		delete(writeOpts, key);
+	}
+
+	/// [#delete(byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to remove
+	public void delete(WriteOptions writeOptions, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment k = RocksDB.toNative(arena, key);
-			MH_DELETE.invokeExact(ptr(), writeOpts.ptr(), k, (long) key.length, err);
+			MH_DELETE.invokeExact(ptr(), writeOptions.ptr(), k, (long) key.length, err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("delete failed", t);
@@ -533,9 +601,17 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	///
 	/// @param key direct [java.nio.ByteBuffer] containing the key to remove
 	public void delete(java.nio.ByteBuffer key) {
+		delete(writeOpts, key);
+	}
+
+	/// [#delete(ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          direct [java.nio.ByteBuffer] containing the key to remove
+	public void delete(WriteOptions writeOptions, java.nio.ByteBuffer key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_DELETE.invokeExact(ptr(), writeOpts.ptr(),
+			MH_DELETE.invokeExact(ptr(), writeOptions.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
@@ -547,9 +623,17 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	///
 	/// @param key native segment containing the key to remove
 	public void delete(MemorySegment key) {
+		delete(writeOpts, key);
+	}
+
+	/// [#delete(MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key to remove
+	public void delete(WriteOptions writeOptions, MemorySegment key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_DELETE.invokeExact(ptr(), writeOpts.ptr(), key, key.byteSize(), err);
+			MH_DELETE.invokeExact(ptr(), writeOptions.ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("delete failed", t);
@@ -608,9 +692,19 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param key   the key to store
 	/// @param value the value to associate with the key
 	public void put(ColumnFamilyHandle cf, byte[] key, byte[] value) {
+		put(cf, writeOpts, key, value);
+	}
+
+	/// [#put(ColumnFamilyHandle, byte\[\], byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to store
+	/// @param value        the value to associate with the key
+	public void put(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_PUT_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(),
+			MH_PUT_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
 					RocksDB.toNative(arena, key), (long) key.length,
 					RocksDB.toNative(arena, value), (long) value.length, err);
 			RocksDB.checkError(err);
@@ -625,9 +719,19 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param key   direct [java.nio.ByteBuffer] containing the key
 	/// @param value direct [java.nio.ByteBuffer] containing the value
 	public void put(ColumnFamilyHandle cf, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+		put(cf, writeOpts, key, value);
+	}
+
+	/// [#put(ColumnFamilyHandle, ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          direct [java.nio.ByteBuffer] containing the key
+	/// @param value        direct [java.nio.ByteBuffer] containing the value
+	public void put(ColumnFamilyHandle cf, WriteOptions writeOptions, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_PUT_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(),
+			MH_PUT_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(),
 					MemorySegment.ofBuffer(value), (long) value.remaining(), err);
 			RocksDB.checkError(err);
@@ -642,9 +746,19 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param key   native segment containing the key
 	/// @param value native segment containing the value
 	public void put(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
+		put(cf, writeOpts, key, value);
+	}
+
+	/// [#put(ColumnFamilyHandle, MemorySegment, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key
+	/// @param value        native segment containing the value
+	public void put(ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_PUT_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(),
+			MH_PUT_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
 					key, key.byteSize(), value, value.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
@@ -663,7 +777,19 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param value the merge operand
 	public void merge(ColumnFamilyHandle cf, byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
-			merge(arena, cf, RocksDB.toNative(arena, key), RocksDB.toNative(arena, value));
+			merge(arena, cf, writeOpts, RocksDB.toNative(arena, key), RocksDB.toNative(arena, value));
+		}
+	}
+
+	/// [#merge(ColumnFamilyHandle, byte\[\], byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to merge into
+	/// @param value        the merge operand
+	public void merge(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] key, byte[] value) {
+		try (Arena arena = Arena.ofConfined()) {
+			merge(arena, cf, writeOptions, RocksDB.toNative(arena, key), RocksDB.toNative(arena, value));
 		}
 	}
 
@@ -674,7 +800,19 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param value direct [java.nio.ByteBuffer] containing the merge operand
 	public void merge(ColumnFamilyHandle cf, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
-			merge(arena, cf, MemorySegment.ofBuffer(key), MemorySegment.ofBuffer(value));
+			merge(arena, cf, writeOpts, MemorySegment.ofBuffer(key), MemorySegment.ofBuffer(value));
+		}
+	}
+
+	/// [#merge(ColumnFamilyHandle, ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          direct [java.nio.ByteBuffer] containing the key
+	/// @param value        direct [java.nio.ByteBuffer] containing the merge operand
+	public void merge(ColumnFamilyHandle cf, WriteOptions writeOptions, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+		try (Arena arena = Arena.ofConfined()) {
+			merge(arena, cf, writeOptions, MemorySegment.ofBuffer(key), MemorySegment.ofBuffer(value));
 		}
 	}
 
@@ -685,15 +823,27 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param value native segment containing the merge operand
 	public void merge(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
-			merge(arena, cf, key, value);
+			merge(arena, cf, writeOpts, key, value);
+		}
+	}
+
+	/// [#merge(ColumnFamilyHandle, MemorySegment, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key
+	/// @param value        native segment containing the merge operand
+	public void merge(ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
+		try (Arena arena = Arena.ofConfined()) {
+			merge(arena, cf, writeOptions, key, value);
 		}
 	}
 
 	/// Merge-into-cf core using the caller's arena — every tier above delegates here.
-	private void merge(Arena arena, ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
+	private void merge(Arena arena, ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
 		try {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_MERGE_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(),
+			MH_MERGE_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
 					key, key.byteSize(), value, value.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
@@ -826,9 +976,18 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param cf  target column family
 	/// @param key the key to remove
 	public void delete(ColumnFamilyHandle cf, byte[] key) {
+		delete(cf, writeOpts, key);
+	}
+
+	/// [#delete(ColumnFamilyHandle, byte\[\])] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          the key to remove
+	public void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_DELETE_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(),
+			MH_DELETE_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
 					RocksDB.toNative(arena, key), (long) key.length, err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
@@ -841,9 +1000,18 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param cf  target column family
 	/// @param key direct [java.nio.ByteBuffer] containing the key to remove
 	public void delete(ColumnFamilyHandle cf, java.nio.ByteBuffer key) {
+		delete(cf, writeOpts, key);
+	}
+
+	/// [#delete(ColumnFamilyHandle, ByteBuffer)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          direct [java.nio.ByteBuffer] containing the key to remove
+	public void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, java.nio.ByteBuffer key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_DELETE_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(),
+			MH_DELETE_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
@@ -856,9 +1024,18 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 	/// @param cf  target column family
 	/// @param key native segment containing the key to remove
 	public void delete(ColumnFamilyHandle cf, MemorySegment key) {
+		delete(cf, writeOpts, key);
+	}
+
+	/// [#delete(ColumnFamilyHandle, MemorySegment)] with explicit [WriteOptions].
+	///
+	/// @param cf           target column family
+	/// @param writeOptions write options, e.g. to disable the WAL for this write
+	/// @param key          native segment containing the key to remove
+	public void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			MH_DELETE_CF.invokeExact(ptr(), writeOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
+			MH_DELETE_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(), key, key.byteSize(), err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("delete failed", t);
