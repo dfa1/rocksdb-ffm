@@ -744,12 +744,12 @@ public final class RocksDB {
 
 	/// ByteBuffer get via `rocksdb_get_into_buffer` — copies directly into the caller's buffer,
 	/// with no intermediate PinnableSlice. Copies nothing when the buffer is too small.
-	static CopyResult getIntoBuffer(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, long keyLen, ByteBuffer value) {
+	static CopyResult getIntoBuffer(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
-			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db.dbPtr(), readOpts.ptr(), key, keyLen,
+			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db.dbPtr(), readOpts.ptr(), key, key.byteSize(),
 					MemorySegment.ofBuffer(value), (long) value.remaining(), valLenSeg, foundSeg, err);
 			checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
@@ -768,12 +768,12 @@ public final class RocksDB {
 
 	/// MemorySegment get via `rocksdb_get_into_buffer` — copies directly into the caller's
 	/// segment, with no intermediate PinnableSlice. Copies nothing when `value` is too small.
-	static CopyResult getIntoSegment(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, long keyLen, MemorySegment value) {
+	static CopyResult getIntoSegment(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
-			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db.dbPtr(), readOpts.ptr(), key, keyLen,
+			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db.dbPtr(), readOpts.ptr(), key, key.byteSize(),
 					value, value.byteSize(), valLenSeg, foundSeg, err);
 			checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
@@ -859,10 +859,10 @@ public final class RocksDB {
 
 	/// MemorySegment put — zero-copy, caller supplies pre-allocated native segments.
 	static void putSegment(RocksDBWriteOperations db, WriteOptions writeOpts,
-	                       MemorySegment key, long keyLen, MemorySegment val, long valLen) {
+	                       MemorySegment key, MemorySegment val) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MH_PUT.invokeExact(db.dbPtr(), writeOpts.ptr(), key, keyLen, val, valLen, err);
+			MH_PUT.invokeExact(db.dbPtr(), writeOpts.ptr(), key, key.byteSize(), val, val.byteSize(), err);
 			checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("put failed", t);
@@ -871,10 +871,10 @@ public final class RocksDB {
 
 	/// MemorySegment put using the caller's arena.
 	static void putSegment(Arena arena, RocksDBWriteOperations db, WriteOptions writeOpts,
-	                       MemorySegment key, long keyLen, MemorySegment val, long valLen) {
+	                       MemorySegment key, MemorySegment val) {
 		try {
 			MemorySegment err = errHolder(arena);
-			MH_PUT.invokeExact(db.dbPtr(), writeOpts.ptr(), key, keyLen, val, valLen, err);
+			MH_PUT.invokeExact(db.dbPtr(), writeOpts.ptr(), key, key.byteSize(), val, val.byteSize(), err);
 			checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("put failed", t);
@@ -892,23 +892,23 @@ public final class RocksDB {
 	static void mergeBytes(Arena arena, RocksDBWriteOperations db, WriteOptions writeOpts, byte[] key, byte[] value) {
 		MemorySegment k = toNative(arena, key);
 		MemorySegment v = toNative(arena, value);
-		mergeSegment(arena, db, writeOpts, k, key.length, v, value.length);
+		mergeSegment(arena, db, writeOpts, k, v);
 	}
 
 	/// MemorySegment merge — zero-copy, caller supplies pre-allocated native segments.
 	static void mergeSegment(RocksDBWriteOperations db, WriteOptions writeOpts,
-	                         MemorySegment key, long keyLen, MemorySegment val, long valLen) {
+	                         MemorySegment key, MemorySegment val) {
 		try (Arena arena = Arena.ofConfined()) {
-			mergeSegment(arena, db, writeOpts, key, keyLen, val, valLen);
+			mergeSegment(arena, db, writeOpts, key, val);
 		}
 	}
 
 	/// MemorySegment merge using the caller's arena.
 	static void mergeSegment(Arena arena, RocksDBWriteOperations db, WriteOptions writeOpts,
-	                         MemorySegment key, long keyLen, MemorySegment val, long valLen) {
+	                         MemorySegment key, MemorySegment val) {
 		try {
 			MemorySegment err = errHolder(arena);
-			MH_MERGE.invokeExact(db.dbPtr(), writeOpts.ptr(), key, keyLen, val, valLen, err);
+			MH_MERGE.invokeExact(db.dbPtr(), writeOpts.ptr(), key, key.byteSize(), val, val.byteSize(), err);
 			checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("merge failed", t);
@@ -928,10 +928,10 @@ public final class RocksDB {
 	}
 
 	/// MemorySegment delete — zero-copy.
-	static void deleteSegment(RocksDBWriteOperations db, WriteOptions writeOpts, MemorySegment key, long keyLen) {
+	static void deleteSegment(RocksDBWriteOperations db, WriteOptions writeOpts, MemorySegment key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MH_DELETE.invokeExact(db.dbPtr(), writeOpts.ptr(), key, keyLen, err);
+			MH_DELETE.invokeExact(db.dbPtr(), writeOpts.ptr(), key, key.byteSize(), err);
 			checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("delete failed", t);
@@ -1110,10 +1110,9 @@ public final class RocksDB {
 		}
 	}
 
-	static boolean keyMayExistSegment(RocksDBReadOperations db, ReadOptions roOpts,
-	                                  MemorySegment key, long keyLen) {
+	static boolean keyMayExistSegment(RocksDBReadOperations db, ReadOptions roOpts, MemorySegment key) {
 		try {
-			return fromByte((byte) MH_KEY_MAY_EXIST.invokeExact(db.dbPtr(), roOpts.ptr(), key, keyLen,
+			return fromByte((byte) MH_KEY_MAY_EXIST.invokeExact(db.dbPtr(), roOpts.ptr(), key, key.byteSize(),
 					MemorySegment.NULL, MemorySegment.NULL,
 					MemorySegment.NULL, 0L, MemorySegment.NULL));
 		} catch (Throwable t) {
@@ -1125,7 +1124,7 @@ public final class RocksDB {
 	/// before delegating.
 	static boolean keyMayExistBytes(RocksDBReadOperations db, ReadOptions roOpts, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
-			return keyMayExistSegment(db, roOpts, toNative(arena, key), key.length);
+			return keyMayExistSegment(db, roOpts, toNative(arena, key));
 		}
 	}
 
@@ -1602,10 +1601,10 @@ public final class RocksDB {
 
 	/// MemorySegment put with explicit column family — zero-copy.
 	static void putCfSegment(RocksDBWriteOperations db, WriteOptions writeOpts, ColumnFamilyHandle cf,
-	                         MemorySegment key, long keyLen, MemorySegment val, long valLen) {
+	                         MemorySegment key, MemorySegment val) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MH_PUT_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(), key, keyLen, val, valLen, err);
+			MH_PUT_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(), key, key.byteSize(), val, val.byteSize(), err);
 			checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("put failed", t);
@@ -1625,23 +1624,23 @@ public final class RocksDB {
 	                         byte[] key, byte[] value) {
 		MemorySegment k = toNative(arena, key);
 		MemorySegment v = toNative(arena, value);
-		mergeCfSegment(arena, db, writeOpts, cf, k, key.length, v, value.length);
+		mergeCfSegment(arena, db, writeOpts, cf, k, v);
 	}
 
 	/// MemorySegment merge with explicit column family — zero-copy.
 	static void mergeCfSegment(RocksDBWriteOperations db, WriteOptions writeOpts, ColumnFamilyHandle cf,
-	                           MemorySegment key, long keyLen, MemorySegment val, long valLen) {
+	                           MemorySegment key, MemorySegment val) {
 		try (Arena arena = Arena.ofConfined()) {
-			mergeCfSegment(arena, db, writeOpts, cf, key, keyLen, val, valLen);
+			mergeCfSegment(arena, db, writeOpts, cf, key, val);
 		}
 	}
 
 	/// MemorySegment merge with explicit column family using the caller's arena.
 	static void mergeCfSegment(Arena arena, RocksDBWriteOperations db, WriteOptions writeOpts, ColumnFamilyHandle cf,
-	                           MemorySegment key, long keyLen, MemorySegment val, long valLen) {
+	                           MemorySegment key, MemorySegment val) {
 		try {
 			MemorySegment err = errHolder(arena);
-			MH_MERGE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(), key, keyLen, val, valLen, err);
+			MH_MERGE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(), key, key.byteSize(), val, val.byteSize(), err);
 			checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("merge failed", t);
@@ -1674,12 +1673,12 @@ public final class RocksDB {
 	/// ByteBuffer get with explicit column family via `rocksdb_get_into_buffer_cf`.
 	/// Copies nothing when the buffer is too small.
 	static CopyResult getCfIntoBuffer(RocksDBReadOperations db, ReadOptions readOpts, ColumnFamilyHandle cf,
-	                                  MemorySegment key, long keyLen, ByteBuffer value) {
+	                                  MemorySegment key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
-			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db.dbPtr(), readOpts.ptr(), cf.ptr(), key, keyLen,
+			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db.dbPtr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(),
 					MemorySegment.ofBuffer(value), (long) value.remaining(), valLenSeg, foundSeg, err);
 			checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
@@ -1699,12 +1698,12 @@ public final class RocksDB {
 	/// MemorySegment get with explicit column family via `rocksdb_get_into_buffer_cf` —
 	/// copies directly into the caller's segment. Copies nothing when `value` is too small.
 	static CopyResult getCfIntoSegment(RocksDBReadOperations db, ReadOptions readOpts, ColumnFamilyHandle cf,
-	                                   MemorySegment key, long keyLen, MemorySegment value) {
+	                                   MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
-			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db.dbPtr(), readOpts.ptr(), cf.ptr(), key, keyLen,
+			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db.dbPtr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(),
 					value, value.byteSize(), valLenSeg, foundSeg, err);
 			checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
@@ -1735,10 +1734,10 @@ public final class RocksDB {
 
 	/// MemorySegment delete with explicit column family — zero-copy.
 	static void deleteCfSegment(RocksDBWriteOperations db, WriteOptions writeOpts, ColumnFamilyHandle cf,
-	                            MemorySegment key, long keyLen) {
+	                            MemorySegment key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
-			MH_DELETE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(), key, keyLen, err);
+			MH_DELETE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
 			checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("delete failed", t);
@@ -1790,10 +1789,9 @@ public final class RocksDB {
 	}
 
 	static boolean keyMayExistCfSegment(RocksDBReadOperations db, ReadOptions roOpts,
-	                                    ColumnFamilyHandle cf,
-	                                    MemorySegment key, long keyLen) {
+	                                    ColumnFamilyHandle cf, MemorySegment key) {
 		try {
-			return fromByte((byte) MH_KEY_MAY_EXIST_CF.invokeExact(db.dbPtr(), roOpts.ptr(), cf.ptr(), key, keyLen,
+			return fromByte((byte) MH_KEY_MAY_EXIST_CF.invokeExact(db.dbPtr(), roOpts.ptr(), cf.ptr(), key, key.byteSize(),
 					MemorySegment.NULL, MemorySegment.NULL,
 					MemorySegment.NULL, 0L, MemorySegment.NULL));
 		} catch (Throwable t) {
@@ -1806,7 +1804,7 @@ public final class RocksDB {
 	static boolean keyMayExistCfBytes(RocksDBReadOperations db, ReadOptions roOpts,
 	                                  ColumnFamilyHandle cf, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
-			return keyMayExistCfSegment(db, roOpts, cf, toNative(arena, key), key.length);
+			return keyMayExistCfSegment(db, roOpts, cf, toNative(arena, key));
 		}
 	}
 
