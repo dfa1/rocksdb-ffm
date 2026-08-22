@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   views of the key, existing value, and operands instead of copied `byte[]`s — benchmarking
   showed the copies dominating once operands exceed ~1KB, so there's no separate copying tier.
   (closes [#94](https://github.com/dfa1/rocksdbffm/issues/94))
+- `Options.setCompression`/`setBlobCompressionType` now throw `UnsupportedOperationException` for
+  `SNAPPY`, `ZLIB`, `BZLIB2`, `XPRESS` — not linked into the bundled native library yet — instead
+  of failing opaquely at DB-open time. ([#114](https://github.com/dfa1/rocksdbffm/pull/114),
+  part of [#83](https://github.com/dfa1/rocksdbffm/issues/83))
 
 ## [0.9] — 2026-08-21
 
