@@ -892,7 +892,7 @@ public final class RocksDB {
 	static void mergeBytes(Arena arena, MemorySegment db, MemorySegment writeOpts, byte[] key, byte[] value) {
 		MemorySegment k = toNative(arena, key);
 		MemorySegment v = toNative(arena, value);
-		mergeSegment(arena, db, writeOpts, k, (long) key.length, v, (long) value.length);
+		mergeSegment(arena, db, writeOpts, k, key.length, v, value.length);
 	}
 
 	/// MemorySegment merge — zero-copy, caller supplies pre-allocated native segments.
@@ -1625,7 +1625,7 @@ public final class RocksDB {
 	                         byte[] key, byte[] value) {
 		MemorySegment k = toNative(arena, key);
 		MemorySegment v = toNative(arena, value);
-		mergeCfSegment(arena, db, writeOpts, cf, k, (long) key.length, v, (long) value.length);
+		mergeCfSegment(arena, db, writeOpts, cf, k, key.length, v, value.length);
 	}
 
 	/// MemorySegment merge with explicit column family — zero-copy.
