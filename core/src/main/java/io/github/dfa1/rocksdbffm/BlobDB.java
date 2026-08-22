@@ -40,6 +40,6 @@ public final class BlobDB extends NativeObjectWithChildren implements RocksDBRea
 
 	@Override
 	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		RocksDB.close(ptr);
+		RocksDB.closeDb(ptr);
 	}
 }

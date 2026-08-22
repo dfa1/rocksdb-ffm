@@ -44,6 +44,6 @@ public final class TtlDB extends NativeObjectWithChildren implements RocksDBRead
 
 	@Override
 	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		RocksDB.close(ptr);
+		RocksDB.closeDb(ptr);
 	}
 }

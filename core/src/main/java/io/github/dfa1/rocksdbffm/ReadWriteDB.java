@@ -29,6 +29,6 @@ public final class ReadWriteDB extends NativeObjectWithChildren implements Rocks
 
 	@Override
 	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		RocksDB.close(ptr);
+		RocksDB.closeDb(ptr);
 	}
 }

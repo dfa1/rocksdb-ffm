@@ -74,6 +74,6 @@ public final class SecondaryDB extends NativeObjectWithChildren implements Rocks
 
 	@Override
 	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		RocksDB.close(ptr);
+		RocksDB.closeDb(ptr);
 	}
 }

@@ -1046,7 +1046,7 @@ public final class RocksDB {
 		}
 	}
 
-	static void close(MemorySegment db) throws Throwable {
+	static void closeDb(MemorySegment db) throws Throwable {
 		MH_CLOSE.invokeExact(db);
 	}
 
