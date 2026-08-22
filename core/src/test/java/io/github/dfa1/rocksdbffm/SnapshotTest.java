@@ -4,6 +4,10 @@ import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -137,6 +141,123 @@ class SnapshotTest {
 
 				// Then — "c" was written after snapshot, must not appear
 				assertThat(keys).containsExactly("a", "b");
+			}
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Snapshot + zero-copy get overloads
+	// -----------------------------------------------------------------------
+
+	@Test
+	void snapshot_get_byteBuffer_isolatesFromWritesAfterSnapshot(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir)) {
+			db.put("key".getBytes(), "before".getBytes());
+
+			try (Snapshot snap = db.getSnapshot();
+			     ReadOptions ro = ReadOptions.newReadOptions().setSnapshot(snap)) {
+
+				db.put("key".getBytes(), "after".getBytes());
+
+				// When
+				var key = ByteBuffer.allocateDirect(3).put("key".getBytes()).flip();
+				var out = ByteBuffer.allocateDirect(16);
+				CopyResult result = db.get(ro, key, out);
+
+				// Then — snapshot read sees the pre-write value
+				assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
+				out.flip();
+				var copied = new byte[out.remaining()];
+				out.get(copied);
+				assertThat(copied).isEqualTo("before".getBytes());
+			}
+		}
+	}
+
+	@Test
+	void snapshot_get_memorySegment_isolatesFromWritesAfterSnapshot(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir)) {
+			db.put("key".getBytes(), "before".getBytes());
+
+			try (Snapshot snap = db.getSnapshot();
+			     ReadOptions ro = ReadOptions.newReadOptions().setSnapshot(snap);
+			     Arena arena = Arena.ofConfined()) {
+
+				db.put("key".getBytes(), "after".getBytes());
+
+				// When
+				MemorySegment key = arena.allocateFrom("key").asSlice(0, 3);
+				MemorySegment out = arena.allocate(16);
+				CopyResult result = db.get(ro, key, out);
+
+				// Then — snapshot read sees the pre-write value
+				assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
+				assertThat(out.asSlice(0, "before".getBytes().length).toArray(ValueLayout.JAVA_BYTE))
+						.isEqualTo("before".getBytes());
+			}
+		}
+	}
+
+	@Test
+	void snapshot_get_mapper_isolatesFromWritesAfterSnapshot(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir)) {
+			db.put("key".getBytes(), "before".getBytes());
+
+			try (Snapshot snap = db.getSnapshot();
+			     ReadOptions ro = ReadOptions.newReadOptions().setSnapshot(snap);
+			     Arena arena = Arena.ofConfined()) {
+
+				db.put("key".getBytes(), "after".getBytes());
+
+				// When
+				MemorySegment key = arena.allocateFrom("key").asSlice(0, 3);
+				var result = db.get(ro, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
+
+				// Then — snapshot read sees the pre-write value
+				assertThat(result).contains("before".getBytes());
+			}
+		}
+	}
+
+	@Test
+	void snapshot_get_cf_isolatesFromWritesAfterSnapshot(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			db.put(cf, "key".getBytes(), "before".getBytes());
+
+			try (Snapshot snap = db.getSnapshot();
+			     ReadOptions ro = ReadOptions.newReadOptions().setSnapshot(snap);
+			     Arena arena = Arena.ofConfined()) {
+
+				db.put(cf, "key".getBytes(), "after".getBytes());
+
+				// When
+				var byteBufferKey = ByteBuffer.allocateDirect(3).put("key".getBytes()).flip();
+				var byteBufferOut = ByteBuffer.allocateDirect(16);
+				CopyResult byteBufferResult = db.get(cf, ro, byteBufferKey, byteBufferOut);
+
+				MemorySegment segmentKey = arena.allocateFrom("key").asSlice(0, 3);
+				MemorySegment segmentOut = arena.allocate(16);
+				CopyResult segmentResult = db.get(cf, ro, segmentKey, segmentOut);
+
+				var mapperResult = db.get(cf, ro, segmentKey, value -> value.toArray(ValueLayout.JAVA_BYTE));
+
+				// Then — every overload's snapshot read sees the pre-write value
+				assertThat(byteBufferResult).isEqualTo(CopyResult.Copied.INSTANCE);
+				byteBufferOut.flip();
+				var copied = new byte[byteBufferOut.remaining()];
+				byteBufferOut.get(copied);
+				assertThat(copied).isEqualTo("before".getBytes());
+
+				assertThat(segmentResult).isEqualTo(CopyResult.Copied.INSTANCE);
+				assertThat(segmentOut.asSlice(0, "before".getBytes().length).toArray(ValueLayout.JAVA_BYTE))
+						.isEqualTo("before".getBytes());
+
+				assertThat(mapperResult).contains("before".getBytes());
 			}
 		}
 	}

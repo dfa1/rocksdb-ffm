@@ -63,6 +63,18 @@ public interface RocksDBReadOperations {
 				MemorySegment.ofBuffer(key), key.remaining(), value);
 	}
 
+	/// [#get(ByteBuffer, ByteBuffer)] with explicit [ReadOptions].
+	///
+	/// @param readOptions read options, e.g. containing a snapshot
+	/// @param key         direct [ByteBuffer] containing the key
+	/// @param value       direct [ByteBuffer] to write the value into
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	default CopyResult get(ReadOptions readOptions, ByteBuffer key, ByteBuffer value) {
+		return RocksDB.getIntoBuffer(dbPtr(), readOptions.ptr(),
+				MemorySegment.ofBuffer(key), key.remaining(), value);
+	}
+
 	/// Single-copy get into a caller-supplied native segment via `rocksdb_get_into_buffer`.
 	/// Copies nothing into `value` when its capacity is too small.
 	///
@@ -72,6 +84,17 @@ public interface RocksDBReadOperations {
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(MemorySegment key, MemorySegment value) {
 		return RocksDB.getIntoSegment(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), key, key.byteSize(), value);
+	}
+
+	/// [#get(MemorySegment, MemorySegment)] with explicit [ReadOptions].
+	///
+	/// @param readOptions read options, e.g. containing a snapshot
+	/// @param key         native segment containing the key
+	/// @param value       native segment to write the value into
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	default CopyResult get(ReadOptions readOptions, MemorySegment key, MemorySegment value) {
+		return RocksDB.getIntoSegment(dbPtr(), readOptions.ptr(), key, key.byteSize(), value);
 	}
 
 	/// Scoped zero-copy get: reads `key` via a `rocksdb_pinnable_handle_t` and passes a
@@ -89,6 +112,18 @@ public interface RocksDBReadOperations {
 	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
 	default <R> Optional<R> get(MemorySegment key, Mapper<R> fn) {
 		return RocksDB.withPinned(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), key, fn);
+	}
+
+	/// [#get(MemorySegment, Mapper)] with explicit [ReadOptions].
+	///
+	/// @param <R> the type produced by `fn`
+	/// @param readOptions read options, e.g. containing a snapshot
+	/// @param key         native segment containing the key
+	/// @param fn          callback invoked with a zero-copy view of the pinned value
+	/// @throws NullPointerException if `fn` returns `null`
+	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
+	default <R> Optional<R> get(ReadOptions readOptions, MemorySegment key, Mapper<R> fn) {
+		return RocksDB.withPinned(dbPtr(), readOptions.ptr(), key, fn);
 	}
 
 	/// Returns the value for `key` in `cf`, or `null` if not found.
@@ -123,6 +158,19 @@ public interface RocksDBReadOperations {
 				MemorySegment.ofBuffer(key), key.remaining(), value);
 	}
 
+	/// [#get(ColumnFamilyHandle, ByteBuffer, ByteBuffer)] with explicit [ReadOptions].
+	///
+	/// @param cf          column family to read from
+	/// @param readOptions read options, e.g. containing a snapshot
+	/// @param key         direct [ByteBuffer] containing the key
+	/// @param value       direct [ByteBuffer] to write the value into
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	default CopyResult get(ColumnFamilyHandle cf, ReadOptions readOptions, ByteBuffer key, ByteBuffer value) {
+		return RocksDB.getCfIntoBuffer(dbPtr(), readOptions.ptr(), cf,
+				MemorySegment.ofBuffer(key), key.remaining(), value);
+	}
+
 	/// Single-copy get from `cf` into a caller-supplied native segment via
 	/// `rocksdb_get_into_buffer_cf`. Copies nothing into `value` when its capacity is too small.
 	///
@@ -133,6 +181,18 @@ public interface RocksDBReadOperations {
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
 		return RocksDB.getCfIntoSegment(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), cf, key, key.byteSize(), value);
+	}
+
+	/// [#get(ColumnFamilyHandle, MemorySegment, MemorySegment)] with explicit [ReadOptions].
+	///
+	/// @param cf          column family to read from
+	/// @param readOptions read options, e.g. containing a snapshot
+	/// @param key         native segment containing the key
+	/// @param value       native segment to write the value into
+	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
+	/// small, or [CopyResult.NotFound] if the key is absent
+	default CopyResult get(ColumnFamilyHandle cf, ReadOptions readOptions, MemorySegment key, MemorySegment value) {
+		return RocksDB.getCfIntoSegment(dbPtr(), readOptions.ptr(), cf, key, key.byteSize(), value);
 	}
 
 	/// Scoped zero-copy get from `cf`. See [#get(MemorySegment, Mapper)] for
@@ -146,6 +206,19 @@ public interface RocksDBReadOperations {
 	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
 	default <R> Optional<R> get(ColumnFamilyHandle cf, MemorySegment key, Mapper<R> fn) {
 		return RocksDB.withPinnedCf(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), cf, key, fn);
+	}
+
+	/// [#get(ColumnFamilyHandle, MemorySegment, Mapper)] with explicit [ReadOptions].
+	///
+	/// @param <R> the type produced by `fn`
+	/// @param cf          target column family
+	/// @param readOptions read options, e.g. containing a snapshot
+	/// @param key         native segment containing the key
+	/// @param fn          callback invoked with a zero-copy view of the pinned value
+	/// @throws NullPointerException if `fn` returns `null`
+	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
+	default <R> Optional<R> get(ColumnFamilyHandle cf, ReadOptions readOptions, MemorySegment key, Mapper<R> fn) {
+		return RocksDB.withPinnedCf(dbPtr(), readOptions.ptr(), cf, key, fn);
 	}
 
 	// -----------------------------------------------------------------------
