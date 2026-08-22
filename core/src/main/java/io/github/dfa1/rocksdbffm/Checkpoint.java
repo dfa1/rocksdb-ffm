@@ -15,7 +15,7 @@ import java.nio.file.Path;
 ///
 /// ```
 /// try (var db = RocksDB.openReadWrite(dir);
-///      var cp = Checkpoint.create(db)) {
+///      var cp = Checkpoint.newCheckpoint(db)) {
 ///     cp.exportTo(checkpointDir1);
 ///     db.put("k".getBytes(), "v2".getBytes());
 ///     cp.exportTo(checkpointDir2);  // second checkpoint, later state
@@ -59,48 +59,17 @@ public final class Checkpoint extends NativeObject {
 	/// The checkpoint object may be reused to export multiple snapshots.
 	/// Close it when done — this does not affect the database or any exported checkpoints.
 	///
+	/// Accepts any direct-DB type — [ReadWriteDB], [BlobDB], [TtlDB], [ReadOnlyDB],
+	/// [SecondaryDB], and [OptimisticTransactionDB] all implement [RocksDBReadOperations].
+	/// A read-only or secondary handle works too: the native checkpoint call tolerates
+	/// `DisableFileDeletions` reporting "not supported" for those and proceeds anyway.
+	///
 	/// @param db the database to checkpoint
 	/// @return a new [Checkpoint] bound to `db`; caller must close it
-	public static Checkpoint newCheckpoint(ReadWriteDB db) {
-		return create(db.ptr());
-	}
-
-	/// Creates a checkpoint object bound to `db`. See [#newCheckpoint(ReadWriteDB)] for details.
-	///
-	/// @param db the blob database to checkpoint
-	/// @return a new [Checkpoint] bound to `db`; caller must close it
-	public static Checkpoint newCheckpoint(BlobDB db) {
-		return create(db.ptr());
-	}
-
-	/// Creates a checkpoint object bound to `db`. See [#newCheckpoint(ReadWriteDB)] for details.
-	///
-	/// @param db the TTL database to checkpoint
-	/// @return a new [Checkpoint] bound to `db`; caller must close it
-	public static Checkpoint newCheckpoint(TtlDB db) {
-		return create(db.ptr());
-	}
-
-	/// Creates a checkpoint object bound to `db`. See [#newCheckpoint(ReadWriteDB)] for details.
-	///
-	/// @param db the read-only database to checkpoint
-	/// @return a new [Checkpoint] bound to `db`; caller must close it
-	public static Checkpoint newCheckpoint(ReadOnlyDB db) {
-		return create(db.ptr());
-	}
-
-	/// Creates a checkpoint object bound to `db`. See [#newCheckpoint(ReadWriteDB)] for details.
-	///
-	/// @param db the secondary database to checkpoint
-	/// @return a new [Checkpoint] bound to `db`; caller must close it
-	public static Checkpoint newCheckpoint(SecondaryDB db) {
-		return create(db.ptr());
-	}
-
-	private static Checkpoint create(MemorySegment dbPtr) {
+	public static Checkpoint newCheckpoint(RocksDBReadOperations db) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
-			var ptr = (MemorySegment) MH_CREATE.invokeExact(dbPtr, err);
+			var ptr = (MemorySegment) MH_CREATE.invokeExact(db.dbPtr(), err);
 			RocksDB.checkError(err);
 			return new Checkpoint(ptr);
 		} catch (Throwable t) {

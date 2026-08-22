@@ -266,7 +266,7 @@ Reopening requires listing every existing column family, `default` included — 
 
 | Type                  | API                                                                                              |
 |:----------------------|:--------------------------------------------------------------------------------------------------|
-| `Checkpoint`          | `newCheckpoint(db)` for `ReadWriteDB`/`BlobDB`/`TtlDB`/`ReadOnlyDB`/`SecondaryDB`; `exportTo(Path[, MemorySize logSizeForFlush])` |
+| `Checkpoint`          | `newCheckpoint(db)` for any `RocksDBReadOperations` implementor (`ReadWriteDB`/`BlobDB`/`TtlDB`/`ReadOnlyDB`/`SecondaryDB`/`OptimisticTransactionDB`); `exportTo(Path[, MemorySize logSizeForFlush])` |
 | `BackupEngine`        | `open(Options, Path)`, `open(BackupEngineOptions, Env)`; `createNewBackup(db[, boolean flushBeforeBackup])`, `getBackupInfo()`, `purgeOldBackups(int)`, `verifyBackup(BackupId)`, `restoreDbFromLatestBackup(...)`, `restoreDbFromBackup(BackupId, ...)` |
 | `BackupEngineOptions` | `create(Path)`; `setShareTableFiles`, `setSync`, `setDestroyOldData`, `setBackupLogFiles`, `setBackupRateLimit`, `setRestoreRateLimit`, `setMaxBackgroundOperations`, `setCallbackTriggerIntervalSize`, `setMaxValidBackupsToOpen`, `setShareFilesWithChecksumNaming`, `setEnv` |
 | `BackupInfo`          | Record: `backupId()`, `timestamp()` (epoch seconds), `size()` (`MemorySize`), `numberOfFiles()`   |
