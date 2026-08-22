@@ -893,9 +893,10 @@ class OptimisticTransactionDBTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
+			ThrowingCallable action = () -> db.cancelAllBackgroundWork(false);
 
-			// When / Then — no exception
-			db.cancelAllBackgroundWork(false);
+			// When / Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -904,10 +905,13 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir)) {
+			ThrowingCallable action = () -> {
+				db.disableManualCompaction();
+				db.enableManualCompaction();
+			};
 
-			// When / Then — no exception
-			db.disableManualCompaction();
-			db.enableManualCompaction();
+			// When / Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -918,9 +922,10 @@ class OptimisticTransactionDBTest {
 		     var db = RocksDB.openOptimistic(opts, dir);
 		     var waitOpts = WaitForCompactOptions.create()) {
 			db.put("k".getBytes(), "v".getBytes());
+			ThrowingCallable action = () -> db.waitForCompact(waitOpts);
 
-			// When / Then — no exception
-			db.waitForCompact(waitOpts);
+			// When / Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -970,10 +975,13 @@ class OptimisticTransactionDBTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
+			ThrowingCallable action = () -> {
+				db.disableFileDeletions();
+				db.enableFileDeletions();
+			};
 
-			// When / Then — no exception
-			db.disableFileDeletions();
-			db.enableFileDeletions();
+			// When / Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
@@ -983,9 +991,10 @@ class OptimisticTransactionDBTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
+			ThrowingCallable action = db::compactRange;
 
-			// When / Then — no exception
-			db.compactRange();
+			// When / Then
+			assertThatCode(action).doesNotThrowAnyException();
 		}
 	}
 
