@@ -83,7 +83,7 @@ Docs follow the [Diátaxis](https://diataxis.fr/) framework.
 
 ## Contributing
 
-**Requirements:** JDK 25+, [Zig](https://ziglang.org/) 0.15.x, and — for the Windows native builds
+**Requirements:** JDK 25+, [Zig](https://ziglang.org/) 0.16.x, and — for the Windows native builds
 only — [CMake](https://cmake.org/) plus `make` or [Ninja](https://ninja-build.org/).
 
 ```bash
@@ -91,9 +91,6 @@ git submodule update --init --recursive     # clone the rocksdb submodule (first
 ./mvnw generate-resources -Pnative-build    # build the native library (first time or after clean)
 ./mvnw test
 ```
-
-Never run `./mvnw install` — it pollutes `~/.m2` with local artifacts. Use `compile`, `test`, or
-`package`.
 
 ## Releasing
 
