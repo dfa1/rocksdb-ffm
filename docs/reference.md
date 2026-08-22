@@ -338,8 +338,9 @@ Reopening requires listing every existing column family, `default` included — 
 | `BlockBasedTableOptions.IndexType`  | Block-based index layout selection                                                             |
 | `Property`, `TickerType`, `HistogramType`, `PerfMetric` | Large enumerations; see the Javadoc for the full lists                     |
 
-Which compression codecs actually work depends on what the bundled `librocksdb` was linked
-against — selecting an unavailable one surfaces as a `RocksDBException` at open time.
+`SNAPPY`, `ZLIB`, `BZLIB2`, and `XPRESS` aren't linked into the bundled `librocksdb` yet —
+`Options.setCompression`/`setBlobCompressionType` reject them eagerly with
+`UnsupportedOperationException` rather than deferring to a native failure at DB-open time.
 
 ## System properties
 
