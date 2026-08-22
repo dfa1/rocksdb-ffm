@@ -29,15 +29,6 @@ public interface RocksDBReadOperations {
 	/// @return the native database pointer
 	MemorySegment dbPtr();
 
-	/// Returns the [ReadOptions] used when no explicit options are supplied. Every current
-	/// implementor shares the same never-closed [RocksDB#DEFAULT_READ_OPTIONS] instance;
-	/// override if a future implementor ever needs its own.
-	///
-	/// @return the default read options
-	default ReadOptions defaultReadOpts() {
-		return RocksDB.DEFAULT_READ_OPTIONS;
-	}
-
 	// -----------------------------------------------------------------------
 	// Get
 	// -----------------------------------------------------------------------
@@ -48,7 +39,7 @@ public interface RocksDBReadOperations {
 	/// @param key key bytes to look up
 	/// @return value bytes, or `null` if the key does not exist
 	default byte[] get(byte[] key) {
-		return RocksDB.getBytes(dbPtr(), defaultReadOpts().ptr(), key);
+		return RocksDB.getBytes(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), key);
 	}
 
 	/// Get with explicit [ReadOptions], e.g. for snapshot-pinned reads. Returns `null` if not found.
@@ -68,7 +59,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ByteBuffer key, ByteBuffer value) {
-		return RocksDB.getIntoBuffer(dbPtr(), defaultReadOpts().ptr(),
+		return RocksDB.getIntoBuffer(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(),
 				MemorySegment.ofBuffer(key), key.remaining(), value);
 	}
 
@@ -80,7 +71,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(MemorySegment key, MemorySegment value) {
-		return RocksDB.getIntoSegment(dbPtr(), defaultReadOpts().ptr(), key, key.byteSize(), value);
+		return RocksDB.getIntoSegment(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), key, key.byteSize(), value);
 	}
 
 	/// Scoped zero-copy get: reads `key` via a `rocksdb_pinnable_handle_t` and passes a
@@ -97,7 +88,7 @@ public interface RocksDBReadOperations {
 	/// @throws NullPointerException if `fn` returns `null`
 	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
 	default <R> Optional<R> get(MemorySegment key, Mapper<R> fn) {
-		return RocksDB.withPinned(dbPtr(), defaultReadOpts().ptr(), key, fn);
+		return RocksDB.withPinned(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), key, fn);
 	}
 
 	/// Returns the value for `key` in `cf`, or `null` if not found.
@@ -106,7 +97,7 @@ public interface RocksDBReadOperations {
 	/// @param key key bytes to look up
 	/// @return value bytes, or `null` if the key does not exist
 	default byte[] get(ColumnFamilyHandle cf, byte[] key) {
-		return RocksDB.getCfBytes(dbPtr(), defaultReadOpts().ptr(), cf, key);
+		return RocksDB.getCfBytes(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), cf, key);
 	}
 
 	/// Get from `cf` with explicit [ReadOptions]. Returns `null` if not found.
@@ -128,7 +119,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
-		return RocksDB.getCfIntoBuffer(dbPtr(), defaultReadOpts().ptr(), cf,
+		return RocksDB.getCfIntoBuffer(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), cf,
 				MemorySegment.ofBuffer(key), key.remaining(), value);
 	}
 
@@ -141,7 +132,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
-		return RocksDB.getCfIntoSegment(dbPtr(), defaultReadOpts().ptr(), cf, key, key.byteSize(), value);
+		return RocksDB.getCfIntoSegment(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), cf, key, key.byteSize(), value);
 	}
 
 	/// Scoped zero-copy get from `cf`. See [#get(MemorySegment, Mapper)] for
@@ -154,7 +145,7 @@ public interface RocksDBReadOperations {
 	/// @throws NullPointerException if `fn` returns `null`
 	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
 	default <R> Optional<R> get(ColumnFamilyHandle cf, MemorySegment key, Mapper<R> fn) {
-		return RocksDB.withPinnedCf(dbPtr(), defaultReadOpts().ptr(), cf, key, fn);
+		return RocksDB.withPinnedCf(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), cf, key, fn);
 	}
 
 	// -----------------------------------------------------------------------
@@ -167,7 +158,7 @@ public interface RocksDBReadOperations {
 	/// @param key the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(byte[] key) {
-		return RocksDB.keyMayExistBytes(dbPtr(), defaultReadOpts().ptr(), key);
+		return RocksDB.keyMayExistBytes(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), key);
 	}
 
 	/// [#keyMayExist(byte\[\])] with explicit [ReadOptions].
@@ -184,7 +175,7 @@ public interface RocksDBReadOperations {
 	/// @param key direct [ByteBuffer] containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ByteBuffer key) {
-		return RocksDB.keyMayExistSegment(dbPtr(), defaultReadOpts().ptr(), MemorySegment.ofBuffer(key), key.remaining());
+		return RocksDB.keyMayExistSegment(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), MemorySegment.ofBuffer(key), key.remaining());
 	}
 
 	/// Zero-copy for [MemorySegment]s.
@@ -192,7 +183,7 @@ public interface RocksDBReadOperations {
 	/// @param key native segment containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(MemorySegment key) {
-		return RocksDB.keyMayExistSegment(dbPtr(), defaultReadOpts().ptr(), key, key.byteSize());
+		return RocksDB.keyMayExistSegment(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), key, key.byteSize());
 	}
 
 	/// Returns `false` if the key definitely does not exist in `cf`; `true` means it _may_ exist.
@@ -201,7 +192,7 @@ public interface RocksDBReadOperations {
 	/// @param key the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ColumnFamilyHandle cf, byte[] key) {
-		return RocksDB.keyMayExistCfBytes(dbPtr(), defaultReadOpts().ptr(), cf, key);
+		return RocksDB.keyMayExistCfBytes(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), cf, key);
 	}
 
 	/// [#keyMayExist(ColumnFamilyHandle, byte\[\])] with explicit [ReadOptions].
@@ -220,7 +211,7 @@ public interface RocksDBReadOperations {
 	/// @param key direct [ByteBuffer] containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ColumnFamilyHandle cf, ByteBuffer key) {
-		return RocksDB.keyMayExistCfSegment(dbPtr(), defaultReadOpts().ptr(), cf,
+		return RocksDB.keyMayExistCfSegment(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), cf,
 				MemorySegment.ofBuffer(key), key.remaining());
 	}
 
@@ -230,7 +221,7 @@ public interface RocksDBReadOperations {
 	/// @param key native segment containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ColumnFamilyHandle cf, MemorySegment key) {
-		return RocksDB.keyMayExistCfSegment(dbPtr(), defaultReadOpts().ptr(), cf, key, key.byteSize());
+		return RocksDB.keyMayExistCfSegment(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), cf, key, key.byteSize());
 	}
 
 	// -----------------------------------------------------------------------
@@ -241,7 +232,7 @@ public interface RocksDBReadOperations {
 	///
 	/// @return a new [RocksIterator]; caller must close it
 	default RocksIterator newIterator() {
-		return RocksIterator.create(dbPtr(), defaultReadOpts().ptr());
+		return RocksIterator.create(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr());
 	}
 
 	/// Returns a new iterator using the supplied [ReadOptions].
@@ -257,7 +248,7 @@ public interface RocksDBReadOperations {
 	/// @param cf target column family
 	/// @return a new [RocksIterator]; caller must close it
 	default RocksIterator newIterator(ColumnFamilyHandle cf) {
-		return RocksDB.createIteratorCf(dbPtr(), defaultReadOpts().ptr(), cf);
+		return RocksDB.createIteratorCf(dbPtr(), RocksDB.DEFAULT_READ_OPTIONS.ptr(), cf);
 	}
 
 	/// Returns a new iterator scoped to `cf` using the supplied [ReadOptions].
