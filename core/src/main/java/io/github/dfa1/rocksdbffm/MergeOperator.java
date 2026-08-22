@@ -291,7 +291,7 @@ public sealed interface MergeOperator {
 				List<MemorySegment> operandViews = readOperandViews(operandsList, operandsLen, numOperands, arena);
 				byte[] result = s.fn().fullMerge(keyView, existingView, operandViews);
 				successPtr.set(ValueLayout.JAVA_BYTE, 0, (byte) 1);
-				newValueLenPtr.set(ValueLayout.JAVA_LONG, 0, (long) result.length);
+				newValueLenPtr.set(ValueLayout.JAVA_LONG, 0, result.length);
 				return mallocCopy(result);
 			} catch (Throwable t) {
 				// must not throw across the upcall boundary — an escaping AssertionError here

@@ -69,7 +69,7 @@ public final class OptimisticTransactionDB extends NativeObjectWithBaseDb
 	/// @return the base DB pointer
 	/// @throws IllegalStateException if this optimistic transaction DB has been closed
 	@Override
-	public final MemorySegment dbPtr() {
+	public MemorySegment dbPtr() {
 		return super.dbPtr();
 	}
 

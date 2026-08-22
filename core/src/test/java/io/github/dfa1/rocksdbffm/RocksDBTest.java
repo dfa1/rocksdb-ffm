@@ -286,6 +286,24 @@ class RocksDBTest {
 	}
 
 	// -----------------------------------------------------------------------
+	// Options — blobCompactionReadaheadSize
+	// -----------------------------------------------------------------------
+
+	@Test
+	void options_blobCompactionReadaheadSize_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions()) {
+			assertThat(opts.getBlobCompactionReadaheadSize()).isEqualTo(MemorySize.ZERO);
+
+			// When
+			opts.setBlobCompactionReadaheadSize(MemorySize.ofMB(2));
+
+			// Then
+			assertThat(opts.getBlobCompactionReadaheadSize()).isEqualTo(MemorySize.ofMB(2));
+		}
+	}
+
+	// -----------------------------------------------------------------------
 	// readOnly
 	// -----------------------------------------------------------------------
 
