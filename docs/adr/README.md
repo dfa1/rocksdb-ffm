@@ -25,3 +25,4 @@ ADR is a point-in-time snapshot: context, the decision, and its known consequenc
 | [0002](0002-why-zig.md)            | Build the native library with `zig cc`/`zig c++` | Accepted |
 | [0003](0003-ownership-model.md)    | `NativeObject`: `AutoCloseable`, idempotent close, ownership transfer | Accepted |
 | [0004](0004-error-handling.md)     | Separating genuine RocksDB errors from FFM binding bugs | Accepted |
+| [0005](0005-no-jpms.md)            | Not adopting the Java Platform Module System            | Accepted |
