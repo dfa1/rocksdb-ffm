@@ -8,14 +8,17 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /// FFM wrapper for `rocksdb_livefiles_t`: metadata for every live SST file belonging to a
-/// database, captured at the moment [RocksDBReadOperations#getLiveFiles()] was called.
+/// database, captured at the moment [MonitoringOperations#getLiveFiles()] was called.
 ///
 /// Each [LiveFileInfo] returned by [#get(int)] or iteration is a lazy view over this native
 /// list — no field is read from native memory until the matching accessor is called, so
 /// scanning only the fields you need (e.g. just `level()` across a database with thousands of
 /// files) costs one native call per file per field actually touched, not a fixed cost per file
-/// up front. Views become invalid once this [LiveFiles] is closed, same as any other
-/// [NativeObject]-backed pointer.
+/// up front. [#size()] and [#get(int)] never touch native memory (the count is cached at fetch
+/// time, and `get` only builds a Java-side view), so both remain callable even after this
+/// [LiveFiles] is closed; it's specifically calling an accessor on a [LiveFileInfo] view — which
+/// does read native memory — that then throws [IllegalStateException], the same as any other
+/// [NativeObject]-backed pointer used after close.
 ///
 /// This deliberately diverges from [BackupEngine#getBackupInfo()]'s pattern of eagerly
 /// snapshotting into plain [BackupInfo] records with no native resource left open: a database

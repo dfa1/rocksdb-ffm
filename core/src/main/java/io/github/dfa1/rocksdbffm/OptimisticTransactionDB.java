@@ -32,7 +32,7 @@ import java.lang.invoke.MethodHandle;
 /// }
 /// ```
 public final class OptimisticTransactionDB extends NativeObjectWithBaseDb
-		implements RocksDBReadOperations, RocksDBWriteOperations {
+		implements RocksDBReadOperations, RocksDBWriteOperations, MonitoringOperations {
 
 	// -----------------------------------------------------------------------
 	// Method handles unique to OptimisticTransactionDB
