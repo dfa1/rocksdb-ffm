@@ -11,7 +11,7 @@ import java.lang.foreign.MemorySegment;
 ///     byte[] value = db.get("key".getBytes());
 /// }
 /// ```
-public final class ReadOnlyDB extends NativeObjectWithChildren implements RocksDBReadOperations {
+public final class ReadOnlyDB extends NativeObjectWithChildren implements RocksDBReadOperations, MonitoringOperations {
 
 	ReadOnlyDB(MemorySegment ptr) {
 		super(ptr);

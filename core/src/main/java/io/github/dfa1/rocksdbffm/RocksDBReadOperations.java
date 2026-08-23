@@ -17,9 +17,11 @@ import java.util.OptionalLong;
 /// own `MethodHandle`s instead of sharing these helpers (`rocksdb_transactiondb_put` etc. are
 /// genuinely different native symbols than the ones these defaults call), per the project
 /// convention that a `MethodHandle` must never be routed through a shared call site (it
-/// defeats `invokeExact`'s compile-time constant folding). [OptimisticTransactionDB] has no
-/// such dedicated C API for direct ops — it always goes through the base `rocksdb_t*` — so it
-/// implements this interface directly instead.
+/// defeats `invokeExact`'s compile-time constant folding). [TransactionDB] implements
+/// [MonitoringOperations] separately, though — `getLiveFiles()` has no such per-type native
+/// symbol to duplicate, so nothing stops it sharing that one surface even though it can't share
+/// this one. [OptimisticTransactionDB] has no such dedicated C API for direct ops — it always
+/// goes through the base `rocksdb_t*` — so it implements this interface directly instead.
 public interface RocksDBReadOperations {
 
 	/// Returns the native `rocksdb_t*` pointer to operate on. Equivalent to the
@@ -383,19 +385,5 @@ public interface RocksDBReadOperations {
 	/// @return the numeric property value, or [OptionalLong#empty()] if not supported
 	default OptionalLong getLongProperty(ColumnFamilyHandle cf, Property property) {
 		return RocksDB.getLongPropertyCf(dbPtr(), cf, property);
-	}
-
-	// -----------------------------------------------------------------------
-	// Live files
-	// -----------------------------------------------------------------------
-
-	/// Captures metadata for every live SST file currently belonging to this database —
-	/// column family, level, size, key range, sequence number range, and entry/deletion
-	/// counts. Fields are read from native memory lazily, one native call per field actually
-	/// accessed, so scanning a single field across many files does not pay for the rest.
-	///
-	/// @return a new [LiveFiles] snapshot; caller must close it
-	default LiveFiles getLiveFiles() {
-		return LiveFiles.fetch(dbPtr());
 	}
 }

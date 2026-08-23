@@ -24,7 +24,7 @@ import java.util.OptionalLong;
 ///     }
 /// }
 /// ```
-public final class TransactionDB extends NativeObjectWithBaseDb {
+public final class TransactionDB extends NativeObjectWithBaseDb implements MonitoringOperations {
 
 	// -----------------------------------------------------------------------
 	// Method handles
@@ -179,6 +179,17 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 		super(ptr, baseDb);
 		this.writeOpts = RocksDB.DEFAULT_WRITE_OPTIONS;
 		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
+	}
+
+	/// Returns the base `rocksdb_t*` pointer. Overridden only to widen visibility to `public`,
+	/// satisfying [MonitoringOperations#dbPtr()] — the guard itself lives in
+	/// [NativeObjectWithBaseDb#dbPtr()].
+	///
+	/// @return the base DB pointer
+	/// @throws IllegalStateException if this transaction DB has been closed
+	@Override
+	public MemorySegment dbPtr() {
+		return super.dbPtr();
 	}
 
 	// -----------------------------------------------------------------------
@@ -573,19 +584,6 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("getLongProperty failed", t);
 		}
-	}
-
-	// -----------------------------------------------------------------------
-	// Live files
-	// -----------------------------------------------------------------------
-
-	/// Captures metadata for every live SST file currently belonging to this database.
-	/// `rocksdb_livefiles` has no `rocksdb_transactiondb_*`-prefixed counterpart, so this goes
-	/// through the base `rocksdb_t*` ([#dbPtr()]) rather than the primary transaction-db handle.
-	///
-	/// @return a new [LiveFiles] snapshot; caller must close it
-	public LiveFiles getLiveFiles() {
-		return LiveFiles.fetch(dbPtr());
 	}
 
 	/// Direct delete, bypassing any active transaction. Slow path.

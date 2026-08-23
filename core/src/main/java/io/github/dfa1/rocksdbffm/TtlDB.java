@@ -16,7 +16,8 @@ import java.time.Duration;
 ///     byte[] value = db.get("key".getBytes());
 /// }
 /// ```
-public final class TtlDB extends NativeObjectWithChildren implements RocksDBReadOperations, RocksDBWriteOperations {
+public final class TtlDB extends NativeObjectWithChildren
+		implements RocksDBReadOperations, RocksDBWriteOperations, MonitoringOperations {
 
 	private final Duration ttl;
 
