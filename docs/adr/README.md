@@ -26,3 +26,4 @@ ADR is a point-in-time snapshot: context, the decision, and its known consequenc
 | [0003](0003-ownership-model.md)    | `NativeObject`: `AutoCloseable`, idempotent close, ownership transfer | Accepted |
 | [0004](0004-error-handling.md)     | Separating genuine RocksDB errors from FFM binding bugs | Accepted |
 | [0005](0005-no-jpms.md)            | Not adopting the Java Platform Module System            | Accepted |
+| [0006](0006-method-handles-usage.md) | How far to centralize MethodHandle call sites and their try/catch boilerplate | Proposed |
