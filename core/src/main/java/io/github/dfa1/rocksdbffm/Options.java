@@ -99,6 +99,8 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_ENV;
 	/// `void rocksdb_options_set_sst_file_manager(rocksdb_options_t* opt, rocksdb_sst_file_manager_t* sfm);`
 	private static final MethodHandle MH_SET_SST_FILE_MANAGER;
+	/// `void rocksdb_options_set_sst_partitioner_factory(rocksdb_options_t*, rocksdb_sst_partitioner_factory_t*);`
+	private static final MethodHandle MH_SET_SST_PARTITIONER_FACTORY;
 	/// `void rocksdb_options_set_metadata_write_temperature(rocksdb_options_t* opt, int v);`
 	private static final MethodHandle MH_SET_METADATA_WRITE_TEMPERATURE;
 	/// `int rocksdb_options_get_metadata_write_temperature(rocksdb_options_t* opt);`
@@ -241,6 +243,9 @@ public final class Options extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_SET_SST_FILE_MANAGER = NativeLibrary.lookup("rocksdb_options_set_sst_file_manager",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_SET_SST_PARTITIONER_FACTORY = NativeLibrary.lookup("rocksdb_options_set_sst_partitioner_factory",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_SET_METADATA_WRITE_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_set_metadata_write_temperature",
@@ -778,6 +783,22 @@ public final class Options extends NativeObject {
 			return this;
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("setSstFileManager failed", t);
+		}
+	}
+
+	/// Attaches an [SstPartitionerFactory] so compaction splits output SST files at partition
+	/// boundaries instead of only by size.
+	///
+	/// No ownership transfer: both objects may be closed independently.
+	///
+	/// @param factory the SST partitioner factory to attach
+	/// @return `this` for chaining
+	public Options setSstPartitionerFactory(SstPartitionerFactory factory) {
+		try {
+			MH_SET_SST_PARTITIONER_FACTORY.invokeExact(ptr(), factory.ptr());
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setSstPartitionerFactory failed", t);
 		}
 	}
 
