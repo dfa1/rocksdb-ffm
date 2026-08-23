@@ -9,9 +9,9 @@ import java.lang.foreign.MemorySegment;
 /// `SecondaryDB`, `OptimisticTransactionDB`); implemented on its own by `TransactionDB`, which
 /// implements neither `RocksDBReadOperations` nor `RocksDBWriteOperations`.
 ///
-/// Currently just live SST file metadata ([#getLiveFiles()]) — the home for future inspection
-/// surfaces that only need `rocksdb_t*`, such as a `rocksdb_get_livefiles_storage_info`-based
-/// wrapper covering WAL/MANIFEST/CURRENT files too, not just SST.
+/// Live SST file metadata ([#getLiveFiles()]) and full database storage inventory
+/// ([#getLiveFilesStorageInfo()]) — SST, WAL, MANIFEST, `CURRENT`, `OPTIONS`, blob files, and
+/// more, everything needed to reconstruct the database, not just SST.
 public interface MonitoringOperations {
 
 	/// Returns the native `rocksdb_t*` pointer to operate on.
@@ -27,5 +27,24 @@ public interface MonitoringOperations {
 	/// @return a new [LiveFiles] snapshot; caller must close it
 	default LiveFiles getLiveFiles() {
 		return LiveFiles.fetch(dbPtr());
+	}
+
+	/// [#getLiveFilesStorageInfo(LiveFilesStorageInfoOptions)] with RocksDB's defaults: no
+	/// checksums, and a memtable flush is always forced first.
+	///
+	/// @return a new [LiveFilesStorageInfo] snapshot; caller must close it
+	default LiveFilesStorageInfo getLiveFilesStorageInfo() {
+		return LiveFilesStorageInfo.fetch(dbPtr(), MemorySegment.NULL);
+	}
+
+	/// Captures every file needed to reconstruct this database — SST, WAL, MANIFEST,
+	/// `CURRENT`, `OPTIONS`, blob files, and more — not just the SST-only view
+	/// [#getLiveFiles()] gives. Fields are read from native memory lazily, the same as
+	/// [#getLiveFiles()].
+	///
+	/// @param options controls checksum computation and the flush performed before capturing
+	/// @return a new [LiveFilesStorageInfo] snapshot; caller must close it
+	default LiveFilesStorageInfo getLiveFilesStorageInfo(LiveFilesStorageInfoOptions options) {
+		return LiveFilesStorageInfo.fetch(dbPtr(), options.ptr());
 	}
 }
