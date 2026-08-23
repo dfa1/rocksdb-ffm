@@ -6,6 +6,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /// Lazy view over a single file's storage metadata, indexed into its owning
 /// [LiveFilesStorageInfo] list.
@@ -149,15 +150,16 @@ public final class LiveFileStorageInfo {
 		}
 	}
 
-	/// Returns the file's checksum, or an empty string if checksums were not requested (see
+	/// Returns the file's checksum, or [Optional#empty()] if checksums were not requested (see
 	/// [LiveFilesStorageInfoOptions#setIncludeChecksumInfo]) or no checksum function is
 	/// configured for the database.
 	///
-	/// @return the file checksum, or an empty string if unavailable
-	public String fileChecksum() {
+	/// @return the file checksum, or [Optional#empty()] if unavailable
+	public Optional<String> fileChecksum() {
 		try {
 			MemorySegment p = (MemorySegment) MH_FILE_CHECKSUM.invokeExact(owner.ptr(), (long) index);
-			return RocksDB.toBorrowedJavaString(p);
+			String checksum = RocksDB.toBorrowedJavaString(p);
+			return checksum.isEmpty() ? Optional.empty() : Optional.of(checksum);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("fileChecksum failed", t);
 		}
