@@ -68,8 +68,8 @@ public final class LiveFilesStorageInfo extends NativeObject implements Iterable
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment listPtr = (MemorySegment) MH_GET.invokeExact(dbPtr, optionsPtr, err);
 			RocksDB.checkError(err);
-			int count = (int) (long) MH_COUNT.invokeExact(listPtr);
-			return new LiveFilesStorageInfo(listPtr, count);
+			long count = (long) MH_COUNT.invokeExact(listPtr);
+			return new LiveFilesStorageInfo(listPtr, (int) count);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("getLiveFilesStorageInfo failed", t);
 		}

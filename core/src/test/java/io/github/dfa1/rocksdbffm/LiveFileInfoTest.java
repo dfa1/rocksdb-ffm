@@ -56,9 +56,10 @@ class LiveFileInfoTest {
 			db.flush(fo);
 
 			try (var files = db.getLiveFiles()) {
+				int size = files.size();
 
 				// When / Then
-				assertThatThrownBy(() -> files.get(files.size())).isInstanceOf(IndexOutOfBoundsException.class);
+				assertThatThrownBy(() -> files.get(size)).isInstanceOf(IndexOutOfBoundsException.class);
 			}
 		}
 	}
