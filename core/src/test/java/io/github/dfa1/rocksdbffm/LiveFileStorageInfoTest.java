@@ -113,8 +113,8 @@ class LiveFileStorageInfoTest {
 				// this snapshot are captured directly rather than read back off disk later
 				assertThat(currentFile.relativeFilename()).isEqualTo("CURRENT");
 				assertThat(currentFile.fileNumber()).isZero();
-				assertThat(currentFile.replacementContents()).isNotEmpty();
-				assertThat(currentFile.replacementContents().length).isEqualTo((int) currentFile.size().toBytes());
+				assertThat(currentFile.replacementContents()).isNotEmpty()
+						.hasSize((int) currentFile.size().toBytes());
 			}
 		}
 	}
@@ -160,9 +160,10 @@ class LiveFileStorageInfoTest {
 		// Given
 		try (var db = RocksDB.openReadWrite(dir);
 		     var info = db.getLiveFilesStorageInfo()) {
+			int size = info.size();
 
 			// When / Then
-			assertThatThrownBy(() -> info.get(info.size())).isInstanceOf(IndexOutOfBoundsException.class);
+			assertThatThrownBy(() -> info.get(size)).isInstanceOf(IndexOutOfBoundsException.class);
 		}
 	}
 

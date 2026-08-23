@@ -35,7 +35,7 @@ class SstPartitionerFactoryTest {
 		var factory = SstPartitionerFactory.newFixedPrefix(4);
 
 		// When
-		try (var opts = Options.newOptions().setSstPartitionerFactory(factory)) {
+		try (var _ = Options.newOptions().setSstPartitionerFactory(factory)) {
 
 			// Then — no ownership transfer: factory.ptr() stays valid while opts is still open
 			assertThatCode(factory::ptr).doesNotThrowAnyException();
