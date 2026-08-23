@@ -575,6 +575,19 @@ public final class TransactionDB extends NativeObjectWithBaseDb {
 		}
 	}
 
+	// -----------------------------------------------------------------------
+	// Live files
+	// -----------------------------------------------------------------------
+
+	/// Captures metadata for every live SST file currently belonging to this database.
+	/// `rocksdb_livefiles` has no `rocksdb_transactiondb_*`-prefixed counterpart, so this goes
+	/// through the base `rocksdb_t*` ([#dbPtr()]) rather than the primary transaction-db handle.
+	///
+	/// @return a new [LiveFiles] snapshot; caller must close it
+	public LiveFiles getLiveFiles() {
+		return LiveFiles.fetch(dbPtr());
+	}
+
 	/// Direct delete, bypassing any active transaction. Slow path.
 	///
 	/// @param key the key to remove

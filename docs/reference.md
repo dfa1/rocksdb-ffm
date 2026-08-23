@@ -366,6 +366,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Snapshots                  |   ✅    | `ReadOptions.setSnapshot`, sequence numbers                                                 |
 | Flush                      |   ✅    | `flush(FlushOptions)`, `flushWal(boolean)`                                                  |
 | DB properties              |   ✅    | `getProperty`, `getLongProperty`                                                            |
+| Live SST file inspection   |   ✅    | `getLiveFiles()` (`rocksdb_livefiles`); lazy `LiveFileInfo` view per file — column family, level, size, key range, seqno range, entry/deletion counts. No `numReadsSampled`/`beingCompacted`/`fileChecksum` (not in the C API's `rocksdb_livefiles_*` accessors, unlike `rocksdbjni`'s `LiveFileMetaData`) |
 | Statistics                 |   ✅    | `TickerType`, `HistogramType`, `StatsLevel`                                                 |
 | Compression                |   ✅    | `CompressionType`; `Options.setCompression`                                                 |
 | Column families            |   ✅    | Multi-CF open for every DB type; CF overloads on all data methods and `WriteBatch`          |

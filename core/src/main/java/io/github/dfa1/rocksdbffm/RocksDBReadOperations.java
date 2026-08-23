@@ -384,4 +384,18 @@ public interface RocksDBReadOperations {
 	default OptionalLong getLongProperty(ColumnFamilyHandle cf, Property property) {
 		return RocksDB.getLongPropertyCf(dbPtr(), cf, property);
 	}
+
+	// -----------------------------------------------------------------------
+	// Live files
+	// -----------------------------------------------------------------------
+
+	/// Captures metadata for every live SST file currently belonging to this database —
+	/// column family, level, size, key range, sequence number range, and entry/deletion
+	/// counts. Fields are read from native memory lazily, one native call per field actually
+	/// accessed, so scanning a single field across many files does not pay for the rest.
+	///
+	/// @return a new [LiveFiles] snapshot; caller must close it
+	default LiveFiles getLiveFiles() {
+		return LiveFiles.fetch(dbPtr());
+	}
 }
