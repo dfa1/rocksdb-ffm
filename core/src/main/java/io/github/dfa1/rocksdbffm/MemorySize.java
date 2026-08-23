@@ -93,22 +93,22 @@ public final class MemorySize implements Comparable<MemorySize> {
 	}
 
 	/// Returns a human-readable string in the largest unit that divides evenly,
-	/// e.g. `"64 MB"`, `"16 KB"`, `"1536 B"`.
+	/// e.g. `"64MB"`, `"16KB"`, `"1536B"`.
 	@Override
 	public String toString() {
 		if (bytes == 0) {
-			return "0 B";
+			return "0B";
 		}
 		if (bytes % GB == 0) {
-			return (bytes / GB) + " GB";
+			return (bytes / GB) + "GB";
 		}
 		if (bytes % MB == 0) {
-			return (bytes / MB) + " MB";
+			return (bytes / MB) + "MB";
 		}
 		if (bytes % KB == 0) {
-			return (bytes / KB) + " KB";
+			return (bytes / KB) + "KB";
 		}
-		return bytes + " B";
+		return bytes + "B";
 	}
 
 	@Override
