@@ -98,7 +98,7 @@ public final class LiveFileInfo {
 	public String columnFamilyName() {
 		try {
 			MemorySegment p = (MemorySegment) MH_CF_NAME.invokeExact(owner.ptr(), index);
-			return borrowedString(p);
+			return RocksDB.toBorrowedJavaString(p);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("columnFamilyName failed", t);
 		}
@@ -110,7 +110,7 @@ public final class LiveFileInfo {
 	public String name() {
 		try {
 			MemorySegment p = (MemorySegment) MH_NAME.invokeExact(owner.ptr(), index);
-			return borrowedString(p);
+			return RocksDB.toBorrowedJavaString(p);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("name failed", t);
 		}
@@ -122,21 +122,10 @@ public final class LiveFileInfo {
 	public Path directory() {
 		try {
 			MemorySegment p = (MemorySegment) MH_DIRECTORY.invokeExact(owner.ptr(), index);
-			return Path.of(borrowedString(p));
+			return Path.of(RocksDB.toBorrowedJavaString(p));
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("directory failed", t);
 		}
-	}
-
-	/// Reads a NUL-terminated string from a pointer this class does not own — a borrowed view
-	/// into the parent [LiveFiles] list's internal `std::string` storage, live only as long as
-	/// that list is open. Unlike [RocksDB#toJavaString(MemorySegment)], this does not free `p`;
-	/// using that method here instead would double-free memory this class never allocated.
-	///
-	/// @param p non-NULL borrowed `const char*`
-	/// @return the decoded string
-	private static String borrowedString(MemorySegment p) {
-		return p.reinterpret(Long.MAX_VALUE).getString(0);
 	}
 
 	/// Returns the LSM level this file resides at.

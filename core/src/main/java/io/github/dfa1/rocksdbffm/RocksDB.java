@@ -1482,8 +1482,7 @@ public final class RocksDB {
 			MemorySegment namesArr = namesPtr.reinterpret(ValueLayout.ADDRESS.byteSize() * count);
 			for (int i = 0; i < count; i++) {
 				MemorySegment namePtr = namesArr.getAtIndex(ValueLayout.ADDRESS, i);
-				result.add(namePtr.reinterpret(Long.MAX_VALUE).getString(0)
-						.getBytes(StandardCharsets.UTF_8));
+				result.add(toBorrowedJavaString(namePtr).getBytes(StandardCharsets.UTF_8));
 			}
 			MH_LIST_CF_DESTROY.invokeExact(namesPtr, count);
 			return result;
@@ -1945,6 +1944,17 @@ public final class RocksDB {
 	/// @return a new array containing a copy of the bytes
 	public static byte[] toByteArray(MemorySegment ptr, long len) {
 		return ptr.reinterpret(len).toArray(ValueLayout.JAVA_BYTE);
+	}
+
+	/// Reads a NUL-terminated, non-owned `const char*` into a Java [String]. Unlike
+	/// [#toJavaString], this does not free `ptr` -- use it for the same kind of borrowed view
+	/// [#toByteArray] does, e.g. a pointer into an internal `std::string` that stays alive only
+	/// as long as its parent object.
+	///
+	/// @param ptr non-NULL native pointer to a borrowed, NUL-terminated string
+	/// @return the decoded string
+	public static String toBorrowedJavaString(MemorySegment ptr) {
+		return ptr.reinterpret(Long.MAX_VALUE).getString(0);
 	}
 
 	/// Converts a malloc'd, NUL-terminated `char*` returned by the RocksDB C API into a
