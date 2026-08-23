@@ -57,9 +57,11 @@ public final class LiveFiles extends NativeObject implements Iterable<LiveFileIn
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 
-	// The underlying std::vector<LiveFileMetaData> (rocksdb/db/c.cc's rocksdb_livefiles_t) is
-	// populated once by rocksdb_livefiles() and never mutated afterward, so the count is cached
-	// here at fetch time instead of re-invoking rocksdb_livefiles_count on every size()/get() call.
+	// Cached at fetch time so size()/get() keep working after close() instead of going through
+	// ptr() (which would throw IllegalStateException) — not a performance optimization, since
+	// rocksdb_livefiles_count is just a std::vector::size() call. The underlying
+	// std::vector<LiveFileMetaData> (rocksdb/db/c.cc's rocksdb_livefiles_t) is populated once by
+	// rocksdb_livefiles() and never mutated afterward, so caching it is also always correct.
 	private final int count;
 
 	private LiveFiles(MemorySegment ptr, int count) {
