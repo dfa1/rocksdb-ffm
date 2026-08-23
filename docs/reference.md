@@ -372,6 +372,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Column families            |   ✅    | Multi-CF open for every DB type; CF overloads on all data methods and `WriteBatch`          |
 | DeleteRange                |   ✅    | Range tombstones on the DB and in `WriteBatch`; all three tiers                             |
 | Compaction control         |   ✅    | `compactRange` (+`CompactOptions`), `suggestCompactRange`, file-deletion toggles            |
+| SST Partitioner             |  🚧    | `SstPartitionerFactory.newFixedPrefix(long)` + `Options.setSstPartitionerFactory` — built-in fixed-prefix only; no callback-based custom partitioner (`rocksdb_sst_partitioner_factory_t` has no callback constructor in `c.h`, unlike `CompactionFilterFactory` — see [c-api-gaps.md](c-api-gaps.md)) |
 | Temperature hints          |   ✅    | `Temperature`; 5 `Options` setter/getter pairs (metadata/WAL/last-level/default-write/default). EXPERIMENTAL upstream, no-op for the default `FileSystem` |
 | SST file ingest            |   ✅    | `SstFileWriter`, `ingestExternalFile`, `IngestExternalFileOptions`                          |
 | Backup engine              |   ✅    | Incremental backup/restore, purge, verify                                                   |

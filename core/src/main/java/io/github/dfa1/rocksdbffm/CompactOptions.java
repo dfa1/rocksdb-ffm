@@ -117,26 +117,36 @@ public final class CompactOptions extends NativeObject {
 		}
 	}
 
-	/// If `true`, the compaction will compact all data at the bottommost level.
+	/// The native field is RocksDB's 4-valued `BottommostLevelCompaction` enum
+	/// (`kSkip`=0, `kIfHaveCompactionFilter`=1, `kForce`=2, `kForceOptimized`=3), not a plain
+	/// bool — this API only exposes the two ends callers actually need. `RocksDB.toByte`/
+	/// `fromByte` (0/1) must not be used to read or write it: `true` written as `1` lands on
+	/// `kIfHaveCompactionFilter`, which silently skips bottommost recompaction whenever no
+	/// compaction filter is configured, instead of forcing it as documented.
+	private static final byte BOTTOMMOST_SKIP = 0;
+	private static final byte BOTTOMMOST_FORCE = 2;
+
+	/// If `true`, the compaction will compact all data at the bottommost level, even files
+	/// that would otherwise be left untouched (e.g. a single file with no overlapping input).
 	/// Default: `false`.
 	///
 	/// @param value `true` to force bottommost-level compaction
 	/// @return `this` for chaining
 	public CompactOptions setBottommostLevelCompaction(boolean value) {
 		try {
-			MH_SET_BOTTOMMOST.invokeExact(ptr(), RocksDB.toByte(value));
+			MH_SET_BOTTOMMOST.invokeExact(ptr(), value ? BOTTOMMOST_FORCE : BOTTOMMOST_SKIP);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("setBottommostLevelCompaction failed", t);
 		}
 		return this;
 	}
 
-	/// Returns whether bottommost-level compaction is enabled.
+	/// Returns whether bottommost-level compaction is forced.
 	///
 	/// @return `true` if all data will be compacted at the bottommost level
 	public boolean isBottommostLevelCompaction() {
 		try {
-			return RocksDB.fromByte((byte) MH_GET_BOTTOMMOST.invokeExact(ptr()));
+			return (byte) MH_GET_BOTTOMMOST.invokeExact(ptr()) == BOTTOMMOST_FORCE;
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("isBottommostLevelCompaction failed", t);
 		}
