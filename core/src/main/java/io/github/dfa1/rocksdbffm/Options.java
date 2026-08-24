@@ -101,6 +101,8 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_SST_FILE_MANAGER;
 	/// `void rocksdb_options_set_sst_partitioner_factory(rocksdb_options_t*, rocksdb_sst_partitioner_factory_t*);`
 	private static final MethodHandle MH_SET_SST_PARTITIONER_FACTORY;
+	/// `void rocksdb_options_set_prefix_extractor(rocksdb_options_t*, rocksdb_slicetransform_t*);`
+	private static final MethodHandle MH_SET_PREFIX_EXTRACTOR;
 	/// `void rocksdb_options_set_metadata_write_temperature(rocksdb_options_t* opt, int v);`
 	private static final MethodHandle MH_SET_METADATA_WRITE_TEMPERATURE;
 	/// `int rocksdb_options_get_metadata_write_temperature(rocksdb_options_t* opt);`
@@ -246,6 +248,9 @@ public final class Options extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_SET_SST_PARTITIONER_FACTORY = NativeLibrary.lookup("rocksdb_options_set_sst_partitioner_factory",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_SET_PREFIX_EXTRACTOR = NativeLibrary.lookup("rocksdb_options_set_prefix_extractor",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_SET_METADATA_WRITE_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_set_metadata_write_temperature",
@@ -800,6 +805,30 @@ public final class Options extends NativeObject {
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("setSstPartitionerFactory failed", t);
 		}
+	}
+
+	/// Attaches a [SliceTransform] as the prefix extractor, enabling prefix-based Bloom filters
+	/// (attach one via [BlockBasedTableOptions#setFilterPolicy(FilterPolicy)]) and prefix
+	/// iteration.
+	///
+	/// Changes the default seek behavior: with a prefix extractor set, iterators/seeks using a
+	/// default [ReadOptions] may only return keys sharing the seek key's prefix instead of doing
+	/// a full-order scan. Use [ReadOptions#setTotalOrderSeek(boolean)] to opt back into full
+	/// ordering, or [ReadOptions#setPrefixSameAsStart(boolean)] to explicitly bound iteration to
+	/// the seek key's prefix.
+	///
+	/// Transfers ownership of `transform` to this Options; do not close it afterwards.
+	///
+	/// @param transform the prefix extractor to attach; ownership is transferred
+	/// @return `this` for chaining
+	public Options setPrefixExtractor(SliceTransform transform) {
+		try {
+			MH_SET_PREFIX_EXTRACTOR.invokeExact(ptr(), transform.ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setPrefixExtractor failed", t);
+		}
+		transform.transferOwnership();
+		return this;
 	}
 
 	/// Attaches a [RateLimiter] to throttle compaction and flush I/O.
