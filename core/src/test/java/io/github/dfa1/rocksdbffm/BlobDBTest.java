@@ -461,7 +461,7 @@ class BlobDBTest {
 			var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).contains("v".getBytes());
+			assertThat(result).isEqualTo("v".getBytes());
 		}
 	}
 
@@ -476,7 +476,7 @@ class BlobDBTest {
 			var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).isEmpty();
+			assertThat(result).isNull();
 		}
 	}
 }

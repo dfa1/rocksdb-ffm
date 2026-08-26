@@ -775,7 +775,7 @@ class OptimisticTransactionDBTest {
 			var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).contains("v".getBytes());
+			assertThat(result).isEqualTo("v".getBytes());
 		}
 	}
 
@@ -791,7 +791,7 @@ class OptimisticTransactionDBTest {
 			var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).isEmpty();
+			assertThat(result).isNull();
 		}
 	}
 
@@ -809,7 +809,7 @@ class OptimisticTransactionDBTest {
 			var result = db.get(cf, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).contains("v".getBytes());
+			assertThat(result).isEqualTo("v".getBytes());
 		}
 	}
 

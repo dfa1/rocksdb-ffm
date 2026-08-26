@@ -171,9 +171,11 @@ be structurally impossible for a correctly configured native call becomes an `As
 [ADR-0004](adr/0004-error-handling.md) for the full reasoning — this split exists so that
 `catch (RocksDBException e)` is always meaningful, never a library bug wearing a "real error" costume.
 
-`null` survives in exactly one place: `byte[] get(byte[])` returns `null` for a missing key, because
-a miss is a normal outcome on the hot read path and boxing it in an `Optional` would allocate on
-every read. The buffer and segment tiers do better — they return a sealed `CopyResult`, so "the key
+`null` survives as a return value on the tiers where a miss is a normal outcome on the hot read path
+and boxing it in an `Optional` would allocate on every read: `byte[] get(byte[])` returns `null` for
+a missing key, and `get(key, Mapper<R>)` returns a `null` `R` for the same reason — there's no
+destination buffer to be too small for, so "present, mapped to a result" and "absent" are the only
+two outcomes. The buffer and segment tiers do better — they return a sealed `CopyResult`, so "the key
 is absent" and "the value did not fit in your buffer" are different cases the compiler makes you
 handle:
 

@@ -231,7 +231,7 @@ public class FfmBenchmark {
 	@Benchmark
 	public Instant readsInstantViaPinned() {
 		return db.get(instantKeyMemorySegment,
-				value -> Instant.ofEpochSecond(value.get(ValueLayout.JAVA_LONG, 0))).orElseThrow();
+				value -> Instant.ofEpochSecond(value.get(ValueLayout.JAVA_LONG, 0)));
 	}
 
 	// ---- batch (byte[] keys, same as JNI) ---------------------------------

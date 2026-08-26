@@ -146,7 +146,7 @@ public class FfmValueSizeBenchmark {
 
 	@Benchmark
 	public long readsValueViaPinned() {
-		return db.get(lookupKeyMemorySegment, MemorySegment::byteSize).orElseThrow();
+		return db.get(lookupKeyMemorySegment, MemorySegment::byteSize);
 	}
 
 	/// Runs this class with [GCProfiler] attached. `-Djmh.forks=<n>` overrides the `@Fork`

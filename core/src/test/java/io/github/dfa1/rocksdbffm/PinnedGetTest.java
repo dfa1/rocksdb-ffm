@@ -33,7 +33,7 @@ class PinnedGetTest {
 				var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 				// Then
-				assertThat(result).contains("v".getBytes());
+				assertThat(result).isEqualTo("v".getBytes());
 			}
 		}
 	}
@@ -49,7 +49,7 @@ class PinnedGetTest {
 				var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 				// Then
-				assertThat(result).isEmpty();
+				assertThat(result).isNull();
 			}
 		}
 	}
@@ -67,7 +67,7 @@ class PinnedGetTest {
 				var result = db.get(key, MemorySegment::byteSize);
 
 				// Then
-				assertThat(result).contains(0L);
+				assertThat(result).isEqualTo(0L);
 			}
 		}
 	}
@@ -172,7 +172,7 @@ class PinnedGetTest {
 				// And a later, independent call still succeeds — proving the handle and
 				// arena from the failed call were destroyed/closed rather than leaked
 				var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
-				assertThat(result).contains("v".getBytes());
+				assertThat(result).isEqualTo("v".getBytes());
 			}
 		}
 	}
@@ -194,7 +194,7 @@ class PinnedGetTest {
 				// or exhaust memory; reaching the end without error is the signal.
 				for (int i = 0; i < 50_000; i++) {
 					var result = db.get(key, value -> value.get(ValueLayout.JAVA_BYTE, 0));
-					assertThat(result).contains((byte) 'v');
+					assertThat(result).isEqualTo((byte) 'v');
 				}
 			}
 		}
@@ -218,7 +218,7 @@ class PinnedGetTest {
 				var result = db.get(cf, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 				// Then
-				assertThat(result).contains("v".getBytes());
+				assertThat(result).isEqualTo("v".getBytes());
 			}
 		}
 	}
@@ -236,7 +236,7 @@ class PinnedGetTest {
 				var result = db.get(cf, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 				// Then
-				assertThat(result).isEmpty();
+				assertThat(result).isNull();
 			}
 		}
 	}
@@ -256,8 +256,8 @@ class PinnedGetTest {
 				var viaCf = db.get(cf, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 				// Then
-				assertThat(viaDefault).isEmpty();
-				assertThat(viaCf).isPresent();
+				assertThat(viaDefault).isNull();
+				assertThat(viaCf).isNotNull();
 			}
 		}
 	}
@@ -284,9 +284,9 @@ class PinnedGetTest {
 				var viaDefaultCf = db.get(defaultCf, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 				// Then
-				assertThat(viaPlain).isPresent();
-				assertThat(viaDefaultCf).isPresent();
-				assertThat(viaPlain.get()).isEqualTo(viaDefaultCf.get()).isEqualTo("v".getBytes());
+				assertThat(viaPlain).isNotNull();
+				assertThat(viaDefaultCf).isNotNull();
+				assertThat(viaPlain).isEqualTo(viaDefaultCf).isEqualTo("v".getBytes());
 			}
 
 			defaultCf.close();

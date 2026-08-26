@@ -183,7 +183,7 @@ class ReadOnlyDBTest {
 			var result = ro.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).contains("value".getBytes());
+			assertThat(result).isEqualTo("value".getBytes());
 		}
 	}
 
@@ -202,7 +202,7 @@ class ReadOnlyDBTest {
 			var result = ro.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).isEmpty();
+			assertThat(result).isNull();
 		}
 	}
 
@@ -226,7 +226,7 @@ class ReadOnlyDBTest {
 			var result = ro.get(cf1, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).contains("value".getBytes());
+			assertThat(result).isEqualTo("value".getBytes());
 
 			handles.forEach(ColumnFamilyHandle::close);
 		}

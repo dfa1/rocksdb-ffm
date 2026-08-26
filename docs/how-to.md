@@ -70,15 +70,15 @@ try (Arena arena = Arena.ofConfined()) {
 // straight into RocksDB's own pinned memory; nothing is copied.
 try (Arena arena = Arena.ofConfined()) {
 	MemorySegment k = arena.allocateFrom("k");
-	Optional<Integer> len = db.get(k, value -> (int) value.byteSize());
+	Integer len = db.get(k, value -> (int) value.byteSize());
 }
 ```
 
 The `byte[]` `get` returns `null` when the key is absent. The buffer/segment tiers return a
 [`CopyResult`](reference.md#domain-types) instead, which distinguishes "missing" from "present but
 your destination is too small" — a distinction the old `int` return could not make. `get(key, Mapper)`
-returns an `Optional<R>` instead — there's no destination to be too small for, so the only two
-outcomes are "present, mapped to a result" and "absent." See
+returns `R` directly, nullable, like the `byte[]` tier — wrapping it in `Optional` would allocate a
+box on every present result, defeating the point of a zero-copy path. See
 [explanation.md#three-access-tiers](explanation.md#three-access-tiers) for why `byte[]`/`ByteBuffer`/
 `MemorySegment` exist as three separate tiers, and for the zero-copy `Mapper` path layered on top of
 the `MemorySegment` tier.

@@ -111,8 +111,8 @@ public interface RocksDBReadOperations {
 	/// @param key native segment containing the key
 	/// @param fn  callback invoked with a zero-copy view of the pinned value
 	/// @throws NullPointerException if `fn` returns `null`
-	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
-	default <R> Optional<R> get(MemorySegment key, Mapper<R> fn) {
+	/// @return the result of `fn`, or `null` if `key` is absent
+	default <R> R get(MemorySegment key, Mapper<R> fn) {
 		return RocksDB.withPinned(this, RocksDB.DEFAULT_READ_OPTIONS, key, fn);
 	}
 
@@ -123,8 +123,8 @@ public interface RocksDBReadOperations {
 	/// @param key         native segment containing the key
 	/// @param fn          callback invoked with a zero-copy view of the pinned value
 	/// @throws NullPointerException if `fn` returns `null`
-	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
-	default <R> Optional<R> get(ReadOptions readOptions, MemorySegment key, Mapper<R> fn) {
+	/// @return the result of `fn`, or `null` if `key` is absent
+	default <R> R get(ReadOptions readOptions, MemorySegment key, Mapper<R> fn) {
 		return RocksDB.withPinned(this, readOptions, key, fn);
 	}
 
@@ -205,8 +205,8 @@ public interface RocksDBReadOperations {
 	/// @param key native segment containing the key
 	/// @param fn  callback invoked with a zero-copy view of the pinned value
 	/// @throws NullPointerException if `fn` returns `null`
-	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
-	default <R> Optional<R> get(ColumnFamilyHandle cf, MemorySegment key, Mapper<R> fn) {
+	/// @return the result of `fn`, or `null` if `key` is absent
+	default <R> R get(ColumnFamilyHandle cf, MemorySegment key, Mapper<R> fn) {
 		return RocksDB.withPinnedCf(this, RocksDB.DEFAULT_READ_OPTIONS, cf, key, fn);
 	}
 
@@ -218,8 +218,8 @@ public interface RocksDBReadOperations {
 	/// @param key         native segment containing the key
 	/// @param fn          callback invoked with a zero-copy view of the pinned value
 	/// @throws NullPointerException if `fn` returns `null`
-	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
-	default <R> Optional<R> get(ColumnFamilyHandle cf, ReadOptions readOptions, MemorySegment key, Mapper<R> fn) {
+	/// @return the result of `fn`, or `null` if `key` is absent
+	default <R> R get(ColumnFamilyHandle cf, ReadOptions readOptions, MemorySegment key, Mapper<R> fn) {
 		return RocksDB.withPinnedCf(this, readOptions, cf, key, fn);
 	}
 

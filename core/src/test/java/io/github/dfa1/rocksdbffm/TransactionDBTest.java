@@ -120,7 +120,7 @@ class TransactionDBTest {
 			var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).contains("v".getBytes());
+			assertThat(result).isEqualTo("v".getBytes());
 		}
 	}
 
@@ -135,7 +135,7 @@ class TransactionDBTest {
 			var result = db.get(key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).isEmpty();
+			assertThat(result).isNull();
 		}
 	}
 
@@ -154,7 +154,7 @@ class TransactionDBTest {
 			var result = txn.get(ro, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).contains("v".getBytes());
+			assertThat(result).isEqualTo("v".getBytes());
 			txn.commit();
 		}
 	}
@@ -173,7 +173,7 @@ class TransactionDBTest {
 			var result = txn.get(ro, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).isEmpty();
+			assertThat(result).isNull();
 			txn.rollback();
 		}
 	}
@@ -816,7 +816,7 @@ class TransactionDBTest {
 			var result = db.get(cf, key.asSlice(0, 7), value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 			// Then
-			assertThat(result).isEmpty();
+			assertThat(result).isNull();
 			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
