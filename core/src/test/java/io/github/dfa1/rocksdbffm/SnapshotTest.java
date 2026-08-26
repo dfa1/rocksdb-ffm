@@ -217,7 +217,7 @@ class SnapshotTest {
 				var result = db.get(ro, key, value -> value.toArray(ValueLayout.JAVA_BYTE));
 
 				// Then — snapshot read sees the pre-write value
-				assertThat(result).contains("before".getBytes());
+				assertThat(result).isEqualTo("before".getBytes());
 			}
 		}
 	}
@@ -257,7 +257,7 @@ class SnapshotTest {
 				assertThat(segmentOut.asSlice(0, "before".getBytes().length).toArray(ValueLayout.JAVA_BYTE))
 						.isEqualTo("before".getBytes());
 
-				assertThat(mapperResult).contains("before".getBytes());
+				assertThat(mapperResult).isEqualTo("before".getBytes());
 			}
 		}
 	}

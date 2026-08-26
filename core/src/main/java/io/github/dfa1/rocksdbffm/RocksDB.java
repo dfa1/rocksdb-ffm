@@ -795,16 +795,16 @@ public final class RocksDB {
 
 	/// Scoped zero-copy get via `rocksdb_get_pinned_v2`. [PinnableHandle] owns the pinned
 	/// value's lifetime and every way it gets consumed.
-	static <R> Optional<R> withPinned(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, Mapper<R> fn) {
+	static <R> R withPinned(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(db.dbPtr(), readOpts.ptr(), key, key.byteSize(), err);
 			checkError(err);
 			if (MemorySegment.NULL.equals(handle)) {
-				return Optional.empty();
+				return null;
 			}
 			try (PinnableHandle ph = PinnableHandle.wrap(handle)) {
-				return Optional.of(ph.map(arena, fn, err));
+				return ph.map(arena, fn, err);
 			}
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("get_pinned failed", t);
@@ -813,18 +813,18 @@ public final class RocksDB {
 
 	/// Scoped zero-copy get from `cf` via `rocksdb_get_pinned_cf_v2`. See [#withPinned]
 	/// for the lifetime contract.
-	static <R> Optional<R> withPinnedCf(RocksDBReadOperations db, ReadOptions readOpts, ColumnFamilyHandle cf,
-	                                     MemorySegment key, Mapper<R> fn) {
+	static <R> R withPinnedCf(RocksDBReadOperations db, ReadOptions readOpts, ColumnFamilyHandle cf,
+	                           MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = errHolder(arena);
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_CF_V2.invokeExact(
 					db.dbPtr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
 			checkError(err);
 			if (MemorySegment.NULL.equals(handle)) {
-				return Optional.empty();
+				return null;
 			}
 			try (PinnableHandle ph = PinnableHandle.wrap(handle)) {
-				return Optional.of(ph.map(arena, fn, err));
+				return ph.map(arena, fn, err);
 			}
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("get_pinned failed", t);

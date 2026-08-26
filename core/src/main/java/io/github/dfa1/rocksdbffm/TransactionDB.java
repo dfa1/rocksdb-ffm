@@ -530,8 +530,8 @@ public final class TransactionDB extends NativeObjectWithBaseDb implements Monit
 	/// @param key native segment containing the key
 	/// @param fn  callback invoked with a zero-copy view of the pinned value
 	/// @throws NullPointerException if `fn` returns `null`
-	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
-	public <R> Optional<R> get(MemorySegment key, Mapper<R> fn) {
+	/// @return the result of `fn`, or `null` if `key` is absent
+	public <R> R get(MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment pin;
@@ -542,10 +542,10 @@ public final class TransactionDB extends NativeObjectWithBaseDb implements Monit
 			}
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
-				return Optional.empty();
+				return null;
 			}
 			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
-				return Optional.of(slice.map(arena, fn, err));
+				return slice.map(arena, fn, err);
 			}
 		}
 	}
@@ -958,8 +958,8 @@ public final class TransactionDB extends NativeObjectWithBaseDb implements Monit
 	/// @param key native segment containing the key
 	/// @param fn  callback invoked with a zero-copy view of the pinned value
 	/// @throws NullPointerException if `fn` returns `null`
-	/// @return the result of `fn`, wrapped in [Optional], or [Optional#empty()] if `key` is absent
-	public <R> Optional<R> get(ColumnFamilyHandle cf, MemorySegment key, Mapper<R> fn) {
+	/// @return the result of `fn`, or `null` if `key` is absent
+	public <R> R get(ColumnFamilyHandle cf, MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MemorySegment pin;
@@ -970,10 +970,10 @@ public final class TransactionDB extends NativeObjectWithBaseDb implements Monit
 			}
 			RocksDB.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
-				return Optional.empty();
+				return null;
 			}
 			try (PinnableSlice slice = PinnableSlice.wrap(pin)) {
-				return Optional.of(slice.map(arena, fn, err));
+				return slice.map(arena, fn, err);
 			}
 		}
 	}

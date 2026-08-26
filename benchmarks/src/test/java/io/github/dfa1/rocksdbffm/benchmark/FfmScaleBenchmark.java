@@ -112,7 +112,7 @@ public class FfmScaleBenchmark {
 
 	@Benchmark
 	public long getZeroCopy() {
-		return db.get(lookupKeySegment, MemorySegment::byteSize).orElseThrow();
+		return db.get(lookupKeySegment, MemorySegment::byteSize);
 	}
 
 	// ---- iteration ------------------------------------------------------------
