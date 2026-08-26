@@ -337,7 +337,7 @@ through `bash` explicitly, which works uniformly on macOS, Linux, and Windows (v
 Two different kinds of gap, and the distinction decides who can fix them:
 
 - **Type A** — the C API exposes it, this library has no Java wrapper yet. Actionable here and now
-  (MultiGet, CompactionFilter, EventListener, custom comparators, …).
+  (CompactionFilter, EventListener, custom comparators, …).
 - **Type B** — the C API does not expose it at all. Needs an upstream PR to `facebook/rocksdb`
   (`c.h` + `c.cc` + `c_test.c`) before any Java work is possible (persistent cache, wide columns,
   SST file reader, …).

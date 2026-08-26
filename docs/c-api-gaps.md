@@ -15,7 +15,8 @@ rocksdbffm wraps `rocksdb/c.h` — the official RocksDB C API — not C++ direct
 
 | Feature | Key C functions | Priority | Notes |
 |:---|:---|:---:|:---|
-| MultiGet | `rocksdb_multi_get()` | High | Bulk key lookup; important for throughput |
+| Legacy MultiGet | `rocksdb_multi_get()`, `_cf`, `_with_ts` | Low | Superseded by `rocksdb_batched_multi_get_cf`, which `ReadBatch` wraps — upstream's own comment says these legacy functions get no batching performance benefit, so there's no reason to also wrap them |
+| TransactionDB/Transaction MultiGet | `rocksdb_transactiondb_multi_get()`, `rocksdb_transaction_multi_get()`, `_for_update` | Medium | Separate native symbols from the plain `rocksdb_t*` batched call `ReadBatch` already wraps (same story as direct put/get elsewhere on these two types) |
 | CompactFiles | `rocksdb_compact_files()`, `rocksdb_compaction_options_t` + setters (incl. `output_temperature_override`) | Low | A second, unrelated options opaque type from `CompactOptions`'s `rocksdb_compactoptions_t` (used by `compactRange`) — needs its own wrapper class, not an extension of `CompactOptions.java` |
 | CompactionFilter | `rocksdb_compactionfilter_create()`, `rocksdb_compactionfilterfactory_create()` | High | Callback-based; enables custom retention/deletion policies during compaction |
 | EventListener | `rocksdb_eventlistener_create()` (~12 callbacks) | High | Flush, compaction, file creation/deletion events; needed for monitoring |

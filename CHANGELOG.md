@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ReadBatch`: batched multiGet, all three tiers (byte[], ByteBuffer, MemorySegment/zero-copy via
+  `Mapper`), built on `rocksdb_batched_multi_get_cf`. Reusable and preallocated — create once for
+  up to N keys, call `get(keys, ...)` repeatedly with no per-call bookkeeping-array allocation.
+  There's no separate one-shot `multiGet()` method; a single-batch read is just `try (var batch =
+  ReadBatch.create(db, keys.size())) { return batch.get(keys, fn); }`. The zero-copy tier's `get`
+  returns `List<R>` with `null` marking a missing key, not `List<Optional<R>>`, matching `get(key,
+  Mapper<R>)`'s nullable-`R` convention. (closes [#126](https://github.com/dfa1/rocksdbffm/issues/126))
+
 ### Changed
 
 - **Breaking:** `MergeOperator.custom`'s `FullMergeFn` now receives zero-copy `MemorySegment`
