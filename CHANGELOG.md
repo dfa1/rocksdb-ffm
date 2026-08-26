@@ -17,6 +17,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SNAPPY`, `ZLIB`, `BZLIB2`, `XPRESS` — not linked into the bundled native library yet — instead
   of failing opaquely at DB-open time. ([#114](https://github.com/dfa1/rocksdbffm/pull/114),
   part of [#83](https://github.com/dfa1/rocksdbffm/issues/83))
+- **Breaking:** the scoped zero-copy `get(key, Mapper<R>)` (and its `ColumnFamilyHandle`/
+  `ReadOptions` overloads, across `RocksDBReadOperations`, `TransactionDB`, `Transaction`) now
+  returns `R` directly instead of `Optional<R>`, with `null` meaning "key not found" — matching
+  the existing `byte[] get(key)` convention. `Optional` boxed a result on every present read,
+  defeating the point of a zero-copy path. ([#130](https://github.com/dfa1/rocksdbffm/pull/130))
+- **Breaking:** `RocksDB.errHolder`, `toNative`, `free`, `checkError`, `toByteArray`,
+  `toBorrowedJavaString`, `toJavaString`, `toOptionalString`, `toByte`, `fromByte` are now
+  package-private. They're internal FFM plumbing consumed only by other wrapper classes in this
+  library, never meant for callers — being `public` just meant they cluttered `RocksDB`'s javadoc
+  page alongside the `open*`/`listColumnFamilies` factories users actually want.
+  ([#132](https://github.com/dfa1/rocksdbffm/pull/132), part of
+  [#131](https://github.com/dfa1/rocksdbffm/issues/131))
 
 ## [0.9] — 2026-08-21
 
