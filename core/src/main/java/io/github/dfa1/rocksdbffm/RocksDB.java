@@ -1860,7 +1860,7 @@ public final class RocksDB {
 	///
 	/// @param arena arena to allocate the holder from
 	/// @return a zeroed `char**` segment suitable for RocksDB error-out parameters
-	public static MemorySegment errHolder(Arena arena) {
+	static MemorySegment errHolder(Arena arena) {
 		MemorySegment holder = arena.allocate(ValueLayout.ADDRESS);
 		holder.set(ValueLayout.ADDRESS, 0, MemorySegment.NULL);
 		return holder;
@@ -1872,7 +1872,7 @@ public final class RocksDB {
 	/// @param arena arena to allocate the segment from
 	/// @param bytes source bytes to copy
 	/// @return native segment containing a copy of `bytes`
-	public static MemorySegment toNative(Arena arena, byte[] bytes) {
+	static MemorySegment toNative(Arena arena, byte[] bytes) {
 		MemorySegment seg = arena.allocate(bytes.length);
 		// TODO: check if this is better seg.copyFrom(MemorySegment.ofArray(bytes));
 		MemorySegment.copy(bytes, 0, seg, ValueLayout.JAVA_BYTE, 0, bytes.length);
@@ -1882,7 +1882,7 @@ public final class RocksDB {
 	/// Frees a malloc'd pointer returned by the RocksDB C API.
 	///
 	/// @param ptr pointer to free; must have been allocated by RocksDB
-	public static void free(MemorySegment ptr) {
+	static void free(MemorySegment ptr) {
 		try {
 			MH_FREE.invokeExact(ptr);
 		} catch (Throwable ignored) {
@@ -1894,7 +1894,7 @@ public final class RocksDB {
 	/// If so, throws a [RocksDBException] and frees the C string.
 	///
 	/// @param errHolder the `char**` segment previously passed to a RocksDB C call
-	public static void checkError(MemorySegment errHolder) {
+	static void checkError(MemorySegment errHolder) {
 		MemorySegment errPtr = errHolder.get(ValueLayout.ADDRESS, 0);
 		if (!MemorySegment.NULL.equals(errPtr)) {
 			String msg = toJavaString(errPtr);
@@ -1942,7 +1942,7 @@ public final class RocksDB {
 	/// @param ptr non-NULL native pointer to a borrowed buffer
 	/// @param len number of bytes to copy
 	/// @return a new array containing a copy of the bytes
-	public static byte[] toByteArray(MemorySegment ptr, long len) {
+	static byte[] toByteArray(MemorySegment ptr, long len) {
 		return ptr.reinterpret(len).toArray(ValueLayout.JAVA_BYTE);
 	}
 
@@ -1953,7 +1953,7 @@ public final class RocksDB {
 	///
 	/// @param ptr non-NULL native pointer to a borrowed, NUL-terminated string
 	/// @return the decoded string
-	public static String toBorrowedJavaString(MemorySegment ptr) {
+	static String toBorrowedJavaString(MemorySegment ptr) {
 		return ptr.reinterpret(Long.MAX_VALUE).getString(0);
 	}
 
@@ -1962,7 +1962,7 @@ public final class RocksDB {
 	///
 	/// @param ptr non-NULL `char*` allocated by RocksDB
 	/// @return the decoded string
-	public static String toJavaString(MemorySegment ptr) {
+	static String toJavaString(MemorySegment ptr) {
 		String s = ptr.reinterpret(Long.MAX_VALUE).getString(0);
 		free(ptr);
 		return s;
@@ -1972,7 +1972,7 @@ public final class RocksDB {
 	///
 	/// @param ptr `char*` allocated by RocksDB, or `MemorySegment.NULL`
 	/// @return the decoded string, or [Optional#empty()] if `ptr` is NULL
-	public static Optional<String> toOptionalString(MemorySegment ptr) {
+	static Optional<String> toOptionalString(MemorySegment ptr) {
 		if (MemorySegment.NULL.equals(ptr)) {
 			return Optional.empty();
 		}
@@ -1983,7 +1983,7 @@ public final class RocksDB {
 	///
 	/// @param value the boolean to convert
 	/// @return `(byte) 1` if `value` is `true`, `(byte) 0` otherwise
-	public static byte toByte(boolean value) {
+	static byte toByte(boolean value) {
 		return value ? (byte) 1 : (byte) 0;
 	}
 
@@ -1991,7 +1991,7 @@ public final class RocksDB {
 	///
 	/// @param value the native byte to convert
 	/// @return `false` if `value` is `0`, `true` otherwise
-	public static boolean fromByte(byte value) {
+	static boolean fromByte(byte value) {
 		return value != 0;
 	}
 }
