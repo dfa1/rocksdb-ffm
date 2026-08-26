@@ -9,6 +9,7 @@ patterns used here see [explanation.md](explanation.md).
 Every snippet omits imports; all types live in `io.github.dfa1.rocksdbffm`.
 
 - [Pick an access tier](#pick-an-access-tier)
+- [Batch multiple reads together](#batch-multiple-reads-together)
 - [Open a database read-only](#open-a-database-read-only)
 - [Use column families](#use-column-families)
 - [Read a consistent point-in-time view](#read-a-consistent-point-in-time-view)
@@ -86,6 +87,43 @@ the `MemorySegment` tier.
 The `Mapper` view is only valid for the duration of the callback — it's bound to an arena that
 closes the moment `fn` returns, so copy anything you need to keep (`value.toArray(JAVA_BYTE)`,
 a parsed primitive, …) before returning. Retaining the view itself throws `IllegalStateException`.
+
+## Batch multiple reads together
+
+`ReadBatch` runs one `rocksdb_batched_multi_get_cf` native call instead of *N* separate `get()`
+calls, reusing its bookkeeping arrays across every call instead of allocating fresh ones each time:
+
+```java
+try (var batch = ReadBatch.create(db, 100)) {
+	List<byte[]> values = batch.get(keys); // one entry per key, null where not found
+}
+```
+
+The column family is fixed once at `create`, not passed per call — give it there for a CF-scoped
+batch:
+
+```java
+try (var batch = ReadBatch.create(db, cf, 100)) {
+	List<byte[]> values = batch.get(keys);
+}
+```
+
+All three access tiers are available, mirroring single-key `get()`:
+
+```java
+List<byte[]> values = batch.get(keys);                             // byte[]
+List<CopyResult> results = batch.get(keyBuffers, valueBuffers);    // ByteBuffer
+List<Long> sizes = batch.get(keySegments, MemorySegment::byteSize); // MemorySegment, zero-copy
+```
+
+The number passed to `create` is a *capacity*, not a fixed size — a batch created with room for
+100 keys can still be called with fewer, so size it for your largest expected call and reuse the
+same batch across smaller ones.
+
+Only worth it once you're actually batching: benchmarks show `ReadBatch` is noticeably *slower*
+than a single `get()` call for one key — the fixed per-call overhead (column family resolution,
+capacity check) isn't amortized over just one lookup — breaks even around 4 keys, and wins by
+roughly 10–20% from 8 keys upward. For one-off single-key lookups, use `get()` directly.
 
 ## Open a database read-only
 
