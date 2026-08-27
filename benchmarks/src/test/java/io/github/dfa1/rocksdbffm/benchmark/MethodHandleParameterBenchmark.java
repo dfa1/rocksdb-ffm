@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 /// parameter" rule: does reading the downcall target from a `static final` field at the
 /// `invokeExact` call site actually out-perform reading the same target through a parameter,
 /// on a JDK 25 JIT -- and if it does, *where* does it start costing something? See
-/// [ADR 0006](../../../../../../../../docs/adr/0006-method-handles-usage.md)
+/// [ADR 0006](../../../../../../../../../docs/adr/0006-method-handles-usage.md)
 /// for why this question matters.
 ///
 /// `degree1` through `degree8` are the same shape repeated with a growing, compile-time-constant
