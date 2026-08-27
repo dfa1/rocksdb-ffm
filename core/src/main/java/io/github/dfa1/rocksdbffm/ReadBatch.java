@@ -125,7 +125,8 @@ public final class ReadBatch implements AutoCloseable {
 	/// call-scoped native buffer — there is nothing to preallocate for content that changes
 	/// every call. `null` at index `i` means `keys.get(i)` was not found; a genuine per-key
 	/// error surfaces as a thrown [RocksDBException] only after every key has been processed
-	/// and every native resource released.
+	/// and every native resource released. If more than one key failed, every error after the
+	/// first is attached to it via [Throwable#addSuppressed(Throwable)].
 	///
 	/// @param readOptions read options, e.g. containing a snapshot
 	/// @param keys        keys to look up; `keys.size()` must be at most [#capacity()]
@@ -165,7 +166,10 @@ public final class ReadBatch implements AutoCloseable {
 
 	/// Reads `keys` into the corresponding pre-sized buffer in `values` (same index, same
 	/// order), advancing each buffer's position on a successful copy, reusing this batch's
-	/// preallocated bookkeeping arrays. `keys` and `values` must be the same size.
+	/// preallocated bookkeeping arrays. `keys` and `values` must be the same size. A genuine
+	/// per-key error surfaces as a thrown [RocksDBException] only after every key has been
+	/// processed and every native resource released; if more than one key failed, every error
+	/// after the first is attached to it via [Throwable#addSuppressed(Throwable)].
 	///
 	/// @param readOptions read options, e.g. containing a snapshot
 	/// @param keys        keys to look up; `keys.size()` must be at most [#capacity()]
@@ -219,7 +223,8 @@ public final class ReadBatch implements AutoCloseable {
 	/// instead of allocating fresh ones — the only per-call allocation is the returned `List`
 	/// itself. `null` at index `i` means `keys.get(i)` was not found; a genuine per-key error
 	/// surfaces as a thrown [RocksDBException] only after every key has been processed and
-	/// every native resource released.
+	/// every native resource released. If more than one key failed, every error after the
+	/// first is attached to it via [Throwable#addSuppressed(Throwable)].
 	///
 	/// @param <R>         the type produced by `fn`
 	/// @param readOptions read options, e.g. containing a snapshot
@@ -249,35 +254,66 @@ public final class ReadBatch implements AutoCloseable {
 		}
 	}
 
-	/// Walks the `values`/`errs` arrays the native call above just populated, mapping every
-	/// found value through `fn` with no intermediate copy and releasing every `PinnableSlice`
-	/// exactly once. If any key reported a genuine error, every value/error is still drained
-	/// (so nothing leaks) and the first error is thrown once the walk completes.
-	private <R> List<R> collect(int n, Mapper<R> fn) {
+	/// Scans the `errs` array the native call above just populated for every genuine per-key
+	/// error (as opposed to not-found, which never sets an `errs` entry). Every error after
+	/// the first is attached to it via [Throwable#addSuppressed(Throwable)], so a single
+	/// `catch (RocksDBException e)` still sees every failing key, not just one -- at the cost
+	/// of visiting every index unconditionally rather than stopping at the first hit, since
+	/// there is no way to know a later key also failed without checking it.
+	///
+	/// @return the first per-key error, with every subsequent one suppressed on it, or `null`
+	/// if every key succeeded (found or not found)
+	private RocksDBException collectErrors(int n) {
 		RocksDBException firstError = null;
-		List<R> result = new ArrayList<>(n);
 		for (int i = 0; i < n; i++) {
 			MemorySegment errSlot = errsArr.asSlice((long) i * ValueLayout.ADDRESS.byteSize(), ValueLayout.ADDRESS);
-			MemorySegment valuePtr = valuesArr.getAtIndex(ValueLayout.ADDRESS, i);
 			try {
 				RocksDB.checkError(errSlot);
-				if (MemorySegment.NULL.equals(valuePtr)) {
-					result.add(null);
-				} else if (firstError == null) {
-					try (PinnableSlice ps = PinnableSlice.wrap(valuePtr)) {
-						result.add(ps.map(arena, fn, vallenOut));
-					}
-				} else {
-					PinnableSlice.wrap(valuePtr).close();
-				}
 			} catch (RocksDBException e) {
 				if (firstError == null) {
 					firstError = e;
+				} else {
+					firstError.addSuppressed(e);
 				}
 			}
 		}
+		return firstError;
+	}
+
+	/// Releases every found value's `PinnableSlice` without mapping or copying it -- used once
+	/// [#collectErrors] has already determined the whole call is going to fail, so
+	/// nothing but cleanup is left to do. `errs[i]` and `values[i]` are mutually exclusive per
+	/// `rocksdb_batched_multi_get_cf`'s own contract (a real error always means a null value),
+	/// so this only ever closes values that genuinely need it.
+	private void drainValues(int n) {
+		for (int i = 0; i < n; i++) {
+			MemorySegment valuePtr = valuesArr.getAtIndex(ValueLayout.ADDRESS, i);
+			if (!MemorySegment.NULL.equals(valuePtr)) {
+				PinnableSlice.wrap(valuePtr).close();
+			}
+		}
+	}
+
+	/// Maps every found value through `fn` with no intermediate copy, releasing each
+	/// `PinnableSlice` exactly once. If any key reported a genuine error, every value is
+	/// drained instead (so nothing leaks) and that error is thrown -- nothing here is mapped,
+	/// since the result would be discarded anyway.
+	private <R> List<R> collect(int n, Mapper<R> fn) {
+		RocksDBException firstError = collectErrors(n);
 		if (firstError != null) {
+			drainValues(n);
 			throw firstError;
+		}
+		List<R> result = new ArrayList<>(n);
+		for (int i = 0; i < n; i++) {
+			MemorySegment valuePtr = valuesArr.getAtIndex(ValueLayout.ADDRESS, i);
+			if (MemorySegment.NULL.equals(valuePtr)) {
+				result.add(null);
+			} else {
+				try (PinnableSlice ps = PinnableSlice.wrap(valuePtr)) {
+					result.add(ps.map(arena, fn, vallenOut));
+				}
+			}
 		}
 		return result;
 	}
@@ -285,30 +321,21 @@ public final class ReadBatch implements AutoCloseable {
 	/// Same walk-and-drain contract as [#collect], but copies each found value to a `byte[]`
 	/// instead of mapping it through a callback.
 	private List<byte[]> collectBytes(int n) {
-		RocksDBException firstError = null;
+		RocksDBException firstError = collectErrors(n);
+		if (firstError != null) {
+			drainValues(n);
+			throw firstError;
+		}
 		List<byte[]> result = new ArrayList<>(n);
 		for (int i = 0; i < n; i++) {
-			MemorySegment errSlot = errsArr.asSlice((long) i * ValueLayout.ADDRESS.byteSize(), ValueLayout.ADDRESS);
 			MemorySegment valuePtr = valuesArr.getAtIndex(ValueLayout.ADDRESS, i);
-			try {
-				RocksDB.checkError(errSlot);
-				if (MemorySegment.NULL.equals(valuePtr)) {
-					result.add(null);
-				} else if (firstError == null) {
-					try (PinnableSlice ps = PinnableSlice.wrap(valuePtr)) {
-						result.add(ps.toByteArray(vallenOut));
-					}
-				} else {
-					PinnableSlice.wrap(valuePtr).close();
-				}
-			} catch (RocksDBException e) {
-				if (firstError == null) {
-					firstError = e;
+			if (MemorySegment.NULL.equals(valuePtr)) {
+				result.add(null);
+			} else {
+				try (PinnableSlice ps = PinnableSlice.wrap(valuePtr)) {
+					result.add(ps.toByteArray(vallenOut));
 				}
 			}
-		}
-		if (firstError != null) {
-			throw firstError;
 		}
 		return result;
 	}
@@ -316,30 +343,21 @@ public final class ReadBatch implements AutoCloseable {
 	/// Same walk-and-drain contract as [#collect], but copies each found value into the
 	/// caller-supplied `values.get(i)` buffer instead of mapping it through a callback.
 	private List<CopyResult> collectBuffers(int n, List<ByteBuffer> values) {
-		RocksDBException firstError = null;
+		RocksDBException firstError = collectErrors(n);
+		if (firstError != null) {
+			drainValues(n);
+			throw firstError;
+		}
 		List<CopyResult> result = new ArrayList<>(n);
 		for (int i = 0; i < n; i++) {
-			MemorySegment errSlot = errsArr.asSlice((long) i * ValueLayout.ADDRESS.byteSize(), ValueLayout.ADDRESS);
 			MemorySegment valuePtr = valuesArr.getAtIndex(ValueLayout.ADDRESS, i);
-			try {
-				RocksDB.checkError(errSlot);
-				if (MemorySegment.NULL.equals(valuePtr)) {
-					result.add(CopyResult.NotFound.INSTANCE);
-				} else if (firstError == null) {
-					try (PinnableSlice ps = PinnableSlice.wrap(valuePtr)) {
-						result.add(ps.copyInto(values.get(i), vallenOut));
-					}
-				} else {
-					PinnableSlice.wrap(valuePtr).close();
-				}
-			} catch (RocksDBException e) {
-				if (firstError == null) {
-					firstError = e;
+			if (MemorySegment.NULL.equals(valuePtr)) {
+				result.add(CopyResult.NotFound.INSTANCE);
+			} else {
+				try (PinnableSlice ps = PinnableSlice.wrap(valuePtr)) {
+					result.add(ps.copyInto(values.get(i), vallenOut));
 				}
 			}
-		}
-		if (firstError != null) {
-			throw firstError;
 		}
 		return result;
 	}
