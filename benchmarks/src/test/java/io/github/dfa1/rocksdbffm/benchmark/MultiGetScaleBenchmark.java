@@ -39,6 +39,9 @@ import java.util.concurrent.TimeUnit;
 /// Keys are a fixed prefix of the populated set — same "settle the LSM tree first" setup as
 /// [FfmScaleBenchmark], for the same reason: without it, which level serves a given lookup
 /// varies per fork and dominates the measurement.
+///
+/// See [JniMultiGetScaleBenchmark] for the JNI baseline (byte[] tier only — the JNI API has
+/// no zero-copy read path).
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
