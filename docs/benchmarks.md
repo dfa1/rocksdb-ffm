@@ -47,6 +47,36 @@ overhead is a small fraction of the total, so removing it moves the total little
 iteration while the I/O cost is amortized across the batch — exactly the shape you would expect if
 the win comes from call overhead.
 
+## MultiGet: individual gets vs ReadBatch
+
+`MultiGetScaleBenchmark` compares repeated single-key `get()` calls against [ReadBatch](reference.md)
+for the same key count, swept from 1 to 128 keys — FFM only, no JNI side (this isolates ReadBatch's
+own batching win, not a binding comparison). One fork; `byte[]` and zero-copy (`MemorySegment`) tiers.
+
+| Batch size | Individual `byte[]` | ReadBatch `byte[]` |   Δ   | Individual 0-copy | ReadBatch 0-copy |   Δ   |
+|-----------:|---------------------:|--------------------:|:-----:|--------------------:|-------------------:|:-----:|
+|          1 |             2,454,792 |            1,502,818 | −39%  |            2,660,649 |           1,674,289 | −37%  |
+|          2 |             1,188,106 |              965,775 | −19%  |            1,283,908 |           1,113,954 | −13%  |
+|          4 |               594,607 |              551,385 |  −7%  |              642,368 |             652,425 |  +2%  |
+|          8 |               262,832 |              302,523 | +15%  |              316,920 |             362,836 | +14%  |
+|         16 |               126,613 |              151,635 | +20%  |              160,115 |             183,974 | +15%  |
+|         32 |                66,752 |               74,055 | +11%  |               76,001 |              86,178 | +13%  |
+|         64 |                30,218 |               35,914 | +19%  |               35,843 |              41,882 | +17%  |
+|        128 |                16,249 |               16,662 |  +3%  |               15,615 |              19,830 | +27%  |
+
+**Crossover is between batch sizes 2 and 4.** Below that, `ReadBatch`'s upfront bookkeeping
+(allocating the batched-multi-get call arrays at `create`) isn't amortized and individual `get()`
+wins. From batch size 4 up, `ReadBatch` wins, plateauing around +15-20% on this hardware.
+
+A single-fork run of the same sweep on a Linux x86_64 desktop showed the same crossover point but a
+much larger and still-growing advantage past it — individual gets fell behind by up to 2× at batch
+sizes ≥16, rather than plateauing at ~1.2×. The likely explanation is that this desktop's baseline
+per-call `get()` overhead is proportionally larger relative to its own raw throughput than the M5's,
+so there is more fixed cost left for `ReadBatch` to amortize away — but that's a hypothesis, not
+something confirmed with a profiler. Absolute throughput and the exact plateau are hardware-specific;
+the crossover shape (small batches favor individual gets, larger batches favor `ReadBatch`) is the
+part worth generalizing.
+
 ## Reproducing
 
 ```bash
@@ -56,7 +86,11 @@ the win comes from call overhead.
 
 The script builds everything, runs both the FFM and JNI suites, and prints a side-by-side table.
 Expect absolute numbers to differ on other hardware — a thermally throttled laptop depresses every
-absolute figure while leaving the ratios roughly intact.
+absolute figure while leaving the ratios roughly intact. For `MultiGetScaleBenchmark` specifically:
+
+```bash
+./scripts/benchmark.sh MultiGetScaleBenchmark -Djmh.forks=1
+```
 
 ## Profiling with `perf`
 
