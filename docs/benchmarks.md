@@ -57,3 +57,38 @@ the win comes from call overhead.
 The script builds everything, runs both the FFM and JNI suites, and prints a side-by-side table.
 Expect absolute numbers to differ on other hardware — a thermally throttled laptop depresses every
 absolute figure while leaving the ratios roughly intact.
+
+## Profiling with `perf`
+
+Linux `perf` is available and usable without root on the project's dev container: `perf stat`
+(hardware counters) and `perf record` (sampled call-graph profiling, including attaching to an
+already-running PID with `-p`) both work as the current user — `kernel.perf_event_paranoid` is set
+low enough for both. This resolves the open question in
+[ADR 0007](adr/0007-critical-linker-option-study.md), which flagged native-side profiling
+(`perf`/Instruments/async-profiler attached to `librocksdb.dylib`) as a complementary technique to
+the JMH-based measurements but hadn't confirmed `perf` itself was usable there.
+
+JMH 1.37 (the version this project pins) ships profilers that wrap `perf` directly —
+`LinuxPerfProfiler`, `LinuxPerfNormProfiler`, `LinuxPerfAsmProfiler`, `LinuxPerfC2CProfiler` — normally
+selected with `-prof perf`/`-prof perfnorm`/`-prof perfasm`/`-prof perfc2c` on JMH's own command-line
+runner. This repo's benchmark classes don't expose that flag (each `main()` builds its
+`OptionsBuilder` programmatically, e.g. `MultiGetScaleBenchmark`'s use of `GCProfiler` — see
+`benchmarks/src/test/java/io/github/dfa1/rocksdbffm/benchmark/MultiGetScaleBenchmark.java`); add one
+the same way to use it:
+
+```java
+builder.addProfiler(org.openjdk.jmh.profile.LinuxPerfNormProfiler.class);
+```
+
+To profile ad hoc without touching a benchmark's `main()`, attach directly to a running `@Fork`'s
+PID (each fork is its own JVM process — find the PID with `jps` while it's warming up):
+
+```bash
+perf stat -p <pid>          # aggregate hardware counters until Ctrl-C
+perf record -p <pid> -g     # sampled call-graph -> perf.data
+```
+
+For call-graph frames to resolve through JIT-compiled Java code, add `-XX:+PreserveFramePointer` to
+the fork's `jvmArgsPrepend`; even then, plain `perf record` won't symbolicate JIT frames the way
+`async-profiler`'s `-agentpath` integration does, so prefer async-profiler when Java-level (not just
+native) stacks matter.

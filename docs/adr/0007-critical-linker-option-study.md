@@ -119,7 +119,10 @@ drawing any conclusion from a RocksDB-shaped one.
   measure how much of `PinnableSlice`'s originally-observed 6-7% was genuine native-side work
   (`rocksdb_pinnableslice_destroy`'s actual `delete`) that no linker option can remove — that would
   need a native profiler (`perf`, Instruments, or async-profiler attached to `librocksdb.dylib`),
-  which is out of scope for a Java-only JMH study and not attempted by this ADR.
+  which is out of scope for a Java-only JMH study and not attempted by this ADR. (`perf stat`/`perf
+  record` are confirmed usable without root on this project's dev container — see
+  [benchmarks.md#profiling-with-perf](../benchmarks.md#profiling-with-perf) — which unblocks this as
+  a future step.)
 
 ### Risks to manage
 
