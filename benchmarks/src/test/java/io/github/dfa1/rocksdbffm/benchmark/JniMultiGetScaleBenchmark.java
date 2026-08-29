@@ -14,6 +14,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.profile.GCProfiler;
+import org.openjdk.jmh.profile.LinuxPerfNormProfiler;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.rocksdb.FlushOptions;
 import org.rocksdb.Options;
@@ -106,12 +107,13 @@ public class JniMultiGetScaleBenchmark {
 		return total;
 	}
 
-	/// Runs this class with [GCProfiler] attached. `-Djmh.include=<regex>` narrows which
-	/// benchmarks run and `-Djmh.forks=<n>` overrides the `@Fork` count above.
+	/// Runs this class with [GCProfiler] and [LinuxPerfNormProfiler] attached. `-Djmh.include=<regex>`
+	/// narrows which benchmarks run and `-Djmh.forks=<n>` overrides the `@Fork` count above.
 	static void main() throws Exception {
 		OptionsBuilder builder = new OptionsBuilder();
 		builder.addProfiler(GCProfiler.class);
-		builder.include(System.getProperty("jmh.include", JniMultiGetScaleBenchmark.class.getSimpleName()));
+		builder.addProfiler(LinuxPerfNormProfiler.class);
+		builder.include(System.getProperty("jmh.include", JniMultiGetScaleBenchmark.class.getName()));
 		String forks = System.getProperty("jmh.forks");
 		if (forks != null) {
 			builder.forks(Integer.parseInt(forks));
