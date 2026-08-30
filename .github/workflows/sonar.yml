@@ -54,6 +54,6 @@ jobs:
         run: |
           mvn --batch-mode verify -P coverage,all-natives \
             org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=dfa1_rocksdbffm \
+            -Dsonar.projectKey=dfa1_rocksdb-ffm \
             -Dsonar.organization=dfa11 \
             -Dsonar.host.url=https://sonarcloud.io
