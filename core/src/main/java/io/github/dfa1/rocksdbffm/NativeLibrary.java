@@ -27,10 +27,10 @@ public class NativeLibrary {
 				fd, options);
 	}
 
-	private static String resolveLibPath() {
+	private static Path resolveLibPath() {
 		String explicit = System.getProperty("rocksdb.lib.path");
 		if (explicit != null) {
-			return explicit;
+			return Path.of(explicit);
 		}
 
 		String classifier = classifier();
@@ -55,10 +55,10 @@ public class NativeLibrary {
 	/// copy, nothing to delete), while an upgrade gets a fresh path instead of
 	/// colliding with a copy a concurrently running older process still holds
 	/// open.
-	private static String extract(byte[] bytes, String ext) throws IOException {
+	private static Path extract(byte[] bytes, String ext) throws IOException {
 		Path target = Path.of(System.getProperty("java.io.tmpdir"), "rocksdbffm-" + sha256(bytes) + "." + ext);
 		if (Files.isRegularFile(target) && Files.size(target) == bytes.length) {
-			return target.toString();
+			return target;
 		}
 
 		Path staging = Files.createTempFile(target.getParent(), "librocksdb-", "." + ext);
@@ -77,7 +77,7 @@ public class NativeLibrary {
 		} finally {
 			Files.deleteIfExists(staging);
 		}
-		return target.toString();
+		return target;
 	}
 
 	private static String sha256(byte[] bytes) {
