@@ -9,7 +9,7 @@
 
 	<name>RocksDB FFM</name>
 	<description>Java FFM (Foreign Function &amp; Memory) bindings for RocksDB</description>
-	<url>https://github.com/dfa1/rocksdbffm</url>
+	<url>https://github.com/dfa1/rocksdb-ffm</url>
 
 	<licenses>
 		<license>
@@ -28,9 +28,9 @@
 	</developers>
 
 	<scm>
-		<connection>scm:git:https://github.com/dfa1/rocksdbffm.git</connection>
-		<developerConnection>scm:git:git@github.com:dfa1/rocksdbffm.git</developerConnection>
-		<url>https://github.com/dfa1/rocksdbffm</url>
+		<connection>scm:git:https://github.com/dfa1/rocksdb-ffm.git</connection>
+		<developerConnection>scm:git:git@github.com:dfa1/rocksdb-ffm.git</developerConnection>
+		<url>https://github.com/dfa1/rocksdb-ffm</url>
 		<tag>HEAD</tag>
 	</scm>
 
