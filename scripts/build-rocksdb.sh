@@ -62,7 +62,7 @@ DEST_DIR="$OUTPUT_RESOURCES/native/$CLASSIFIER"
 mkdir -p "$DEST_DIR"
 
 # Skip if already built (CI cache or repeated local builds)
-if [ -f "$DEST_DIR/$LIB_NAME" ]; then
+if [ -f "$DEST_DIR/$LIB_NAME" ] && [ -f "$DEST_DIR/ldb" ]; then
     echo "[build-rocksdb] $DEST_DIR/$LIB_NAME already exists, skipping build."
     exit 0
 fi
@@ -172,10 +172,66 @@ LZ4_SRC_DIR="$(ls -d lz4-*/ | head -1)"
 export CC="zig cc -target $ZIG_TARGET -I$ROCKSDB_DIR/${ZSTD_SRC_DIR}lib -I$ROCKSDB_DIR/${LZ4_SRC_DIR}lib -L$ROCKSDB_DIR"
 export CXX="zig c++ -target $ZIG_TARGET -I$ROCKSDB_DIR/${ZSTD_SRC_DIR}lib -I$ROCKSDB_DIR/${LZ4_SRC_DIR}lib -L$ROCKSDB_DIR"
 
-make shared_lib EXTRA_LDFLAGS="-s" EXTRA_CXXFLAGS="$EXTRA_FLAGS" EXTRA_CFLAGS="$EXTRA_FLAGS" -j"$JOBS"
+# USE_RTTI=1: with DEBUG_LEVEL=0 (release) and USE_RTTI unset, the Makefile
+# adds -fno-rtti (see Makefile's DEBUG_LEVEL/USE_RTTI block). That's fine for
+# $LIB_NAME itself, but tools/ldb.cc's Customizable-based option parsing needs
+# RTTI (dynamic_cast) and fails to *link* without it — not a warning, a hard
+# undefined-typeinfo-symbol error, because the affected classes (WriteBatch::
+# Handler, Customizable, ...) end up with a vtable but no typeinfo emitted at
+# all in that translation unit. Object files are reused as-is across the
+# shared_lib and ldb/sst_dump make invocations below (ALLOW_BUILD_PARAMETER_
+# CHANGE=1 disables the Makefile's own guard against exactly this kind of
+# inconsistency), so USE_RTTI=1 must apply from this first invocation onward,
+# not just the later ldb/sst_dump one — otherwise these objects get compiled
+# once here without RTTI and are never recompiled.
+#
+# -Wl,-Bsymbolic (both this invocation and the ldb/sst_dump one below): zig
+# c++ statically bundles its own libc++ into every C++ link output, so
+# $LIB_NAME and ldb/sst_dump each embed an independent copy — without
+# -Bsymbolic, ELF symbol interposition lets ldb/sst_dump's copy preempt
+# $LIB_NAME's own libc++ calls at runtime, corrupting the heap. See
+# [ADR 0008](../docs/adr/0008-ldb-sst-dump-dynamic-linking.md) for the full
+# root-cause analysis and why this flag (not -Bsymbolic-functions, rejected by
+# zig's -Wl, allowlist) is the fix.
+make shared_lib USE_RTTI=1 EXTRA_LDFLAGS="-s -Wl,-Bsymbolic" EXTRA_CXXFLAGS="$EXTRA_FLAGS" EXTRA_CFLAGS="$EXTRA_FLAGS" -j"$JOBS"
+
+# ---------------------------------------------------------------------------
+# ldb / sst_dump: RocksDB's own admin/inspection CLIs (tools/ldb.cc,
+# tools/sst_dump.cc), not part of the C API. LIB_MODE=shared links them
+# against the $LIB_NAME we just built instead of relinking the whole (static)
+# library into each binary: ~300KB/binary plus one shared
+# librocksdb_tools.$EXT, versus ~15MB apiece with the default static link.
+# DEBUG_LEVEL=0: unlike shared_lib, `ldb`/`sst_dump` are not among the target
+# names the Makefile auto-forces to release mode, so without this they'd
+# rebuild every tool source in (slower, assertions-on) debug mode instead.
+make ldb sst_dump LIB_MODE=shared DEBUG_LEVEL=0 USE_RTTI=1 EXTRA_LDFLAGS="-s -Wl,-Bsymbolic" EXTRA_CXXFLAGS="$EXTRA_FLAGS" EXTRA_CFLAGS="$EXTRA_FLAGS" -j"$JOBS"
+
+EXT="${LIB_NAME##*.}"
+TOOLS_LIB="librocksdb_tools.$EXT"
+
+# ldb/sst_dump reference $LIB_NAME's shared library by its versioned SONAME
+# (e.g. librocksdb.11.8.dylib / librocksdb.so.11.8), not by the unversioned
+# $LIB_NAME we extract for NativeLibrary's own FFM loading — the Makefile
+# embeds $(SHARED3) = librocksdb[.so].$MAJOR.$MINOR as the -soname/-install_name
+# of the shared lib (see `AM_SHARE`/$(SHARED3) target in Makefile). Recompute
+# that name the same way the Makefile does, from include/rocksdb/version.h, and
+# ship it as a small text file: NativeToolSupport reads it at extraction time
+# and creates a symlink under that exact name next to the extracted $LIB_NAME,
+# so the OS dynamic linker's bare-name lookup finds it without duplicating the
+# ~17MB library content under two file names.
+ROCKSDB_MAJOR=$(grep -E "ROCKSDB_MAJOR.[0-9]" include/rocksdb/version.h | cut -d ' ' -f 3)
+ROCKSDB_MINOR=$(grep -E "ROCKSDB_MINOR.[0-9]" include/rocksdb/version.h | cut -d ' ' -f 3)
+if [ "$EXT" = "dylib" ]; then
+    SONAME="librocksdb.$ROCKSDB_MAJOR.$ROCKSDB_MINOR.dylib"
+else
+    SONAME="librocksdb.so.$ROCKSDB_MAJOR.$ROCKSDB_MINOR"
+fi
 
 # ---------------------------------------------------------------------------
 # Install
 # ---------------------------------------------------------------------------
 cp "$ROCKSDB_DIR/$LIB_NAME" "$DEST_DIR/$LIB_NAME"
-echo "[build-rocksdb] Installed: $DEST_DIR/$LIB_NAME"
+cp "$ROCKSDB_DIR/ldb" "$ROCKSDB_DIR/sst_dump" "$ROCKSDB_DIR/$TOOLS_LIB" "$DEST_DIR/"
+chmod +x "$DEST_DIR/ldb" "$DEST_DIR/sst_dump"
+echo "$SONAME" > "$DEST_DIR/librocksdb.soname"
+echo "[build-rocksdb] Installed: $DEST_DIR/$LIB_NAME, ldb, sst_dump, $TOOLS_LIB"

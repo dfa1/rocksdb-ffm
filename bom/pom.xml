@@ -22,6 +22,16 @@
 			</dependency>
 			<dependency>
 				<groupId>io.github.dfa1</groupId>
+				<artifactId>rocksdbffm-ldb</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.dfa1</groupId>
+				<artifactId>rocksdbffm-sst-dump</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.dfa1</groupId>
 				<artifactId>rocksdbffm-native-osx-aarch64</artifactId>
 				<version>${project.version}</version>
 			</dependency>
