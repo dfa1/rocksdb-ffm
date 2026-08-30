@@ -342,12 +342,6 @@ Reopening requires listing every existing column family, `default` included — 
 `Options.setCompression`/`setBlobCompressionType` reject them eagerly with
 `UnsupportedOperationException` rather than deferring to a native failure at DB-open time.
 
-## System properties
-
-| Property             | Effect                                                                          |
-|:---------------------|:---------------------------------------------------------------------------------|
-| `rocksdb.lib.path`   | Load the native library from this absolute path instead of the classpath resource |
-
 ## Feature status
 
 Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not implemented yet ·

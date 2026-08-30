@@ -276,11 +276,11 @@ throws `UnsatisfiedLinkError` with a message naming the classifier it looked for
 
 There is **no** fallback to a Homebrew or system-installed `librocksdb`, by design: a system library
 is a different build at a different version, and silently binding to it turns a missing-dependency
-error into an undefined-behavior bug. The one supported override is explicit:
-
-```
--Drocksdb.lib.path=/path/to/librocksdb.so
-```
+error into an undefined-behavior bug. There is also deliberately no path override
+(no `-Drocksdb.lib.path`): loading a caller-supplied native library is arbitrary native code
+execution in the JVM process, so the loader trusts only the signed artifact on the classpath. To
+run a self-built `librocksdb`, package it into the native resource jar — see
+[Build the native library from source](how-to.md#build-the-native-library-from-source).
 
 All native modules are ordinary unconditional dependencies — applications declare all five, the loader
 ignores the ones that don't match the running platform, and declaring all five is a normal thing to do

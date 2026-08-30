@@ -687,17 +687,6 @@ try (var waitOptions = WaitForCompactOptions.create()
 
 `db.disableFileDeletions()` / `enableFileDeletions()` bracket an external copy of the live files.
 
-## Load a custom native library
-
-Point the loader at a library on disk instead of the bundled classpath resource — useful for
-bisecting a RocksDB build or testing a patched one:
-
-```
-java -Drocksdb.lib.path=/path/to/librocksdb.so ...
-```
-
-Details in [explanation.md#native-library-loading](explanation.md#native-library-loading).
-
 ## Build the native library from source
 
 Only needed when working on this repository:

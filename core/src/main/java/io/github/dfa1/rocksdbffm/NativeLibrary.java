@@ -14,7 +14,16 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
-/// Infrastructure — library loading and symbol lookup
+/// Infrastructure — library loading and symbol lookup.
+///
+/// The library is resolved only from the platform-specific native JAR on the
+/// classpath, extracted to a temp file, and loaded once at class-init time.
+///
+/// There is deliberately no path override (no `-Drocksdb.lib.path`): loading a
+/// caller-supplied native library is arbitrary native code execution in the JVM
+/// process, so the loader trusts only the signed artifact on the classpath. To
+/// run a self-built `librocksdb`, package it into the native resource jar — see
+/// `docs/how-to.md`.
 public class NativeLibrary {
 
 	private static final Linker LINKER = Linker.nativeLinker();
@@ -28,11 +37,6 @@ public class NativeLibrary {
 	}
 
 	private static Path resolveLibPath() {
-		String explicit = System.getProperty("rocksdb.lib.path");
-		if (explicit != null) {
-			return Path.of(explicit);
-		}
-
 		String classifier = classifier();
 		String ext = classifier.startsWith("osx") ? "dylib" : classifier.startsWith("windows") ? "dll" : "so";
 		String resource = "/native/" + classifier + "/librocksdb." + ext;
