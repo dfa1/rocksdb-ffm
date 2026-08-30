@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10] — 2026-08-30
+
+`ReadBatch` (a reusable, preallocated multiGet), full SST-file inspection (`LiveFiles`,
+`LiveFilesStorageInfo`), `SstPartitionerFactory` and `SliceTransform` prefix wrappers, explicit
+`WriteOptions`/`ReadOptions` overloads across the direct read/write surface, a zero-copy
+`MergeOperator.custom`, and three breaking API cleanups.
+
 ### Added
 
 - `ReadBatch`: batched multiGet, all three tiers (byte[], ByteBuffer, MemorySegment/zero-copy via
@@ -16,9 +23,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ReadBatch.create(db, keys.size())) { return batch.get(keys, fn); }`. The zero-copy tier's `get`
   returns `List<R>` with `null` marking a missing key, not `List<Optional<R>>`, matching `get(key,
   Mapper<R>)`'s nullable-`R` convention. (closes [#126](https://github.com/dfa1/rocksdbffm/issues/126))
+- `LiveFiles`/`LiveFileInfo`: lazy, per-field view over `rocksdb_livefiles` for inspecting a
+  database's current SST files. ([#124](https://github.com/dfa1/rocksdbffm/pull/124))
+- `LiveFilesStorageInfo`/`LiveFileStorageInfo`: broader than `LiveFiles` — every file needed to
+  reconstruct the database (SST, WAL, MANIFEST, `CURRENT`, `OPTIONS`, blob), over
+  `rocksdb_get_livefiles_storage_info`. ([#125](https://github.com/dfa1/rocksdbffm/pull/125))
+- `SstPartitionerFactory` (fixed-prefix), wired via a new `Options` setter, so compaction can
+  split output SST files at key-prefix boundaries instead of only by size. Closes the Type A half
+  of [#123](https://github.com/dfa1/rocksdbffm/issues/123); the custom callback-based partitioner
+  half has no C API entry point and is recorded as a Type B gap. Also fixes forced bottommost
+  compaction. ([#124](https://github.com/dfa1/rocksdbffm/pull/124))
+- `SliceTransform` (fixed-prefix extractor), wired via `Options.setPrefixExtractor`, enabling
+  prefix-based Bloom filters and prefix iteration.
+  ([#128](https://github.com/dfa1/rocksdbffm/pull/128))
+- Explicit `WriteOptions` overloads for every direct write op (put/merge/delete/deleteRange/write,
+  all tiers and CF variants) — 30 new methods alongside the existing default-options methods.
+  ([#113](https://github.com/dfa1/rocksdbffm/pull/113))
+- Explicit `ReadOptions` overloads for `get(ByteBuffer, ByteBuffer)`, `get(MemorySegment,
+  MemorySegment)`, and `get(MemorySegment, Mapper)` (plus CF-scoped equivalents), matching the
+  `byte[]` tier which already had both.
 
 ### Changed
 
+- `RocksDB.close` renamed to `closeDb` for clarity alongside the `open*` factories.
 - **Breaking:** `MergeOperator.custom`'s `FullMergeFn` now receives zero-copy `MemorySegment`
   views of the key, existing value, and operands instead of copied `byte[]`s — benchmarking
   showed the copies dominating once operands exceed ~1KB, so there's no separate copying tier.
@@ -39,6 +66,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   page alongside the `open*`/`listColumnFamilies` factories users actually want.
   ([#132](https://github.com/dfa1/rocksdbffm/pull/132), part of
   [#131](https://github.com/dfa1/rocksdbffm/issues/131))
+
+### Fixed
+
+- `MemorySize.toString()` no longer puts a space between the value and its unit ("1571B", not
+  "1571 B") — matching the no-space convention used elsewhere (e.g. "10ms"), and no longer reading
+  as two fields when interleaved with other key=value diagnostic output.
+- Forced bottommost compaction, fixed alongside the `SstPartitionerFactory` work.
+  ([#124](https://github.com/dfa1/rocksdbffm/pull/124))
 
 ## [0.9] — 2026-08-21
 
