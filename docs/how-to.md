@@ -31,6 +31,7 @@ Every snippet omits imports; all types live in `io.github.dfa1.rocksdbffm`.
 - [Throttle background I/O](#throttle-background-io)
 - [Cap disk usage](#cap-disk-usage)
 - [Inspect properties and statistics](#inspect-properties-and-statistics)
+- [Inspect a database with ldb and sst_dump](#inspect-a-database-with-ldb-and-sst_dump)
 - [Profile a single operation](#profile-a-single-operation)
 - [Route RocksDB logs into your logger](#route-rocksdb-logs-into-your-logger)
 - [Observe flushes and compactions](#observe-flushes-and-compactions)
@@ -710,6 +711,63 @@ long totalHits = openDbOptions.stream()
 		.mapToLong(o -> o.getTickerCount(TickerType.BLOCK_CACHE_HIT))
 		.sum();
 ```
+
+## Inspect a database with ldb and sst_dump
+
+`ldb` (offline database inspection/admin) and `sst_dump` (single SST file inspection) are RocksDB's
+own command-line tools — not part of `rocksdb/c.h`, so nothing else in this library wraps them.
+`rocksdbffm-ldb` and `rocksdbffm-sst-dump` run the bundled binaries as subprocesses, either
+programmatically or as a `java -jar`/`java -cp` CLI. Add the module plus a native artifact for your
+platform, same as `rocksdbffm-core`:
+
+```kotlin
+implementation("io.github.dfa1:rocksdbffm-ldb")
+implementation("io.github.dfa1:rocksdbffm-sst-dump")
+runtimeOnly("io.github.dfa1:rocksdbffm-native-linux-x86_64")
+```
+
+Both tools need the target database or SST file to not be open elsewhere — close your `RocksDB`
+handle first:
+
+```java
+import io.github.dfa1.rocksdbffm.ldb.LdbTool;
+import io.github.dfa1.rocksdbffm.sstdump.SstDumpTool;
+import io.github.dfa1.rocksdbffm.sstdump.SstDumpCommand;
+
+ToolResult result = LdbTool.checkConsistency(dbPath);
+if (!result.isSuccess()) {
+	System.out.println(result.stdout()); // ldb's own diagnostic output
+}
+
+LdbTool.manifestDump(dbPath, /* verbose */ true);
+
+// Escape hatch for the ~30 other ldb subcommands not given a dedicated method:
+LdbTool.run(dbPath, "list_file_range_deletes", "--max_keys=100");
+
+SstDumpTool.request(sstFilePath)
+		.command(SstDumpCommand.SCAN)
+		.outputHex()
+		.run();
+```
+
+A non-zero `ToolResult.exitCode()` is a normal answer from the tool (e.g. "this database is
+inconsistent"), not a failure of this library, so it's reported as a value rather than thrown. Only
+a failure to launch or wait for the subprocess itself throws `ToolLaunchException`.
+
+For direct command-line use without writing Java, both jars declare a `Main-Class` and forward
+arguments verbatim to the underlying tool:
+
+```console
+$ java -cp rocksdbffm-ldb.jar:rocksdbffm-core.jar:rocksdbffm-native-linux-x86_64.jar \
+    io.github.dfa1.rocksdbffm.ldb.Main checkconsistency --db=/path/to/db
+```
+
+A bare `java -jar rocksdbffm-ldb.jar` won't find the native dependency on its own — `-jar` ignores
+`-cp`, so the native artifact jar needs to be on the classpath some other way (`-cp` as above, or a
+manifest `Class-Path` entry if you copy the dependency jars alongside).
+
+Not bundled for `windows-*` classifiers yet — `NativeToolSupport.extractToolDirectory()` throws
+`UnsupportedOperationException` there.
 
 ## Profile a single operation
 

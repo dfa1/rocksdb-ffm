@@ -38,11 +38,13 @@ Group id `io.github.dfa1`. Import the BOM once and omit versions everywhere else
 |:-------------------------------------|:---------------------------------------------|
 | `rocksdbffm-bom`                     | Version management (`<type>pom</type>`, `<scope>import</scope>`) |
 | `rocksdbffm-core`                    | Pure Java — the entire API                   |
-| `rocksdbffm-native-osx-aarch64`      | `librocksdb.dylib` for macOS on Apple silicon |
-| `rocksdbffm-native-linux-x86_64`     | `librocksdb.so` for Linux x86-64             |
-| `rocksdbffm-native-linux-aarch64`    | `librocksdb.so` for Linux aarch64            |
-| `rocksdbffm-native-windows-x86_64`   | `librocksdb.dll` for Windows x86-64          |
-| `rocksdbffm-native-windows-aarch64`  | `librocksdb.dll` for Windows aarch64         |
+| `rocksdbffm-ldb`                     | `LdbTool` (offline DB inspection/admin) + `java -jar` CLI passthrough to bundled `ldb` |
+| `rocksdbffm-sst-dump`                | `SstDumpTool` (single SST file inspection) + `java -jar` CLI passthrough to bundled `sst_dump` |
+| `rocksdbffm-native-osx-aarch64`      | `librocksdb.dylib` for macOS on Apple silicon, plus `ldb`/`sst_dump` binaries and their `librocksdb_tools.dylib` |
+| `rocksdbffm-native-linux-x86_64`     | `librocksdb.so` for Linux x86-64, plus `ldb`/`sst_dump` binaries and their `librocksdb_tools.so` |
+| `rocksdbffm-native-linux-aarch64`    | `librocksdb.so` for Linux aarch64, plus `ldb`/`sst_dump` binaries and their `librocksdb_tools.so` |
+| `rocksdbffm-native-windows-x86_64`   | `librocksdb.dll` for Windows x86-64 — no `ldb`/`sst_dump` (built by a separate script with no equivalent tool step yet) |
+| `rocksdbffm-native-windows-aarch64`  | `librocksdb.dll` for Windows aarch64 — no `ldb`/`sst_dump` (built by a separate script with no equivalent tool step yet) |
 
 Depend on `rocksdbffm-core` plus one native artifact per platform you ship to; declaring several is
 normal and the loader picks the matching one at startup. Gradle:
@@ -534,6 +536,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Event listeners            |   ✅    | `EventNotifier` via `Options.addEventListener`; 8 of the C API's 10 callbacks (the two subcompaction ones are deliberately not exposed) |
 | Background jobs            |   🚧    | `cancelAllBackgroundWork`, manual-compaction toggles, `waitForCompact`                       |
 | Compaction style            |   ✅    | `Options.CompactionStyle` (`LEVEL`/`UNIVERSAL`/`FIFO`); `FifoCompactionOptions`, `UniversalCompactionOptions` |
+| Command-line tools         |   ✅    | `rocksdbffm-ldb`/`rocksdbffm-sst-dump` — `LdbTool`/`SstDumpTool` wrap the bundled `ldb`/`sst_dump` binaries (not in `c.h`, no C API equivalent) as subprocesses; also directly `java -jar`-able. Not bundled for `windows-*` classifiers |
 | MultiGet                   |  🚧    | `ReadBatch` — the sole entry point for batched reads (all three tiers), built on `rocksdb_batched_multi_get_cf` — the modern, PinnableSlice-based, single-CF-per-call variant only; reusable and preallocated (create once for up to N keys, no per-call bookkeeping-array allocation on reuse); no separate one-shot `multiGet()` method exists — a single-batch read is just `try (var batch = ReadBatch.create(db, keys.size())) { return batch.get(keys, fn); }`; legacy `rocksdb_multi_get`/`_cf`/`_with_ts` (no batching perf benefit per upstream) and `TransactionDB`/`Transaction` multi-get are not wrapped |
 | Merge                      |   ✅    | `merge()` write op on all 7 write-capable types (byte[]/ByteBuffer/MemorySegment, CF variants), see [#8](https://github.com/dfa1/rocksdbffm/issues/8); requires a `MergeOperator` configured via `Options.setMergeOperator`, else calls fail with `RocksDBException` |
 | MergeOperator               |   ✅    | `MergeOperator.uint64Add()` (built-in `rocksdb_options_set_uint64add_merge_operator`) and `MergeOperator.custom(String, FullMergeFn)` (`rocksdb_mergeoperator_create()` — `full_merge` implemented in Java, `partial_merge` always declines; `fn` receives zero-copy `MemorySegment` views of key/existing-value/operands instead of copied `byte[]`s, see [#94](https://github.com/dfa1/rocksdbffm/issues/94)) |

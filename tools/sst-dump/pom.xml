@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>io.github.dfa1</groupId>
+		<artifactId>rocksdbffm</artifactId>
+		<version>0.12-SNAPSHOT</version>
+		<relativePath>../../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>rocksdbffm-sst-dump</artifactId>
+	<name>RocksDB FFM sst_dump Tool</name>
+	<packaging>jar</packaging>
+
+	<dependencies>
+		<dependency>
+			<groupId>io.github.dfa1</groupId>
+			<artifactId>rocksdbffm-core</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<!-- native: test scope only, matching core/pom.xml — the published
+		     rocksdbffm-sst-dump jar ships no native binaries; a consumer adds
+		     the one rocksdbffm-native-<their-platform> dependency themselves,
+		     exactly as they already must for rocksdbffm-core. -->
+		<dependency>
+			<groupId>io.github.dfa1</groupId>
+			<artifactId>rocksdbffm-native-osx-aarch64</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.github.dfa1</groupId>
+			<artifactId>rocksdbffm-native-linux-x86_64</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.github.dfa1</groupId>
+			<artifactId>rocksdbffm-native-linux-aarch64</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.github.dfa1</groupId>
+			<artifactId>rocksdbffm-native-windows-x86_64</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.github.dfa1</groupId>
+			<artifactId>rocksdbffm-native-windows-aarch64</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- test -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>io.github.dfa1.rocksdbffm.sstdump.Main</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

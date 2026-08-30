@@ -41,6 +41,8 @@
 		<module>native/windows-x86_64</module>
 		<module>native/windows-aarch64</module>
 		<module>core</module>
+		<module>tools/ldb</module>
+		<module>tools/sst-dump</module>
 		<module>bom</module>
 		<module>integration-tests</module>
 		<module>benchmarks</module>
@@ -87,6 +89,16 @@
 			<dependency>
 				<groupId>io.github.dfa1</groupId>
 				<artifactId>rocksdbffm-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.dfa1</groupId>
+				<artifactId>rocksdbffm-ldb</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.dfa1</groupId>
+				<artifactId>rocksdbffm-sst-dump</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

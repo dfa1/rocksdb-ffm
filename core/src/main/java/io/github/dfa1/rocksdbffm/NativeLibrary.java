@@ -84,7 +84,7 @@ public class NativeLibrary {
 		return target;
 	}
 
-	private static String sha256(byte[] bytes) {
+	static String sha256(byte[] bytes) {
 		try {
 			return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
 		} catch (NoSuchAlgorithmException e) {
@@ -92,7 +92,7 @@ public class NativeLibrary {
 		}
 	}
 
-	private static String classifier() {
+	static String classifier() {
 		String os = System.getProperty("os.name", "").toLowerCase();
 		String arch = System.getProperty("os.arch", "").toLowerCase();
 		String osName = os.contains("mac") ? "osx" : os.contains("win") ? "windows" : "linux";
