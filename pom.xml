@@ -238,6 +238,11 @@
 					<artifactId>jacoco-maven-plugin</artifactId>
 					<version>0.8.15</version>
 				</plugin>
+				<plugin>
+					<groupId>org.pitest</groupId>
+					<artifactId>pitest-maven</artifactId>
+					<version>1.30.0</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 		<plugins>
