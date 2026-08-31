@@ -51,6 +51,8 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_GET_COMPACTION_STYLE;
 	/// `void rocksdb_options_set_fifo_compaction_options(rocksdb_options_t* opt, rocksdb_fifo_compaction_options_t* fifo);`
 	private static final MethodHandle MH_SET_FIFO_COMPACTION_OPTIONS;
+	/// `void rocksdb_options_set_universal_compaction_options(rocksdb_options_t*, rocksdb_universal_compaction_options_t*);`
+	private static final MethodHandle MH_SET_UNIVERSAL_COMPACTION_OPTIONS;
 	/// `void rocksdb_options_set_enable_blob_files(rocksdb_options_t* opt, unsigned char val);`
 	private static final MethodHandle MH_SET_ENABLE_BLOB_FILES;
 	/// `unsigned char rocksdb_options_get_enable_blob_files(rocksdb_options_t* opt);`
@@ -177,6 +179,10 @@ public final class Options extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
 		MH_SET_FIFO_COMPACTION_OPTIONS = NativeLibrary.lookup("rocksdb_options_set_fifo_compaction_options",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_SET_UNIVERSAL_COMPACTION_OPTIONS = NativeLibrary.lookup(
+				"rocksdb_options_set_universal_compaction_options",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_SET_ENABLE_BLOB_FILES = NativeLibrary.lookup("rocksdb_options_set_enable_blob_files",
@@ -452,7 +458,8 @@ public final class Options extends NativeObject {
 		/// general-purpose read/write/space balance.
 		LEVEL(0),
 		/// Merges files of similar size, minimizing write amplification at the cost of higher
-		/// read/space amplification and periodic large compactions.
+		/// read/space amplification and periodic large compactions. Configure further via
+		/// [#setUniversalCompactionOptions].
 		UNIVERSAL(1),
 		/// First-in-first-out: never compacts, just drops (or, with
 		/// [FifoCompactionOptions#setAllowCompaction], compacts) the oldest SST once a size
@@ -511,6 +518,21 @@ public final class Options extends NativeObject {
 			MH_SET_FIFO_COMPACTION_OPTIONS.invokeExact(ptr(), fifoOptions.ptr());
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("setFifoCompactionOptions failed", t);
+		}
+		return this;
+	}
+
+	/// Configures universal compaction. Only takes effect when [#setCompactionStyle] is
+	/// [CompactionStyle#UNIVERSAL]. RocksDB copies the config internally; `universalOptions`
+	/// may be closed after this call.
+	///
+	/// @param universalOptions the universal compaction options to apply
+	/// @return `this` for chaining
+	public Options setUniversalCompactionOptions(UniversalCompactionOptions universalOptions) {
+		try {
+			MH_SET_UNIVERSAL_COMPACTION_OPTIONS.invokeExact(ptr(), universalOptions.ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setUniversalCompactionOptions failed", t);
 		}
 		return this;
 	}

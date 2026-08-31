@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `getSeparateKeyValueInDataBlock`.
 - `FifoCompactionOptions`: new wrapper for FIFO compaction, attached via `Options#setCompactionStyle`
   (new `Options.CompactionStyle` enum) and `Options#setFifoCompactionOptions`.
+- `UniversalCompactionOptions`: new wrapper for universal compaction (new `StopStyle` enum),
+  attached via `Options#setCompactionStyle` and `Options#setUniversalCompactionOptions`.
 
 ## [0.10] — 2026-08-30
 
