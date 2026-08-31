@@ -2,7 +2,11 @@ package io.github.dfa1.rocksdbffm;
 
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -68,6 +72,26 @@ class SliceTransformTest {
 
 			// Then
 			assertThatThrownBy(transform::ptr).isInstanceOf(IllegalStateException.class);
+		}
+	}
+
+	@Test
+	void setPrefixExtractor_closedImmediately_isANoOpAndDbStillWorks(@TempDir Path dir) {
+		// Given — setPrefixExtractor transfers ownership to Options, so closing the
+		// SliceTransform wrapper right away (before it's even used to open a DB) must be a
+		// no-op rather than freeing the pointer RocksDB's own copy now owns
+		var transform = SliceTransform.newFixedPrefix(3);
+		try (var opts = Options.newOptions().setCreateIfMissing(true).setPrefixExtractor(transform)) {
+			transform.close();
+
+			// When
+			try (var db = RocksDB.openReadWrite(opts, dir)) {
+				db.put("pre-key1".getBytes(), "value1".getBytes());
+				var hit = db.get("pre-key1".getBytes());
+
+				// Then
+				assertThat(hit).isEqualTo("value1".getBytes());
+			}
 		}
 	}
 }

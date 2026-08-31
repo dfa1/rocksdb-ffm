@@ -95,6 +95,27 @@ class TableOptionsTest {
 		}
 	}
 
+	@Test
+	void filterPolicy_closedImmediatelyAfterSetFilterPolicy_isANoOpAndDbStillWorks(@TempDir Path dir) {
+		// Given — setFilterPolicy transfers ownership to the table config, so closing the
+		// FilterPolicy wrapper right away (before it's even used to open a DB) must be a
+		// no-op rather than freeing the pointer RocksDB's own shared_ptr now owns
+		var filter = FilterPolicy.newBloom(10);
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setFilterPolicy(filter)) {
+			filter.close();
+
+			// When
+			try (var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
+			     var db = RocksDB.openReadWrite(opts, dir)) {
+				db.put("bloom-key".getBytes(), "bloom-value".getBytes());
+				var hit = db.get("bloom-key".getBytes());
+
+				// Then
+				assertThat(hit).isEqualTo("bloom-value".getBytes());
+			}
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// Shared block cache
 	// -----------------------------------------------------------------------
