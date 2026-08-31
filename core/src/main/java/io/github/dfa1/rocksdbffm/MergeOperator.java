@@ -249,6 +249,24 @@ public sealed interface MergeOperator {
 			}
 		}
 
+		/// Last checkpoint before a value crosses back into native code as an upcall's `ADDRESS`
+		/// return: a Java `null` here isn't a Java-level failure (nothing throws), it's an
+		/// address the generated native trampoline can't marshal, which crashes the JVM instead
+		/// of raising anything catchable. Every dispatch method's return goes through this so a
+		/// future bug upstream (a mutation, a refactor that drops a `return`) fails loudly and
+		/// safely in Java instead of silently reaching the boundary.
+		///
+		/// @param result   the value about to be returned to native code
+		/// @param location description of the call site, for the error message
+		/// @return `result`
+		/// @throws AssertionError if `result` is `null`
+		private static MemorySegment requireNonNullUpcallResult(MemorySegment result, String location) {
+			if (result == null) {
+				throw new AssertionError(location + " produced a null upcall return value");
+			}
+			return result;
+		}
+
 		/// Builds a zero-copy, read-only view of a borrowed native buffer, bound to `arena` so
 		/// use past the call throws rather than reading freed/reused memory (same pattern as
 		/// [PinnableHandle#map(Arena, Mapper, MemorySegment)]).
@@ -292,7 +310,7 @@ public sealed interface MergeOperator {
 				byte[] result = s.fn().fullMerge(keyView, existingView, operandViews);
 				successPtr.set(ValueLayout.JAVA_BYTE, 0, (byte) 1);
 				newValueLenPtr.set(ValueLayout.JAVA_LONG, 0, result.length);
-				return mallocCopy(result);
+				return requireNonNullUpcallResult(mallocCopy(result), "fullMergeDispatch");
 			} catch (Throwable t) {
 				// must not throw across the upcall boundary — an escaping AssertionError here
 				// (assertions are on by default under Surefire) would abort the JVM, not just
@@ -328,10 +346,24 @@ public sealed interface MergeOperator {
 			REGISTRY.unregister(state);
 		}
 
-		/// Called from [#NAME_STUB]. Must not throw.
+		/// Fallback for [#nameDispatch] when the registry entry is missing. RocksDB's `Name()`
+		/// does `std::string(name)` on whatever this returns with no null check of its own, so
+		/// unlike the full/partial-merge paths — where `MemorySegment.NULL` legitimately means
+		/// "nothing to report" to code that checks for it — a raw null pointer here would itself
+		/// be a native crash; an empty, NUL-terminated C string is the safe equivalent.
+		private static final MemorySegment EMPTY_NAME = Arena.global().allocateFrom("");
+
+		/// Called from [#NAME_STUB]. Must not throw, and must never return a value that isn't
+		/// a valid NUL-terminated native string (see [#EMPTY_NAME]).
 		private static MemorySegment nameDispatch(MemorySegment state) {
-			State s = REGISTRY.get(state);
-			return s != null ? s.nameSeg() : MemorySegment.NULL;
+			try {
+				State s = REGISTRY.get(state);
+				return requireNonNullUpcallResult(s != null ? s.nameSeg() : EMPTY_NAME, "nameDispatch");
+			} catch (Throwable t) {
+				// same "must not throw" contract as fullMergeDispatch/partialMergeDispatch.
+				LOG.log(System.Logger.Level.ERROR, "nameDispatch failed", t);
+				return EMPTY_NAME;
+			}
 		}
 	}
 }
