@@ -606,4 +606,43 @@ class RocksIteratorTest {
 			}
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// Lifecycle — closing the owning DB before the iterator
+	// -----------------------------------------------------------------------
+
+	@Test
+	void closingDbFirst_closesStillOpenIteratorAutomatically(@TempDir Path dir) {
+		// Given — an iterator left open when its owning DB is closed
+		ReadWriteDB db = RocksDB.openReadWrite(dir);
+		db.put("k".getBytes(), "v".getBytes());
+		RocksIterator it = db.newIterator();
+		it.seekToFirst();
+
+		// When
+		db.close();
+
+		// Then — the DB closed the still-registered iterator itself before freeing its own
+		// native handle, so touching the iterator now throws a clean IllegalStateException
+		// instead of reading through a dangling rocksdb_iterator_t*
+		assertThatThrownBy(it::isValid).isInstanceOf(IllegalStateException.class);
+		it.close(); // no-op: already closed by the DB, must not double-free
+	}
+
+	@Test
+	void closingIteratorFirst_unregistersFromOwningDb(@TempDir Path dir) {
+		// Given — the ordinary order: iterator closed before its owning DB
+		try (var db = RocksDB.openReadWrite(dir)) {
+			db.put("k".getBytes(), "v".getBytes());
+			RocksIterator it = db.newIterator();
+			it.seekToFirst();
+			it.close();
+
+			// When — db.close() at the end of this try-with-resources must not attempt to
+			// close the already-closed iterator again (it unregistered itself above)
+
+			// Then — no exception from db.close()
+			assertThatThrownBy(it::isValid).isInstanceOf(IllegalStateException.class);
+		}
+	}
 }

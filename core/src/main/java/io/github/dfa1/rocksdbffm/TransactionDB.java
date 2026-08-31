@@ -1065,7 +1065,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb implements Monit
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE_ITERATOR_CF.invokeExact(
 					ptr(), readOpts.ptr(), cf.ptr());
-			return RocksIterator.create(iterPtr);
+			return RocksIterator.create(this, iterPtr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("newIterator failed", t);
 		}
@@ -1080,7 +1080,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb implements Monit
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE_ITERATOR_CF.invokeExact(
 					ptr(), readOptions.ptr(), cf.ptr());
-			return RocksIterator.create(iterPtr);
+			return RocksIterator.create(this, iterPtr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("newIterator failed", t);
 		}
