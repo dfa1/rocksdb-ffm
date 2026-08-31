@@ -11,7 +11,12 @@ import java.util.Optional;
 
 /// FFM wrapper for `rocksdb_iterator_t`.
 ///
-/// Always close after use.
+/// Always close after use. Closing the owning DB (or [TransactionDB]) first is safe when the
+/// iterator came from one of those — it registers itself as a [NativeObjectWithChildren] child
+/// of the DB that created it, the same way [Snapshot] does, so the DB closes any still-open
+/// iterator itself, synchronously, before destroying its own native handle. An iterator obtained
+/// from a [Transaction] (`Transaction.newIterator`) is not covered by this yet — `Transaction`
+/// is not a `NativeObjectWithChildren` — so close those before the transaction itself.
 ///
 /// ```
 /// try (RocksIterator it = db.newIterator()) {
@@ -101,26 +106,44 @@ public final class RocksIterator extends NativeObject {
 	private final Arena lenArena;
 	private final MemorySegment lenSegment;
 
+	/// The DB that produced this iterator, or `null` for a [Transaction]-owned iterator (see the
+	/// class-level doc — `Transaction` is not a [NativeObjectWithChildren] yet). Used in
+	/// [#tryClose(MemorySegment)] only to unregister once closed on its own; registration itself
+	/// happens here, via [NativeObjectWithChildren#registerChild(NativeObject)].
+	private final NativeObjectWithChildren owningDb;
+
 	/// Package-private: created via [#create].
-	private RocksIterator(MemorySegment ptr) {
+	private RocksIterator(NativeObjectWithChildren owningDb, MemorySegment ptr) {
 		super(ptr);
+		this.owningDb = owningDb;
 		this.lenArena = Arena.ofConfined();
 		this.lenSegment = lenArena.allocate(ValueLayout.JAVA_LONG);
+		if (owningDb != null) {
+			owningDb.registerChild(this);
+		}
 	}
 
 	/// Package-private factory called by RocksDB.
 	static RocksIterator create(RocksDBReadOperations db, ReadOptions readOptions) {
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE.invokeExact(db.dbPtr(), readOptions.ptr());
-			return new RocksIterator(iterPtr);
+			// Every implementor extends NativeObjectWithChildren (see RocksDBReadOperations#getSnapshot()).
+			return new RocksIterator((NativeObjectWithChildren) db, iterPtr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("iterator create failed", t);
 		}
 	}
 
-	/// Package-private factory for a pre-created iterator pointer (e.g. from rocksdb_create_iterator_cf).
+	/// Package-private factory for a pre-created iterator pointer scoped to a column family
+	/// (e.g. from `rocksdb_create_iterator_cf`), registered with `owningDb`.
+	static RocksIterator create(NativeObjectWithChildren owningDb, MemorySegment iterPtr) {
+		return new RocksIterator(owningDb, iterPtr);
+	}
+
+	/// Package-private factory for a pre-created iterator pointer with no owning
+	/// `NativeObjectWithChildren` to register with (currently only [Transaction]).
 	static RocksIterator create(MemorySegment iterPtr) {
-		return new RocksIterator(iterPtr);
+		return new RocksIterator(null, iterPtr);
 	}
 
 	// -----------------------------------------------------------------------
@@ -431,6 +454,16 @@ public final class RocksIterator extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
+		// Unregister first: if this runs because owningDb's own close() is sweeping its
+		// children (owningDb closed first), its pointer is still valid for the rest of this
+		// call (NativeObjectWithChildren captures its raw pointer before nulling its own
+		// AtomicReference and only then closes children) — same ordering guarantee Snapshot
+		// relies on, though rocksdb_iter_destroy itself never touches the DB pointer; what it
+		// must not touch is the DB's now-freed internal state, which is exactly what this
+		// registration prevents by destroying the iterator first.
+		if (owningDb != null) {
+			owningDb.unregisterChild(this);
+		}
 		MH_DESTROY.invokeExact(ptr);
 		lenArena.close();
 	}

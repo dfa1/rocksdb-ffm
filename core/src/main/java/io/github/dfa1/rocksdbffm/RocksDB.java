@@ -1812,7 +1812,8 @@ public final class RocksDB {
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE_ITERATOR_CF.invokeExact(
 					db.dbPtr(), readOpts.ptr(), cf.ptr());
-			return RocksIterator.create(iterPtr);
+			// Every implementor extends NativeObjectWithChildren (see RocksDBReadOperations#getSnapshot()).
+			return RocksIterator.create((NativeObjectWithChildren) db, iterPtr);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("newIterator failed", t);
 		}
