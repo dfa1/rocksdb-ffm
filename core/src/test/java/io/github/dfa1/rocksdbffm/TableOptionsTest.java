@@ -223,4 +223,70 @@ class TableOptionsTest {
 			assertThat(result).isEqualTo(BlockBasedTableOptions.FormatVersion.V5);
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// Auto-readahead tuning
+	// -----------------------------------------------------------------------
+
+	@Test
+	void autoReadaheadTuning_allowsReadWrite(@TempDir Path dir) {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setInitialAutoReadaheadSize(MemorySize.ofKB(4))
+				     .setMaxAutoReadaheadSize(MemorySize.ofKB(128))
+				     .setNumFileReadsForAutoReadahead(3);
+		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			var result = db.get("k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void setMaxAutoReadaheadSize_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setMaxAutoReadaheadSize(MemorySize.ofKB(128))) {
+
+			// When
+			var result = tbl.getMaxAutoReadaheadSize();
+
+			// Then
+			assertThat(result).isEqualTo(MemorySize.ofKB(128));
+		}
+	}
+
+	@Test
+	void setInitialAutoReadaheadSize_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setInitialAutoReadaheadSize(MemorySize.ofKB(4))) {
+
+			// When
+			var result = tbl.getInitialAutoReadaheadSize();
+
+			// Then
+			assertThat(result).isEqualTo(MemorySize.ofKB(4));
+		}
+	}
+
+	@Test
+	void setNumFileReadsForAutoReadahead_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setNumFileReadsForAutoReadahead(5)) {
+
+			// When
+			var result = tbl.getNumFileReadsForAutoReadahead();
+
+			// Then
+			assertThat(result).isEqualTo(5L);
+		}
+	}
 }
