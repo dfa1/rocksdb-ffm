@@ -175,6 +175,30 @@ public final class BlockBasedTableOptions extends NativeObject {
 	private static final MethodHandle MH_SET_PARTITION_PINNING_TIER;
 	/// `void rocksdb_block_based_options_set_unpartitioned_pinning_tier(rocksdb_block_based_table_options_t* options, int v);`
 	private static final MethodHandle MH_SET_UNPARTITIONED_PINNING_TIER;
+	/// `void rocksdb_block_based_options_set_block_restart_interval(rocksdb_block_based_table_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_BLOCK_RESTART_INTERVAL;
+	/// `int rocksdb_block_based_options_get_block_restart_interval(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_BLOCK_RESTART_INTERVAL;
+	/// `void rocksdb_block_based_options_set_index_block_restart_interval(rocksdb_block_based_table_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_INDEX_BLOCK_RESTART_INTERVAL;
+	/// `int rocksdb_block_based_options_get_index_block_restart_interval(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_INDEX_BLOCK_RESTART_INTERVAL;
+	/// `void rocksdb_block_based_options_set_metadata_block_size(rocksdb_block_based_table_options_t* opt, uint64_t v);`
+	private static final MethodHandle MH_SET_METADATA_BLOCK_SIZE;
+	/// `uint64_t rocksdb_block_based_options_get_metadata_block_size(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_METADATA_BLOCK_SIZE;
+	/// `void rocksdb_block_based_options_set_block_size_deviation(rocksdb_block_based_table_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_BLOCK_SIZE_DEVIATION;
+	/// `int rocksdb_block_based_options_get_block_size_deviation(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_BLOCK_SIZE_DEVIATION;
+	/// `void rocksdb_block_based_options_set_use_delta_encoding(rocksdb_block_based_table_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_USE_DELTA_ENCODING;
+	/// `unsigned char rocksdb_block_based_options_get_use_delta_encoding(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_USE_DELTA_ENCODING;
+	/// `void rocksdb_block_based_options_set_separate_key_value_in_data_block(rocksdb_block_based_table_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK;
+	/// `unsigned char rocksdb_block_based_options_get_separate_key_value_in_data_block(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK;
 
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_block_based_options_create",
@@ -275,6 +299,54 @@ public final class BlockBasedTableOptions extends NativeObject {
 		MH_SET_UNPARTITIONED_PINNING_TIER = NativeLibrary.lookup(
 				"rocksdb_block_based_options_set_unpartitioned_pinning_tier",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_SET_BLOCK_RESTART_INTERVAL = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_block_restart_interval",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_BLOCK_RESTART_INTERVAL = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_block_restart_interval",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_INDEX_BLOCK_RESTART_INTERVAL = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_index_block_restart_interval",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_INDEX_BLOCK_RESTART_INTERVAL = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_index_block_restart_interval",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_METADATA_BLOCK_SIZE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_metadata_block_size",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_METADATA_BLOCK_SIZE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_metadata_block_size",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_BLOCK_SIZE_DEVIATION = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_block_size_deviation",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_BLOCK_SIZE_DEVIATION = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_block_size_deviation",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_USE_DELTA_ENCODING = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_use_delta_encoding",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_USE_DELTA_ENCODING = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_use_delta_encoding",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_separate_key_value_in_data_block",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_separate_key_value_in_data_block",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 	}
 
 	private BlockBasedTableOptions(MemorySegment ptr) {
@@ -640,6 +712,167 @@ public final class BlockBasedTableOptions extends NativeObject {
 			throw RocksDB.wrapInvokeFailure("setUnpartitionedPinningTier failed", t);
 		}
 		return this;
+	}
+
+	// -----------------------------------------------------------------------
+	// Block layout
+	// -----------------------------------------------------------------------
+
+	/// Number of keys between restart points in a data block. Every restart point stores its
+	/// key in full; keys in between are delta-encoded against the previous key (subject to
+	/// [#setUseDeltaEncoding]). Smaller values speed up random reads within a block at the
+	/// cost of space; larger values save space at the cost of a longer linear scan per lookup.
+	/// Default: 16.
+	///
+	/// @param interval number of keys between restart points
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setBlockRestartInterval(int interval) {
+		try {
+			MH_SET_BLOCK_RESTART_INTERVAL.invokeExact(ptr(), interval);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setBlockRestartInterval failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured number of keys between restart points in a data block.
+	///
+	/// @return current block restart interval
+	public int getBlockRestartInterval() {
+		try {
+			return (int) MH_GET_BLOCK_RESTART_INTERVAL.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getBlockRestartInterval failed", t);
+		}
+	}
+
+	/// Same as [#setBlockRestartInterval], but for the index block instead of data blocks.
+	/// Values greater than 1 reduce index block size (per format version 4+) at the cost of
+	/// a longer linear scan per index lookup. Default: 1 (no delta encoding of index entries).
+	///
+	/// @param interval number of index entries between restart points
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setIndexBlockRestartInterval(int interval) {
+		try {
+			MH_SET_INDEX_BLOCK_RESTART_INTERVAL.invokeExact(ptr(), interval);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setIndexBlockRestartInterval failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured number of index entries between restart points in the index block.
+	///
+	/// @return current index block restart interval
+	public int getIndexBlockRestartInterval() {
+		try {
+			return (int) MH_GET_INDEX_BLOCK_RESTART_INTERVAL.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getIndexBlockRestartInterval failed", t);
+		}
+	}
+
+	/// Approximate size of partitioned metadata blocks (index/filter partitions). Only takes
+	/// effect with [IndexType#TWO_LEVEL_INDEX_SEARCH] and [#setPartitionFilters]. Default: 4 KB.
+	///
+	/// @param size approximate metadata block size
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setMetadataBlockSize(MemorySize size) {
+		try {
+			MH_SET_METADATA_BLOCK_SIZE.invokeExact(ptr(), size.toBytes());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setMetadataBlockSize failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured approximate metadata block size.
+	///
+	/// @return current metadata block size
+	public MemorySize getMetadataBlockSize() {
+		try {
+			return MemorySize.ofBytes((long) MH_GET_METADATA_BLOCK_SIZE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getMetadataBlockSize failed", t);
+		}
+	}
+
+	/// Percentage that a data block may exceed [#setBlockSize] before RocksDB starts a new
+	/// block instead of packing in one more key -- e.g. 10 allows blocks up to 1.1x the
+	/// configured block size. Default: 10.
+	///
+	/// @param percent allowed overshoot past the configured block size, as a percentage
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setBlockSizeDeviation(int percent) {
+		try {
+			MH_SET_BLOCK_SIZE_DEVIATION.invokeExact(ptr(), percent);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setBlockSizeDeviation failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured block size deviation percentage.
+	///
+	/// @return current block size deviation, as a percentage
+	public int getBlockSizeDeviation() {
+		try {
+			return (int) MH_GET_BLOCK_SIZE_DEVIATION.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getBlockSizeDeviation failed", t);
+		}
+	}
+
+	/// If true, keys between restart points within a data block are delta-encoded against the
+	/// previous key instead of stored in full. Default: true. Disabling trades a smaller CPU
+	/// cost per read for larger data blocks.
+	///
+	/// @param value `true` to delta-encode keys between restart points
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setUseDeltaEncoding(boolean value) {
+		try {
+			MH_SET_USE_DELTA_ENCODING.invokeExact(ptr(), RocksDB.toByte(value));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setUseDeltaEncoding failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether keys between restart points are delta-encoded.
+	///
+	/// @return `true` if keys between restart points are delta-encoded
+	public boolean getUseDeltaEncoding() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_USE_DELTA_ENCODING.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getUseDeltaEncoding failed", t);
+		}
+	}
+
+	/// If true, keys and values within a data block are stored in separate areas instead of
+	/// interleaved, which can improve compression and point-lookup performance for some
+	/// workloads at the cost of range-scan performance. Default: false.
+	///
+	/// @param value `true` to store keys and values in separate areas of a data block
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setSeparateKeyValueInDataBlock(boolean value) {
+		try {
+			MH_SET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK.invokeExact(ptr(), RocksDB.toByte(value));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setSeparateKeyValueInDataBlock failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether keys and values are stored in separate areas of a data block.
+	///
+	/// @return `true` if keys and values are stored in separate areas of a data block
+	public boolean getSeparateKeyValueInDataBlock() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getSeparateKeyValueInDataBlock failed", t);
+		}
 	}
 
 	@Override

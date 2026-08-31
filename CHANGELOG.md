@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `setTopLevelIndexPinningTier`, `setPartitionPinningTier`, `setUnpartitionedPinningTier`
   (setter-only in `c.h`, no getters), and `setCacheIndexAndFilterBlocksWithHighPriority`/
   `setPinL0FilterAndIndexBlocksInCache`/`setPinTopLevelIndexAndFilter` with their getters.
+- `BlockBasedTableOptions`: block layout tuning — `setBlockRestartInterval`/
+  `getBlockRestartInterval`, `setIndexBlockRestartInterval`/`getIndexBlockRestartInterval`,
+  `setMetadataBlockSize`/`getMetadataBlockSize`, `setBlockSizeDeviation`/`getBlockSizeDeviation`,
+  `setUseDeltaEncoding`/`getUseDeltaEncoding`, `setSeparateKeyValueInDataBlock`/
+  `getSeparateKeyValueInDataBlock`.
 
 ## [0.10] — 2026-08-30
 

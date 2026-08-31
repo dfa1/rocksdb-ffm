@@ -359,4 +359,111 @@ class TableOptionsTest {
 			assertThat(result).isTrue();
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// Block layout
+	// -----------------------------------------------------------------------
+
+	@Test
+	void blockLayoutTuning_allowsReadWrite(@TempDir Path dir) {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setBlockRestartInterval(8)
+				     .setIndexBlockRestartInterval(2)
+				     .setMetadataBlockSize(MemorySize.ofKB(8))
+				     .setBlockSizeDeviation(20)
+				     .setUseDeltaEncoding(false)
+				     .setSeparateKeyValueInDataBlock(true);
+		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			var result = db.get("k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void setBlockRestartInterval_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setBlockRestartInterval(8)) {
+
+			// When
+			var result = tbl.getBlockRestartInterval();
+
+			// Then
+			assertThat(result).isEqualTo(8);
+		}
+	}
+
+	@Test
+	void setIndexBlockRestartInterval_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setIndexBlockRestartInterval(2)) {
+
+			// When
+			var result = tbl.getIndexBlockRestartInterval();
+
+			// Then
+			assertThat(result).isEqualTo(2);
+		}
+	}
+
+	@Test
+	void setMetadataBlockSize_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setMetadataBlockSize(MemorySize.ofKB(8))) {
+
+			// When
+			var result = tbl.getMetadataBlockSize();
+
+			// Then
+			assertThat(result).isEqualTo(MemorySize.ofKB(8));
+		}
+	}
+
+	@Test
+	void setBlockSizeDeviation_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setBlockSizeDeviation(20)) {
+
+			// When
+			var result = tbl.getBlockSizeDeviation();
+
+			// Then
+			assertThat(result).isEqualTo(20);
+		}
+	}
+
+	@Test
+	void setUseDeltaEncoding_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setUseDeltaEncoding(false)) {
+
+			// When
+			var result = tbl.getUseDeltaEncoding();
+
+			// Then
+			assertThat(result).isFalse();
+		}
+	}
+
+	@Test
+	void setSeparateKeyValueInDataBlock_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setSeparateKeyValueInDataBlock(true)) {
+
+			// When
+			var result = tbl.getSeparateKeyValueInDataBlock();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
 }
