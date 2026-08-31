@@ -45,6 +45,12 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_COMPRESSION;
 	/// `int rocksdb_options_get_compression(rocksdb_options_t*);`
 	private static final MethodHandle MH_GET_COMPRESSION;
+	/// `void rocksdb_options_set_compaction_style(rocksdb_options_t*, int);`
+	private static final MethodHandle MH_SET_COMPACTION_STYLE;
+	/// `int rocksdb_options_get_compaction_style(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_COMPACTION_STYLE;
+	/// `void rocksdb_options_set_fifo_compaction_options(rocksdb_options_t* opt, rocksdb_fifo_compaction_options_t* fifo);`
+	private static final MethodHandle MH_SET_FIFO_COMPACTION_OPTIONS;
 	/// `void rocksdb_options_set_enable_blob_files(rocksdb_options_t* opt, unsigned char val);`
 	private static final MethodHandle MH_SET_ENABLE_BLOB_FILES;
 	/// `unsigned char rocksdb_options_get_enable_blob_files(rocksdb_options_t* opt);`
@@ -163,6 +169,15 @@ public final class Options extends NativeObject {
 
 		MH_GET_COMPRESSION = NativeLibrary.lookup("rocksdb_options_get_compression",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_COMPACTION_STYLE = NativeLibrary.lookup("rocksdb_options_set_compaction_style",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_COMPACTION_STYLE = NativeLibrary.lookup("rocksdb_options_get_compaction_style",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_FIFO_COMPACTION_OPTIONS = NativeLibrary.lookup("rocksdb_options_set_fifo_compaction_options",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_SET_ENABLE_BLOB_FILES = NativeLibrary.lookup("rocksdb_options_set_enable_blob_files",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
@@ -428,6 +443,76 @@ public final class Options extends NativeObject {
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("getCompression failed", t);
 		}
+	}
+
+	/// Which strategy RocksDB uses to pick which SST files to compact and when, per `c.h`'s
+	/// anonymous `rocksdb_*_compaction` enum (backed by C++'s `CompactionStyle`).
+	public enum CompactionStyle {
+		/// The default: organizes SSTs into levels of exponentially increasing size: good
+		/// general-purpose read/write/space balance.
+		LEVEL(0),
+		/// Merges files of similar size, minimizing write amplification at the cost of higher
+		/// read/space amplification and periodic large compactions.
+		UNIVERSAL(1),
+		/// First-in-first-out: never compacts, just drops (or, with
+		/// [FifoCompactionOptions#setAllowCompaction], compacts) the oldest SST once a size
+		/// bound is exceeded. For TTL-like or ring-buffer workloads. Configure further via
+		/// [#setFifoCompactionOptions].
+		FIFO(2);
+
+		final int value;
+
+		CompactionStyle(int value) {
+			this.value = value;
+		}
+
+		static CompactionStyle fromValue(int value) {
+			return switch (value) {
+				case 0 -> LEVEL;
+				case 1 -> UNIVERSAL;
+				case 2 -> FIFO;
+				default -> throw new IllegalArgumentException("Unknown CompactionStyle value: " + value);
+			};
+		}
+	}
+
+	/// Sets the compaction style. Default: [CompactionStyle#LEVEL].
+	///
+	/// @param style the compaction style to use
+	/// @return `this` for chaining
+	public Options setCompactionStyle(CompactionStyle style) {
+		try {
+			MH_SET_COMPACTION_STYLE.invokeExact(ptr(), style.value);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setCompactionStyle failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured compaction style.
+	///
+	/// @return current compaction style
+	public CompactionStyle getCompactionStyle() {
+		try {
+			return CompactionStyle.fromValue((int) MH_GET_COMPACTION_STYLE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getCompactionStyle failed", t);
+		}
+	}
+
+	/// Configures FIFO compaction. Only takes effect when [#setCompactionStyle] is
+	/// [CompactionStyle#FIFO]. RocksDB copies the config internally; `fifoOptions` may be
+	/// closed after this call.
+	///
+	/// @param fifoOptions the FIFO compaction options to apply
+	/// @return `this` for chaining
+	public Options setFifoCompactionOptions(FifoCompactionOptions fifoOptions) {
+		try {
+			MH_SET_FIFO_COMPACTION_OPTIONS.invokeExact(ptr(), fifoOptions.ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setFifoCompactionOptions failed", t);
+		}
+		return this;
 	}
 
 	/// Configures block-based table format for this DB.

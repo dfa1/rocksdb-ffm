@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `setMetadataBlockSize`/`getMetadataBlockSize`, `setBlockSizeDeviation`/`getBlockSizeDeviation`,
   `setUseDeltaEncoding`/`getUseDeltaEncoding`, `setSeparateKeyValueInDataBlock`/
   `getSeparateKeyValueInDataBlock`.
+- `FifoCompactionOptions`: new wrapper for FIFO compaction, attached via `Options#setCompactionStyle`
+  (new `Options.CompactionStyle` enum) and `Options#setFifoCompactionOptions`.
 
 ## [0.10] — 2026-08-30
 
