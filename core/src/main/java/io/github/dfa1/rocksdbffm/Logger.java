@@ -34,6 +34,8 @@ import java.nio.charset.StandardCharsets;
 /// ```
 public final class Logger extends NativeObject {
 
+	private static final System.Logger LOG = System.getLogger(Logger.class.getName());
+
 	/// Receives a log message from RocksDB. Must not throw.
 	@FunctionalInterface
 	public interface LogCallback {
@@ -163,8 +165,10 @@ public final class Logger extends NativeObject {
 			}
 			cb.log(level, message);
 		} catch (Throwable throwable) {
-			// exceptions must not escape into native code, but they must be shown to the user somehow
-			assert false; // fail at least the build
+			// must not throw across the upcall boundary — an escaping AssertionError here
+			// (assertions are on by default under Surefire) would abort the JVM, not just
+			// this call, so report failure via System.Logger instead of asserting.
+			LOG.log(System.Logger.Level.ERROR, "LogCallback threw", throwable);
 		}
 	}
 }
