@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (new `Options.CompactionStyle` enum) and `Options#setFifoCompactionOptions`.
 - `UniversalCompactionOptions`: new wrapper for universal compaction (new `StopStyle` enum),
   attached via `Options#setCompactionStyle` and `Options#setUniversalCompactionOptions`.
+- `EnvOptions`: new wrapper for `rocksdb_envoptions_t` (mmap/direct I/O, sync cadence, fallocate,
+  readahead, rate limiting), previously completely unmapped. Attached via a new
+  `SstFileWriter.newSstFileWriter(Options, EnvOptions)` overload; the existing single-arg
+  overload keeps using RocksDB's defaults internally.
 
 ## [0.10] — 2026-08-30
 

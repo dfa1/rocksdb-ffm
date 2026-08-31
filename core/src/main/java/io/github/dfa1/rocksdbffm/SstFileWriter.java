@@ -28,10 +28,6 @@ import java.nio.file.Path;
 /// ```
 public final class SstFileWriter extends NativeObject {
 
-	/// `rocksdb_envoptions_t* rocksdb_envoptions_create(void);`
-	private static final MethodHandle MH_ENVOPTIONS_CREATE;
-	/// `void rocksdb_envoptions_destroy(rocksdb_envoptions_t* opt);`
-	private static final MethodHandle MH_ENVOPTIONS_DESTROY;
 	/// `rocksdb_sstfilewriter_t* rocksdb_sstfilewriter_create(const rocksdb_envoptions_t* env, const rocksdb_options_t* io_options);`
 	private static final MethodHandle MH_CREATE;
 	/// `void rocksdb_sstfilewriter_destroy(rocksdb_sstfilewriter_t* writer);`
@@ -50,12 +46,6 @@ public final class SstFileWriter extends NativeObject {
 	private static final MethodHandle MH_FILE_SIZE;
 
 	static {
-		MH_ENVOPTIONS_CREATE = NativeLibrary.lookup("rocksdb_envoptions_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_ENVOPTIONS_DESTROY = NativeLibrary.lookup("rocksdb_envoptions_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
 		MH_CREATE = NativeLibrary.lookup("rocksdb_sstfilewriter_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
@@ -98,18 +88,27 @@ public final class SstFileWriter extends NativeObject {
 		super(ptr);
 	}
 
-	/// Creates an SST file writer using the given DB options (comparator, compression, etc.).
+	/// Creates an SST file writer using the given DB options (comparator, compression, etc.)
+	/// and default file-I/O behavior.
 	///
 	/// @param options DB options that control comparator and compression for the SST file
 	/// @return a new [SstFileWriter]; caller must close it
 	public static SstFileWriter newSstFileWriter(Options options) {
+		try (EnvOptions envOptions = EnvOptions.newEnvOptions()) {
+			return newSstFileWriter(options, envOptions);
+		}
+	}
+
+	/// Creates an SST file writer using the given DB options (comparator, compression, etc.)
+	/// and file-I/O behavior. RocksDB copies `envOptions` internally; it may be closed after
+	/// this call.
+	///
+	/// @param options    DB options that control comparator and compression for the SST file
+	/// @param envOptions low-level file-I/O behavior (mmap/direct I/O, sync cadence, ...)
+	/// @return a new [SstFileWriter]; caller must close it
+	public static SstFileWriter newSstFileWriter(Options options, EnvOptions envOptions) {
 		try {
-			MemorySegment envOpts = (MemorySegment) MH_ENVOPTIONS_CREATE.invokeExact();
-			try {
-				return new SstFileWriter((MemorySegment) MH_CREATE.invokeExact(envOpts, options.ptr()));
-			} finally {
-				MH_ENVOPTIONS_DESTROY.invokeExact(envOpts);
-			}
+			return new SstFileWriter((MemorySegment) MH_CREATE.invokeExact(envOptions.ptr(), options.ptr()));
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("sstfilewriter create failed", t);
 		}
