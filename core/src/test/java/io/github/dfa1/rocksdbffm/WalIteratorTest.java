@@ -126,6 +126,31 @@ class WalIteratorTest {
 	}
 
 	@Test
+	void isValid_afterExhaustingViaFixedCount_reportsFalse(@TempDir Path dir) {
+		// Given — a single write, so getUpdatesSince returns an iterator already positioned
+		// on that one and only batch. Exhaustion is driven by a *known, fixed* next() count
+		// (1), never by looping on isValid() itself — if isValid() were broken to always
+		// return true, a loop keyed on it (like getUpdatesSince_emptyWhenNoWritesAfterSequence
+		// above) would just spin/crash forever instead of reaching a clean assertion failure.
+		try (var db = RocksDB.openReadWrite(dir)) {
+			SequenceNumber start = db.getLatestSequenceNumber();
+			db.put("k".getBytes(), "v".getBytes());
+
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				assertThat(it.isValid()).isTrue();
+				try (var result = it.getBatch()) {
+					// consume the one batch
+				}
+				it.next();
+
+				// When / Then
+				assertThat(it.isValid()).isFalse();
+				assertThatThrownBy(it::getBatch).isInstanceOf(IllegalStateException.class);
+			}
+		}
+	}
+
+	@Test
 	void walIterator_isClosedSafely(@TempDir Path dir) {
 		// Given
 		try (var db = RocksDB.openReadWrite(dir)) {
