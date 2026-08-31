@@ -117,14 +117,19 @@ class LiveFileInfoTest {
 
 			// When
 			List<Long> entryCounts = new ArrayList<>();
+			List<String> names = new ArrayList<>();
 			try (var files = db.getLiveFiles()) {
 				for (LiveFileInfo file : files) {
 					entryCounts.add(file.numberOfEntries());
+					names.add(file.name());
 				}
 			}
 
-			// Then
+			// Then — two distinct files visited, not the same index read twice (which a
+			// corrupted iteration index could otherwise mask, since both files here happen
+			// to share the same entry count)
 			assertThat(entryCounts).containsExactly(1L, 1L);
+			assertThat(names).doesNotHaveDuplicates();
 		}
 	}
 
