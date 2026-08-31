@@ -120,7 +120,12 @@ public final class LiveFiles extends NativeObject implements Iterable<LiveFileIn
 				if (!hasNext()) {
 					throw new NoSuchElementException();
 				}
-				return new LiveFileInfo(LiveFiles.this, i++);
+				// Routed through the bounds-checked get(int), not constructed directly: if the
+				// index bookkeeping here ever regresses (e.g. corrupts to negative), this throws
+				// IndexOutOfBoundsException instead of handing a bad index to LiveFileInfo, whose
+				// native accessors do an unchecked std::vector::operator[] — a negative int
+				// reinterpreted as an enormous size_t is a near-certain native OOB read/crash.
+				return get(i++);
 			}
 		};
 	}
