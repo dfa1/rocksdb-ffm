@@ -51,6 +51,25 @@ class LoggerTest {
 	}
 
 	@Test
+	void callbackLogger_throwingCallback_doesNotCrashJvm(@TempDir Path dir) {
+		// Given — a callback that violates its "must not throw" contract
+		try (var logger = Logger.newCallbackLogger(LogLevel.INFO, (level, msg) -> {
+			throw new RuntimeException("boom from user callback");
+		});
+		     var opts = Options.newOptions().setCreateIfMissing(true).setInfoLog(logger);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+
+			// When — opening the DB and writing triggers internal log events, which
+			// invoke the throwing callback from the native upcall dispatch
+			db.put("k".getBytes(), "v".getBytes());
+
+			// Then — reaching this line means the exception was swallowed inside the
+			// upcall dispatch rather than escaping into native code and aborting the JVM
+			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
 	void setInfoLogLevel_roundTrips() {
 		// Given / When / Then
 		try (var opts = Options.newOptions()) {
