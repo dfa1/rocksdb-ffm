@@ -142,9 +142,9 @@ public final class ReadBatch implements AutoCloseable {
 			MemorySegment cfPtr = cf != null ? cf.ptr() : (MemorySegment) MH_GET_DEFAULT_CF.invokeExact(db.dbPtr());
 			for (int i = 0; i < n; i++) {
 				byte[] key = keys.get(i);
-				keysArr.setAtIndex(ValueLayout.ADDRESS, i, RocksDB.toNative(callArena, key));
-				keySizesArr.setAtIndex(ValueLayout.JAVA_LONG, i, key.length);
+				writeKeySlot(i, RocksDB.toNative(callArena, key), key.length);
 			}
+			RocksDB.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
 			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collectBytes(n);
@@ -190,15 +190,31 @@ public final class ReadBatch implements AutoCloseable {
 			MemorySegment cfPtr = cf != null ? cf.ptr() : (MemorySegment) MH_GET_DEFAULT_CF.invokeExact(db.dbPtr());
 			for (int i = 0; i < n; i++) {
 				ByteBuffer key = keys.get(i);
-				keysArr.setAtIndex(ValueLayout.ADDRESS, i, MemorySegment.ofBuffer(key));
-				keySizesArr.setAtIndex(ValueLayout.JAVA_LONG, i, key.remaining());
+				writeKeySlot(i, MemorySegment.ofBuffer(key), key.remaining());
 			}
+			RocksDB.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
 			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collectBuffers(n, values);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("ReadBatch.get failed", t);
 		}
+	}
+
+	/// Writes both halves of key slot `i` together — the pointer into [#keysArr] and its
+	/// matching length into [#keySizesArr] — so a future edit to one of these loops can't
+	/// silently drop one write while keeping the other. Both arrays are preallocated once and
+	/// reused across every `get` call; a skipped write previously left a slot holding a stale
+	/// pointer/length pair from a prior call. `rocksdb_batched_multi_get_cf` trusts the pairing
+	/// completely, with no bounds check of its own, so a mismatched pointer+length crashes the
+	/// JVM rather than failing cleanly.
+	///
+	/// @param i      slot index, `0 <= i < n` for the current call
+	/// @param keyPtr native pointer to this key's bytes
+	/// @param keyLen this key's length in bytes
+	private void writeKeySlot(int i, MemorySegment keyPtr, long keyLen) {
+		keysArr.setAtIndex(ValueLayout.ADDRESS, i, keyPtr);
+		keySizesArr.setAtIndex(ValueLayout.JAVA_LONG, i, keyLen);
 	}
 
 	private void checkCapacity(int n) {
@@ -243,9 +259,9 @@ public final class ReadBatch implements AutoCloseable {
 			MemorySegment cfPtr = cf != null ? cf.ptr() : (MemorySegment) MH_GET_DEFAULT_CF.invokeExact(db.dbPtr());
 			for (int i = 0; i < n; i++) {
 				MemorySegment key = keys.get(i);
-				keysArr.setAtIndex(ValueLayout.ADDRESS, i, key);
-				keySizesArr.setAtIndex(ValueLayout.JAVA_LONG, i, key.byteSize());
+				writeKeySlot(i, key, key.byteSize());
 			}
+			RocksDB.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
 			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collect(n, fn);
