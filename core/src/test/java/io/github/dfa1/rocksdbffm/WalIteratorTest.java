@@ -151,6 +151,33 @@ class WalIteratorTest {
 	}
 
 	@Test
+	void getBatch_calledTwiceWithoutNext_throwsInsteadOfCrashing(@TempDir Path dir) {
+		// Given — rocksdb_wal_iter_get_batch is only safe to call once per position; a second
+		// call before next() moves the iterator on segfaults inside RocksDB's own WriteBatch
+		// move-assignment instead of raising a Java exception
+		try (var db = RocksDB.openReadWrite(dir)) {
+			SequenceNumber start = db.getLatestSequenceNumber();
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("b".getBytes(), "2".getBytes());
+
+			try (WalIterator it = db.getUpdatesSince(start)) {
+				try (var first = it.getBatch()) {
+					// consume
+				}
+
+				// When / Then
+				assertThatThrownBy(it::getBatch).isInstanceOf(IllegalStateException.class);
+
+				// And — next() clears the guard, so getBatch() works again at the new position
+				it.next();
+				try (var second = it.getBatch()) {
+					assertThat(second.sequenceNumber().isAfter(start)).isTrue();
+				}
+			}
+		}
+	}
+
+	@Test
 	void walIterator_isClosedSafely(@TempDir Path dir) {
 		// Given
 		try (var db = RocksDB.openReadWrite(dir)) {
