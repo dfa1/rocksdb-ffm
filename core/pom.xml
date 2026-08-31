@@ -13,6 +13,17 @@
 	<name>RocksDB FFM Core</name>
 	<packaging>jar</packaging>
 
+	<properties>
+		<!-- Overridable scope for -Pmutation-testing, e.g.
+		     -Dpitest.targetClasses=io.github.dfa1.rocksdbffm.MemorySize
+		     -Dpitest.targetTests=io.github.dfa1.rocksdbffm.MemorySizeTest -->
+		<pitest.targetClasses>io.github.dfa1.rocksdbffm.*</pitest.targetClasses>
+		<pitest.targetTests>io.github.dfa1.rocksdbffm.*</pitest.targetTests>
+		<pitest.excludedClasses />
+		<pitest.excludedTestClasses />
+		<pitest.threads>4</pitest.threads>
+	</properties>
+
 	<dependencies>
 		<!-- native -->
 		<dependency>
@@ -71,4 +82,42 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<!-- Opt-in, not part of the normal build: mvn test-compile -pl core -am -Pmutation-testing -->
+			<id>mutation-testing</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.pitest</groupId>
+						<artifactId>pitest-maven</artifactId>
+						<dependencies>
+							<dependency>
+								<groupId>org.pitest</groupId>
+								<artifactId>pitest-junit5-plugin</artifactId>
+								<version>1.2.3</version>
+							</dependency>
+						</dependencies>
+						<configuration>
+							<targetClasses>${pitest.targetClasses}</targetClasses>
+							<targetTests>${pitest.targetTests}</targetTests>
+							<excludedClasses>${pitest.excludedClasses}</excludedClasses>
+							<excludedTestClasses>${pitest.excludedTestClasses}</excludedTestClasses>
+							<threads>${pitest.threads}</threads>
+							<!-- Mutated classes run inside real forked JVMs, same as surefire, so
+							     the same native-access flag is required for the library to load. -->
+							<jvmArgs>
+								<jvmArg>--enable-native-access=ALL-UNNAMED</jvmArg>
+							</jvmArgs>
+							<outputFormats>
+								<outputFormat>HTML</outputFormat>
+							</outputFormats>
+							<timestampedReports>false</timestampedReports>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
