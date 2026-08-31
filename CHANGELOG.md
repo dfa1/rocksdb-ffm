@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `BlockBasedTableOptions`: auto-readahead tuning — `setMaxAutoReadaheadSize`/`getMaxAutoReadaheadSize`,
+  `setInitialAutoReadaheadSize`/`getInitialAutoReadaheadSize`, `setNumFileReadsForAutoReadahead`/
+  `getNumFileReadsForAutoReadahead`.
+
 ## [0.10] — 2026-08-30
 
 `ReadBatch` (a reusable, preallocated multiGet), full SST-file inspection (`LiveFiles`,

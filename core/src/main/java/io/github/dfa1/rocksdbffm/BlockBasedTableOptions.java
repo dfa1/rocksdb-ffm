@@ -122,6 +122,18 @@ public final class BlockBasedTableOptions extends NativeObject {
 	private static final MethodHandle MH_SET_WHOLE_KEY_FILTERING;
 	/// `void rocksdb_block_based_options_set_partition_filters(rocksdb_block_based_table_options_t* options, unsigned char partition_filters);`
 	private static final MethodHandle MH_SET_PARTITION_FILTERS;
+	/// `void rocksdb_block_based_options_set_max_auto_readahead_size(rocksdb_block_based_table_options_t* opt, size_t v);`
+	private static final MethodHandle MH_SET_MAX_AUTO_READAHEAD_SIZE;
+	/// `size_t rocksdb_block_based_options_get_max_auto_readahead_size(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_MAX_AUTO_READAHEAD_SIZE;
+	/// `void rocksdb_block_based_options_set_initial_auto_readahead_size(rocksdb_block_based_table_options_t* opt, size_t v);`
+	private static final MethodHandle MH_SET_INITIAL_AUTO_READAHEAD_SIZE;
+	/// `size_t rocksdb_block_based_options_get_initial_auto_readahead_size(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_INITIAL_AUTO_READAHEAD_SIZE;
+	/// `void rocksdb_block_based_options_set_num_file_reads_for_auto_readahead(rocksdb_block_based_table_options_t* opt, uint64_t v);`
+	private static final MethodHandle MH_SET_NUM_FILE_READS_FOR_AUTO_READAHEAD;
+	/// `uint64_t rocksdb_block_based_options_get_num_file_reads_for_auto_readahead(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_NUM_FILE_READS_FOR_AUTO_READAHEAD;
 
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_block_based_options_create",
@@ -162,6 +174,30 @@ public final class BlockBasedTableOptions extends NativeObject {
 		MH_SET_PARTITION_FILTERS = NativeLibrary.lookup(
 				"rocksdb_block_based_options_set_partition_filters",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_SET_MAX_AUTO_READAHEAD_SIZE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_max_auto_readahead_size",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_MAX_AUTO_READAHEAD_SIZE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_max_auto_readahead_size",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_INITIAL_AUTO_READAHEAD_SIZE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_initial_auto_readahead_size",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_INITIAL_AUTO_READAHEAD_SIZE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_initial_auto_readahead_size",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_NUM_FILE_READS_FOR_AUTO_READAHEAD = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_num_file_reads_for_auto_readahead",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_NUM_FILE_READS_FOR_AUTO_READAHEAD = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_num_file_reads_for_auto_readahead",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 	}
 
 	private BlockBasedTableOptions(MemorySegment ptr) {
@@ -319,6 +355,87 @@ public final class BlockBasedTableOptions extends NativeObject {
 			throw RocksDB.wrapInvokeFailure("setPartitionFilters failed", t);
 		}
 		return this;
+	}
+
+	// -----------------------------------------------------------------------
+	// Auto-readahead tuning
+	// -----------------------------------------------------------------------
+
+	/// Upper bound on the read-ahead size RocksDB grows to for sequential scans of this
+	/// table. Auto-readahead starts at [#setInitialAutoReadaheadSize] and doubles after every
+	/// [#setNumFileReadsForAutoReadahead] sequential reads, capped at this value. Default: 256 KB.
+	///
+	/// @param size maximum auto-readahead size
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setMaxAutoReadaheadSize(MemorySize size) {
+		try {
+			MH_SET_MAX_AUTO_READAHEAD_SIZE.invokeExact(ptr(), size.toBytes());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setMaxAutoReadaheadSize failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured maximum auto-readahead size.
+	///
+	/// @return current maximum auto-readahead size
+	public MemorySize getMaxAutoReadaheadSize() {
+		try {
+			return MemorySize.ofBytes((long) MH_GET_MAX_AUTO_READAHEAD_SIZE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getMaxAutoReadaheadSize failed", t);
+		}
+	}
+
+	/// Read-ahead size RocksDB starts with for a new sequential scan of this table, before it
+	/// grows toward [#setMaxAutoReadaheadSize]. Default: 8 KB.
+	///
+	/// @param size initial auto-readahead size
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setInitialAutoReadaheadSize(MemorySize size) {
+		try {
+			MH_SET_INITIAL_AUTO_READAHEAD_SIZE.invokeExact(ptr(), size.toBytes());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setInitialAutoReadaheadSize failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured initial auto-readahead size.
+	///
+	/// @return current initial auto-readahead size
+	public MemorySize getInitialAutoReadaheadSize() {
+		try {
+			return MemorySize.ofBytes((long) MH_GET_INITIAL_AUTO_READAHEAD_SIZE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getInitialAutoReadaheadSize failed", t);
+		}
+	}
+
+	/// Number of sequential file reads that must be observed before RocksDB doubles the
+	/// auto-readahead size (up to [#setMaxAutoReadaheadSize]). Default: 2.
+	///
+	/// @param count number of sequential reads that triggers doubling the readahead size
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setNumFileReadsForAutoReadahead(long count) {
+		try {
+			MH_SET_NUM_FILE_READS_FOR_AUTO_READAHEAD.invokeExact(ptr(), count);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setNumFileReadsForAutoReadahead failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured number of sequential reads that triggers doubling the
+	/// auto-readahead size.
+	///
+	/// @return current number of sequential reads that triggers doubling the readahead size
+	public long getNumFileReadsForAutoReadahead() {
+		try {
+			return (long) MH_GET_NUM_FILE_READS_FOR_AUTO_READAHEAD.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getNumFileReadsForAutoReadahead failed", t);
+		}
 	}
 
 	@Override
