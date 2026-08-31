@@ -1220,6 +1220,7 @@ public final class RocksDB {
 			for (int i = 0; i < files.size(); i++) {
 				fileArray.setAtIndex(ValueLayout.ADDRESS, i, arena.allocateFrom(files.get(i).toString()));
 			}
+			requireNoNullEntries(fileArray, files.size(), "ingest file list array");
 			MH_INGEST_EXTERNAL_FILE.invokeExact(db.dbPtr(), fileArray, (long) files.size(), options.ptr(), err);
 			checkError(err);
 		} catch (Throwable t) {
@@ -1500,6 +1501,25 @@ public final class RocksDB {
 	private record CfNamesAndOptions(MemorySegment names, MemorySegment options) {
 	}
 
+	/// Guards against handing a native call an array with an unfilled (NULL) slot — every C
+	/// API this backs (`rocksdb_open_column_families`, `rocksdb_ingest_external_file`, ...)
+	/// dereferences each entry as a pointer with no null check of its own, so a slot a
+	/// marshalling loop failed to populate would otherwise crash the JVM instead of failing
+	/// in Java. Cheap (a handful of pointer comparisons at DB-open/ingest time, not a hot
+	/// per-key path) insurance against that class of bug, whatever causes it.
+	///
+	/// @param arr  native `ADDRESS[n]` array to check
+	/// @param n    number of entries to check
+	/// @param what description of the array's contents, for the error message
+	/// @throws AssertionError if any of the first `n` entries is `MemorySegment.NULL`
+	static void requireNoNullEntries(MemorySegment arr, int n, String what) {
+		for (int i = 0; i < n; i++) {
+			if (MemorySegment.NULL.equals(arr.getAtIndex(ValueLayout.ADDRESS, i))) {
+				throw new AssertionError(what + " has an unpopulated (NULL) entry at index " + i);
+			}
+		}
+	}
+
 	/// Allocates and fills the parallel names/options arrays every `*_column_families` open
 	/// call marshals, one entry per `descriptors[i]`. A descriptor with no explicit
 	/// [ColumnFamilyDescriptor#options()] gets a fresh, disposable [Options] instance,
@@ -1525,6 +1545,8 @@ public final class RocksDB {
 			}
 			optsArr.setAtIndex(ValueLayout.ADDRESS, i, cfOpts.ptr());
 		}
+		requireNoNullEntries(namesArr, n, "column family names array");
+		requireNoNullEntries(optsArr, n, "column family options array");
 		return new CfNamesAndOptions(namesArr, optsArr);
 	}
 
