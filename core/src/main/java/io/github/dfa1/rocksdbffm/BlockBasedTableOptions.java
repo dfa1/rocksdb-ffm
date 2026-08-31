@@ -94,6 +94,29 @@ public final class BlockBasedTableOptions extends NativeObject {
 		}
 	}
 
+	/// Which tier of block-based tables a metadata-block cache-pinning setting affects
+	/// ([#setTopLevelIndexPinningTier], [#setPartitionPinningTier],
+	/// [#setUnpartitionedPinningTier]), per `table.h`'s `PinningTier`.
+	public enum PinningTier {
+		/// Falls back to the deprecated [#setPinL0FilterAndIndexBlocksInCache] /
+		/// [#setPinTopLevelIndexAndFilter] booleans instead of a tier-based rule.
+		FALLBACK(0),
+		/// No block-based tables in this tier are pinned.
+		NONE(1),
+		/// Tables that may have originated from a memtable flush -- includes L0 tables smaller
+		/// than 1.5x the current write buffer size, so also intra-L0 compaction outputs and
+		/// ingested files not abnormally large compared to flushed L0 files.
+		FLUSHED_AND_SIMILAR(2),
+		/// Every block-based table in this tier is pinned.
+		ALL(3);
+
+		final int value;
+
+		PinningTier(int value) {
+			this.value = value;
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// Method handles
 	// -----------------------------------------------------------------------
@@ -134,6 +157,24 @@ public final class BlockBasedTableOptions extends NativeObject {
 	private static final MethodHandle MH_SET_NUM_FILE_READS_FOR_AUTO_READAHEAD;
 	/// `uint64_t rocksdb_block_based_options_get_num_file_reads_for_auto_readahead(rocksdb_block_based_table_options_t* opt);`
 	private static final MethodHandle MH_GET_NUM_FILE_READS_FOR_AUTO_READAHEAD;
+	/// `void rocksdb_block_based_options_set_cache_index_and_filter_blocks_with_high_priority(rocksdb_block_based_table_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY;
+	/// `unsigned char rocksdb_block_based_options_get_cache_index_and_filter_blocks_with_high_priority(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY;
+	/// `void rocksdb_block_based_options_set_pin_l0_filter_and_index_blocks_in_cache(rocksdb_block_based_table_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE;
+	/// `unsigned char rocksdb_block_based_options_get_pin_l0_filter_and_index_blocks_in_cache(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE;
+	/// `void rocksdb_block_based_options_set_pin_top_level_index_and_filter(rocksdb_block_based_table_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_PIN_TOP_LEVEL_INDEX_AND_FILTER;
+	/// `unsigned char rocksdb_block_based_options_get_pin_top_level_index_and_filter(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_PIN_TOP_LEVEL_INDEX_AND_FILTER;
+	/// `void rocksdb_block_based_options_set_top_level_index_pinning_tier(rocksdb_block_based_table_options_t* options, int v);`
+	private static final MethodHandle MH_SET_TOP_LEVEL_INDEX_PINNING_TIER;
+	/// `void rocksdb_block_based_options_set_partition_pinning_tier(rocksdb_block_based_table_options_t* options, int v);`
+	private static final MethodHandle MH_SET_PARTITION_PINNING_TIER;
+	/// `void rocksdb_block_based_options_set_unpartitioned_pinning_tier(rocksdb_block_based_table_options_t* options, int v);`
+	private static final MethodHandle MH_SET_UNPARTITIONED_PINNING_TIER;
 
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_block_based_options_create",
@@ -198,6 +239,42 @@ public final class BlockBasedTableOptions extends NativeObject {
 		MH_GET_NUM_FILE_READS_FOR_AUTO_READAHEAD = NativeLibrary.lookup(
 				"rocksdb_block_based_options_get_num_file_reads_for_auto_readahead",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_cache_index_and_filter_blocks_with_high_priority",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_cache_index_and_filter_blocks_with_high_priority",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_pin_l0_filter_and_index_blocks_in_cache",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_pin_l0_filter_and_index_blocks_in_cache",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_PIN_TOP_LEVEL_INDEX_AND_FILTER = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_pin_top_level_index_and_filter",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_PIN_TOP_LEVEL_INDEX_AND_FILTER = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_pin_top_level_index_and_filter",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_TOP_LEVEL_INDEX_PINNING_TIER = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_top_level_index_pinning_tier",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_SET_PARTITION_PINNING_TIER = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_partition_pinning_tier",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_SET_UNPARTITIONED_PINNING_TIER = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_unpartitioned_pinning_tier",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 	}
 
 	private BlockBasedTableOptions(MemorySegment ptr) {
@@ -436,6 +513,133 @@ public final class BlockBasedTableOptions extends NativeObject {
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("getNumFileReadsForAutoReadahead failed", t);
 		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Cache pinning and priority
+	// -----------------------------------------------------------------------
+
+	/// If true, index and filter blocks are inserted into the block cache with high priority,
+	/// making them less likely to be evicted than normal-priority data blocks. Only takes
+	/// effect when [#setCacheIndexAndFilterBlocks] is `true`. Default: false.
+	///
+	/// @param value `true` to insert index/filter blocks at high cache priority
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setCacheIndexAndFilterBlocksWithHighPriority(boolean value) {
+		try {
+			MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY.invokeExact(ptr(), RocksDB.toByte(value));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setCacheIndexAndFilterBlocksWithHighPriority failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether index/filter blocks are inserted into the block cache at high priority.
+	///
+	/// @return `true` if index/filter blocks are inserted at high cache priority
+	public boolean getCacheIndexAndFilterBlocksWithHighPriority() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getCacheIndexAndFilterBlocksWithHighPriority failed", t);
+		}
+	}
+
+	/// Deprecated pinning control, superseded by [#setUnpartitionedPinningTier] and
+	/// [#setPartitionPinningTier] (used only when those are left at
+	/// [PinningTier#FALLBACK]). If true, pins L0 filter and index blocks in the block cache.
+	/// Default: false.
+	///
+	/// @param value `true` to pin L0 filter and index blocks in the block cache
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setPinL0FilterAndIndexBlocksInCache(boolean value) {
+		try {
+			MH_SET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE.invokeExact(ptr(), RocksDB.toByte(value));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setPinL0FilterAndIndexBlocksInCache failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether L0 filter and index blocks are pinned in the block cache.
+	///
+	/// @return `true` if L0 filter and index blocks are pinned in the block cache
+	public boolean getPinL0FilterAndIndexBlocksInCache() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getPinL0FilterAndIndexBlocksInCache failed", t);
+		}
+	}
+
+	/// Deprecated pinning control, superseded by [#setTopLevelIndexPinningTier] (used only
+	/// when that is left at [PinningTier#FALLBACK]). If true, pins the top-level index and
+	/// filter on partitioned index/filter tables. Default: false.
+	///
+	/// @param value `true` to pin the top-level index and filter
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setPinTopLevelIndexAndFilter(boolean value) {
+		try {
+			MH_SET_PIN_TOP_LEVEL_INDEX_AND_FILTER.invokeExact(ptr(), RocksDB.toByte(value));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setPinTopLevelIndexAndFilter failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether the top-level index and filter are pinned.
+	///
+	/// @return `true` if the top-level index and filter are pinned
+	public boolean getPinTopLevelIndexAndFilter() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_PIN_TOP_LEVEL_INDEX_AND_FILTER.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getPinTopLevelIndexAndFilter failed", t);
+		}
+	}
+
+	/// The tier of block-based tables whose top-level index into metadata partitions will be
+	/// pinned in the block cache. Requires [#setCacheIndexAndFilterBlocks] to be `true` to have
+	/// any effect. Default: [PinningTier#FALLBACK].
+	///
+	/// @param tier the pinning tier to apply
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setTopLevelIndexPinningTier(PinningTier tier) {
+		try {
+			MH_SET_TOP_LEVEL_INDEX_PINNING_TIER.invokeExact(ptr(), tier.value);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setTopLevelIndexPinningTier failed", t);
+		}
+		return this;
+	}
+
+	/// The tier of block-based tables whose metadata partitions (index and filter) will be
+	/// pinned in the block cache. Default: [PinningTier#FALLBACK].
+	///
+	/// @param tier the pinning tier to apply
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setPartitionPinningTier(PinningTier tier) {
+		try {
+			MH_SET_PARTITION_PINNING_TIER.invokeExact(ptr(), tier.value);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setPartitionPinningTier failed", t);
+		}
+		return this;
+	}
+
+	/// The tier of block-based tables whose unpartitioned metadata blocks will be pinned in
+	/// the block cache. Requires [#setCacheIndexAndFilterBlocks] to be `true` to have any
+	/// effect. Default: [PinningTier#FALLBACK].
+	///
+	/// @param tier the pinning tier to apply
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setUnpartitionedPinningTier(PinningTier tier) {
+		try {
+			MH_SET_UNPARTITIONED_PINNING_TIER.invokeExact(ptr(), tier.value);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setUnpartitionedPinningTier failed", t);
+		}
+		return this;
 	}
 
 	@Override

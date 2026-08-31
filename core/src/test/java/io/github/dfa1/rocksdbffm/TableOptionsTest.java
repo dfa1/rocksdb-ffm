@@ -289,4 +289,74 @@ class TableOptionsTest {
 			assertThat(result).isEqualTo(5L);
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// Cache pinning and priority
+	// -----------------------------------------------------------------------
+
+	@Test
+	void cachePinningAndPriority_allowsReadWrite(@TempDir Path dir) {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setCacheIndexAndFilterBlocks(true)
+				     .setCacheIndexAndFilterBlocksWithHighPriority(true)
+				     .setPinL0FilterAndIndexBlocksInCache(true)
+				     .setPinTopLevelIndexAndFilter(true)
+				     .setTopLevelIndexPinningTier(BlockBasedTableOptions.PinningTier.ALL)
+				     .setPartitionPinningTier(BlockBasedTableOptions.PinningTier.FLUSHED_AND_SIMILAR)
+				     .setUnpartitionedPinningTier(BlockBasedTableOptions.PinningTier.NONE);
+		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			var result = db.get("k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void setCacheIndexAndFilterBlocksWithHighPriority_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setCacheIndexAndFilterBlocksWithHighPriority(true)) {
+
+			// When
+			var result = tbl.getCacheIndexAndFilterBlocksWithHighPriority();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void setPinL0FilterAndIndexBlocksInCache_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setPinL0FilterAndIndexBlocksInCache(true)) {
+
+			// When
+			var result = tbl.getPinL0FilterAndIndexBlocksInCache();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void setPinTopLevelIndexAndFilter_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setPinTopLevelIndexAndFilter(true)) {
+
+			// When
+			var result = tbl.getPinTopLevelIndexAndFilter();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
 }

@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `BlockBasedTableOptions`: auto-readahead tuning — `setMaxAutoReadaheadSize`/`getMaxAutoReadaheadSize`,
   `setInitialAutoReadaheadSize`/`getInitialAutoReadaheadSize`, `setNumFileReadsForAutoReadahead`/
   `getNumFileReadsForAutoReadahead`.
+- `BlockBasedTableOptions`: cache pinning and priority — new `PinningTier` enum plus
+  `setTopLevelIndexPinningTier`, `setPartitionPinningTier`, `setUnpartitionedPinningTier`
+  (setter-only in `c.h`, no getters), and `setCacheIndexAndFilterBlocksWithHighPriority`/
+  `setPinL0FilterAndIndexBlocksInCache`/`setPinTopLevelIndexAndFilter` with their getters.
 
 ## [0.10] — 2026-08-30
 
