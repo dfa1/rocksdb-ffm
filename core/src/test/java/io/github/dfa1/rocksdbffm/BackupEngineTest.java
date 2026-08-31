@@ -49,6 +49,32 @@ class BackupEngineTest {
 	}
 
 	@Test
+	void getBackupInfo_multipleBackups_returnsExactlyOneEntryPerBackupInOrder(@TempDir Path dir) {
+		// Given — getBackupInfo's loop bound comes from a native rocksdb_backup_engine_info_t
+		// count with no client-side bounds oracle to double-check against; an off-by-one loop
+		// bound reads one BackupInfo past the native std::vector's end (unchecked operator[]
+		// on the C++ side). A handful of backups makes an accidental one-past-the-end read
+		// more likely to land outside the allocation than a single-backup case would.
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
+		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
+
+			for (int i = 0; i < 5; i++) {
+				db.put(("k" + i).getBytes(), ("v" + i).getBytes());
+				engine.createNewBackup(db, true);
+			}
+
+			// When
+			List<BackupInfo> result = engine.getBackupInfo();
+
+			// Then
+			assertThat(result).hasSize(5);
+			assertThat(result.stream().map(BackupInfo::backupId))
+					.containsExactly(BackupId.of(1), BackupId.of(2), BackupId.of(3), BackupId.of(4), BackupId.of(5));
+		}
+	}
+
+	@Test
 	void verifyBackup_succeedsForValidBackup(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
