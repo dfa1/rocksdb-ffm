@@ -57,6 +57,11 @@ public final class WalIterator extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 
+	// rocksdb_wal_iter_get_batch is only safe to call once per position: a second call before
+	// next() moves the iterator on crashes inside RocksDB's own WriteBatch move-assignment
+	// instead of raising a Java exception (see getBatch()'s guard below).
+	private boolean batchFetchedAtCurrentPosition;
+
 	private WalIterator(MemorySegment ptr) {
 		super(ptr);
 	}
@@ -80,6 +85,7 @@ public final class WalIterator extends NativeObject {
 	public void next() {
 		try {
 			MH_NEXT.invokeExact(ptr());
+			batchFetchedAtCurrentPosition = false;
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("wal_iter_next failed", t);
 		}
@@ -100,21 +106,29 @@ public final class WalIterator extends NativeObject {
 	}
 
 	/// Returns the current [WriteBatch] and the [SequenceNumber] of its first transaction.
-	/// The caller owns the returned [WalBatchResult] and must close it.
+	/// The caller owns the returned [WalBatchResult] and must close it. Only call once per
+	/// position — call [#next()] before calling this again.
 	///
 	/// @return the current batch and its sequence number
-	/// @throws IllegalStateException if [#isValid()] is `false` — RocksDB's C API
-	///                                (`rocksdb_wal_iter_get_batch`) dereferences a null
-	///                                internal pointer in that case and crashes the JVM
+	/// @throws IllegalStateException if [#isValid()] is `false`, or if this is called a second
+	///                                time at the same position without an intervening
+	///                                [#next()] — RocksDB's C API (`rocksdb_wal_iter_get_batch`)
+	///                                is only safe to call once per position; calling it again
+	///                                crashes the JVM (inside `WriteBatch`'s own move-assignment)
 	///                                instead of raising a Java exception
 	public WalBatchResult getBatch() {
 		if (!isValid()) {
 			throw new IllegalStateException("wal iterator is not valid: getBatch() can only be called while isValid() is true");
 		}
+		if (batchFetchedAtCurrentPosition) {
+			throw new IllegalStateException(
+					"getBatch() was already called at this position: call next() before calling it again");
+		}
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment seqHolder = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment batchPtr = (MemorySegment) MH_GET_BATCH.invokeExact(ptr(), seqHolder);
 			long seq = seqHolder.get(ValueLayout.JAVA_LONG, 0);
+			batchFetchedAtCurrentPosition = true;
 			return new WalBatchResult(SequenceNumber.of(seq), WriteBatch.wrap(batchPtr));
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("wal_iter_get_batch failed", t);
