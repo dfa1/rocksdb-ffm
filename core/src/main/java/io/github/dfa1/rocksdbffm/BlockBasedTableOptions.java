@@ -214,8 +214,11 @@ public final class BlockBasedTableOptions extends NativeObject {
 	public enum ChecksumType {
 		/// No checksum protection.
 		NO_CHECKSUM(0),
+		/// CRC32C.
 		CRC32C(1),
+		/// xxHash.
 		XX_HASH(2),
+		/// xxHash64.
 		XX_HASH64(3),
 		/// Default since RocksDB 6.27.
 		XXH3(4);
