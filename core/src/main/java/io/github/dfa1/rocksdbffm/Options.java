@@ -133,6 +133,26 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_DEFAULT_TEMPERATURE;
 	/// `int rocksdb_options_get_default_temperature(rocksdb_options_t* opt);`
 	private static final MethodHandle MH_GET_DEFAULT_TEMPERATURE;
+	/// `void rocksdb_options_set_write_buffer_size(rocksdb_options_t*, size_t);`
+	private static final MethodHandle MH_SET_WRITE_BUFFER_SIZE;
+	/// `size_t rocksdb_options_get_write_buffer_size(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_WRITE_BUFFER_SIZE;
+	/// `void rocksdb_options_set_num_levels(rocksdb_options_t*, int);`
+	private static final MethodHandle MH_SET_NUM_LEVELS;
+	/// `int rocksdb_options_get_num_levels(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_NUM_LEVELS;
+	/// `void rocksdb_options_set_level0_file_num_compaction_trigger(rocksdb_options_t*, int);`
+	private static final MethodHandle MH_SET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER;
+	/// `int rocksdb_options_get_level0_file_num_compaction_trigger(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER;
+	/// `void rocksdb_options_set_target_file_size_base(rocksdb_options_t*, uint64_t);`
+	private static final MethodHandle MH_SET_TARGET_FILE_SIZE_BASE;
+	/// `uint64_t rocksdb_options_get_target_file_size_base(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_TARGET_FILE_SIZE_BASE;
+	/// `void rocksdb_options_set_max_bytes_for_level_base(rocksdb_options_t*, uint64_t);`
+	private static final MethodHandle MH_SET_MAX_BYTES_FOR_LEVEL_BASE;
+	/// `uint64_t rocksdb_options_get_max_bytes_for_level_base(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_MAX_BYTES_FOR_LEVEL_BASE;
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
@@ -310,6 +330,37 @@ public final class Options extends NativeObject {
 		MH_GET_DEFAULT_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_get_default_temperature",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
+		MH_SET_WRITE_BUFFER_SIZE = NativeLibrary.lookup("rocksdb_options_set_write_buffer_size",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_WRITE_BUFFER_SIZE = NativeLibrary.lookup("rocksdb_options_get_write_buffer_size",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_NUM_LEVELS = NativeLibrary.lookup("rocksdb_options_set_num_levels",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_NUM_LEVELS = NativeLibrary.lookup("rocksdb_options_get_num_levels",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER = NativeLibrary.lookup(
+				"rocksdb_options_set_level0_file_num_compaction_trigger",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER = NativeLibrary.lookup(
+				"rocksdb_options_get_level0_file_num_compaction_trigger",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_TARGET_FILE_SIZE_BASE = NativeLibrary.lookup("rocksdb_options_set_target_file_size_base",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_TARGET_FILE_SIZE_BASE = NativeLibrary.lookup("rocksdb_options_get_target_file_size_base",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_MAX_BYTES_FOR_LEVEL_BASE = NativeLibrary.lookup("rocksdb_options_set_max_bytes_for_level_base",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_MAX_BYTES_FOR_LEVEL_BASE = NativeLibrary.lookup("rocksdb_options_get_max_bytes_for_level_base",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 	}
 
 	private Options(MemorySegment ptr) {
@@ -570,6 +621,138 @@ public final class Options extends NativeObject {
 			throw RocksDB.wrapInvokeFailure("setTableFormatConfig failed", t);
 		}
 		return this;
+	}
+
+	// -----------------------------------------------------------------------
+	// LSM shape and compaction triggers
+	// -----------------------------------------------------------------------
+
+	/// Amount of data to accumulate in a memtable before it is flushed to an SST file.
+	/// Larger values reduce write amplification and the number of files produced, at the cost
+	/// of more memory per column family and a larger recovery replay window. Default: 64 MiB.
+	///
+	/// @param size memtable size threshold that triggers a flush
+	/// @return `this` for chaining
+	public Options setWriteBufferSize(MemorySize size) {
+		try {
+			MH_SET_WRITE_BUFFER_SIZE.invokeExact(ptr(), size.toBytes());
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setWriteBufferSize failed", t);
+		}
+	}
+
+	/// Returns the configured memtable flush threshold.
+	///
+	/// @return current memtable size threshold that triggers a flush
+	public MemorySize getWriteBufferSize() {
+		try {
+			return MemorySize.ofBytes((long) MH_GET_WRITE_BUFFER_SIZE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getWriteBufferSize failed", t);
+		}
+	}
+
+	/// Number of levels in the LSM tree for this column family. Default: 7.
+	///
+	/// @param numLevels number of levels
+	/// @return `this` for chaining
+	public Options setNumLevels(int numLevels) {
+		try {
+			MH_SET_NUM_LEVELS.invokeExact(ptr(), numLevels);
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setNumLevels failed", t);
+		}
+	}
+
+	/// Returns the configured number of LSM tree levels.
+	///
+	/// @return current number of levels
+	public int getNumLevels() {
+		try {
+			return (int) MH_GET_NUM_LEVELS.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getNumLevels failed", t);
+		}
+	}
+
+	/// Once the number of level-0 SST files reaches this count, RocksDB triggers a compaction
+	/// of level 0 into level 1. Lower values trigger compaction sooner (useful for tests that
+	/// need to observe real automatic compactions without writing a large volume of data);
+	/// higher values tolerate more read amplification from level 0 before compacting.
+	/// Default: 4.
+	///
+	/// @param numFiles number of level-0 files that triggers compaction
+	/// @return `this` for chaining
+	public Options setLevel0FileNumCompactionTrigger(int numFiles) {
+		try {
+			MH_SET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER.invokeExact(ptr(), numFiles);
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setLevel0FileNumCompactionTrigger failed", t);
+		}
+	}
+
+	/// Returns the configured level-0 file count that triggers compaction.
+	///
+	/// @return current level-0 file count that triggers compaction
+	public int getLevel0FileNumCompactionTrigger() {
+		try {
+			return (int) MH_GET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getLevel0FileNumCompactionTrigger failed", t);
+		}
+	}
+
+	/// Target size for SST files at level 1; higher levels scale up from this by
+	/// `target_file_size_multiplier` (not currently exposed by this library). Default: 64 MiB.
+	///
+	/// @param size target SST file size at level 1
+	/// @return `this` for chaining
+	public Options setTargetFileSizeBase(MemorySize size) {
+		try {
+			MH_SET_TARGET_FILE_SIZE_BASE.invokeExact(ptr(), size.toBytes());
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setTargetFileSizeBase failed", t);
+		}
+	}
+
+	/// Returns the configured target SST file size at level 1.
+	///
+	/// @return current target SST file size at level 1
+	public MemorySize getTargetFileSizeBase() {
+		try {
+			return MemorySize.ofBytes((long) MH_GET_TARGET_FILE_SIZE_BASE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getTargetFileSizeBase failed", t);
+		}
+	}
+
+	/// Target total size for level 1; higher levels scale up from this by
+	/// `max_bytes_for_level_multiplier` (not currently exposed by this library). Default: 256 MiB.
+	///
+	/// @param size target total size for level 1
+	/// @return `this` for chaining
+	public Options setMaxBytesForLevelBase(MemorySize size) {
+		try {
+			MH_SET_MAX_BYTES_FOR_LEVEL_BASE.invokeExact(ptr(), size.toBytes());
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setMaxBytesForLevelBase failed", t);
+		}
+	}
+
+	/// Returns the configured target total size for level 1.
+	///
+	/// @return current target total size for level 1
+	public MemorySize getMaxBytesForLevelBase() {
+		try {
+			return MemorySize.ofBytes((long) MH_GET_MAX_BYTES_FOR_LEVEL_BASE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getMaxBytesForLevelBase failed", t);
+		}
 	}
 
 	// -----------------------------------------------------------------------

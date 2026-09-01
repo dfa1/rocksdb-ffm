@@ -34,7 +34,7 @@ rocksdbffm wraps `rocksdb/c.h` — the official RocksDB C API — not C++ direct
 | Custom Comparator | `rocksdb_comparator_create()`, `rocksdb_comparator_with_ts_create()` | High | Custom key ordering; note: key shortening not exposed in C API |
 | JemallocNodumpAllocator | `rocksdb_jemalloc_nodump_allocator_create()` | Medium | Jemalloc allocator for caches; avoids coredump leaking sensitive data |
 | Advanced memtable config | Various `rocksdb_options_set_*` memtable setters | Low | SkipList tuning, hash-memtable variants |
-| Advanced column family options | CF-scoped option setters | Low | Per-CF compaction style, level multiplier, etc. |
+| Advanced column family options | `rocksdb_options_set_target_file_size_multiplier`, `_set_max_bytes_for_level_multiplier`, `_set_max_write_buffer_number`, `_set_min_write_buffer_number_to_merge`, `_set_level_compaction_dynamic_level_bytes`, `_set_compression_per_level`, etc. | Low | Remainder after `write_buffer_size`/`num_levels`/`level0_file_num_compaction_trigger`/`target_file_size_base`/`max_bytes_for_level_base` were mapped (see `Options.java`'s "LSM shape and compaction triggers" section) — multiplier/secondary knobs layered on top of those base values |
 | `rocksdb.live_sst_files_size_at_temperature` property | `rocksdb_property_value()` (existing, generic) | Low | Needs a `Temperature` enum (no Java type yet, matches C++'s `kUnknown`/`kHot`/`kWarm`/`kCold`) and a suffixed-property call shape (`name:kWarm`) `getProperty(Property)`'s flat enum doesn't support — every other property is a plain constant, this one alone takes a parameter |
 
 ---
