@@ -29,6 +29,8 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_GET_CREATE_IF_MISSING;
 	/// `void rocksdb_options_set_block_based_table_factory(rocksdb_options_t* opt, rocksdb_block_based_table_options_t* table_options);`
 	private static final MethodHandle MH_SET_BLOCK_BASED_TABLE_FACTORY;
+	/// `void rocksdb_options_set_cuckoo_table_factory(rocksdb_options_t* opt, rocksdb_cuckoo_table_options_t* table_options);`
+	private static final MethodHandle MH_SET_CUCKOO_TABLE_FACTORY;
 	/// `void rocksdb_options_enable_statistics(rocksdb_options_t*);`
 	private static final MethodHandle MH_ENABLE_STATISTICS;
 	/// `void rocksdb_options_set_statistics_level(rocksdb_options_t*, int level);`
@@ -146,6 +148,10 @@ public final class Options extends NativeObject {
 
 		MH_SET_BLOCK_BASED_TABLE_FACTORY = NativeLibrary.lookup(
 				"rocksdb_options_set_block_based_table_factory",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_SET_CUCKOO_TABLE_FACTORY = NativeLibrary.lookup(
+				"rocksdb_options_set_cuckoo_table_factory",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_ENABLE_STATISTICS = NativeLibrary.lookup("rocksdb_options_enable_statistics",
@@ -545,6 +551,21 @@ public final class Options extends NativeObject {
 	public Options setTableFormatConfig(BlockBasedTableOptions tableConfig) {
 		try {
 			MH_SET_BLOCK_BASED_TABLE_FACTORY.invokeExact(ptr(), tableConfig.ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setTableFormatConfig failed", t);
+		}
+		return this;
+	}
+
+	/// Configures Cuckoo Table format for this DB -- a hash-based SST format optimized for
+	/// fixed-size keys and point lookups (no range scans).
+	/// RocksDB copies the config internally; `tableConfig` may be closed after this call.
+	///
+	/// @param tableConfig the Cuckoo table options to apply
+	/// @return `this` for chaining
+	public Options setTableFormatConfig(CuckooTableOptions tableConfig) {
+		try {
+			MH_SET_CUCKOO_TABLE_FACTORY.invokeExact(ptr(), tableConfig.ptr());
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("setTableFormatConfig failed", t);
 		}

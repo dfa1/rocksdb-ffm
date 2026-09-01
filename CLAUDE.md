@@ -174,7 +174,7 @@ instance method listed below lives on the DB type (`ReadWriteDB`, `TtlDB`, …),
 | Transactions            | `Transaction.java`, `TransactionDB.java`, `TransactionDBOptions.java`, `TransactionOptions.java`                          |
 | Optimistic Transactions | `OptimisticTransactionDB.java`, `OptimisticTransactionOptions.java`                                                       |
 | Checkpoints             | `Checkpoint.java`                                                                                                         |
-| Table Options           | `BlockBasedTableOptions.java`, `Cache.java`, `LRUCache.java`, `HyperClockCache.java`, `FilterPolicy.java`                 |
+| Table Options           | `BlockBasedTableOptions.java`, `CuckooTableOptions.java`, `Cache.java`, `LRUCache.java`, `HyperClockCache.java`, `FilterPolicy.java`; `Options.setTableFormatConfig` overloads for both table formats |
 | Compression             | `CompressionType.java`; `Options.setCompression`, `Options.getCompression`                                                |
 | Temperature hints       | `Temperature.java`; 5 setter/getter pairs on `Options` (metadata/WAL/last-level/default-write/default write temperature)  |
 | Iterators               | `RocksIterator.java`                                                                                                      |
@@ -204,6 +204,7 @@ instance method listed below lives on the DB type (`ReadWriteDB`, `TtlDB`, …),
 | Backup Engine           | `BackupEngine.java`, `BackupEngineOptions.java`, `RestoreOptions.java`, `BackupInfo.java`, `BackupId.java`                |
 | Column Families         | `ColumnFamilyHandle.java`, `ColumnFamilyDescriptor.java`; `RocksDB.openReadWrite`, `listColumnFamilies`; CF overloads on `ReadWriteDB` and `WriteBatch`; CF overloads on `ReadOnlyDB`, `TtlDB`, `BlobDB`, `SecondaryDB`, `TransactionDB`, `OptimisticTransactionDB`; `Transaction` CF put/delete/get/getForUpdate/newIterator; multi-CF open for all DB types (including `RocksDB.openSecondary`) |
 | Perf Context            | `PerfContext.java`, `PerfLevel.java`, `PerfMetric.java`; thread-local; `setPerfLevel`, `reset`, `metric`, `report`       |
+| Tracing & Replay        | `TraceOptions.java`, `TraceFilter.java`; `RocksDBTracingOperations.startTrace`/`endTrace` — its own interface (not folded into `RocksDBWriteOperations`) since tracing captures reads too and works on read-only/secondary handles, implemented by the same set of types as `MonitoringOperations` (`ReadWriteDB`/`TtlDB`/`BlobDB`/`OptimisticTransactionDB`/`ReadOnlyDB`/`SecondaryDB`/`TransactionDB`); `Replayer.java`, `ReplayOptions.java` — replays a captured trace against a target database |
 
 ## Documentation
 

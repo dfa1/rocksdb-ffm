@@ -113,6 +113,10 @@ public final class RocksDB {
 	private static final MethodHandle MH_ENABLE_MANUAL_COMPACTION;
 	/// `void rocksdb_wait_for_compact(rocksdb_t* db, rocksdb_wait_for_compact_options_t* options, char** errptr);`
 	private static final MethodHandle MH_WAIT_FOR_COMPACT;
+	/// `void rocksdb_start_trace(rocksdb_t* db, rocksdb_env_t* env, const rocksdb_envoptions_t* env_options, const rocksdb_trace_options_t* options, const char* trace_path, char** errptr);`
+	private static final MethodHandle MH_START_TRACE;
+	/// `void rocksdb_end_trace(rocksdb_t* db, char** errptr);`
+	private static final MethodHandle MH_END_TRACE;
 
 	// -----------------------------------------------------------------------
 	// Column-family method handles
@@ -327,6 +331,18 @@ public final class RocksDB {
 
 		MH_WAIT_FOR_COMPACT = NativeLibrary.lookup("rocksdb_wait_for_compact",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_START_TRACE = NativeLibrary.lookup("rocksdb_start_trace",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS,  // db
+						ValueLayout.ADDRESS,  // env
+						ValueLayout.ADDRESS,  // env_options
+						ValueLayout.ADDRESS,  // options
+						ValueLayout.ADDRESS,  // trace_path
+						ValueLayout.ADDRESS)); // errptr
+
+		MH_END_TRACE = NativeLibrary.lookup("rocksdb_end_trace",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_OPEN_CF = NativeLibrary.lookup("rocksdb_open_column_families",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -1010,6 +1026,36 @@ public final class RocksDB {
 			checkError(err);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("flushWal failed", t);
+		}
+	}
+
+	/// [#startTrace(RocksDBTracingOperations, Env, EnvOptions, TraceOptions, Path)] using a
+	/// temporary default [Env]/[EnvOptions] pair, closed before this method returns.
+	static void startTrace(RocksDBTracingOperations db, TraceOptions traceOptions, Path tracePath) {
+		try (Env env = Env.defaultEnv(); EnvOptions envOptions = EnvOptions.newEnvOptions()) {
+			startTrace(db, env, envOptions, traceOptions, tracePath);
+		}
+	}
+
+	static void startTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,
+			TraceOptions traceOptions, Path tracePath) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = errHolder(arena);
+			MemorySegment pathSeg = arena.allocateFrom(tracePath.toString());
+			MH_START_TRACE.invokeExact(db.dbPtr(), env.ptr(), envOptions.ptr(), traceOptions.ptr(), pathSeg, err);
+			checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("startTrace failed", t);
+		}
+	}
+
+	static void endTrace(RocksDBTracingOperations db) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = errHolder(arena);
+			MH_END_TRACE.invokeExact(db.dbPtr(), err);
+			checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("endTrace failed", t);
 		}
 	}
 

@@ -24,7 +24,8 @@ import java.util.OptionalLong;
 ///     }
 /// }
 /// ```
-public final class TransactionDB extends NativeObjectWithBaseDb implements MonitoringOperations {
+public final class TransactionDB extends NativeObjectWithBaseDb
+		implements MonitoringOperations, RocksDBTracingOperations {
 
 	// -----------------------------------------------------------------------
 	// Method handles

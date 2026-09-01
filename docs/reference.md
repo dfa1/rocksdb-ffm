@@ -189,6 +189,17 @@ Per-call options:
 | `setWholeKeyFiltering`        | `boolean`                            |
 | `setPartitionFilters`         | `boolean`                            |
 
+`CuckooTableOptions.newCuckooTableOptions()` — hash-based SST format for fixed-size keys and
+point lookups (no range scans), attached via `Options.setTableFormatConfig(CuckooTableOptions)`:
+
+| Method                     | Type      | Default |
+|:---------------------------|:----------|:--------|
+| `setHashTableRatio`        | `double`  | `0.9`   |
+| `setMaxSearchDepth`        | `int`     | `100`   |
+| `setCuckooBlockSize`       | `int`     | `5`     |
+| `setIdentityAsFirstHash`   | `boolean` | `false` |
+| `setUseModuleHash`         | `boolean` | `true`  |
+
 | Class              | Factory                                                                | Notes                                    |
 |:-------------------|:-----------------------------------------------------------------------|:-----------------------------------------|
 | `Cache` (abstract) | —                                                                      | `setCapacity`, `getCapacity`, `getUsage`, `getPinnedUsage` |
@@ -355,7 +366,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Transactions (pessimistic) |   ✅    | `TransactionDB`, savepoints, get-for-update                                                 |
 | Optimistic transactions    |   ✅    | Conflict detection at commit                                                                |
 | Checkpoints                |   ✅    | Point-in-time on-disk snapshot                                                              |
-| Table options              |   ✅    | `BlockBasedTableOptions`, `LRUCache`, `HyperClockCache`, `FilterPolicy` (Bloom, Ribbon)     |
+| Table options              |   ✅    | `BlockBasedTableOptions`, `CuckooTableOptions`, `LRUCache`, `HyperClockCache`, `FilterPolicy` (Bloom, Ribbon)     |
 | Iterators                  |   ✅    | seek/seekForPrev/next/prev; all three tiers                                                 |
 | Snapshots                  |   ✅    | `ReadOptions.setSnapshot`, sequence numbers                                                 |
 | Flush                      |   ✅    | `flush(FlushOptions)`, `flushWal(boolean)`                                                  |
@@ -384,6 +395,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | MultiGet                   |  🚧    | `ReadBatch` — the sole entry point for batched reads (all three tiers), built on `rocksdb_batched_multi_get_cf` — the modern, PinnableSlice-based, single-CF-per-call variant only; reusable and preallocated (create once for up to N keys, no per-call bookkeeping-array allocation on reuse); no separate one-shot `multiGet()` method exists — a single-batch read is just `try (var batch = ReadBatch.create(db, keys.size())) { return batch.get(keys, fn); }`; legacy `rocksdb_multi_get`/`_cf`/`_with_ts` (no batching perf benefit per upstream) and `TransactionDB`/`Transaction` multi-get are not wrapped |
 | Merge                      |   ✅    | `merge()` write op on all 7 write-capable types (byte[]/ByteBuffer/MemorySegment, CF variants), see [#8](https://github.com/dfa1/rocksdbffm/issues/8); requires a `MergeOperator` configured via `Options.setMergeOperator`, else calls fail with `RocksDBException` |
 | MergeOperator               |   ✅    | `MergeOperator.uint64Add()` (built-in `rocksdb_options_set_uint64add_merge_operator`) and `MergeOperator.custom(String, FullMergeFn)` (`rocksdb_mergeoperator_create()` — `full_merge` implemented in Java, `partial_merge` always declines; `fn` receives zero-copy `MemorySegment` views of key/existing-value/operands instead of copied `byte[]`s, see [#94](https://github.com/dfa1/rocksdbffm/issues/94)) |
+| Tracing & Replay           |   ✅    | `RocksDBTracingOperations.startTrace`/`endTrace` (`rocksdb_start_trace`/`rocksdb_end_trace`) capture every op to a file, tuned via `TraceOptions` (rollover size, sampling frequency, per-op-type `TraceFilter` exclusion, write-order preservation) — its own interface, implemented by the same broad set of types as `MonitoringOperations` (including read-only and secondary handles, since tracing captures reads too); `Replayer` (`rocksdb_new_default_replayer`) + `ReplayOptions` reissue a captured trace against a target database (any CF set, concurrency, speed multiplier) — no callback plumbing needed, since RocksDB decodes the trace file internally. No parity gap with `rocksdbjni`: it has capture only (via a JNI-only `DB::StartTrace` path with a pluggable `TraceWriter` sink, file-only here) and no replayer at all |
 | CompactionFilter           |   ❌    | Callback-based custom compaction logic                                                      |
 | Custom comparators         |   ❌    | `rocksdb_comparator_create()` exists in the C API                                           |
 | Advanced column family     |   ❌    | Per-CF compaction style, level multipliers                                                  |
