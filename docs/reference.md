@@ -305,7 +305,8 @@ Reopening requires listing every existing column family, `default` included — 
 | `BackupEngine`        | `open(Options, Path)`, `open(BackupEngineOptions, Env)`; `createNewBackup(db[, boolean flushBeforeBackup])`, `getBackupInfo()`, `purgeOldBackups(int)`, `verifyBackup(BackupId)`, `restoreDbFromLatestBackup(...)`, `restoreDbFromBackup(BackupId, ...)` |
 | `BackupEngineOptions` | `create(Path)`; `setShareTableFiles`, `setSync`, `setDestroyOldData`, `setBackupLogFiles`, `setBackupRateLimit`, `setRestoreRateLimit`, `setMaxBackgroundOperations`, `setCallbackTriggerIntervalSize`, `setMaxValidBackupsToOpen`, `setShareFilesWithChecksumNaming`, `setEnv` |
 | `BackupInfo`          | Record: `backupId()`, `timestamp()` (epoch seconds), `size()` (`MemorySize`), `numberOfFiles()`   |
-| `SstFileWriter`       | `newSstFileWriter(Options)`; `open(Path)`, `put`, `delete`, `deleteRange`, `finish()`, `fileSize()` — keys must be added in sorted order |
+| `SstFileWriter`       | `newSstFileWriter(Options[, EnvOptions])`; `open(Path)`, `put`, `delete`, `deleteRange`, `finish()`, `fileSize()` — keys must be added in sorted order |
+| `EnvOptions`          | `newEnvOptions()`; per-file I/O tuning for a single `SstFileWriter` — `setUseMmapReads`/`Writes`, `setUseDirectReads`/`Writes`, `setAllowFallocate`, `setFdCloexec`, `setBytesPerSync`, `setStrictBytesPerSync`, `setFallocateWithKeepSize`, `setCompactionReadaheadSize`, `setWritableFileMaxBufferSize`, `setRateLimiter`. Distinct from `Env`, which selects the environment itself |
 | Ingest                | `db.ingestExternalFile(Path \| List<Path>[, IngestExternalFileOptions])`                          |
 
 ## WAL
@@ -330,6 +331,16 @@ Reopening requires listing every existing column family, `default` included — 
 | `disableFileDeletions()` / `enableFileDeletions()`             | Bracket an external copy of live files   |
 | `flush(FlushOptions)` / `flush(cf, FlushOptions)`              | Memtable → SST                           |
 | `flushWal(boolean sync)`                                       | WAL only                                 |
+
+`Options.setCompactionStyle(CompactionStyle)` selects the compaction algorithm at DB-open time;
+`FifoCompactionOptions`/`UniversalCompactionOptions` tune it further and only take effect under
+the matching style:
+
+| Type                          | Factory / Methods                                                                 |
+|:-------------------------------|:------------------------------------------------------------------------------------|
+| `Options.CompactionStyle`      | `LEVEL` (default), `UNIVERSAL`, `FIFO`                                              |
+| `FifoCompactionOptions`        | `newFifoCompactionOptions()`; `setMaxTableFilesSize`, `setMaxDataFilesSize`, `setAllowCompaction`, `setUseKvRatioCompaction` — attach via `Options.setFifoCompactionOptions` |
+| `UniversalCompactionOptions`   | `newUniversalCompactionOptions()`; `setSizeRatio`, `setMinMergeWidth`, `setMaxMergeWidth`, `setMaxSizeAmplificationPercent`, `setCompressionSizePercent`, `setStopStyle(StopStyle)` — attach via `Options.setUniversalCompactionOptions` |
 
 ## Observability
 
@@ -415,7 +426,8 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Blob DB                    |   ✅    | Blob options, blob properties, `PrepopulateBlobCache`                                       |
 | Logger                     |   ✅    | Stderr and callback loggers                                                                 |
 | Perf context               |   ✅    | `PerfContext`, `PerfLevel`, `PerfMetric`                                                    |
-| Background jobs            |   🚧    | `cancelAllBackgroundWork`, manual-compaction toggles, `waitForCompact`; Options-level tuning (FIFO/Universal) pending |
+| Background jobs            |   🚧    | `cancelAllBackgroundWork`, manual-compaction toggles, `waitForCompact`                       |
+| Compaction style            |   ✅    | `Options.CompactionStyle` (`LEVEL`/`UNIVERSAL`/`FIFO`); `FifoCompactionOptions`, `UniversalCompactionOptions` |
 | MultiGet                   |  🚧    | `ReadBatch` — the sole entry point for batched reads (all three tiers), built on `rocksdb_batched_multi_get_cf` — the modern, PinnableSlice-based, single-CF-per-call variant only; reusable and preallocated (create once for up to N keys, no per-call bookkeeping-array allocation on reuse); no separate one-shot `multiGet()` method exists — a single-batch read is just `try (var batch = ReadBatch.create(db, keys.size())) { return batch.get(keys, fn); }`; legacy `rocksdb_multi_get`/`_cf`/`_with_ts` (no batching perf benefit per upstream) and `TransactionDB`/`Transaction` multi-get are not wrapped |
 | Merge                      |   ✅    | `merge()` write op on all 7 write-capable types (byte[]/ByteBuffer/MemorySegment, CF variants), see [#8](https://github.com/dfa1/rocksdbffm/issues/8); requires a `MergeOperator` configured via `Options.setMergeOperator`, else calls fail with `RocksDBException` |
 | MergeOperator               |   ✅    | `MergeOperator.uint64Add()` (built-in `rocksdb_options_set_uint64add_merge_operator`) and `MergeOperator.custom(String, FullMergeFn)` (`rocksdb_mergeoperator_create()` — `full_merge` implemented in Java, `partial_merge` always declines; `fn` receives zero-copy `MemorySegment` views of key/existing-value/operands instead of copied `byte[]`s, see [#94](https://github.com/dfa1/rocksdbffm/issues/94)) |
