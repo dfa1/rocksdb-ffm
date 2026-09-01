@@ -8,7 +8,7 @@ import java.util.Set;
 
 /// FFM wrapper for `rocksdb_trace_options_t`.
 ///
-/// Controls [RocksDBWriteOperations#startTrace] capture behavior: rollover size, sampling
+/// Controls [RocksDBTracingOperations#startTrace] capture behavior: rollover size, sampling
 /// rate, which operation types to exclude, and write-order preservation. May be closed
 /// immediately after being passed to `startTrace` -- RocksDB copies the underlying struct by
 /// value.

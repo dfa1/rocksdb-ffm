@@ -12,7 +12,7 @@ import java.util.List;
 
 /// FFM wrapper for `rocksdb_replayer_t`.
 ///
-/// Replays a trace file captured via [RocksDBWriteOperations#startTrace] against a target
+/// Replays a trace file captured via [RocksDBTracingOperations#startTrace] against a target
 /// database, reissuing each recorded operation in order, subject to
 /// [ReplayOptions#setFastForward] timing and [ReplayOptions#setNumThreads] concurrency.
 /// Typically opened against a *different* database than the one that produced the trace --
@@ -72,7 +72,7 @@ public final class Replayer extends NativeObject {
 	/// them to open the trace file, not afterward).
 	///
 	/// @param db        target database to replay operations against
-	/// @param tracePath trace file previously written by [RocksDBWriteOperations#startTrace]
+	/// @param tracePath trace file previously written by [RocksDBTracingOperations#startTrace]
 	/// @return a new [Replayer]; caller must close it
 	public static Replayer create(RocksDBWriteOperations db, Path tracePath) {
 		try (Env env = Env.defaultEnv(); EnvOptions envOptions = EnvOptions.newEnvOptions()) {
@@ -90,7 +90,7 @@ public final class Replayer extends NativeObject {
 	///                   family only
 	/// @param env        environment used to open the trace file
 	/// @param envOptions file-I/O tuning for reading the trace file
-	/// @param tracePath  trace file previously written by [RocksDBWriteOperations#startTrace]
+	/// @param tracePath  trace file previously written by [RocksDBTracingOperations#startTrace]
 	/// @return a new [Replayer]; caller must close it
 	public static Replayer create(RocksDBWriteOperations db, List<ColumnFamilyHandle> cfs, Env env,
 			EnvOptions envOptions, Path tracePath) {
@@ -123,7 +123,7 @@ public final class Replayer extends NativeObject {
 	}
 
 	/// Returns the timestamp recorded in the trace file's header -- when the original
-	/// [RocksDBWriteOperations#startTrace] capture began.
+	/// [RocksDBTracingOperations#startTrace] capture began.
 	///
 	/// @return capture start time
 	public Instant getHeaderTimestamp() {
