@@ -97,6 +97,26 @@ class TableOptionsTest {
 	}
 
 	@Test
+	void ribbonHybridFilter_returnsExistingKey(@TempDir Path dir) {
+		// Given — bloomBeforeLevel=1: Bloom for flushes/L0, Ribbon from L1 down
+		try (var filter = FilterPolicy.newRibbonHybrid(10, 1);
+		     var tbl = BlockBasedTableOptions.newBlockBasedConfig().setFilterPolicy(filter);
+		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+
+			db.put("ribbon-hybrid-key".getBytes(), "ribbon-hybrid-value".getBytes());
+
+			// When
+			var hit = db.get("ribbon-hybrid-key".getBytes());
+			var miss = db.get("absent".getBytes());
+
+			// Then
+			assertThat(hit).isEqualTo("ribbon-hybrid-value".getBytes());
+			assertThat(miss).isNull();
+		}
+	}
+
+	@Test
 	void filterPolicy_closedImmediatelyAfterSetFilterPolicy_isANoOpAndDbStillWorks(@TempDir Path dir) {
 		// Given — setFilterPolicy transfers ownership to the table config, so closing the
 		// FilterPolicy wrapper right away (before it's even used to open a DB) must be a

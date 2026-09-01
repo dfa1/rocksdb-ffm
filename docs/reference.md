@@ -229,7 +229,7 @@ point lookups (no range scans), attached via `Options.setTableFormatConfig(Cucko
 | `Cache` (abstract) | —                                                                      | `setCapacity`, `getCapacity`, `getUsage`, `getPinnedUsage` |
 | `LRUCache`         | `newLRUCache(MemorySize)`                                              | Sharded LRU                              |
 | `HyperClockCache`  | `newHyperClockCache(MemorySize, MemorySize charge[, int numShardBits])`| `MemorySize.ZERO` charge = auto-estimate; `-1` shard bits = auto |
-| `FilterPolicy`     | `newBloom(double bitsPerKey)`, `newRibbon(double)`                     | Bloom `10` ≈ 1% false positives; Ribbon: better space efficiency at similar query cost |
+| `FilterPolicy`     | `newBloom(double bitsPerKey)`, `newRibbon(double)`, `newRibbonHybrid(double, int bloomBeforeLevel)` | Bloom `10` ≈ 1% false positives; Ribbon: ~30% smaller at similar query cost, more CPU/temp space to build; hybrid mixes Bloom for the top levels (cheap to rebuild on flush) with Ribbon below (`bloomBeforeLevel=1` is RocksDB's own standard example) |
 | `RateLimiter`      | `create`, `createAutoTuned`, `createWithMode` (`READS_ONLY`, `WRITES_ONLY`, `ALL_IO`) | Rate given as `MemorySize` per second |
 | `SstFileManager`   | `create(Env)`                                                          | `setMaxAllowedSpaceUsage`, `setCompactionBufferSize`, `setDeleteRateBytesPerSecond`, `setMaxTrashDbRatio`, `getTotalSize`, `getTotalTrashSize`, `isMaxAllowedSpaceReached` |
 | `Env`              | `defaultEnv()`, `memEnv()`                                             | `setBackgroundThreads`, `setHighPriorityBackgroundThreads` |

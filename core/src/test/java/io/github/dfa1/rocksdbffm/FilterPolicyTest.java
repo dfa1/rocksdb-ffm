@@ -32,6 +32,18 @@ class FilterPolicyTest {
 	}
 
 	@Test
+	void newRibbonHybrid_closesWithoutOwnershipTransfer() {
+		// Given
+		var sut = FilterPolicy.newRibbonHybrid(10, 1);
+
+		// When
+		sut.close();
+
+		// Then — tryClose (native destroy) actually ran; ptr() now reports closed
+		assertThatThrownBy(sut::ptr).isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
 	void close_isIdempotent() {
 		// Given
 		var sut = FilterPolicy.newBloom(10);
