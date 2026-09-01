@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -91,6 +93,41 @@ class SliceTransformTest {
 
 				// Then
 				assertThat(hit).isEqualTo("value1".getBytes());
+			}
+		}
+	}
+
+	@Test
+	void prefixBloomSeek_withAutoPrefixMode_findsOnlyMatchingPrefix(@TempDir Path dir) {
+		// Given — the prefix-bloom pattern for Seek()-heavy workloads: a prefix extractor +
+		// prefix-only filtering (wholeKeyFiltering off) + a bloom filter, so Seek() can skip
+		// SST files whose prefix bloom proves the target isn't there; ReadOptions.autoPrefixMode
+		// lets RocksDB pick prefix-seek mode on its own instead of the caller reasoning about it
+		try (var filter = FilterPolicy.newBloom(10);
+		     var transform = SliceTransform.newFixedPrefix(4);
+		     var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setWholeKeyFiltering(false)
+				     .setFilterPolicy(filter);
+		     var opts = Options.newOptions()
+				     .setCreateIfMissing(true)
+				     .setPrefixExtractor(transform)
+				     .setTableFormatConfig(tbl);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+			db.put("aaaa-1".getBytes(), "v1".getBytes());
+			db.put("aaaa-2".getBytes(), "v2".getBytes());
+			db.put("bbbb-1".getBytes(), "v3".getBytes());
+
+			try (var ro = ReadOptions.newReadOptions().setAutoPrefixMode(true).setPrefixSameAsStart(true);
+			     var it = db.newIterator(ro)) {
+				// When
+				it.seek("aaaa-1".getBytes());
+				List<String> keysInPrefix = new ArrayList<>();
+				for (; it.isValid(); it.next()) {
+					keysInPrefix.add(new String(it.key()));
+				}
+
+				// Then — only the "aaaa" prefix is returned; "bbbb-1" is a different prefix
+				assertThat(keysInPrefix).containsExactly("aaaa-1", "aaaa-2");
 			}
 		}
 	}

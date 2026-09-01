@@ -82,6 +82,19 @@ class ReadOptionsTest {
 	}
 
 	@Test
+	void setAutoPrefixMode_roundTrips() {
+		// Given
+		try (var sut = ReadOptions.newReadOptions()) {
+
+			// When
+			sut.setAutoPrefixMode(true);
+
+			// Then
+			assertThat(sut.isAutoPrefixMode()).isTrue();
+		}
+	}
+
+	@Test
 	void setPrefixSameAsStart_roundTrips() {
 		// Given
 		try (var sut = ReadOptions.newReadOptions()) {

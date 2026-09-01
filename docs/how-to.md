@@ -14,6 +14,7 @@ Every snippet omits imports; all types live in `io.github.dfa1.rocksdbffm`.
 - [Use column families](#use-column-families)
 - [Read a consistent point-in-time view](#read-a-consistent-point-in-time-view)
 - [Scan a key range](#scan-a-key-range)
+- [Speed up prefix-based Seek() with a bloom filter](#speed-up-prefix-based-seek-with-a-bloom-filter)
 - [Delete a range of keys](#delete-a-range-of-keys)
 - [Merge values without a read-modify-write](#merge-values-without-a-read-modify-write)
 - [Run a pessimistic transaction](#run-a-pessimistic-transaction)
@@ -238,6 +239,50 @@ comparison would place `0x80…0xFF` before `0x00`.
 
 For the zero-copy variants (`key(Mapper)`, `value(Mapper)`) mind the lifetime rule: the view passed
 to the callback is only valid for the duration of that call.
+
+## Speed up prefix-based Seek() with a bloom filter
+
+The default whole-key bloom filter only helps `get()`, not `Seek()`. If your keys share a common
+(even synthetic) prefix and your workload is iterator-heavy, switch to a prefix bloom filter so
+`Seek()` can skip whole SST files whose prefix bloom proves the target isn't there:
+
+```java
+try (var filter = FilterPolicy.newBloom(10);
+     var transform = SliceTransform.newFixedPrefix(4);
+     var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+             .setWholeKeyFiltering(false)   // bloom checks become prefix-based, not whole-key
+             .setFilterPolicy(filter);
+     var opts = Options.newOptions()
+             .setCreateIfMissing(true)
+             .setPrefixExtractor(transform) // required for prefix-mode filtering/iteration to apply
+             .setTableFormatConfig(tbl);
+     var db = RocksDB.openReadWrite(opts, dbPath)) {
+    ...
+}
+```
+
+Then, per read, opt into prefix-seek mode on `ReadOptions`:
+
+```java
+try (var ro = ReadOptions.newReadOptions()
+        .setAutoPrefixMode(true)      // let RocksDB decide when prefix-seek mode is safe
+        .setPrefixSameAsStart(true);  // stop iteration once the prefix changes
+     var it = db.newIterator(ro)) {
+    for (it.seek(target); it.isValid(); it.next()) {
+        process(it.key(), it.value());
+    }
+}
+```
+
+`setAutoPrefixMode(true)` behaves like `setTotalOrderSeek(true)` by default, but RocksDB switches
+to prefix mode on its own whenever it can prove that won't change the result (based on the seek
+key and `setIterateUpperBound`) — so you get the pruning without manually reasoning about when
+it's safe. `setPrefixSameAsStart(true)` is separate: it bounds the *iteration*, stopping once you
+cross into the next prefix, rather than affecting the seek's file-skipping.
+
+`SliceTransform.newFixedPrefix(n)` is the only extractor shape currently wrapped (a variable-length
+"capped prefix" extractor has no C API entry point yet — see [c-api-gaps.md](c-api-gaps.md)); pick
+`n` to cover exactly the prefix your access pattern actually groups by.
 
 ## Delete a range of keys
 

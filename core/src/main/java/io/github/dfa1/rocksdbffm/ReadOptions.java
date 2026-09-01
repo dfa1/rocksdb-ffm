@@ -38,6 +38,10 @@ public final class ReadOptions extends NativeObject {
 	private static final MethodHandle MH_SET_TOTAL_ORDER_SEEK;
 	/// `unsigned char rocksdb_readoptions_get_total_order_seek(rocksdb_readoptions_t* opt);`
 	private static final MethodHandle MH_GET_TOTAL_ORDER_SEEK;
+	/// `void rocksdb_readoptions_set_auto_prefix_mode(rocksdb_readoptions_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_AUTO_PREFIX_MODE;
+	/// `unsigned char rocksdb_readoptions_get_auto_prefix_mode(rocksdb_readoptions_t* opt);`
+	private static final MethodHandle MH_GET_AUTO_PREFIX_MODE;
 	/// `void rocksdb_readoptions_set_prefix_same_as_start(rocksdb_readoptions_t* opt, unsigned char v);`
 	private static final MethodHandle MH_SET_PREFIX_SAME_AS_START;
 	/// `unsigned char rocksdb_readoptions_get_prefix_same_as_start(rocksdb_readoptions_t* opt);`
@@ -95,6 +99,12 @@ public final class ReadOptions extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
 		MH_GET_TOTAL_ORDER_SEEK = NativeLibrary.lookup("rocksdb_readoptions_get_total_order_seek",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_AUTO_PREFIX_MODE = NativeLibrary.lookup("rocksdb_readoptions_set_auto_prefix_mode",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_AUTO_PREFIX_MODE = NativeLibrary.lookup("rocksdb_readoptions_get_auto_prefix_mode",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
 		MH_SET_PREFIX_SAME_AS_START = NativeLibrary.lookup("rocksdb_readoptions_set_prefix_same_as_start",
@@ -287,6 +297,40 @@ public final class ReadOptions extends NativeObject {
 			return RocksDB.fromByte((byte) MH_GET_TOTAL_ORDER_SEEK.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("isTotalOrderSeek failed", t);
+		}
+	}
+
+	/// If `true`, an iterator behaves like [#setTotalOrderSeek] by default, but RocksDB switches
+	/// it to prefix-seek mode on its own whenever it can prove that won't change the result --
+	/// based on the seek key and [#setIterateUpperBound(byte[])]. Lets a caller get prefix-bloom
+	/// pruning on `Seek()` without manually reasoning about when it's safe to set
+	/// [#setPrefixSameAsStart] instead. Requires [Options#setPrefixExtractor] to be configured;
+	/// a no-op otherwise. Default: `false`.
+	///
+	/// Known upstream caveat: keys shorter than the prefix extractor's full length can be
+	/// omitted from results in this mode when they would appear under a plain total-order seek,
+	/// if such short keys exist in the database. Not an issue if every key is at least as long
+	/// as the configured prefix.
+	///
+	/// @param autoPrefixMode `true` to let RocksDB auto-select prefix-seek mode when it's safe
+	/// @return `this` for chaining
+	public ReadOptions setAutoPrefixMode(boolean autoPrefixMode) {
+		try {
+			MH_SET_AUTO_PREFIX_MODE.invokeExact(ptr(), RocksDB.toByte(autoPrefixMode));
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setAutoPrefixMode failed", t);
+		}
+	}
+
+	/// Returns whether RocksDB may automatically switch to prefix-seek mode when safe.
+	///
+	/// @return `true` if automatic prefix-seek mode is enabled
+	public boolean isAutoPrefixMode() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_AUTO_PREFIX_MODE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("isAutoPrefixMode failed", t);
 		}
 	}
 
