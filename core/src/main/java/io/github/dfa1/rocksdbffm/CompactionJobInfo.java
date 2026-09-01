@@ -14,7 +14,7 @@ import java.lang.invoke.MethodHandle;
 /// retained or used after the callback method returns.
 ///
 /// Per-file details (input/output file lists, per-file table properties) and the detailed
-/// [CompactionJobStats] counters are not exposed yet; only the flat, single-value fields are.
+/// `CompactionJobStats` counters are not exposed yet; only the flat, single-value fields are.
 public final class CompactionJobInfo {
 
 	/// `uint32_t rocksdb_compactionjobinfo_cf_id(const rocksdb_compactionjobinfo_t*);`
