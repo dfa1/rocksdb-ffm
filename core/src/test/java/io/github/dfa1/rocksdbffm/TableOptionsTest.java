@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TableOptionsTest {
 
@@ -464,6 +465,405 @@ class TableOptionsTest {
 
 			// Then
 			assertThat(result).isTrue();
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Filter tuning
+	// -----------------------------------------------------------------------
+
+	@Test
+	void filterTuning_allowsReadWrite(@TempDir Path dir) {
+		// Given
+		try (var filter = FilterPolicy.newBloom(10);
+		     var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setOptimizeFiltersForMemory(true)
+				     .setPartitionFilters(true)
+				     .setDecouplePartitionedFilters(true)
+				     .setDataBlockIndexType(BlockBasedTableOptions.DataBlockIndexType.BINARY_AND_HASH)
+				     .setDataBlockHashTableUtilRatio(0.5)
+				     .setFilterPolicy(filter);
+		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			var result = db.get("k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void setOptimizeFiltersForMemory_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setOptimizeFiltersForMemory(true)) {
+
+			// When
+			var result = tbl.getOptimizeFiltersForMemory();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void setDecouplePartitionedFilters_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setDecouplePartitionedFilters(true)) {
+
+			// When
+			var result = tbl.getDecouplePartitionedFilters();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void setDataBlockHashTableUtilRatio_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setDataBlockHashTableUtilRatio(0.5)) {
+
+			// When
+			var result = tbl.getDataBlockHashTableUtilRatio();
+
+			// Then
+			assertThat(result).isEqualTo(0.5);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Index tuning
+	// -----------------------------------------------------------------------
+
+	@Test
+	void indexTuning_allowsReadWrite(@TempDir Path dir) {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setIndexShortening(BlockBasedTableOptions.IndexShorteningMode.NO_SHORTENING)
+				     .setIndexBlockSearchType(BlockBasedTableOptions.IndexSearchType.AUTO)
+				     .setDataBlockIndexType(BlockBasedTableOptions.DataBlockIndexType.BINARY_SEARCH)
+				     .setEnableIndexCompression(false)
+				     .setUniformCvThreshold(0.2);
+		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			var result = db.get("k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void setIndexShortening_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setIndexShortening(BlockBasedTableOptions.IndexShorteningMode.NO_SHORTENING)) {
+
+			// When
+			var result = tbl.getIndexShortening();
+
+			// Then
+			assertThat(result).isEqualTo(BlockBasedTableOptions.IndexShorteningMode.NO_SHORTENING);
+		}
+	}
+
+	@Test
+	void setIndexBlockSearchType_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setIndexBlockSearchType(BlockBasedTableOptions.IndexSearchType.INTERPOLATION)) {
+
+			// When
+			var result = tbl.getIndexBlockSearchType();
+
+			// Then
+			assertThat(result).isEqualTo(BlockBasedTableOptions.IndexSearchType.INTERPOLATION);
+		}
+	}
+
+	@Test
+	void setDataBlockIndexType_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setDataBlockIndexType(BlockBasedTableOptions.DataBlockIndexType.BINARY_AND_HASH)) {
+
+			// When
+			var result = tbl.getDataBlockIndexType();
+
+			// Then
+			assertThat(result).isEqualTo(BlockBasedTableOptions.DataBlockIndexType.BINARY_AND_HASH);
+		}
+	}
+
+	@Test
+	void setEnableIndexCompression_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setEnableIndexCompression(false)) {
+
+			// When
+			var result = tbl.getEnableIndexCompression();
+
+			// Then
+			assertThat(result).isFalse();
+		}
+	}
+
+	@Test
+	void setUniformCvThreshold_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setUniformCvThreshold(0.2)) {
+
+			// When
+			var result = tbl.getUniformCvThreshold();
+
+			// Then
+			assertThat(result).isEqualTo(0.2);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Corruption and integrity
+	// -----------------------------------------------------------------------
+
+	@Test
+	void corruptionAndIntegrityTuning_allowsReadWrite(@TempDir Path dir) {
+		// Given
+		try (var filter = FilterPolicy.newBloom(10);
+		     var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setChecksumType(BlockBasedTableOptions.ChecksumType.CRC32C)
+				     .setVerifyCompression(true)
+				     .setDetectFilterConstructCorruption(true)
+				     .setReadAmpBytesPerBit(8)
+				     .setFilterPolicy(filter);
+		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			var result = db.get("k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void setChecksumType_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setChecksumType(BlockBasedTableOptions.ChecksumType.CRC32C)) {
+
+			// When
+			var result = tbl.getChecksumType();
+
+			// Then
+			assertThat(result).isEqualTo(BlockBasedTableOptions.ChecksumType.CRC32C);
+		}
+	}
+
+	@Test
+	void setVerifyCompression_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setVerifyCompression(true)) {
+
+			// When
+			var result = tbl.getVerifyCompression();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void setDetectFilterConstructCorruption_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setDetectFilterConstructCorruption(true)) {
+
+			// When
+			var result = tbl.getDetectFilterConstructCorruption();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void setReadAmpBytesPerBit_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setReadAmpBytesPerBit(8)) {
+
+			// When
+			var result = tbl.getReadAmpBytesPerBit();
+
+			// Then
+			assertThat(result).isEqualTo(8);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Block alignment
+	// -----------------------------------------------------------------------
+
+	@Test
+	void blockAlign_allowsReadWrite(@TempDir Path dir) {
+		// Given — block_align requires compression disabled
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setBlockAlign(true);
+		     var opts = Options.newOptions()
+				     .setCreateIfMissing(true)
+				     .setCompression(CompressionType.NO_COMPRESSION)
+				     .setTableFormatConfig(tbl);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			var result = db.get("k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void setBlockAlign_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setBlockAlign(true)) {
+
+			// When
+			var result = tbl.getBlockAlign();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void setSuperBlockAlignmentSize_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setSuperBlockAlignmentSize(MemorySize.ofMB(2))) {
+
+			// When
+			var result = tbl.getSuperBlockAlignmentSize();
+
+			// Then
+			assertThat(result).isEqualTo(MemorySize.ofMB(2));
+		}
+	}
+
+	@Test
+	void newBlockBasedConfig_hasDefaultSuperBlockAlignmentSpaceOverheadRatio() {
+		// Given
+
+		// When
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()) {
+
+			// Then
+			assertThat(tbl.getSuperBlockAlignmentSpaceOverheadRatio()).isEqualTo(128L);
+		}
+	}
+
+	@Test
+	void setSuperBlockAlignmentSpaceOverheadRatio_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setSuperBlockAlignmentSpaceOverheadRatio(64)) {
+
+			// When
+			var result = tbl.getSuperBlockAlignmentSpaceOverheadRatio();
+
+			// Then
+			assertThat(result).isEqualTo(64L);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Block cache prepopulation
+	// -----------------------------------------------------------------------
+
+	@Test
+	void prepopulateBlockCache_allowsReadWrite(@TempDir Path dir) {
+		// Given
+		try (var cache = LRUCache.newLRUCache(MemorySize.ofMB(64));
+		     var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setBlockCache(cache)
+				     .setPrepopulateBlockCache(BlockBasedTableOptions.PrepopulateBlockCache.FLUSH_ONLY);
+		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
+		     var db = RocksDB.openReadWrite(opts, dir);
+		     var fo = FlushOptions.newFlushOptions()) {
+
+			db.put("k".getBytes(), "v".getBytes());
+			db.flush(fo);
+
+			// When
+			var result = db.get("k".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void setPrepopulateBlockCache_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setPrepopulateBlockCache(BlockBasedTableOptions.PrepopulateBlockCache.FLUSH_AND_COMPACTION)) {
+
+			// When
+			var result = tbl.getPrepopulateBlockCache();
+
+			// Then
+			assertThat(result).isEqualTo(BlockBasedTableOptions.PrepopulateBlockCache.FLUSH_AND_COMPACTION);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// User-defined index (UDI) activation
+	// -----------------------------------------------------------------------
+
+	@Test
+	void getUserDefinedIndexFactoryName_isEmptyByDefault() {
+		// Given
+
+		// When
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()) {
+
+			// Then
+			assertThat(tbl.getUserDefinedIndexFactoryName()).isEmpty();
+		}
+	}
+
+	@Test
+	void setUserDefinedIndexFactoryFromString_unregisteredName_throws() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()) {
+
+			// When / Then — no UserDefinedIndexFactory is registered in this build
+			assertThatThrownBy(() -> tbl.setUserDefinedIndexFactoryFromString("NoSuchFactory"))
+					.isInstanceOf(RocksDBException.class);
+		}
+	}
+
+	@Test
+	void clearUserDefinedIndexFactory_leavesFactoryNameEmpty() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()) {
+
+			// When
+			tbl.clearUserDefinedIndexFactory();
+
+			// Then
+			assertThat(tbl.getUserDefinedIndexFactoryName()).isEmpty();
 		}
 	}
 }

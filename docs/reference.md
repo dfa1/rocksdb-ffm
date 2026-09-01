@@ -188,6 +188,30 @@ Per-call options:
 | `setFormatVersion`            | `BlockBasedTableOptions.FormatVersion` |
 | `setWholeKeyFiltering`        | `boolean`                            |
 | `setPartitionFilters`         | `boolean`                            |
+| `setOptimizeFiltersForMemory` | `boolean`                            |
+| `setDecouplePartitionedFilters` | `boolean`                           |
+| `setDataBlockHashTableUtilRatio` | `double`                          |
+| `setIndexShortening`          | `BlockBasedTableOptions.IndexShorteningMode` |
+| `setIndexBlockSearchType`     | `BlockBasedTableOptions.IndexSearchType` |
+| `setDataBlockIndexType`       | `BlockBasedTableOptions.DataBlockIndexType` |
+| `setEnableIndexCompression`   | `boolean`                            |
+| `setUniformCvThreshold`       | `double`                             |
+| `setChecksumType`             | `BlockBasedTableOptions.ChecksumType` |
+| `setVerifyCompression`        | `boolean`                            |
+| `setDetectFilterConstructCorruption` | `boolean`                      |
+| `setReadAmpBytesPerBit`       | `int`                                |
+| `setBlockAlign`               | `boolean`                            |
+| `setSuperBlockAlignmentSize`  | `MemorySize`                         |
+| `setSuperBlockAlignmentSpaceOverheadRatio` | `long` (divisor, not a `Ratio` — see below) |
+| `setPrepopulateBlockCache`    | `BlockBasedTableOptions.PrepopulateBlockCache` |
+| `setUserDefinedIndexFactoryFromString`/`clearUserDefinedIndexFactory`/`getUserDefinedIndexFactoryName` | `String` |
+
+`setSuperBlockAlignmentSpaceOverheadRatio` looks like a `[0.0, 1.0]` ratio from its name, but
+RocksDB's own field is a divisor with a default of `128` (max padding = alignment size / ratio),
+so it's mapped to a plain `long` rather than this project's `Ratio` type, which would reject the
+documented default outright. The UDI (`UserDefinedIndexFactory`) trio activates a factory already
+registered and self-linked into the loaded native library, by name — not a way to supply a custom
+Java-implemented index; the C API has no hook for that (see [c-api-gaps.md](c-api-gaps.md)).
 
 `CuckooTableOptions.newCuckooTableOptions()` — hash-based SST format for fixed-size keys and
 point lookups (no range scans), attached via `Options.setTableFormatConfig(CuckooTableOptions)`:

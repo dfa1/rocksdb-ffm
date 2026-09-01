@@ -1,9 +1,12 @@
 package io.github.dfa1.rocksdbffm;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 /// FFM wrapper for `rocksdb_block_based_table_options_t`.
 ///
@@ -117,6 +120,154 @@ public final class BlockBasedTableOptions extends NativeObject {
 		}
 	}
 
+	/// How much of an index key is retained, per `table.h`'s `IndexShorteningMode`. Shortening
+	/// replaces a full key with the shortest separator that still distinguishes two adjacent
+	/// blocks, trading a smaller index for a very small chance of extra block reads on range
+	/// scans near a shortened boundary.
+	public enum IndexShorteningMode {
+		/// Every index key is stored in full. Required by RocksDB's `kBinarySearchWithFirstKey`
+		/// index type (not currently exposed by [IndexType]) -- shortening would defeat that
+		/// mode's whole point.
+		NO_SHORTENING(0),
+		/// Shortens keys between blocks, but keeps the last index key (the file's upper bound) in
+		/// full. Default.
+		SHORTEN_SEPARATORS(1),
+		/// Also shortens the last index key. Slightly smaller index, at the cost of the file's
+		/// upper bound sometimes being overestimated, which can cause an extra unnecessary block
+		/// read on the last data block per file on some seeks.
+		SHORTEN_SEPARATORS_AND_SUCCESSOR(2);
+
+		final int value;
+
+		IndexShorteningMode(int value) {
+			this.value = value;
+		}
+
+		static IndexShorteningMode fromValue(int value) {
+			return switch (value) {
+				case 0 -> NO_SHORTENING;
+				case 1 -> SHORTEN_SEPARATORS;
+				case 2 -> SHORTEN_SEPARATORS_AND_SUCCESSOR;
+				default -> throw new IllegalArgumentException("Unknown IndexShorteningMode value: " + value);
+			};
+		}
+	}
+
+	/// Search algorithm used within an index block at read time, per `table.h`'s
+	/// `BlockSearchType`. Compatible with any index block, regardless of which mode wrote it.
+	public enum IndexSearchType {
+		/// Standard binary search. Default.
+		BINARY(0),
+		/// Interpolation search; can outperform binary search for uniformly distributed keys
+		/// under the default byte-wise comparator. Avoid combining with
+		/// [IndexShorteningMode#SHORTEN_SEPARATORS_AND_SUCCESSOR], which skews the estimated
+		/// upper bound in a way that hurts interpolation search specifically.
+		INTERPOLATION(1),
+		/// Uses interpolation search for blocks flagged "uniform" at write time (see
+		/// [#setUniformCvThreshold(double)]), binary search otherwise. Blocks from files written
+		/// before that flag existed, or with uniformity detection disabled, are never flagged
+		/// uniform and always fall back to binary search.
+		AUTO(2);
+
+		final int value;
+
+		IndexSearchType(int value) {
+			this.value = value;
+		}
+
+		static IndexSearchType fromValue(int value) {
+			return switch (value) {
+				case 0 -> BINARY;
+				case 1 -> INTERPOLATION;
+				case 2 -> AUTO;
+				default -> throw new IllegalArgumentException("Unknown IndexSearchType value: " + value);
+			};
+		}
+	}
+
+	/// Index format for a single data block's own key index, per `table.h`'s `DataBlockIndexType`
+	/// -- distinct from [IndexType], which selects the format of the SST-level index over blocks.
+	public enum DataBlockIndexType {
+		/// Traditional binary-search block index. Default.
+		BINARY_SEARCH(0),
+		/// Binary search plus an additional hash index for point lookups, tuned by
+		/// [#setDataBlockHashTableUtilRatio(double)].
+		BINARY_AND_HASH(1);
+
+		final int value;
+
+		DataBlockIndexType(int value) {
+			this.value = value;
+		}
+
+		static DataBlockIndexType fromValue(int value) {
+			return switch (value) {
+				case 0 -> BINARY_SEARCH;
+				case 1 -> BINARY_AND_HASH;
+				default -> throw new IllegalArgumentException("Unknown DataBlockIndexType value: " + value);
+			};
+		}
+	}
+
+	/// Per-block checksum algorithm, per `table.h`'s `ChecksumType`. Only affects newly written
+	/// blocks -- files with a different checksum type remain readable.
+	public enum ChecksumType {
+		/// No checksum protection.
+		NO_CHECKSUM(0),
+		CRC32C(1),
+		XX_HASH(2),
+		XX_HASH64(3),
+		/// Default since RocksDB 6.27.
+		XXH3(4);
+
+		final int value;
+
+		ChecksumType(int value) {
+			this.value = value;
+		}
+
+		static ChecksumType fromValue(int value) {
+			return switch (value) {
+				case 0 -> NO_CHECKSUM;
+				case 1 -> CRC32C;
+				case 2 -> XX_HASH;
+				case 3 -> XX_HASH64;
+				case 4 -> XXH3;
+				default -> throw new IllegalArgumentException("Unknown ChecksumType value: " + value);
+			};
+		}
+	}
+
+	/// Whether to eagerly warm the block cache with blocks this process just wrote, per
+	/// `table.h`'s `PrepopulateBlockCache`.
+	public enum PrepopulateBlockCache {
+		/// No eager warming. Default.
+		DISABLE(0),
+		/// Warms the cache with blocks written by a memtable flush only.
+		FLUSH_ONLY(1),
+		/// Warms the cache with blocks written by flush and by compaction. Compaction output is
+		/// typically much larger than a flush and often not all of it is hot, so
+		/// compaction-warmed blocks are inserted at a lower cache priority than flush-warmed
+		/// ones and are evicted first under pressure; recommended mainly when most or all of the
+		/// database is expected to stay resident in cache.
+		FLUSH_AND_COMPACTION(2);
+
+		final int value;
+
+		PrepopulateBlockCache(int value) {
+			this.value = value;
+		}
+
+		static PrepopulateBlockCache fromValue(int value) {
+			return switch (value) {
+				case 0 -> DISABLE;
+				case 1 -> FLUSH_ONLY;
+				case 2 -> FLUSH_AND_COMPACTION;
+				default -> throw new IllegalArgumentException("Unknown PrepopulateBlockCache value: " + value);
+			};
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// Method handles
 	// -----------------------------------------------------------------------
@@ -199,6 +350,76 @@ public final class BlockBasedTableOptions extends NativeObject {
 	private static final MethodHandle MH_SET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK;
 	/// `unsigned char rocksdb_block_based_options_get_separate_key_value_in_data_block(rocksdb_block_based_table_options_t* opt);`
 	private static final MethodHandle MH_GET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK;
+	/// `void rocksdb_block_based_options_set_optimize_filters_for_memory(rocksdb_block_based_table_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_OPTIMIZE_FILTERS_FOR_MEMORY;
+	/// `unsigned char rocksdb_block_based_options_get_optimize_filters_for_memory(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_OPTIMIZE_FILTERS_FOR_MEMORY;
+	/// `void rocksdb_block_based_options_set_decouple_partitioned_filters(rocksdb_block_based_table_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_DECOUPLE_PARTITIONED_FILTERS;
+	/// `unsigned char rocksdb_block_based_options_get_decouple_partitioned_filters(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_DECOUPLE_PARTITIONED_FILTERS;
+	/// `void rocksdb_block_based_options_set_data_block_hash_table_util_ratio(rocksdb_block_based_table_options_t* opt, double v);`
+	private static final MethodHandle MH_SET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO;
+	/// `double rocksdb_block_based_options_get_data_block_hash_table_util_ratio(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO;
+	/// `void rocksdb_block_based_options_set_index_shortening(rocksdb_block_based_table_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_INDEX_SHORTENING;
+	/// `int rocksdb_block_based_options_get_index_shortening(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_INDEX_SHORTENING;
+	/// `void rocksdb_block_based_options_set_data_block_index_type(rocksdb_block_based_table_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_DATA_BLOCK_INDEX_TYPE;
+	/// `int rocksdb_block_based_options_get_data_block_index_type(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_DATA_BLOCK_INDEX_TYPE;
+	/// `void rocksdb_block_based_options_set_index_block_search_type(rocksdb_block_based_table_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_INDEX_BLOCK_SEARCH_TYPE;
+	/// `int rocksdb_block_based_options_get_index_block_search_type(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_INDEX_BLOCK_SEARCH_TYPE;
+	/// `void rocksdb_block_based_options_set_enable_index_compression(rocksdb_block_based_table_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_ENABLE_INDEX_COMPRESSION;
+	/// `unsigned char rocksdb_block_based_options_get_enable_index_compression(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_ENABLE_INDEX_COMPRESSION;
+	/// `void rocksdb_block_based_options_set_uniform_cv_threshold(rocksdb_block_based_table_options_t* opt, double v);`
+	private static final MethodHandle MH_SET_UNIFORM_CV_THRESHOLD;
+	/// `double rocksdb_block_based_options_get_uniform_cv_threshold(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_UNIFORM_CV_THRESHOLD;
+	/// `void rocksdb_block_based_options_set_checksum(rocksdb_block_based_table_options_t* opt, char v);`
+	private static final MethodHandle MH_SET_CHECKSUM;
+	/// `int rocksdb_block_based_options_get_checksum(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_CHECKSUM;
+	/// `void rocksdb_block_based_options_set_verify_compression(rocksdb_block_based_table_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_VERIFY_COMPRESSION;
+	/// `unsigned char rocksdb_block_based_options_get_verify_compression(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_VERIFY_COMPRESSION;
+	/// `void rocksdb_block_based_options_set_detect_filter_construct_corruption(rocksdb_block_based_table_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_DETECT_FILTER_CONSTRUCT_CORRUPTION;
+	/// `unsigned char rocksdb_block_based_options_get_detect_filter_construct_corruption(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_DETECT_FILTER_CONSTRUCT_CORRUPTION;
+	/// `void rocksdb_block_based_options_set_read_amp_bytes_per_bit(rocksdb_block_based_table_options_t* opt, uint32_t v);`
+	private static final MethodHandle MH_SET_READ_AMP_BYTES_PER_BIT;
+	/// `uint32_t rocksdb_block_based_options_get_read_amp_bytes_per_bit(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_READ_AMP_BYTES_PER_BIT;
+	/// `void rocksdb_block_based_options_set_block_align(rocksdb_block_based_table_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_BLOCK_ALIGN;
+	/// `unsigned char rocksdb_block_based_options_get_block_align(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_BLOCK_ALIGN;
+	/// `void rocksdb_block_based_options_set_super_block_alignment_size(rocksdb_block_based_table_options_t* opt, size_t v);`
+	private static final MethodHandle MH_SET_SUPER_BLOCK_ALIGNMENT_SIZE;
+	/// `size_t rocksdb_block_based_options_get_super_block_alignment_size(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_SUPER_BLOCK_ALIGNMENT_SIZE;
+	/// `void rocksdb_block_based_options_set_super_block_alignment_space_overhead_ratio(rocksdb_block_based_table_options_t* opt, size_t v);`
+	private static final MethodHandle MH_SET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO;
+	/// `size_t rocksdb_block_based_options_get_super_block_alignment_space_overhead_ratio(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO;
+	/// `void rocksdb_block_based_options_set_prepopulate_block_cache(rocksdb_block_based_table_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_PREPOPULATE_BLOCK_CACHE;
+	/// `int rocksdb_block_based_options_get_prepopulate_block_cache(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_PREPOPULATE_BLOCK_CACHE;
+	/// `void rocksdb_block_based_options_set_user_defined_index_factory_from_string(rocksdb_block_based_table_options_t* options, const char* value, size_t value_len, char** errptr);`
+	private static final MethodHandle MH_SET_UDI_FACTORY_FROM_STRING;
+	/// `void rocksdb_block_based_options_clear_user_defined_index_factory(rocksdb_block_based_table_options_t* options);`
+	private static final MethodHandle MH_CLEAR_UDI_FACTORY;
+	/// `const char* rocksdb_block_based_options_get_user_defined_index_factory_name(const rocksdb_block_based_table_options_t* options, size_t* name_len);`
+	private static final MethodHandle MH_GET_UDI_FACTORY_NAME;
 
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_block_based_options_create",
@@ -347,6 +568,135 @@ public final class BlockBasedTableOptions extends NativeObject {
 		MH_GET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK = NativeLibrary.lookup(
 				"rocksdb_block_based_options_get_separate_key_value_in_data_block",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_OPTIMIZE_FILTERS_FOR_MEMORY = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_optimize_filters_for_memory",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_OPTIMIZE_FILTERS_FOR_MEMORY = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_optimize_filters_for_memory",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_DECOUPLE_PARTITIONED_FILTERS = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_decouple_partitioned_filters",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_DECOUPLE_PARTITIONED_FILTERS = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_decouple_partitioned_filters",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_data_block_hash_table_util_ratio",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
+
+		MH_GET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_data_block_hash_table_util_ratio",
+				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
+
+		MH_SET_INDEX_SHORTENING = NativeLibrary.lookup("rocksdb_block_based_options_set_index_shortening",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_INDEX_SHORTENING = NativeLibrary.lookup("rocksdb_block_based_options_get_index_shortening",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_DATA_BLOCK_INDEX_TYPE = NativeLibrary.lookup("rocksdb_block_based_options_set_data_block_index_type",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_DATA_BLOCK_INDEX_TYPE = NativeLibrary.lookup("rocksdb_block_based_options_get_data_block_index_type",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_INDEX_BLOCK_SEARCH_TYPE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_index_block_search_type",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_INDEX_BLOCK_SEARCH_TYPE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_index_block_search_type",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_ENABLE_INDEX_COMPRESSION = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_enable_index_compression",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_ENABLE_INDEX_COMPRESSION = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_enable_index_compression",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_UNIFORM_CV_THRESHOLD = NativeLibrary.lookup("rocksdb_block_based_options_set_uniform_cv_threshold",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
+
+		MH_GET_UNIFORM_CV_THRESHOLD = NativeLibrary.lookup("rocksdb_block_based_options_get_uniform_cv_threshold",
+				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
+
+		MH_SET_CHECKSUM = NativeLibrary.lookup("rocksdb_block_based_options_set_checksum",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_CHECKSUM = NativeLibrary.lookup("rocksdb_block_based_options_get_checksum",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_VERIFY_COMPRESSION = NativeLibrary.lookup("rocksdb_block_based_options_set_verify_compression",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_VERIFY_COMPRESSION = NativeLibrary.lookup("rocksdb_block_based_options_get_verify_compression",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_DETECT_FILTER_CONSTRUCT_CORRUPTION = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_detect_filter_construct_corruption",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_DETECT_FILTER_CONSTRUCT_CORRUPTION = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_detect_filter_construct_corruption",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_READ_AMP_BYTES_PER_BIT = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_read_amp_bytes_per_bit",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_READ_AMP_BYTES_PER_BIT = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_read_amp_bytes_per_bit",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_BLOCK_ALIGN = NativeLibrary.lookup("rocksdb_block_based_options_set_block_align",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_BLOCK_ALIGN = NativeLibrary.lookup("rocksdb_block_based_options_get_block_align",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_SUPER_BLOCK_ALIGNMENT_SIZE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_super_block_alignment_size",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_SUPER_BLOCK_ALIGNMENT_SIZE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_super_block_alignment_size",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_super_block_alignment_space_overhead_ratio",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_super_block_alignment_space_overhead_ratio",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_PREPOPULATE_BLOCK_CACHE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_prepopulate_block_cache",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_PREPOPULATE_BLOCK_CACHE = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_prepopulate_block_cache",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_UDI_FACTORY_FROM_STRING = NativeLibrary.lookup(
+				"rocksdb_block_based_options_set_user_defined_index_factory_from_string",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS));
+
+		MH_CLEAR_UDI_FACTORY = NativeLibrary.lookup(
+				"rocksdb_block_based_options_clear_user_defined_index_factory",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+
+		MH_GET_UDI_FACTORY_NAME = NativeLibrary.lookup(
+				"rocksdb_block_based_options_get_user_defined_index_factory_name",
+				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
 	private BlockBasedTableOptions(MemorySegment ptr) {
@@ -872,6 +1222,501 @@ public final class BlockBasedTableOptions extends NativeObject {
 			return RocksDB.fromByte((byte) MH_GET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("getSeparateKeyValueInDataBlock failed", t);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Filter tuning
+	// -----------------------------------------------------------------------
+
+	/// If true, avoids allocating a full-precision cache reservation charge for the Bloom/Ribbon
+	/// filter's own memory, using a lower-memory (but less accurate) estimate instead. Takes
+	/// effect only when [#setCacheIndexAndFilterBlocks] is `true` with a cache that reserves
+	/// memory for filters. Default: false.
+	///
+	/// @param value `true` to optimize filter memory tracking for lower overhead
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setOptimizeFiltersForMemory(boolean value) {
+		try {
+			MH_SET_OPTIMIZE_FILTERS_FOR_MEMORY.invokeExact(ptr(), RocksDB.toByte(value));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setOptimizeFiltersForMemory failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether filter memory tracking is optimized for lower overhead.
+	///
+	/// @return `true` if filter memory tracking is optimized for lower overhead
+	public boolean getOptimizeFiltersForMemory() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_OPTIMIZE_FILTERS_FOR_MEMORY.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getOptimizeFiltersForMemory failed", t);
+		}
+	}
+
+	/// If true, partitioned filters are stored in their own separate blocks rather than
+	/// alongside the index partitions they'd otherwise share storage with. Only takes effect
+	/// with [#setPartitionFilters]. Default: false.
+	///
+	/// @param value `true` to store partitioned filters in their own blocks
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setDecouplePartitionedFilters(boolean value) {
+		try {
+			MH_SET_DECOUPLE_PARTITIONED_FILTERS.invokeExact(ptr(), RocksDB.toByte(value));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setDecouplePartitionedFilters failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether partitioned filters are stored in their own blocks.
+	///
+	/// @return `true` if partitioned filters are stored in their own blocks
+	public boolean getDecouplePartitionedFilters() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_DECOUPLE_PARTITIONED_FILTERS.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getDecouplePartitionedFilters failed", t);
+		}
+	}
+
+	/// Target entries-to-buckets ratio for a data block's hash index, valid only when
+	/// [DataBlockIndexType#BINARY_AND_HASH] is set via [#setDataBlockIndexType]. Default: `0.75`.
+	///
+	/// @param ratio target entries/buckets ratio
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setDataBlockHashTableUtilRatio(double ratio) {
+		try {
+			MH_SET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO.invokeExact(ptr(), ratio);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setDataBlockHashTableUtilRatio failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured data block hash table utilization ratio.
+	///
+	/// @return current data block hash table utilization ratio
+	public double getDataBlockHashTableUtilRatio() {
+		try {
+			return (double) MH_GET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getDataBlockHashTableUtilRatio failed", t);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Index tuning
+	// -----------------------------------------------------------------------
+
+	/// Controls how much of each index key is retained. Default: [IndexShorteningMode#SHORTEN_SEPARATORS].
+	///
+	/// @param mode index shortening mode to use
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setIndexShortening(IndexShorteningMode mode) {
+		try {
+			MH_SET_INDEX_SHORTENING.invokeExact(ptr(), mode.value);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setIndexShortening failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured index shortening mode.
+	///
+	/// @return current index shortening mode
+	public IndexShorteningMode getIndexShortening() {
+		try {
+			return IndexShorteningMode.fromValue((int) MH_GET_INDEX_SHORTENING.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getIndexShortening failed", t);
+		}
+	}
+
+	/// Sets the search algorithm used within an index block at read time. Default:
+	/// [IndexSearchType#BINARY].
+	///
+	/// @param searchType index block search algorithm to use
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setIndexBlockSearchType(IndexSearchType searchType) {
+		try {
+			MH_SET_INDEX_BLOCK_SEARCH_TYPE.invokeExact(ptr(), searchType.value);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setIndexBlockSearchType failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured index block search algorithm.
+	///
+	/// @return current index block search algorithm
+	public IndexSearchType getIndexBlockSearchType() {
+		try {
+			return IndexSearchType.fromValue((int) MH_GET_INDEX_BLOCK_SEARCH_TYPE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getIndexBlockSearchType failed", t);
+		}
+	}
+
+	/// Sets the index format used for each data block's own key index. Default:
+	/// [DataBlockIndexType#BINARY_SEARCH].
+	///
+	/// @param indexType data block index type to use
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setDataBlockIndexType(DataBlockIndexType indexType) {
+		try {
+			MH_SET_DATA_BLOCK_INDEX_TYPE.invokeExact(ptr(), indexType.value);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setDataBlockIndexType failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured data block index type.
+	///
+	/// @return current data block index type
+	public DataBlockIndexType getDataBlockIndexType() {
+		try {
+			return DataBlockIndexType.fromValue((int) MH_GET_DATA_BLOCK_INDEX_TYPE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getDataBlockIndexType failed", t);
+		}
+	}
+
+	/// If true, index blocks are compressed like data blocks are, subject to
+	/// [Options#setCompression]. Default: true.
+	///
+	/// @param value `true` to compress index blocks
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setEnableIndexCompression(boolean value) {
+		try {
+			MH_SET_ENABLE_INDEX_COMPRESSION.invokeExact(ptr(), RocksDB.toByte(value));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setEnableIndexCompression failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether index blocks are compressed.
+	///
+	/// @return `true` if index blocks are compressed
+	public boolean getEnableIndexCompression() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_ENABLE_INDEX_COMPRESSION.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getEnableIndexCompression failed", t);
+		}
+	}
+
+	/// Coefficient-of-variation threshold below which a data block's key spacing is flagged
+	/// "uniform" in its footer at write time, letting [IndexSearchType#AUTO] use interpolation
+	/// search on it at read time. A negative value (the default, `-1.0`) disables uniformity
+	/// detection entirely, so blocks are never flagged and `AUTO` always falls back to binary
+	/// search.
+	///
+	/// @param threshold coefficient-of-variation threshold, or a negative value to disable
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setUniformCvThreshold(double threshold) {
+		try {
+			MH_SET_UNIFORM_CV_THRESHOLD.invokeExact(ptr(), threshold);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setUniformCvThreshold failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured coefficient-of-variation threshold.
+	///
+	/// @return current coefficient-of-variation threshold
+	public double getUniformCvThreshold() {
+		try {
+			return (double) MH_GET_UNIFORM_CV_THRESHOLD.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getUniformCvThreshold failed", t);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Corruption and integrity
+	// -----------------------------------------------------------------------
+
+	/// Sets the per-block checksum algorithm for newly written blocks. Existing files with a
+	/// different checksum type remain readable. Default: [ChecksumType#XXH3].
+	///
+	/// @param checksumType checksum algorithm to use for newly written blocks
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setChecksumType(ChecksumType checksumType) {
+		try {
+			MH_SET_CHECKSUM.invokeExact(ptr(), (byte) checksumType.value);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setChecksumType failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured checksum algorithm.
+	///
+	/// @return current checksum algorithm
+	public ChecksumType getChecksumType() {
+		try {
+			return ChecksumType.fromValue((int) MH_GET_CHECKSUM.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getChecksumType failed", t);
+		}
+	}
+
+	/// If true, re-decompresses each compressed block immediately after compressing it during
+	/// write and compares the result byte-for-byte, catching a broken compression library before
+	/// corrupted data reaches disk. Adds meaningful CPU and latency to writes. Default: false.
+	///
+	/// @param value `true` to verify compression round-trips correctly on every write
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setVerifyCompression(boolean value) {
+		try {
+			MH_SET_VERIFY_COMPRESSION.invokeExact(ptr(), RocksDB.toByte(value));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setVerifyCompression failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether compression is verified on every write.
+	///
+	/// @return `true` if compression is verified on every write
+	public boolean getVerifyCompression() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_VERIFY_COMPRESSION.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getVerifyCompression failed", t);
+		}
+	}
+
+	/// If true, computes and checks a checksum over each constructed filter (Bloom/Ribbon)
+	/// immediately after building it, so a filter corrupted during construction is caught
+	/// before the SST file is finalized rather than surfacing later as a false-negative lookup.
+	/// Default: false.
+	///
+	/// @param value `true` to checksum-verify each filter right after it's built
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setDetectFilterConstructCorruption(boolean value) {
+		try {
+			MH_SET_DETECT_FILTER_CONSTRUCT_CORRUPTION.invokeExact(ptr(), RocksDB.toByte(value));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setDetectFilterConstructCorruption failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether newly constructed filters are checksum-verified immediately.
+	///
+	/// @return `true` if newly constructed filters are checksum-verified immediately
+	public boolean getDetectFilterConstructCorruption() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_DETECT_FILTER_CONSTRUCT_CORRUPTION.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getDetectFilterConstructCorruption failed", t);
+		}
+	}
+
+	/// Enables read amplification tracking (the `rocksdb.read-amp-estimate-useful-bytes` and
+	/// `rocksdb.read-amp-estimate-total-read-bytes` properties) by tagging every `bytesPerBit`
+	/// bytes of each data block with a coverage bit, set the first time that byte range is
+	/// actually read. Default: `0` (disabled) -- tracking adds bookkeeping overhead per block
+	/// read, so enable only while investigating read amplification.
+	///
+	/// @param bytesPerBit bytes of a data block covered by each tracking bit, or `0` to disable
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setReadAmpBytesPerBit(int bytesPerBit) {
+		try {
+			MH_SET_READ_AMP_BYTES_PER_BIT.invokeExact(ptr(), bytesPerBit);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setReadAmpBytesPerBit failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured read amplification tracking granularity.
+	///
+	/// @return current read amplification tracking granularity, in bytes per bit
+	public int getReadAmpBytesPerBit() {
+		try {
+			return (int) MH_GET_READ_AMP_BYTES_PER_BIT.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getReadAmpBytesPerBit failed", t);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Block alignment
+	// -----------------------------------------------------------------------
+
+	/// If true, data blocks are padded to the filesystem's block size so each one starts on a
+	/// physical block boundary, avoiding an extra physical read for a logical block that would
+	/// otherwise straddle two disk blocks. Wastes some space to padding; requires
+	/// [#setPrepopulateBlockCache] left at [PrepopulateBlockCache#DISABLE] and compression to be
+	/// disabled via [Options#setCompression]. Default: false.
+	///
+	/// @param value `true` to align data blocks to filesystem block boundaries
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setBlockAlign(boolean value) {
+		try {
+			MH_SET_BLOCK_ALIGN.invokeExact(ptr(), RocksDB.toByte(value));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setBlockAlign failed", t);
+		}
+		return this;
+	}
+
+	/// Returns whether data blocks are aligned to filesystem block boundaries.
+	///
+	/// @return `true` if data blocks are aligned to filesystem block boundaries
+	public boolean getBlockAlign() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_BLOCK_ALIGN.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getBlockAlign failed", t);
+		}
+	}
+
+	/// Alignment size, in bytes, for the coarser "super block" grouping of data blocks -- a
+	/// second, larger-grained alignment layered on top of [#setBlockAlign]'s per-block
+	/// alignment. Default: `0` (disabled).
+	///
+	/// @param size super block alignment size
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setSuperBlockAlignmentSize(MemorySize size) {
+		try {
+			MH_SET_SUPER_BLOCK_ALIGNMENT_SIZE.invokeExact(ptr(), size.toBytes());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setSuperBlockAlignmentSize failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured super block alignment size.
+	///
+	/// @return current super block alignment size
+	public MemorySize getSuperBlockAlignmentSize() {
+		try {
+			return MemorySize.ofBytes((long) MH_GET_SUPER_BLOCK_ALIGNMENT_SIZE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getSuperBlockAlignmentSize failed", t);
+		}
+	}
+
+	/// Divisor used to cap the padding [#setSuperBlockAlignmentSize] is allowed to introduce: the
+	/// maximum padding is `superBlockAlignmentSize / ratio` -- e.g. a 2 MB alignment size with
+	/// the default ratio of `128` allows at most 16 KB of padding per super block. Ignored while
+	/// [#setSuperBlockAlignmentSize] is `0` (alignment disabled). Default: `128`.
+	///
+	/// @param ratio divisor applied to the alignment size to cap padding overhead
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setSuperBlockAlignmentSpaceOverheadRatio(long ratio) {
+		try {
+			MH_SET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO.invokeExact(ptr(), ratio);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setSuperBlockAlignmentSpaceOverheadRatio failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured super block alignment space overhead ratio.
+	///
+	/// @return current super block alignment space overhead ratio
+	public long getSuperBlockAlignmentSpaceOverheadRatio() {
+		try {
+			return (long) MH_GET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getSuperBlockAlignmentSpaceOverheadRatio failed", t);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Block cache prepopulation
+	// -----------------------------------------------------------------------
+
+	/// Controls whether blocks are eagerly inserted into the block cache as soon as this
+	/// process writes them, instead of waiting for a later read to pull them in. Default:
+	/// [PrepopulateBlockCache#DISABLE].
+	///
+	/// @param mode when to eagerly warm the block cache
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setPrepopulateBlockCache(PrepopulateBlockCache mode) {
+		try {
+			MH_SET_PREPOPULATE_BLOCK_CACHE.invokeExact(ptr(), mode.value);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setPrepopulateBlockCache failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the configured block cache prepopulation mode.
+	///
+	/// @return current block cache prepopulation mode
+	public PrepopulateBlockCache getPrepopulateBlockCache() {
+		try {
+			return PrepopulateBlockCache.fromValue((int) MH_GET_PREPOPULATE_BLOCK_CACHE.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getPrepopulateBlockCache failed", t);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// User-defined index (UDI) activation
+	// -----------------------------------------------------------------------
+
+	/// Activates a `UserDefinedIndexFactory` already registered and self-linked into the loaded
+	/// native library, by name -- e.g. RocksDB's built-in `TrieIndexFactory`, if the build
+	/// includes it. This does not let Java code supply its own index implementation (the C API
+	/// has no hook for that, only for activating one that already exists in C++); see
+	/// `docs/c-api-gaps.md` for the Type B gap tracking the missing callback-based factory
+	/// constructor.
+	///
+	/// @param name registered factory name to activate
+	/// @return `this` for chaining
+	/// @throws RocksDBException if no factory with `name` is registered in the loaded library
+	public BlockBasedTableOptions setUserDefinedIndexFactoryFromString(String name) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = RocksDB.errHolder(arena);
+			byte[] nameBytes = name.getBytes(StandardCharsets.UTF_8);
+			MemorySegment nameSeg = RocksDB.toNative(arena, nameBytes);
+			MH_SET_UDI_FACTORY_FROM_STRING.invokeExact(ptr(), nameSeg, (long) nameBytes.length, err);
+			RocksDB.checkError(err);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setUserDefinedIndexFactoryFromString failed", t);
+		}
+		return this;
+	}
+
+	/// Clears any user-defined index factory activated via [#setUserDefinedIndexFactoryFromString],
+	/// reverting to the standard index formats controlled by [#setIndexType].
+	///
+	/// @return `this` for chaining
+	public BlockBasedTableOptions clearUserDefinedIndexFactory() {
+		try {
+			MH_CLEAR_UDI_FACTORY.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("clearUserDefinedIndexFactory failed", t);
+		}
+		return this;
+	}
+
+	/// Returns the name of the currently activated user-defined index factory.
+	///
+	/// @return the activated factory's name, or [Optional#empty()] if none is activated
+	public Optional<String> getUserDefinedIndexFactoryName() {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment lenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment namePtr = (MemorySegment) MH_GET_UDI_FACTORY_NAME.invokeExact(ptr(), lenSeg);
+			if (MemorySegment.NULL.equals(namePtr)) {
+				return Optional.empty();
+			}
+			long len = lenSeg.get(ValueLayout.JAVA_LONG, 0);
+			return Optional.of(new String(RocksDB.toByteArray(namePtr, len), StandardCharsets.UTF_8));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getUserDefinedIndexFactoryName failed", t);
 		}
 	}
 
