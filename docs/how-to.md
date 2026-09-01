@@ -23,6 +23,7 @@ Every snippet omits imports; all types live in `io.github.dfa1.rocksdbffm`.
 - [Back up and restore](#back-up-and-restore)
 - [Bulk-load data with SST files](#bulk-load-data-with-sst-files)
 - [Tail the write-ahead log](#tail-the-write-ahead-log)
+- [Capture and replay a workload](#capture-and-replay-a-workload)
 - [Serve reads from a secondary instance](#serve-reads-from-a-secondary-instance)
 - [Store large values in blob files](#store-large-values-in-blob-files)
 - [Tune the block cache and bloom filters](#tune-the-block-cache-and-bloom-filters)
@@ -499,6 +500,35 @@ try (var db = RocksDB.openReadWrite(dbPath)) {
 Each `WalBatchResult` owns a `WriteBatch` and must be closed. Old WAL files are recycled, so a
 sequence number that has already been compacted away is no longer reachable — checkpoint your
 position often.
+
+## Capture and replay a workload
+
+Record every operation on a database to a file, then reissue them against a different
+database — useful for validating a config change or a new build against real traffic before
+rollout, without a full A/B deployment.
+
+```java
+try (var db = RocksDB.openReadWrite(dbPath);
+     var traceOptions = TraceOptions.newTraceOptions().setSamplingFrequency(1)) {
+	db.startTrace(traceOptions, tracePath);
+	// ... production workload runs while the trace is captured ...
+	db.endTrace();
+}
+
+try (var candidate = RocksDB.openReadWrite(candidatePath);
+     var replayer = Replayer.create(candidate, tracePath);
+     var replayOptions = ReplayOptions.newReplayOptions().setNumThreads(4)) {
+	replayer.prepare();
+	replayer.replay(replayOptions);
+}
+```
+
+`startTrace`/`endTrace` are available on every direct-DB type, including read-only and secondary
+handles, since tracing captures reads as well as writes. `TraceOptions.setFilter(Set<TraceFilter>)`
+excludes specific operation types — e.g. skip `Get`s to capture only the write path — and
+`setSamplingFrequency` captures one operation out of every N instead of all of them. The C API has
+no pluggable capture sink, so tracing always writes to a file; `Replayer` reissues that file's
+operations against any target database, reading and decoding it internally.
 
 ## Serve reads from a secondary instance
 
