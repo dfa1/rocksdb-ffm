@@ -1,11 +1,11 @@
 package io.github.dfa1.rocksdbffm;
 
-/// Why a compaction was triggered, reported on [CompactionJobInfo#compactionReason()] and
-/// [SubcompactionJobInfo#compactionReason()].
+/// Why a compaction was triggered, reported on [CompactionJobInfo#compactionReason()] (also
+/// surfaced through `rocksdb_subcompactionjobinfo_compaction_reason()`, though subcompaction
+/// info is not otherwise exposed by this library yet).
 ///
 /// Integer values match `rocksdb::CompactionReason` (`rocksdb/listener.h`), surfaced through
-/// `rocksdb_compactionjobinfo_compaction_reason()` /
-/// `rocksdb_subcompactionjobinfo_compaction_reason()`. `kNumOfReasons`, a sentinel counting the
+/// `rocksdb_compactionjobinfo_compaction_reason()`. `kNumOfReasons`, a sentinel counting the
 /// number of reasons rather than a real one, is deliberately not mapped here.
 public enum CompactionReason {
 
