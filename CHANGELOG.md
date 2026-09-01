@@ -29,59 +29,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   readahead, rate limiting), previously completely unmapped. Attached via a new
   `SstFileWriter.newSstFileWriter(Options, EnvOptions)` overload; the existing single-arg
   overload keeps using RocksDB's defaults internally.
-- `EventNotifier`: wraps `rocksdb_eventlistener_create()` so a Java listener can observe RocksDB's
-  internal lifecycle — `onFlushBegin`/`onFlushCompleted`, `onCompactionBegin`/
-  `onCompactionCompleted`, `onExternalFileIngested`, `onBackgroundError`,
-  `onStallConditionsChanged`, `onMemTableSealed` — attached via `Options.addEventListener`
-  (callable more than once to register several listeners). New zero-copy, callback-scoped payload
-  types `FlushJobInfo`, `CompactionJobInfo`, `ExternalFileIngestionInfo`, `MemTableInfo`,
-  `WriteStallInfo`, and enums `FlushReason`, `BackgroundErrorReason`, `CompactionReason`,
-  `WriteStallCondition`. Subcompaction callbacks are deliberately not exposed (wired to a shared
-  no-op stub instead, since `db/c.cc` calls them unconditionally with no null check). Verified
-  against *real* automatic compactions (not just manual `compactRange()`) by a new
-  `EventNotifierCompactionIntegrationTest`. ([#121](https://github.com/dfa1/rocksdbffm/pull/121))
-- `Tracing & Replay`: `RocksDBTracingOperations.startTrace`/`endTrace` (`rocksdb_start_trace`/
-  `rocksdb_end_trace`) capture every DB operation to a file, tuned via a new `TraceOptions`
-  (rollover size, sampling frequency, per-operation-type `TraceFilter` exclusion, write-order
-  preservation). Its own interface — not folded into `RocksDBWriteOperations` — since tracing
-  captures reads too and works on read-only/secondary handles; implemented by the same broad set
-  of types as `MonitoringOperations`. New `Replayer`/`ReplayOptions` (`rocksdb_new_default_replayer`)
-  reissue a captured trace against a target database — no callback plumbing needed, since RocksDB
-  decodes the trace file internally.
-- `CuckooTableOptions`: new wrapper for the hash-based Cuckoo Table SST format (fixed-size keys,
-  point lookups only, no range scans), attached via a new
+- `EventNotifier`: wraps `rocksdb_eventlistener_create()` for flush/compaction/ingestion/
+  background-error/stall/memtable-seal callbacks, attached via `Options.addEventListener`.
+  ([#121](https://github.com/dfa1/rocksdbffm/pull/121))
+- `Tracing & Replay`: `RocksDBTracingOperations.startTrace`/`endTrace` capture DB operations to a
+  file (tuned via `TraceOptions`); `Replayer`/`ReplayOptions` reissue a captured trace against a
+  target database.
+- `CuckooTableOptions`: new wrapper for the hash-based Cuckoo Table SST format, attached via a new
   `Options.setTableFormatConfig(CuckooTableOptions)` overload.
-- `BlockBasedTableOptions`: the remainder of the option surface — filter tuning
-  (`setOptimizeFiltersForMemory`, `setDecouplePartitionedFilters`,
-  `setDataBlockHashTableUtilRatio`), index tuning (`setIndexShortening`,
-  `setIndexBlockSearchType`, `setDataBlockIndexType`, `setEnableIndexCompression`,
-  `setUniformCvThreshold`), corruption/integrity (`setChecksumType`, `setVerifyCompression`,
-  `setDetectFilterConstructCorruption`, `setReadAmpBytesPerBit`), block alignment
-  (`setBlockAlign`, `setSuperBlockAlignmentSize`, `setSuperBlockAlignmentSpaceOverheadRatio`),
-  `setPrepopulateBlockCache`, and the string-based user-defined-index (UDI) activation trio
-  (`setUserDefinedIndexFactoryFromString`/`clearUserDefinedIndexFactory`/
-  `getUserDefinedIndexFactoryName`). Five new enums: `IndexShorteningMode`, `IndexSearchType`,
-  `DataBlockIndexType`, `ChecksumType`, `PrepopulateBlockCache`.
+- `BlockBasedTableOptions`: remaining filter/index/corruption/block-alignment tuning, plus
+  `setPrepopulateBlockCache` and the string-based user-defined-index activation trio.
 - `Options`: basic LSM-shape tuning — `setWriteBufferSize`, `setNumLevels`,
-  `setLevel0FileNumCompactionTrigger`, `setTargetFileSizeBase`, `setMaxBytesForLevelBase` (each
-  with a getter). Previously entirely unmapped despite being the most basic RocksDB tuning
-  surface.
-- `ReadOptions.setAutoPrefixMode`: lets RocksDB automatically switch to prefix-seek mode on
-  `Seek()` whenever it can prove that's safe, instead of the caller manually choosing between
-  `setTotalOrderSeek`/`setPrefixSameAsStart`.
-- `FilterPolicy.newRibbonHybrid`: mixes Bloom filters for the top levels (cheap to rebuild on
-  flush) with Ribbon for lower levels (~30% smaller, where most of a large database's data
-  lives), via a `bloomBeforeLevel` parameter.
+  `setLevel0FileNumCompactionTrigger`, `setTargetFileSizeBase`, `setMaxBytesForLevelBase`.
+- `ReadOptions.setAutoPrefixMode`: lets RocksDB auto-select prefix-seek mode on `Seek()` when safe.
+- `FilterPolicy.newRibbonHybrid`: Bloom for the top levels, Ribbon below, via `bloomBeforeLevel`.
 
 ### Fixed
 
 - `Logger`'s callback path and `MergeOperator.custom` could deadlock the JVM on `System.exit()`
-  once a callback had run on a RocksDB background thread — HotSpot auto-attaches such a thread to
-  the JVM on its first upcall, while RocksDB's default `Env` separately `pthread_join`s its pool
-  threads from a static destructor at libc exit, and the two can deadlock. Fixed by a new
-  `BackgroundUpcallThreads` shutdown hook (armed only once a callback is actually registered) that
-  drains RocksDB's background thread pools while the JVM is still alive. Introduced alongside
-  `EventNotifier`, which is exposed to the same class of bug. ([#121](https://github.com/dfa1/rocksdbffm/pull/121))
+  once a callback had run on a RocksDB background thread. Fixed by a new
+  `BackgroundUpcallThreads` shutdown hook; introduced alongside `EventNotifier`, which hits the
+  same class of bug. ([#121](https://github.com/dfa1/rocksdbffm/pull/121))
 
 ## [0.10] — 2026-08-30
 
