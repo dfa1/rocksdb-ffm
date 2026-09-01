@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           # Zulu ships JDK 25 for every target here, including Windows/ARM64,
           # which Temurin does not yet.
