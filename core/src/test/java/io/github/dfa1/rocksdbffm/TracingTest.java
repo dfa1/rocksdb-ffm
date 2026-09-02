@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -82,6 +83,34 @@ class TracingTest {
 		}
 		try (var target = RocksDB.openReadWrite(dir.resolve("target"))) {
 			assertThat(target.get("k".getBytes())).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void replayerCreate_withExplicitColumnFamilies_capturesEachHandle(@TempDir Path dir) {
+		// Given -- the full create() overload marshals the cfs list into a native array; a
+		// single-element list is enough to exercise that marshaling instead of the empty-list
+		// default column family path every other test in this class uses.
+		var tracePath = dir.resolve("trace.log");
+		try (var source = RocksDB.openReadWrite(dir.resolve("source"));
+		     var traceOptions = TraceOptions.newTraceOptions()) {
+			source.startTrace(traceOptions, tracePath);
+			source.put("k".getBytes(), "v".getBytes());
+			source.endTrace();
+		}
+
+		try (var target = RocksDB.openReadWrite(dir.resolve("target"));
+		     var cf = target.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var env = Env.defaultEnv();
+		     var envOptions = EnvOptions.newEnvOptions();
+		     var replayer = Replayer.create(target, List.of(cf), env, envOptions, tracePath)) {
+
+			// When
+			replayer.prepare();
+
+			// Then -- reaching prepare() without throwing confirms the column-family array was
+			// built and passed correctly
+			assertThat(replayer.getHeaderTimestamp()).isNotNull();
 		}
 	}
 }

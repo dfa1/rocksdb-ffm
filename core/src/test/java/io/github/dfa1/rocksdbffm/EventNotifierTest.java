@@ -347,6 +347,30 @@ class EventNotifierTest {
 	}
 
 	@Test
+	void notifier_callbackThatThrows_isCaughtAndLoggedNotPropagated(@TempDir Path dir) {
+		// Given -- EventNotifierBridge's contract: an escaping exception from a callback is
+		// caught and logged, never propagated back into RocksDB or across the native boundary.
+		EventNotifier notifier = new EventNotifier() {
+			@Override
+			public void onFlushCompleted(FlushJobInfo info) {
+				throw new RuntimeException("boom from user callback");
+			}
+		};
+
+		try (var opts = Options.newOptions().setCreateIfMissing(true).addEventListener(notifier);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			db.flush(FlushOptions.newFlushOptions());
+
+			// Then -- the DB is still usable afterward; nothing crashed or propagated
+			var result = db.get("k".getBytes());
+			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
 	void notifier_withNoOverrides_defaultCallbacksAreNoOpsAndDoNotThrow(@TempDir Path dir) {
 		// Given — a listener that overrides nothing, exercising every EventNotifier default
 		// method's no-op body (onFlushBegin/onFlushCompleted/onCompactionBegin/

@@ -128,4 +128,18 @@ class OptionsTest {
 			assertThat(result).isTrue();
 		}
 	}
+
+	@Test
+	void setBlobCache_doesNotThrowAndCallerRetainsOwnership() {
+		// Given -- ownership is shared, like RateLimiter/SstFileManager, so cache stays usable
+		try (var cache = LRUCache.newLRUCache(MemorySize.ofMB(8));
+		     var opts = Options.newOptions().setBlobCache(cache)) {
+
+			// When
+			var stillOpen = cache.ptr();
+
+			// Then
+			assertThat(stillOpen).isNotNull();
+		}
+	}
 }

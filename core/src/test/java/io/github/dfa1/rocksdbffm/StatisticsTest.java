@@ -40,4 +40,17 @@ class StatisticsTest {
 			}
 		}
 	}
+
+	@Test
+	void getStatisticsString_isNullWhenStatisticsNotEnabled() {
+		// Given
+		try (Options options = Options.newOptions()) {
+
+			// When
+			String stats = options.getStatisticsString();
+
+			// Then
+			assertThat(stats).isNull();
+		}
+	}
 }
