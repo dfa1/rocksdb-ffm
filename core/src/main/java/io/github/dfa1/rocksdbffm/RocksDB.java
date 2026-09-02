@@ -150,6 +150,14 @@ public final class RocksDB {
 	private static final MethodHandle MH_PROPERTY_VALUE_CF;
 	/// `int rocksdb_property_int_cf(rocksdb_t* db, rocksdb_column_family_handle_t* column_family, const char* propname, uint64_t* out_val);`
 	private static final MethodHandle MH_PROPERTY_INT_CF;
+	/// `void rocksdb_approximate_sizes(rocksdb_t* db, int num_ranges, const char* const* range_start_key, const size_t* range_start_key_len, const char* const* range_limit_key, const size_t* range_limit_key_len, uint64_t* sizes, char** errptr);`
+	private static final MethodHandle MH_APPROXIMATE_SIZES;
+	/// `void rocksdb_approximate_sizes_cf(rocksdb_t* db, rocksdb_column_family_handle_t* column_family, int num_ranges, const char* const* range_start_key, const size_t* range_start_key_len, const char* const* range_limit_key, const size_t* range_limit_key_len, uint64_t* sizes, char** errptr);`
+	private static final MethodHandle MH_APPROXIMATE_SIZES_CF;
+	/// `void rocksdb_approximate_sizes_with_options(rocksdb_t* db, const rocksdb_size_approximation_options_t* options, int num_ranges, const char* const* range_start_key, const size_t* range_start_key_len, const char* const* range_limit_key, const size_t* range_limit_key_len, uint64_t* sizes, char** errptr);`
+	private static final MethodHandle MH_APPROXIMATE_SIZES_WITH_OPTIONS;
+	/// `void rocksdb_approximate_sizes_cf_with_options(rocksdb_t* db, rocksdb_column_family_handle_t* column_family, const rocksdb_size_approximation_options_t* options, int num_ranges, const char* const* range_start_key, const size_t* range_start_key_len, const char* const* range_limit_key, const size_t* range_limit_key_len, uint64_t* sizes, char** errptr);`
+	private static final MethodHandle MH_APPROXIMATE_SIZES_CF_WITH_OPTIONS;
 	/// `rocksdb_t* rocksdb_open_for_read_only_column_families(const rocksdb_options_t* options, const char* name, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, unsigned char error_if_wal_file_exists, char** errptr);`
 	private static final MethodHandle MH_OPEN_FOR_READ_ONLY_CF;
 	/// `rocksdb_t* rocksdb_open_as_secondary_column_families(const rocksdb_options_t* options, const char* name, const char* secondary_path, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, char** errptr);`
@@ -419,6 +427,54 @@ public final class RocksDB {
 				FunctionDescriptor.of(ValueLayout.JAVA_INT,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_APPROXIMATE_SIZES = NativeLibrary.lookup("rocksdb_approximate_sizes",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS,   // db
+						ValueLayout.JAVA_INT,  // num_ranges
+						ValueLayout.ADDRESS,   // range_start_key
+						ValueLayout.ADDRESS,   // range_start_key_len
+						ValueLayout.ADDRESS,   // range_limit_key
+						ValueLayout.ADDRESS,   // range_limit_key_len
+						ValueLayout.ADDRESS,   // sizes
+						ValueLayout.ADDRESS)); // errptr
+
+		MH_APPROXIMATE_SIZES_CF = NativeLibrary.lookup("rocksdb_approximate_sizes_cf",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS,   // db
+						ValueLayout.ADDRESS,   // column_family
+						ValueLayout.JAVA_INT,  // num_ranges
+						ValueLayout.ADDRESS,   // range_start_key
+						ValueLayout.ADDRESS,   // range_start_key_len
+						ValueLayout.ADDRESS,   // range_limit_key
+						ValueLayout.ADDRESS,   // range_limit_key_len
+						ValueLayout.ADDRESS,   // sizes
+						ValueLayout.ADDRESS)); // errptr
+
+		MH_APPROXIMATE_SIZES_WITH_OPTIONS = NativeLibrary.lookup("rocksdb_approximate_sizes_with_options",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS,   // db
+						ValueLayout.ADDRESS,   // options
+						ValueLayout.JAVA_INT,  // num_ranges
+						ValueLayout.ADDRESS,   // range_start_key
+						ValueLayout.ADDRESS,   // range_start_key_len
+						ValueLayout.ADDRESS,   // range_limit_key
+						ValueLayout.ADDRESS,   // range_limit_key_len
+						ValueLayout.ADDRESS,   // sizes
+						ValueLayout.ADDRESS)); // errptr
+
+		MH_APPROXIMATE_SIZES_CF_WITH_OPTIONS = NativeLibrary.lookup("rocksdb_approximate_sizes_cf_with_options",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS,   // db
+						ValueLayout.ADDRESS,   // column_family
+						ValueLayout.ADDRESS,   // options
+						ValueLayout.JAVA_INT,  // num_ranges
+						ValueLayout.ADDRESS,   // range_start_key
+						ValueLayout.ADDRESS,   // range_start_key_len
+						ValueLayout.ADDRESS,   // range_limit_key
+						ValueLayout.ADDRESS,   // range_limit_key_len
+						ValueLayout.ADDRESS,   // sizes
+						ValueLayout.ADDRESS)); // errptr
 
 		MH_OPEN_FOR_READ_ONLY_CF = NativeLibrary.lookup("rocksdb_open_for_read_only_column_families",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -1921,6 +1977,86 @@ public final class RocksDB {
 			return OptionalLong.of(out.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("getLongProperty failed", t);
+		}
+	}
+
+	/// The four parallel native arrays every `rocksdb_approximate_sizes*` call needs: start-key
+	/// pointers, start-key lengths, limit-key pointers, limit-key lengths -- one entry per
+	/// [Range].
+	private record RangeArrays(MemorySegment starts, MemorySegment startLens,
+			MemorySegment limits, MemorySegment limitLens) {
+	}
+
+	private static RangeArrays buildRangeArrays(Arena arena, List<Range> ranges) {
+		int n = ranges.size();
+		MemorySegment starts = arena.allocate(ValueLayout.ADDRESS, n);
+		MemorySegment startLens = arena.allocate(ValueLayout.JAVA_LONG, n);
+		MemorySegment limits = arena.allocate(ValueLayout.ADDRESS, n);
+		MemorySegment limitLens = arena.allocate(ValueLayout.JAVA_LONG, n);
+		for (int i = 0; i < n; i++) {
+			Range range = ranges.get(i);
+			starts.setAtIndex(ValueLayout.ADDRESS, i, toNative(arena, range.startKey()));
+			startLens.setAtIndex(ValueLayout.JAVA_LONG, i, range.startKey().length);
+			limits.setAtIndex(ValueLayout.ADDRESS, i, toNative(arena, range.endKey()));
+			limitLens.setAtIndex(ValueLayout.JAVA_LONG, i, range.endKey().length);
+		}
+		return new RangeArrays(starts, startLens, limits, limitLens);
+	}
+
+	static long[] approximateSizes(MemorySegment db, List<Range> ranges) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = errHolder(arena);
+			RangeArrays r = buildRangeArrays(arena, ranges);
+			MemorySegment sizes = arena.allocate(ValueLayout.JAVA_LONG, ranges.size());
+			MH_APPROXIMATE_SIZES.invokeExact(db, ranges.size(),
+					r.starts(), r.startLens(), r.limits(), r.limitLens(), sizes, err);
+			checkError(err);
+			return sizes.toArray(ValueLayout.JAVA_LONG);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getApproximateSizes failed", t);
+		}
+	}
+
+	static long[] approximateSizesCf(MemorySegment db, ColumnFamilyHandle cf, List<Range> ranges) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = errHolder(arena);
+			RangeArrays r = buildRangeArrays(arena, ranges);
+			MemorySegment sizes = arena.allocate(ValueLayout.JAVA_LONG, ranges.size());
+			MH_APPROXIMATE_SIZES_CF.invokeExact(db, cf.ptr(), ranges.size(),
+					r.starts(), r.startLens(), r.limits(), r.limitLens(), sizes, err);
+			checkError(err);
+			return sizes.toArray(ValueLayout.JAVA_LONG);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getApproximateSizes failed", t);
+		}
+	}
+
+	static long[] approximateSizesWithOptions(MemorySegment db, SizeApproximationOptions options, List<Range> ranges) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = errHolder(arena);
+			RangeArrays r = buildRangeArrays(arena, ranges);
+			MemorySegment sizes = arena.allocate(ValueLayout.JAVA_LONG, ranges.size());
+			MH_APPROXIMATE_SIZES_WITH_OPTIONS.invokeExact(db, options.ptr(), ranges.size(),
+					r.starts(), r.startLens(), r.limits(), r.limitLens(), sizes, err);
+			checkError(err);
+			return sizes.toArray(ValueLayout.JAVA_LONG);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getApproximateSizes failed", t);
+		}
+	}
+
+	static long[] approximateSizesCfWithOptions(MemorySegment db, ColumnFamilyHandle cf,
+			SizeApproximationOptions options, List<Range> ranges) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = errHolder(arena);
+			RangeArrays r = buildRangeArrays(arena, ranges);
+			MemorySegment sizes = arena.allocate(ValueLayout.JAVA_LONG, ranges.size());
+			MH_APPROXIMATE_SIZES_CF_WITH_OPTIONS.invokeExact(db, cf.ptr(), options.ptr(), ranges.size(),
+					r.starts(), r.startLens(), r.limits(), r.limitLens(), sizes, err);
+			checkError(err);
+			return sizes.toArray(ValueLayout.JAVA_LONG);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getApproximateSizes failed", t);
 		}
 	}
 

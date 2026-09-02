@@ -1,6 +1,7 @@
 package io.github.dfa1.rocksdbffm;
 
 import java.lang.foreign.MemorySegment;
+import java.util.List;
 
 /// Shared read-only inspection operations for every wrapper around a plain `rocksdb_t*`,
 /// including [TransactionDB] (reached through its base DB pointer, see
@@ -11,7 +12,8 @@ import java.lang.foreign.MemorySegment;
 ///
 /// Live SST file metadata ([#getLiveFiles()]) and full database storage inventory
 /// ([#getLiveFilesStorageInfo()]) — SST, WAL, MANIFEST, `CURRENT`, `OPTIONS`, blob files, and
-/// more, everything needed to reconstruct the database, not just SST.
+/// more, everything needed to reconstruct the database, not just SST. [#getApproximateSizes(List)]
+/// estimates the on-disk footprint of one or more key ranges without scanning them.
 public interface MonitoringOperations {
 
 	/// Returns the native `rocksdb_t*` pointer to operate on.
@@ -46,5 +48,44 @@ public interface MonitoringOperations {
 	/// @return a new [LiveFilesStorageInfo] snapshot; caller must close it
 	default LiveFilesStorageInfo getLiveFilesStorageInfo(LiveFilesStorageInfoOptions options) {
 		return LiveFilesStorageInfo.fetch(dbPtr(), options.ptr());
+	}
+
+	/// Estimates the on-disk size, in bytes, of each range in `ranges`, on the default column
+	/// family, without scanning the data. RocksDB defaults apply: on-disk SST data only
+	/// (memtables and blob files excluded), computed exactly rather than with an error margin.
+	///
+	/// @param ranges key ranges to estimate; one entry per range
+	/// @return estimated size in bytes for each range, in the same order as `ranges`
+	default long[] getApproximateSizes(List<Range> ranges) {
+		return RocksDB.approximateSizes(dbPtr(), ranges);
+	}
+
+	/// [#getApproximateSizes(List)] with explicit [SizeApproximationOptions] controlling what
+	/// data counts toward the estimate and how precise it needs to be.
+	///
+	/// @param options controls which data is counted and the allowed error margin
+	/// @param ranges  key ranges to estimate; one entry per range
+	/// @return estimated size in bytes for each range, in the same order as `ranges`
+	default long[] getApproximateSizes(SizeApproximationOptions options, List<Range> ranges) {
+		return RocksDB.approximateSizesWithOptions(dbPtr(), options, ranges);
+	}
+
+	/// [#getApproximateSizes(List)] scoped to a specific column family instead of the default one.
+	///
+	/// @param cf     target column family
+	/// @param ranges key ranges to estimate; one entry per range
+	/// @return estimated size in bytes for each range, in the same order as `ranges`
+	default long[] getApproximateSizes(ColumnFamilyHandle cf, List<Range> ranges) {
+		return RocksDB.approximateSizesCf(dbPtr(), cf, ranges);
+	}
+
+	/// [#getApproximateSizes(ColumnFamilyHandle, List)] with explicit [SizeApproximationOptions].
+	///
+	/// @param cf      target column family
+	/// @param options controls which data is counted and the allowed error margin
+	/// @param ranges  key ranges to estimate; one entry per range
+	/// @return estimated size in bytes for each range, in the same order as `ranges`
+	default long[] getApproximateSizes(ColumnFamilyHandle cf, SizeApproximationOptions options, List<Range> ranges) {
+		return RocksDB.approximateSizesCfWithOptions(dbPtr(), cf, options, ranges);
 	}
 }

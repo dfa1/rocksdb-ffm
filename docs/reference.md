@@ -365,6 +365,7 @@ the matching style:
 | Logging       | `Options.setInfoLog(Logger)`, `setInfoLogLevel(LogLevel)`                                  |
 | Event listeners| `Options.addEventListener(EventNotifier)` (callable repeatedly to register several); `EventNotifier` has 8 no-op default methods — `onFlushBegin`, `onFlushCompleted`, `onCompactionBegin`, `onCompactionCompleted`, `onExternalFileIngested`, `onBackgroundError`, `onStallConditionsChanged`, `onMemTableSealed`. Callbacks run on RocksDB background threads; the `*Info` arguments are zero-copy views valid only for the duration of the call — see [explanation.md#background-thread-callbacks](explanation.md#background-thread-callbacks) |
 | Event payloads | `FlushJobInfo`, `CompactionJobInfo`, `ExternalFileIngestionInfo`, `MemTableInfo`, `WriteStallInfo` |
+| Approximate sizes | `getApproximateSizes(List<Range>[, ColumnFamilyHandle][, SizeApproximationOptions])` — estimates on-disk size in bytes per range without scanning; `Range.of(startKey, endKey)`; `SizeApproximationOptions` controls what counts (memtables/files/blob files) and the allowed error margin |
 
 ## Domain types
 
@@ -375,6 +376,7 @@ the matching style:
 | `BackupId`        | Backup identity (native `uint32`). `of(long)`, `toLong()`; `Comparable`                      |
 | `Ratio`           | Fraction in `[0.0, 1.0]`. `of(double)`, `toDouble()`, `ZERO`, `ONE`; immutable, `Comparable` |
 | `CopyResult`      | Sealed: `Copied()`, `NotEnoughCapacity(long required)`, `NotFound()`                         |
+| `Range`           | Half-open key range `[startKey, endKey)`. `of(byte[], byte[])`; used by `getApproximateSizes` |
 | `RocksDBException`| Unchecked; thrown for a genuine RocksDB-reported error (see [explanation.md#errors-are-always-loud](explanation.md#errors-are-always-loud)) |
 | `NativeObject`    | Base class of every native wrapper; `ptr()`, `close()` (idempotent), abstract `tryClose`      |
 | `NativeObjectWithChildren` | `NativeObject` subclass for wrappers that can produce children borrowing their pointer (every DB type producing `Snapshot`); `registerChild`/`unregisterChild`, closes children before `tryCloseResource` — see [explanation.md](explanation.md#lifecycle-and-ownership) |
@@ -426,6 +428,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | DB properties              |   ✅    | `getProperty`, `getLongProperty`                                                            |
 | Live SST file inspection   |   ✅    | `getLiveFiles()` (`rocksdb_livefiles`); lazy `LiveFileInfo` view per file — column family, level, size, key range, seqno range, entry/deletion counts. No `numReadsSampled`/`beingCompacted` (not in the C API's `rocksdb_livefiles_*` accessors, unlike `rocksdbjni`'s `LiveFileMetaData`); checksums are available through `getLiveFilesStorageInfo()` instead |
 | Live files storage info    |   ✅    | `getLiveFilesStorageInfo()` (`rocksdb_get_livefiles_storage_info`); lazy `LiveFileStorageInfo` view per file — every file needed to reconstruct the DB (SST, WAL, MANIFEST, `CURRENT`, `OPTIONS`, blob), `FileType`, size, `Temperature`, checksum + checksum-function-name (opt-in via `LiveFilesStorageInfoOptions`), `CURRENT`'s captured replacement contents |
+| Approximate sizes          |   ✅    | `getApproximateSizes(List<Range>)` (`rocksdb_approximate_sizes`/`_cf`/`_with_options`/`_cf_with_options`); estimates on-disk byte size per key range without scanning, tunable via `SizeApproximationOptions` (memtables/files/blob files, error margin) |
 | Statistics                 |   ✅    | `TickerType`, `HistogramType`, `StatsLevel`                                                 |
 | Compression                |   ✅    | `CompressionType`; `Options.setCompression`                                                 |
 | Column families            |   ✅    | Multi-CF open for every DB type; CF overloads on all data methods and `WriteBatch`          |
