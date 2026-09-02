@@ -22,7 +22,7 @@ import java.lang.invoke.MethodHandle;
 ///     ...
 /// }
 /// ```
-public final class FifoCompactionOptions extends NativeObject {
+public final class FifoCompactionOptions extends AbstractOptions {
 
 	/// `rocksdb_fifo_compaction_options_t* rocksdb_fifo_compaction_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -105,11 +105,7 @@ public final class FifoCompactionOptions extends NativeObject {
 	/// @param value `true` to allow compacting old files together instead of dropping them
 	/// @return `this` for chaining
 	public FifoCompactionOptions setAllowCompaction(boolean value) {
-		try {
-			MH_SET_ALLOW_COMPACTION.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setAllowCompaction failed", t);
-		}
+		setBoolean(MH_SET_ALLOW_COMPACTION, value);
 		return this;
 	}
 
@@ -117,11 +113,7 @@ public final class FifoCompactionOptions extends NativeObject {
 	///
 	/// @return `true` if compacting old files together is allowed
 	public boolean getAllowCompaction() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_ALLOW_COMPACTION.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getAllowCompaction failed", t);
-		}
+		return getBoolean(MH_GET_ALLOW_COMPACTION);
 	}
 
 	/// Once the total size of all SST files exceeds this, the oldest file is dropped (or, with
@@ -131,11 +123,7 @@ public final class FifoCompactionOptions extends NativeObject {
 	/// @param size maximum total size of all SST files
 	/// @return `this` for chaining
 	public FifoCompactionOptions setMaxTableFilesSize(MemorySize size) {
-		try {
-			MH_SET_MAX_TABLE_FILES_SIZE.invokeExact(ptr(), size.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMaxTableFilesSize failed", t);
-		}
+		setMemorySize(MH_SET_MAX_TABLE_FILES_SIZE, size);
 		return this;
 	}
 
@@ -143,11 +131,7 @@ public final class FifoCompactionOptions extends NativeObject {
 	///
 	/// @return current maximum total SST file size
 	public MemorySize getMaxTableFilesSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_MAX_TABLE_FILES_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMaxTableFilesSize failed", t);
-		}
+		return getMemorySize(MH_GET_MAX_TABLE_FILES_SIZE);
 	}
 
 	/// Upper bound on the total size of data files (excludes metadata like index/filter
@@ -156,11 +140,7 @@ public final class FifoCompactionOptions extends NativeObject {
 	/// @param size maximum total size of data files
 	/// @return `this` for chaining
 	public FifoCompactionOptions setMaxDataFilesSize(MemorySize size) {
-		try {
-			MH_SET_MAX_DATA_FILES_SIZE.invokeExact(ptr(), size.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMaxDataFilesSize failed", t);
-		}
+		setMemorySize(MH_SET_MAX_DATA_FILES_SIZE, size);
 		return this;
 	}
 
@@ -168,11 +148,7 @@ public final class FifoCompactionOptions extends NativeObject {
 	///
 	/// @return current maximum total data file size
 	public MemorySize getMaxDataFilesSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_MAX_DATA_FILES_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMaxDataFilesSize failed", t);
-		}
+		return getMemorySize(MH_GET_MAX_DATA_FILES_SIZE);
 	}
 
 	/// If true, uses the key-value ratio (rather than raw file size) to decide when to drop
@@ -181,11 +157,7 @@ public final class FifoCompactionOptions extends NativeObject {
 	/// @param value `true` to use the key-value ratio for FIFO compaction decisions
 	/// @return `this` for chaining
 	public FifoCompactionOptions setUseKvRatioCompaction(boolean value) {
-		try {
-			MH_SET_USE_KV_RATIO_COMPACTION.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setUseKvRatioCompaction failed", t);
-		}
+		setBoolean(MH_SET_USE_KV_RATIO_COMPACTION, value);
 		return this;
 	}
 
@@ -193,11 +165,7 @@ public final class FifoCompactionOptions extends NativeObject {
 	///
 	/// @return `true` if the key-value ratio is used for FIFO compaction decisions
 	public boolean getUseKvRatioCompaction() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_USE_KV_RATIO_COMPACTION.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getUseKvRatioCompaction failed", t);
-		}
+		return getBoolean(MH_GET_USE_KV_RATIO_COMPACTION);
 	}
 
 	@Override

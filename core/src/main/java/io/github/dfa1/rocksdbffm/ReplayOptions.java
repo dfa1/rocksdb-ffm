@@ -17,7 +17,7 @@ import java.lang.invoke.MethodHandle;
 ///     replayer.replay(opts);
 /// }
 /// ```
-public final class ReplayOptions extends NativeObject {
+public final class ReplayOptions extends AbstractOptions {
 
 	/// `rocksdb_replay_options_t* rocksdb_replay_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -73,11 +73,7 @@ public final class ReplayOptions extends NativeObject {
 	/// @param numThreads number of replay threads
 	/// @return `this` for chaining
 	public ReplayOptions setNumThreads(int numThreads) {
-		try {
-			MH_SET_NUM_THREADS.invokeExact(ptr(), numThreads);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setNumThreads failed", t);
-		}
+		setInt(MH_SET_NUM_THREADS, numThreads);
 		return this;
 	}
 
@@ -85,11 +81,7 @@ public final class ReplayOptions extends NativeObject {
 	///
 	/// @return current number of replay threads
 	public int getNumThreads() {
-		try {
-			return (int) MH_GET_NUM_THREADS.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getNumThreads failed", t);
-		}
+		return getInt(MH_GET_NUM_THREADS);
 	}
 
 	/// Speed multiplier applied to the original capture timing: `2.0` replays twice as fast as
@@ -98,11 +90,7 @@ public final class ReplayOptions extends NativeObject {
 	/// @param fastForward speed multiplier; must be positive
 	/// @return `this` for chaining
 	public ReplayOptions setFastForward(double fastForward) {
-		try {
-			MH_SET_FAST_FORWARD.invokeExact(ptr(), fastForward);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setFastForward failed", t);
-		}
+		setDouble(MH_SET_FAST_FORWARD, fastForward);
 		return this;
 	}
 
@@ -110,11 +98,7 @@ public final class ReplayOptions extends NativeObject {
 	///
 	/// @return current speed multiplier
 	public double getFastForward() {
-		try {
-			return (double) MH_GET_FAST_FORWARD.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getFastForward failed", t);
-		}
+		return getDouble(MH_GET_FAST_FORWARD);
 	}
 
 	@Override

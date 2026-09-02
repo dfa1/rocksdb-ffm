@@ -9,7 +9,7 @@ import java.time.Duration;
 /// FFM wrapper for `rocksdb_transactiondb_options_t` — global, database-wide settings for a
 /// [TransactionDB] (lock manager sizing, timeouts, and write policy). Per-transaction settings
 /// (snapshot, deadlock detection, per-call lock timeout) live on [TransactionOptions] instead.
-public final class TransactionDBOptions extends NativeObject {
+public final class TransactionDBOptions extends AbstractOptions {
 
 	/// `rocksdb_transactiondb_options_t* rocksdb_transactiondb_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -180,11 +180,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @param maxNumLocks max locks; `-1` for unlimited
 	/// @return this instance for chaining
 	public TransactionDBOptions setMaxNumLocks(long maxNumLocks) {
-		try {
-			MH_SET_MAX_NUM_LOCKS.invokeExact(ptr(), maxNumLocks);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMaxNumLocks failed", t);
-		}
+		setLong(MH_SET_MAX_NUM_LOCKS, maxNumLocks);
 		return this;
 	}
 
@@ -192,11 +188,7 @@ public final class TransactionDBOptions extends NativeObject {
 	///
 	/// @return max locks; `-1` means unlimited
 	public long getMaxNumLocks() {
-		try {
-			return (long) MH_GET_MAX_NUM_LOCKS.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMaxNumLocks failed", t);
-		}
+		return getLong(MH_GET_MAX_NUM_LOCKS);
 	}
 
 	/// Maximum number of deadlocks to track in the deadlock detection buffer. Default: 5.
@@ -204,11 +196,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @param maxNumDeadlocks max tracked deadlocks
 	/// @return this instance for chaining
 	public TransactionDBOptions setMaxNumDeadlocks(int maxNumDeadlocks) {
-		try {
-			MH_SET_MAX_NUM_DEADLOCKS.invokeExact(ptr(), maxNumDeadlocks);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMaxNumDeadlocks failed", t);
-		}
+		setInt(MH_SET_MAX_NUM_DEADLOCKS, maxNumDeadlocks);
 		return this;
 	}
 
@@ -216,11 +204,7 @@ public final class TransactionDBOptions extends NativeObject {
 	///
 	/// @return max tracked deadlocks
 	public int getMaxNumDeadlocks() {
-		try {
-			return (int) MH_GET_MAX_NUM_DEADLOCKS.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMaxNumDeadlocks failed", t);
-		}
+		return getInt(MH_GET_MAX_NUM_DEADLOCKS);
 	}
 
 	/// Number of sub-lock-tables. Increasing reduces lock contention. Default: 16.
@@ -228,11 +212,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @param numStripes number of lock-table stripes
 	/// @return this instance for chaining
 	public TransactionDBOptions setNumStripes(long numStripes) {
-		try {
-			MH_SET_NUM_STRIPES.invokeExact(ptr(), numStripes);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setNumStripes failed", t);
-		}
+		setLong(MH_SET_NUM_STRIPES, numStripes);
 		return this;
 	}
 
@@ -240,11 +220,7 @@ public final class TransactionDBOptions extends NativeObject {
 	///
 	/// @return number of lock-table stripes
 	public long getNumStripes() {
-		try {
-			return (long) MH_GET_NUM_STRIPES.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getNumStripes failed", t);
-		}
+		return getLong(MH_GET_NUM_STRIPES);
 	}
 
 	/// Default wait timeout for acquiring a lock via [TransactionDB], used when a transaction
@@ -331,11 +307,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @param writePolicy the write policy
 	/// @return this instance for chaining
 	public TransactionDBOptions setWritePolicy(WritePolicy writePolicy) {
-		try {
-			MH_SET_WRITE_POLICY.invokeExact(ptr(), writePolicy.getValue());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setWritePolicy failed", t);
-		}
+		setInt(MH_SET_WRITE_POLICY, writePolicy.getValue());
 		return this;
 	}
 
@@ -343,12 +315,7 @@ public final class TransactionDBOptions extends NativeObject {
 	///
 	/// @return the active [WritePolicy]
 	public WritePolicy getWritePolicy() {
-		try {
-			int value = (int) MH_GET_WRITE_POLICY.invokeExact(ptr());
-			return WritePolicy.fromValue(value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getWritePolicy failed", t);
-		}
+		return WritePolicy.fromValue(getInt(MH_GET_WRITE_POLICY));
 	}
 
 	/// If `true`, [Transaction#rollback()] on a key with a merge operand rolls back by
@@ -358,11 +325,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @param value `true` to roll back merge operands
 	/// @return this instance for chaining
 	public TransactionDBOptions setRollbackMergeOperands(boolean value) {
-		try {
-			MH_SET_ROLLBACK_MERGE_OPERANDS.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setRollbackMergeOperands failed", t);
-		}
+		setBoolean(MH_SET_ROLLBACK_MERGE_OPERANDS, value);
 		return this;
 	}
 
@@ -370,11 +333,7 @@ public final class TransactionDBOptions extends NativeObject {
 	///
 	/// @return `true` if merge operands are rolled back
 	public boolean getRollbackMergeOperands() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_ROLLBACK_MERGE_OPERANDS.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getRollbackMergeOperands failed", t);
-		}
+		return getBoolean(MH_GET_ROLLBACK_MERGE_OPERANDS);
 	}
 
 	/// If `true`, uses a lock manager that locks each key individually rather than by range,
@@ -383,11 +342,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @param value `true` to use the per-key point lock manager
 	/// @return this instance for chaining
 	public TransactionDBOptions setUsePerKeyPointLockMgr(boolean value) {
-		try {
-			MH_SET_USE_PER_KEY_POINT_LOCK_MGR.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setUsePerKeyPointLockMgr failed", t);
-		}
+		setBoolean(MH_SET_USE_PER_KEY_POINT_LOCK_MGR, value);
 		return this;
 	}
 
@@ -395,11 +350,7 @@ public final class TransactionDBOptions extends NativeObject {
 	///
 	/// @return `true` if the per-key point lock manager is active
 	public boolean getUsePerKeyPointLockMgr() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_USE_PER_KEY_POINT_LOCK_MGR.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getUsePerKeyPointLockMgr failed", t);
-		}
+		return getBoolean(MH_GET_USE_PER_KEY_POINT_LOCK_MGR);
 	}
 
 	/// If `true`, skips two-phase locking and relies on the write policy alone for isolation.
@@ -409,11 +360,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @param value `true` to skip concurrency control
 	/// @return this instance for chaining
 	public TransactionDBOptions setSkipConcurrencyControl(boolean value) {
-		try {
-			MH_SET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setSkipConcurrencyControl failed", t);
-		}
+		setBoolean(MH_SET_SKIP_CONCURRENCY_CONTROL, value);
 		return this;
 	}
 
@@ -421,11 +368,7 @@ public final class TransactionDBOptions extends NativeObject {
 	///
 	/// @return `true` if concurrency control is skipped
 	public boolean getSkipConcurrencyControl() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_SKIP_CONCURRENCY_CONTROL.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getSkipConcurrencyControl failed", t);
-		}
+		return getBoolean(MH_GET_SKIP_CONCURRENCY_CONTROL);
 	}
 
 	/// Default write-batch size at which a transaction using [WritePolicy#WRITE_PREPARED] or
@@ -437,11 +380,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @param defaultWriteBatchFlushThreshold flush threshold; [MemorySize#ZERO] disables it
 	/// @return this instance for chaining
 	public TransactionDBOptions setDefaultWriteBatchFlushThreshold(MemorySize defaultWriteBatchFlushThreshold) {
-		try {
-			MH_SET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr(), defaultWriteBatchFlushThreshold.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setDefaultWriteBatchFlushThreshold failed", t);
-		}
+		setMemorySize(MH_SET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD, defaultWriteBatchFlushThreshold);
 		return this;
 	}
 
@@ -449,11 +388,7 @@ public final class TransactionDBOptions extends NativeObject {
 	///
 	/// @return flush threshold; [MemorySize#ZERO] means disabled
 	public MemorySize getDefaultWriteBatchFlushThreshold() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getDefaultWriteBatchFlushThreshold failed", t);
-		}
+		return getMemorySize(MH_GET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD);
 	}
 
 	/// If `true`, validates user-defined timestamp sizes for consistency across column families.
@@ -462,11 +397,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @param value `true` to enable user-defined-timestamp validation
 	/// @return this instance for chaining
 	public TransactionDBOptions setEnableUdtValidation(boolean value) {
-		try {
-			MH_SET_ENABLE_UDT_VALIDATION.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setEnableUdtValidation failed", t);
-		}
+		setBoolean(MH_SET_ENABLE_UDT_VALIDATION, value);
 		return this;
 	}
 
@@ -474,11 +405,7 @@ public final class TransactionDBOptions extends NativeObject {
 	///
 	/// @return `true` if user-defined-timestamp validation is enabled
 	public boolean getEnableUdtValidation() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_ENABLE_UDT_VALIDATION.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getEnableUdtValidation failed", t);
-		}
+		return getBoolean(MH_GET_ENABLE_UDT_VALIDATION);
 	}
 
 	/// Number of keys in a transaction's write batch above which commit bypasses the memtable
@@ -489,11 +416,7 @@ public final class TransactionDBOptions extends NativeObject {
 	/// @param txnCommitBypassMemtableThreshold key-count threshold; `0` disables the bypass
 	/// @return this instance for chaining
 	public TransactionDBOptions setTxnCommitBypassMemtableThreshold(int txnCommitBypassMemtableThreshold) {
-		try {
-			MH_SET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD.invokeExact(ptr(), txnCommitBypassMemtableThreshold);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setTxnCommitBypassMemtableThreshold failed", t);
-		}
+		setInt(MH_SET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD, txnCommitBypassMemtableThreshold);
 		return this;
 	}
 
@@ -501,11 +424,7 @@ public final class TransactionDBOptions extends NativeObject {
 	///
 	/// @return key-count threshold; `0` means the bypass is disabled
 	public int getTxnCommitBypassMemtableThreshold() {
-		try {
-			return (int) MH_GET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getTxnCommitBypassMemtableThreshold failed", t);
-		}
+		return getInt(MH_GET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD);
 	}
 
 	@Override

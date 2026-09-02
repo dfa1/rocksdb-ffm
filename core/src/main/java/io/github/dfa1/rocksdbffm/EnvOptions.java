@@ -20,7 +20,7 @@ import java.lang.invoke.MethodHandle;
 ///     ...
 /// }
 /// ```
-public final class EnvOptions extends NativeObject {
+public final class EnvOptions extends AbstractOptions {
 
 	/// `rocksdb_envoptions_t* rocksdb_envoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -178,11 +178,7 @@ public final class EnvOptions extends NativeObject {
 	/// @param value `true` to use `mmap` for reads
 	/// @return `this` for chaining
 	public EnvOptions setUseMmapReads(boolean value) {
-		try {
-			MH_SET_USE_MMAP_READS.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setUseMmapReads failed", t);
-		}
+		setBoolean(MH_SET_USE_MMAP_READS, value);
 		return this;
 	}
 
@@ -190,11 +186,7 @@ public final class EnvOptions extends NativeObject {
 	///
 	/// @return `true` if reads go through `mmap`
 	public boolean getUseMmapReads() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_USE_MMAP_READS.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getUseMmapReads failed", t);
-		}
+		return getBoolean(MH_GET_USE_MMAP_READS);
 	}
 
 	/// If true, writes go through `mmap` instead of regular `write` calls. Default: `false`.
@@ -202,11 +194,7 @@ public final class EnvOptions extends NativeObject {
 	/// @param value `true` to use `mmap` for writes
 	/// @return `this` for chaining
 	public EnvOptions setUseMmapWrites(boolean value) {
-		try {
-			MH_SET_USE_MMAP_WRITES.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setUseMmapWrites failed", t);
-		}
+		setBoolean(MH_SET_USE_MMAP_WRITES, value);
 		return this;
 	}
 
@@ -214,11 +202,7 @@ public final class EnvOptions extends NativeObject {
 	///
 	/// @return `true` if writes go through `mmap`
 	public boolean getUseMmapWrites() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_USE_MMAP_WRITES.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getUseMmapWrites failed", t);
-		}
+		return getBoolean(MH_GET_USE_MMAP_WRITES);
 	}
 
 	/// If true, uses direct I/O (`O_DIRECT`) for reads, bypassing the OS page cache. Avoids
@@ -229,11 +213,7 @@ public final class EnvOptions extends NativeObject {
 	/// @param value `true` to use direct I/O for reads
 	/// @return `this` for chaining
 	public EnvOptions setUseDirectReads(boolean value) {
-		try {
-			MH_SET_USE_DIRECT_READS.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setUseDirectReads failed", t);
-		}
+		setBoolean(MH_SET_USE_DIRECT_READS, value);
 		return this;
 	}
 
@@ -241,11 +221,7 @@ public final class EnvOptions extends NativeObject {
 	///
 	/// @return `true` if direct I/O is used for reads
 	public boolean getUseDirectReads() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_USE_DIRECT_READS.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getUseDirectReads failed", t);
-		}
+		return getBoolean(MH_GET_USE_DIRECT_READS);
 	}
 
 	/// If true, uses direct I/O (`O_DIRECT`) for writes, bypassing the OS page cache. Default:
@@ -254,11 +230,7 @@ public final class EnvOptions extends NativeObject {
 	/// @param value `true` to use direct I/O for writes
 	/// @return `this` for chaining
 	public EnvOptions setUseDirectWrites(boolean value) {
-		try {
-			MH_SET_USE_DIRECT_WRITES.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setUseDirectWrites failed", t);
-		}
+		setBoolean(MH_SET_USE_DIRECT_WRITES, value);
 		return this;
 	}
 
@@ -266,11 +238,7 @@ public final class EnvOptions extends NativeObject {
 	///
 	/// @return `true` if direct I/O is used for writes
 	public boolean getUseDirectWrites() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_USE_DIRECT_WRITES.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getUseDirectWrites failed", t);
-		}
+		return getBoolean(MH_GET_USE_DIRECT_WRITES);
 	}
 
 	/// If true, allows `fallocate` to preallocate disk space for a file before writing to it,
@@ -279,11 +247,7 @@ public final class EnvOptions extends NativeObject {
 	/// @param value `true` to allow `fallocate`
 	/// @return `this` for chaining
 	public EnvOptions setAllowFallocate(boolean value) {
-		try {
-			MH_SET_ALLOW_FALLOCATE.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setAllowFallocate failed", t);
-		}
+		setBoolean(MH_SET_ALLOW_FALLOCATE, value);
 		return this;
 	}
 
@@ -291,11 +255,7 @@ public final class EnvOptions extends NativeObject {
 	///
 	/// @return `true` if `fallocate` is allowed
 	public boolean getAllowFallocate() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_ALLOW_FALLOCATE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getAllowFallocate failed", t);
-		}
+		return getBoolean(MH_GET_ALLOW_FALLOCATE);
 	}
 
 	/// If true, sets the close-on-exec flag on file descriptors RocksDB opens, so they don't
@@ -304,11 +264,7 @@ public final class EnvOptions extends NativeObject {
 	/// @param value `true` to set close-on-exec on opened file descriptors
 	/// @return `this` for chaining
 	public EnvOptions setFdCloexec(boolean value) {
-		try {
-			MH_SET_FD_CLOEXEC.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setFdCloexec failed", t);
-		}
+		setBoolean(MH_SET_FD_CLOEXEC, value);
 		return this;
 	}
 
@@ -316,11 +272,7 @@ public final class EnvOptions extends NativeObject {
 	///
 	/// @return `true` if close-on-exec is set on opened file descriptors
 	public boolean getFdCloexec() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_FD_CLOEXEC.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getFdCloexec failed", t);
-		}
+		return getBoolean(MH_GET_FD_CLOEXEC);
 	}
 
 	/// Issues a periodic `sync` (via `sync_file_range` on Linux) after every this-many bytes
@@ -330,11 +282,7 @@ public final class EnvOptions extends NativeObject {
 	/// @param size number of bytes between periodic syncs
 	/// @return `this` for chaining
 	public EnvOptions setBytesPerSync(MemorySize size) {
-		try {
-			MH_SET_BYTES_PER_SYNC.invokeExact(ptr(), size.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBytesPerSync failed", t);
-		}
+		setMemorySize(MH_SET_BYTES_PER_SYNC, size);
 		return this;
 	}
 
@@ -342,11 +290,7 @@ public final class EnvOptions extends NativeObject {
 	///
 	/// @return current bytes-per-sync interval
 	public MemorySize getBytesPerSync() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_BYTES_PER_SYNC.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBytesPerSync failed", t);
-		}
+		return getMemorySize(MH_GET_BYTES_PER_SYNC);
 	}
 
 	/// If true, the periodic sync triggered by [#setBytesPerSync] blocks until the sync
@@ -355,11 +299,7 @@ public final class EnvOptions extends NativeObject {
 	/// @param value `true` to block until each periodic sync completes
 	/// @return `this` for chaining
 	public EnvOptions setStrictBytesPerSync(boolean value) {
-		try {
-			MH_SET_STRICT_BYTES_PER_SYNC.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setStrictBytesPerSync failed", t);
-		}
+		setBoolean(MH_SET_STRICT_BYTES_PER_SYNC, value);
 		return this;
 	}
 
@@ -367,11 +307,7 @@ public final class EnvOptions extends NativeObject {
 	///
 	/// @return `true` if periodic syncs block until completion
 	public boolean getStrictBytesPerSync() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_STRICT_BYTES_PER_SYNC.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getStrictBytesPerSync failed", t);
-		}
+		return getBoolean(MH_GET_STRICT_BYTES_PER_SYNC);
 	}
 
 	/// If true, `fallocate` preallocates space without changing the file's reported size
@@ -380,11 +316,7 @@ public final class EnvOptions extends NativeObject {
 	/// @param value `true` to keep the reported file size unchanged when preallocating
 	/// @return `this` for chaining
 	public EnvOptions setFallocateWithKeepSize(boolean value) {
-		try {
-			MH_SET_FALLOCATE_WITH_KEEP_SIZE.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setFallocateWithKeepSize failed", t);
-		}
+		setBoolean(MH_SET_FALLOCATE_WITH_KEEP_SIZE, value);
 		return this;
 	}
 
@@ -392,11 +324,7 @@ public final class EnvOptions extends NativeObject {
 	///
 	/// @return `true` if `fallocate` keeps the reported file size unchanged
 	public boolean getFallocateWithKeepSize() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_FALLOCATE_WITH_KEEP_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getFallocateWithKeepSize failed", t);
-		}
+		return getBoolean(MH_GET_FALLOCATE_WITH_KEEP_SIZE);
 	}
 
 	/// Readahead size used specifically for compaction reads (as opposed to regular reads).
@@ -405,11 +333,7 @@ public final class EnvOptions extends NativeObject {
 	/// @param size compaction readahead size
 	/// @return `this` for chaining
 	public EnvOptions setCompactionReadaheadSize(MemorySize size) {
-		try {
-			MH_SET_COMPACTION_READAHEAD_SIZE.invokeExact(ptr(), size.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setCompactionReadaheadSize failed", t);
-		}
+		setMemorySize(MH_SET_COMPACTION_READAHEAD_SIZE, size);
 		return this;
 	}
 
@@ -417,11 +341,7 @@ public final class EnvOptions extends NativeObject {
 	///
 	/// @return current compaction readahead size
 	public MemorySize getCompactionReadaheadSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_COMPACTION_READAHEAD_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getCompactionReadaheadSize failed", t);
-		}
+		return getMemorySize(MH_GET_COMPACTION_READAHEAD_SIZE);
 	}
 
 	/// Maximum buffer size used for writing to a single file before flushing to disk. Default:
@@ -430,11 +350,7 @@ public final class EnvOptions extends NativeObject {
 	/// @param size maximum write buffer size
 	/// @return `this` for chaining
 	public EnvOptions setWritableFileMaxBufferSize(MemorySize size) {
-		try {
-			MH_SET_WRITABLE_FILE_MAX_BUFFER_SIZE.invokeExact(ptr(), size.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setWritableFileMaxBufferSize failed", t);
-		}
+		setMemorySize(MH_SET_WRITABLE_FILE_MAX_BUFFER_SIZE, size);
 		return this;
 	}
 
@@ -442,11 +358,7 @@ public final class EnvOptions extends NativeObject {
 	///
 	/// @return current maximum write buffer size
 	public MemorySize getWritableFileMaxBufferSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_WRITABLE_FILE_MAX_BUFFER_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getWritableFileMaxBufferSize failed", t);
-		}
+		return getMemorySize(MH_GET_WRITABLE_FILE_MAX_BUFFER_SIZE);
 	}
 
 	/// Attaches a [RateLimiter] to throttle this file's I/O. `rateLimiter` remains owned by

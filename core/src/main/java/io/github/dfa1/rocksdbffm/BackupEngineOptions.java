@@ -25,7 +25,7 @@ import java.nio.file.Path;
 ///
 /// If [#setEnv(Env)] is called, the provided [Env] must remain open for the
 /// lifetime of any [BackupEngine] opened with these options.
-public final class BackupEngineOptions extends NativeObject {
+public final class BackupEngineOptions extends AbstractOptions {
 
 	/// `rocksdb_backup_engine_options_t* rocksdb_backup_engine_options_create(const char* backup_dir);`
 	private static final MethodHandle MH_CREATE;
@@ -221,23 +221,15 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @param val `true` to enable SST sharing
 	/// @return `this` for chaining
 	public BackupEngineOptions setShareTableFiles(boolean val) {
-		try {
-			MH_SET_SHARE_TABLE_FILES.invokeExact(ptr(), RocksDB.toByte(val));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setShareTableFiles failed", t);
-		}
+		setBoolean(MH_SET_SHARE_TABLE_FILES, val);
+		return this;
 	}
 
 	/// Returns whether SST files are shared between backups.
 	///
 	/// @return `true` if SST sharing is enabled
 	public boolean isShareTableFiles() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_SHARE_TABLE_FILES.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isShareTableFiles failed", t);
-		}
+		return getBoolean(MH_GET_SHARE_TABLE_FILES);
 	}
 
 	/// If `true`, each file is synced after writing. Safer but slower. Default: `true`.
@@ -245,23 +237,15 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @param val `true` to enable sync after each file write
 	/// @return `this` for chaining
 	public BackupEngineOptions setSync(boolean val) {
-		try {
-			MH_SET_SYNC.invokeExact(ptr(), RocksDB.toByte(val));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setSync failed", t);
-		}
+		setBoolean(MH_SET_SYNC, val);
+		return this;
 	}
 
 	/// Returns whether files are synced after writing.
 	///
 	/// @return `true` if sync-after-write is enabled
 	public boolean isSync() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_SYNC.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isSync failed", t);
-		}
+		return getBoolean(MH_GET_SYNC);
 	}
 
 	/// If `true`, existing backup data in the backup directory is deleted when the
@@ -270,23 +254,15 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @param val `true` to destroy existing backup data on open
 	/// @return `this` for chaining
 	public BackupEngineOptions setDestroyOldData(boolean val) {
-		try {
-			MH_SET_DESTROY_OLD_DATA.invokeExact(ptr(), RocksDB.toByte(val));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setDestroyOldData failed", t);
-		}
+		setBoolean(MH_SET_DESTROY_OLD_DATA, val);
+		return this;
 	}
 
 	/// Returns whether existing backup data is destroyed on engine open.
 	///
 	/// @return `true` if destroy-old-data is enabled
 	public boolean isDestroyOldData() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_DESTROY_OLD_DATA.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isDestroyOldData failed", t);
-		}
+		return getBoolean(MH_GET_DESTROY_OLD_DATA);
 	}
 
 	/// If `true`, WAL/log files are included in backups. Default: `true`.
@@ -294,23 +270,15 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @param val `true` to include WAL/log files in each backup
 	/// @return `this` for chaining
 	public BackupEngineOptions setBackupLogFiles(boolean val) {
-		try {
-			MH_SET_BACKUP_LOG_FILES.invokeExact(ptr(), RocksDB.toByte(val));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBackupLogFiles failed", t);
-		}
+		setBoolean(MH_SET_BACKUP_LOG_FILES, val);
+		return this;
 	}
 
 	/// Returns whether WAL/log files are included in backups.
 	///
 	/// @return `true` if log file backup is enabled
 	public boolean isBackupLogFiles() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_BACKUP_LOG_FILES.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isBackupLogFiles failed", t);
-		}
+		return getBoolean(MH_GET_BACKUP_LOG_FILES);
 	}
 
 	/// Maximum rate at which the backup engine copies files to the backup directory.
@@ -319,23 +287,15 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @param limit maximum backup copy rate; `MemorySize.ofBytes(0)` means unlimited
 	/// @return `this` for chaining
 	public BackupEngineOptions setBackupRateLimit(MemorySize limit) {
-		try {
-			MH_SET_BACKUP_RATE_LIMIT.invokeExact(ptr(), limit.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBackupRateLimit failed", t);
-		}
+		setMemorySize(MH_SET_BACKUP_RATE_LIMIT, limit);
+		return this;
 	}
 
 	/// Returns the maximum backup copy rate.
 	///
 	/// @return the rate limit; `MemorySize.ofBytes(0)` means unlimited
 	public MemorySize getBackupRateLimit() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_BACKUP_RATE_LIMIT.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBackupRateLimit failed", t);
-		}
+		return getMemorySize(MH_GET_BACKUP_RATE_LIMIT);
 	}
 
 	/// Maximum rate at which the backup engine copies files during a restore.
@@ -344,23 +304,15 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @param limit maximum restore copy rate; `MemorySize.ofBytes(0)` means unlimited
 	/// @return `this` for chaining
 	public BackupEngineOptions setRestoreRateLimit(MemorySize limit) {
-		try {
-			MH_SET_RESTORE_RATE_LIMIT.invokeExact(ptr(), limit.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setRestoreRateLimit failed", t);
-		}
+		setMemorySize(MH_SET_RESTORE_RATE_LIMIT, limit);
+		return this;
 	}
 
 	/// Returns the maximum restore copy rate.
 	///
 	/// @return the rate limit; `MemorySize.ofBytes(0)` means unlimited
 	public MemorySize getRestoreRateLimit() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_RESTORE_RATE_LIMIT.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getRestoreRateLimit failed", t);
-		}
+		return getMemorySize(MH_GET_RESTORE_RATE_LIMIT);
 	}
 
 	/// Number of background threads used for backup/restore. Default: `1`.
@@ -368,23 +320,15 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @param val number of background threads
 	/// @return `this` for chaining
 	public BackupEngineOptions setMaxBackgroundOperations(int val) {
-		try {
-			MH_SET_MAX_BACKGROUND_OPERATIONS.invokeExact(ptr(), val);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMaxBackgroundOperations failed", t);
-		}
+		setInt(MH_SET_MAX_BACKGROUND_OPERATIONS, val);
+		return this;
 	}
 
 	/// Returns the number of background threads used for backup/restore.
 	///
 	/// @return number of background threads
 	public int getMaxBackgroundOperations() {
-		try {
-			return (int) MH_GET_MAX_BACKGROUND_OPERATIONS.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMaxBackgroundOperations failed", t);
-		}
+		return getInt(MH_GET_MAX_BACKGROUND_OPERATIONS);
 	}
 
 	/// How many bytes to copy before invoking the progress callback. Default: `4 MB`.
@@ -392,23 +336,15 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @param size bytes between progress callback invocations
 	/// @return `this` for chaining
 	public BackupEngineOptions setCallbackTriggerIntervalSize(MemorySize size) {
-		try {
-			MH_SET_CALLBACK_TRIGGER_INTERVAL_SIZE.invokeExact(ptr(), size.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setCallbackTriggerIntervalSize failed", t);
-		}
+		setMemorySize(MH_SET_CALLBACK_TRIGGER_INTERVAL_SIZE, size);
+		return this;
 	}
 
 	/// Returns the byte interval between progress callback invocations.
 	///
 	/// @return the callback trigger interval size
 	public MemorySize getCallbackTriggerIntervalSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_CALLBACK_TRIGGER_INTERVAL_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getCallbackTriggerIntervalSize failed", t);
-		}
+		return getMemorySize(MH_GET_CALLBACK_TRIGGER_INTERVAL_SIZE);
 	}
 
 	/// Number of the most recent backups to open on engine startup.
@@ -417,23 +353,15 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @param val number of recent backups to open; `-1` means all
 	/// @return `this` for chaining
 	public BackupEngineOptions setMaxValidBackupsToOpen(int val) {
-		try {
-			MH_SET_MAX_VALID_BACKUPS_TO_OPEN.invokeExact(ptr(), val);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMaxValidBackupsToOpen failed", t);
-		}
+		setInt(MH_SET_MAX_VALID_BACKUPS_TO_OPEN, val);
+		return this;
 	}
 
 	/// Returns the maximum number of recent backups opened on engine startup.
 	///
 	/// @return the limit; `-1` means all backups are opened
 	public int getMaxValidBackupsToOpen() {
-		try {
-			return (int) MH_GET_MAX_VALID_BACKUPS_TO_OPEN.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMaxValidBackupsToOpen failed", t);
-		}
+		return getInt(MH_GET_MAX_VALID_BACKUPS_TO_OPEN);
 	}
 
 	/// Naming scheme for shared SST files. See RocksDB docs for valid values.
@@ -442,23 +370,15 @@ public final class BackupEngineOptions extends NativeObject {
 	/// @param val the naming scheme integer value
 	/// @return `this` for chaining
 	public BackupEngineOptions setShareFilesWithChecksumNaming(int val) {
-		try {
-			MH_SET_SHARE_FILES_WITH_CHECKSUM_NAMING.invokeExact(ptr(), val);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setShareFilesWithChecksumNaming failed", t);
-		}
+		setInt(MH_SET_SHARE_FILES_WITH_CHECKSUM_NAMING, val);
+		return this;
 	}
 
 	/// Returns the naming scheme used for shared SST files.
 	///
 	/// @return the naming scheme integer value
 	public int getShareFilesWithChecksumNaming() {
-		try {
-			return (int) MH_GET_SHARE_FILES_WITH_CHECKSUM_NAMING.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getShareFilesWithChecksumNaming failed", t);
-		}
+		return getInt(MH_GET_SHARE_FILES_WITH_CHECKSUM_NAMING);
 	}
 
 	@Override

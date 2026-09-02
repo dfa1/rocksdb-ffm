@@ -13,7 +13,7 @@ import java.lang.invoke.MethodHandle;
 ///     // ...
 /// }
 /// ```
-public final class LiveFilesStorageInfoOptions extends NativeObject {
+public final class LiveFilesStorageInfoOptions extends AbstractOptions {
 
 	/// `rocksdb_livefiles_storage_info_options_t* rocksdb_livefiles_storage_info_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -85,23 +85,15 @@ public final class LiveFilesStorageInfoOptions extends NativeObject {
 	/// @param value `true` to compute and include per-file checksums
 	/// @return `this` for chaining
 	public LiveFilesStorageInfoOptions setIncludeChecksumInfo(boolean value) {
-		try {
-			MH_SET_INCLUDE_CHECKSUM_INFO.invokeExact(ptr(), RocksDB.toByte(value));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIncludeChecksumInfo failed", t);
-		}
+		setBoolean(MH_SET_INCLUDE_CHECKSUM_INFO, value);
+		return this;
 	}
 
 	/// Returns `true` if per-file checksums will be included.
 	///
 	/// @return `true` if checksum info is included
 	public boolean isIncludeChecksumInfo() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_INCLUDE_CHECKSUM_INFO.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isIncludeChecksumInfo failed", t);
-		}
+		return getBoolean(MH_GET_INCLUDE_CHECKSUM_INFO);
 	}
 
 	/// Flushes memtables first if the total size of live WAL files is at least this size (and
@@ -111,23 +103,15 @@ public final class LiveFilesStorageInfoOptions extends NativeObject {
 	/// @param size WAL-size flush threshold; [MemorySize#ZERO] always flushes
 	/// @return `this` for chaining
 	public LiveFilesStorageInfoOptions setWalSizeForFlush(MemorySize size) {
-		try {
-			MH_SET_WAL_SIZE_FOR_FLUSH.invokeExact(ptr(), size.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setWalSizeForFlush failed", t);
-		}
+		setMemorySize(MH_SET_WAL_SIZE_FOR_FLUSH, size);
+		return this;
 	}
 
 	/// Returns the configured WAL-size flush threshold.
 	///
 	/// @return the WAL-size flush threshold
 	public MemorySize getWalSizeForFlush() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_WAL_SIZE_FOR_FLUSH.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getWalSizeForFlush failed", t);
-		}
+		return getMemorySize(MH_GET_WAL_SIZE_FOR_FLUSH);
 	}
 
 	/// If `true`, flushes all column families atomically when a flush is performed —
@@ -138,23 +122,15 @@ public final class LiveFilesStorageInfoOptions extends NativeObject {
 	/// @param value `true` to force an atomic flush across column families
 	/// @return `this` for chaining
 	public LiveFilesStorageInfoOptions setAtomicFlush(boolean value) {
-		try {
-			MH_SET_ATOMIC_FLUSH.invokeExact(ptr(), RocksDB.toByte(value));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setAtomicFlush failed", t);
-		}
+		setBoolean(MH_SET_ATOMIC_FLUSH, value);
+		return this;
 	}
 
 	/// Returns `true` if an atomic flush across column families will be forced.
 	///
 	/// @return `true` if atomic flush is forced
 	public boolean isAtomicFlush() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_ATOMIC_FLUSH.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isAtomicFlush failed", t);
-		}
+		return getBoolean(MH_GET_ATOMIC_FLUSH);
 	}
 
 	@Override

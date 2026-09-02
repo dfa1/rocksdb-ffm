@@ -22,7 +22,7 @@ import java.util.Set;
 ///     db.endTrace();
 /// }
 /// ```
-public final class TraceOptions extends NativeObject {
+public final class TraceOptions extends AbstractOptions {
 
 	/// `rocksdb_trace_options_t* rocksdb_trace_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -100,11 +100,7 @@ public final class TraceOptions extends NativeObject {
 	/// @param size maximum trace file size
 	/// @return `this` for chaining
 	public TraceOptions setMaxTraceFileSize(MemorySize size) {
-		try {
-			MH_SET_MAX_TRACE_FILE_SIZE.invokeExact(ptr(), size.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMaxTraceFileSize failed", t);
-		}
+		setMemorySize(MH_SET_MAX_TRACE_FILE_SIZE, size);
 		return this;
 	}
 
@@ -112,11 +108,7 @@ public final class TraceOptions extends NativeObject {
 	///
 	/// @return current maximum trace file size
 	public MemorySize getMaxTraceFileSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_MAX_TRACE_FILE_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMaxTraceFileSize failed", t);
-		}
+		return getMemorySize(MH_GET_MAX_TRACE_FILE_SIZE);
 	}
 
 	/// Captures one operation out of every `frequency`, evaluated after [#setFilter(Set)]
@@ -125,11 +117,7 @@ public final class TraceOptions extends NativeObject {
 	/// @param frequency sampling frequency; must be at least `1`
 	/// @return `this` for chaining
 	public TraceOptions setSamplingFrequency(long frequency) {
-		try {
-			MH_SET_SAMPLING_FREQUENCY.invokeExact(ptr(), frequency);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setSamplingFrequency failed", t);
-		}
+		setLong(MH_SET_SAMPLING_FREQUENCY, frequency);
 		return this;
 	}
 
@@ -137,11 +125,7 @@ public final class TraceOptions extends NativeObject {
 	///
 	/// @return current sampling frequency
 	public long getSamplingFrequency() {
-		try {
-			return (long) MH_GET_SAMPLING_FREQUENCY.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getSamplingFrequency failed", t);
-		}
+		return getLong(MH_GET_SAMPLING_FREQUENCY);
 	}
 
 	/// Excludes the given operation types from the trace, evaluated before
@@ -175,11 +159,7 @@ public final class TraceOptions extends NativeObject {
 	/// @param value `true` to preserve write order
 	/// @return `this` for chaining
 	public TraceOptions setPreserveWriteOrder(boolean value) {
-		try {
-			MH_SET_PRESERVE_WRITE_ORDER.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setPreserveWriteOrder failed", t);
-		}
+		setBoolean(MH_SET_PRESERVE_WRITE_ORDER, value);
 		return this;
 	}
 
@@ -187,11 +167,7 @@ public final class TraceOptions extends NativeObject {
 	///
 	/// @return `true` if write order is preserved
 	public boolean getPreserveWriteOrder() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_PRESERVE_WRITE_ORDER.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getPreserveWriteOrder failed", t);
-		}
+		return getBoolean(MH_GET_PRESERVE_WRITE_ORDER);
 	}
 
 	@Override

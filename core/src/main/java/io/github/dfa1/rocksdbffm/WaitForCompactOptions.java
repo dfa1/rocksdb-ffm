@@ -15,7 +15,7 @@ import java.time.Duration;
 ///     db.waitForCompact(opts);
 /// }
 /// ```
-public final class WaitForCompactOptions extends NativeObject {
+public final class WaitForCompactOptions extends AbstractOptions {
 
 	/// `rocksdb_wait_for_compact_options_t* rocksdb_wait_for_compact_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -92,23 +92,15 @@ public final class WaitForCompactOptions extends NativeObject {
 	/// @param value `true` to abort on pause instead of blocking
 	/// @return `this` for chaining
 	public WaitForCompactOptions setAbortOnPause(boolean value) {
-		try {
-			MH_SET_ABORT_ON_PAUSE.invokeExact(ptr(), RocksDB.toByte(value));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setAbortOnPause failed", t);
-		}
+		setBoolean(MH_SET_ABORT_ON_PAUSE, value);
+		return this;
 	}
 
 	/// Returns `true` if the wait will abort when background work is paused.
 	///
 	/// @return `true` if abort-on-pause is enabled
 	public boolean isAbortOnPause() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_ABORT_ON_PAUSE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isAbortOnPause failed", t);
-		}
+		return getBoolean(MH_GET_ABORT_ON_PAUSE);
 	}
 
 	/// If `true`, triggers a memtable flush before waiting for compaction.
@@ -117,23 +109,15 @@ public final class WaitForCompactOptions extends NativeObject {
 	/// @param value `true` to flush before waiting
 	/// @return `this` for chaining
 	public WaitForCompactOptions setFlush(boolean value) {
-		try {
-			MH_SET_FLUSH.invokeExact(ptr(), RocksDB.toByte(value));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setFlush failed", t);
-		}
+		setBoolean(MH_SET_FLUSH, value);
+		return this;
 	}
 
 	/// Returns `true` if a memtable flush will be triggered before waiting.
 	///
 	/// @return `true` if flush-before-wait is enabled
 	public boolean isFlush() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_FLUSH.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isFlush failed", t);
-		}
+		return getBoolean(MH_GET_FLUSH);
 	}
 
 	/// If `true`, closes the DB after all compactions finish.
@@ -142,23 +126,15 @@ public final class WaitForCompactOptions extends NativeObject {
 	/// @param value `true` to close the DB once compaction is complete
 	/// @return `this` for chaining
 	public WaitForCompactOptions setCloseDb(boolean value) {
-		try {
-			MH_SET_CLOSE_DB.invokeExact(ptr(), RocksDB.toByte(value));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setCloseDb failed", t);
-		}
+		setBoolean(MH_SET_CLOSE_DB, value);
+		return this;
 	}
 
 	/// Returns `true` if the DB will be closed after compaction finishes.
 	///
 	/// @return `true` if close-after-compact is enabled
 	public boolean isCloseDb() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_CLOSE_DB.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isCloseDb failed", t);
-		}
+		return getBoolean(MH_GET_CLOSE_DB);
 	}
 
 	/// Maximum time to wait. [Duration#ZERO] means no timeout.
@@ -167,24 +143,15 @@ public final class WaitForCompactOptions extends NativeObject {
 	/// @param timeout maximum wait duration; [Duration#ZERO] disables the timeout
 	/// @return `this` for chaining
 	public WaitForCompactOptions setTimeout(Duration timeout) {
-		try {
-			MH_SET_TIMEOUT.invokeExact(ptr(), timeout.toNanos() / 1_000L);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setTimeout failed", t);
-		}
+		setLong(MH_SET_TIMEOUT, timeout.toNanos() / 1_000L);
+		return this;
 	}
 
 	/// Returns the maximum wait duration. [Duration#ZERO] means no timeout.
 	///
 	/// @return configured timeout duration
 	public Duration getTimeout() {
-		try {
-			long micros = (long) MH_GET_TIMEOUT.invokeExact(ptr());
-			return Duration.ofNanos(micros * 1000L);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getTimeout failed", t);
-		}
+		return Duration.ofNanos(getLong(MH_GET_TIMEOUT) * 1000L);
 	}
 
 	@Override

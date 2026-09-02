@@ -17,7 +17,7 @@ import java.lang.invoke.MethodHandle;
 ///
 /// Note: the Options object must remain open until after RocksDB.openReadWrite() returns;
 /// it can be closed immediately after that call.
-public final class Options extends NativeObject {
+public final class Options extends AbstractOptions {
 
 	/// `rocksdb_options_t* rocksdb_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -420,11 +420,7 @@ public final class Options extends NativeObject {
 	/// @param value `true` to create the DB if absent
 	/// @return `this` for chaining
 	public Options setCreateIfMissing(boolean value) {
-		try {
-			MH_SET_CREATE_IF_MISSING.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setCreateIfMissing failed", t);
-		}
+		setBoolean(MH_SET_CREATE_IF_MISSING, value);
 		return this;
 	}
 
@@ -432,11 +428,7 @@ public final class Options extends NativeObject {
 	///
 	/// @return `true` if the DB is created on open when absent
 	public boolean getCreateIfMissing() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_CREATE_IF_MISSING.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getCreateIfMissing failed", t);
-		}
+		return getBoolean(MH_GET_CREATE_IF_MISSING);
 	}
 
 	/// Enables statistics gathering for this DB.
@@ -456,11 +448,7 @@ public final class Options extends NativeObject {
 	/// @param level the desired statistics collection level
 	/// @return `this` for chaining
 	public Options setStatisticsLevel(StatsLevel level) {
-		try {
-			MH_SET_STATISTICS_LEVEL.invokeExact(ptr(), level.getValue());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setStatisticsLevel failed", t);
-		}
+		setInt(MH_SET_STATISTICS_LEVEL, level.getValue());
 		return this;
 	}
 
@@ -468,12 +456,7 @@ public final class Options extends NativeObject {
 	///
 	/// @return the active [StatsLevel]
 	public StatsLevel getStatisticsLevel() {
-		try {
-			int level = (int) MH_GET_STATISTICS_LEVEL.invokeExact(ptr());
-			return StatsLevel.fromValue(level);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getStatisticsLevel failed", t);
-		}
+		return StatsLevel.fromValue(getInt(MH_GET_STATISTICS_LEVEL));
 	}
 
 	/// Returns a human-readable statistics summary, or `null` if statistics are not enabled.
@@ -525,23 +508,15 @@ public final class Options extends NativeObject {
 		if (!type.isSupported()) {
 			throw new UnsupportedOperationException(type + " compression is not linked into the bundled native library");
 		}
-		try {
-			MH_SET_COMPRESSION.invokeExact(ptr(), type.getValue());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setCompression failed", t);
-		}
+		setInt(MH_SET_COMPRESSION, type.getValue());
+		return this;
 	}
 
 	/// Returns the compression algorithm configured for this Options.
 	///
 	/// @return the active compression type
 	public CompressionType getCompression() {
-		try {
-			return CompressionType.fromValue((int) MH_GET_COMPRESSION.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getCompression failed", t);
-		}
+		return CompressionType.fromValue(getInt(MH_GET_COMPRESSION));
 	}
 
 	/// Which strategy RocksDB uses to pick which SST files to compact and when, per `c.h`'s
@@ -581,11 +556,7 @@ public final class Options extends NativeObject {
 	/// @param style the compaction style to use
 	/// @return `this` for chaining
 	public Options setCompactionStyle(CompactionStyle style) {
-		try {
-			MH_SET_COMPACTION_STYLE.invokeExact(ptr(), style.value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setCompactionStyle failed", t);
-		}
+		setInt(MH_SET_COMPACTION_STYLE, style.value);
 		return this;
 	}
 
@@ -593,11 +564,7 @@ public final class Options extends NativeObject {
 	///
 	/// @return current compaction style
 	public CompactionStyle getCompactionStyle() {
-		try {
-			return CompactionStyle.fromValue((int) MH_GET_COMPACTION_STYLE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getCompactionStyle failed", t);
-		}
+		return CompactionStyle.fromValue(getInt(MH_GET_COMPACTION_STYLE));
 	}
 
 	/// Configures FIFO compaction. Only takes effect when [#setCompactionStyle] is
@@ -670,23 +637,15 @@ public final class Options extends NativeObject {
 	/// @param size memtable size threshold that triggers a flush
 	/// @return `this` for chaining
 	public Options setWriteBufferSize(MemorySize size) {
-		try {
-			MH_SET_WRITE_BUFFER_SIZE.invokeExact(ptr(), size.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setWriteBufferSize failed", t);
-		}
+		setMemorySize(MH_SET_WRITE_BUFFER_SIZE, size);
+		return this;
 	}
 
 	/// Returns the configured memtable flush threshold.
 	///
 	/// @return current memtable size threshold that triggers a flush
 	public MemorySize getWriteBufferSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_WRITE_BUFFER_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getWriteBufferSize failed", t);
-		}
+		return getMemorySize(MH_GET_WRITE_BUFFER_SIZE);
 	}
 
 	/// Number of levels in the LSM tree for this column family. Default: 7.
@@ -694,23 +653,15 @@ public final class Options extends NativeObject {
 	/// @param numLevels number of levels
 	/// @return `this` for chaining
 	public Options setNumLevels(int numLevels) {
-		try {
-			MH_SET_NUM_LEVELS.invokeExact(ptr(), numLevels);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setNumLevels failed", t);
-		}
+		setInt(MH_SET_NUM_LEVELS, numLevels);
+		return this;
 	}
 
 	/// Returns the configured number of LSM tree levels.
 	///
 	/// @return current number of levels
 	public int getNumLevels() {
-		try {
-			return (int) MH_GET_NUM_LEVELS.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getNumLevels failed", t);
-		}
+		return getInt(MH_GET_NUM_LEVELS);
 	}
 
 	/// Once the number of level-0 SST files reaches this count, RocksDB triggers a compaction
@@ -722,23 +673,15 @@ public final class Options extends NativeObject {
 	/// @param numFiles number of level-0 files that triggers compaction
 	/// @return `this` for chaining
 	public Options setLevel0FileNumCompactionTrigger(int numFiles) {
-		try {
-			MH_SET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER.invokeExact(ptr(), numFiles);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setLevel0FileNumCompactionTrigger failed", t);
-		}
+		setInt(MH_SET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER, numFiles);
+		return this;
 	}
 
 	/// Returns the configured level-0 file count that triggers compaction.
 	///
 	/// @return current level-0 file count that triggers compaction
 	public int getLevel0FileNumCompactionTrigger() {
-		try {
-			return (int) MH_GET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getLevel0FileNumCompactionTrigger failed", t);
-		}
+		return getInt(MH_GET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER);
 	}
 
 	/// Once the number of level-0 SST files reaches this count, RocksDB slows writes down (an
@@ -750,23 +693,15 @@ public final class Options extends NativeObject {
 	/// @param numFiles number of level-0 files that triggers write slowdown
 	/// @return `this` for chaining
 	public Options setLevel0SlowdownWritesTrigger(int numFiles) {
-		try {
-			MH_SET_LEVEL0_SLOWDOWN_WRITES_TRIGGER.invokeExact(ptr(), numFiles);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setLevel0SlowdownWritesTrigger failed", t);
-		}
+		setInt(MH_SET_LEVEL0_SLOWDOWN_WRITES_TRIGGER, numFiles);
+		return this;
 	}
 
 	/// Returns the configured level-0 file count that triggers write slowdown.
 	///
 	/// @return current level-0 file count that triggers write slowdown
 	public int getLevel0SlowdownWritesTrigger() {
-		try {
-			return (int) MH_GET_LEVEL0_SLOWDOWN_WRITES_TRIGGER.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getLevel0SlowdownWritesTrigger failed", t);
-		}
+		return getInt(MH_GET_LEVEL0_SLOWDOWN_WRITES_TRIGGER);
 	}
 
 	/// Once the number of level-0 SST files reaches this count, RocksDB stops accepting writes
@@ -776,23 +711,15 @@ public final class Options extends NativeObject {
 	/// @param numFiles number of level-0 files that stops writes
 	/// @return `this` for chaining
 	public Options setLevel0StopWritesTrigger(int numFiles) {
-		try {
-			MH_SET_LEVEL0_STOP_WRITES_TRIGGER.invokeExact(ptr(), numFiles);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setLevel0StopWritesTrigger failed", t);
-		}
+		setInt(MH_SET_LEVEL0_STOP_WRITES_TRIGGER, numFiles);
+		return this;
 	}
 
 	/// Returns the configured level-0 file count that stops writes.
 	///
 	/// @return current level-0 file count that stops writes
 	public int getLevel0StopWritesTrigger() {
-		try {
-			return (int) MH_GET_LEVEL0_STOP_WRITES_TRIGGER.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getLevel0StopWritesTrigger failed", t);
-		}
+		return getInt(MH_GET_LEVEL0_STOP_WRITES_TRIGGER);
 	}
 
 	/// If `true`, disables automatic compaction entirely -- only a manually triggered
@@ -801,23 +728,15 @@ public final class Options extends NativeObject {
 	/// @param value `true` to disable automatic compaction
 	/// @return `this` for chaining
 	public Options setDisableAutoCompactions(boolean value) {
-		try {
-			MH_SET_DISABLE_AUTO_COMPACTIONS.invokeExact(ptr(), value ? 1 : 0);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setDisableAutoCompactions failed", t);
-		}
+		setInt(MH_SET_DISABLE_AUTO_COMPACTIONS, RocksDB.toByte(value));
+		return this;
 	}
 
 	/// Returns whether automatic compaction is disabled.
 	///
 	/// @return `true` if automatic compaction is disabled
 	public boolean getDisableAutoCompactions() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_DISABLE_AUTO_COMPACTIONS.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getDisableAutoCompactions failed", t);
-		}
+		return getBoolean(MH_GET_DISABLE_AUTO_COMPACTIONS);
 	}
 
 	/// Target size for SST files at level 1; higher levels scale up from this by
@@ -826,23 +745,15 @@ public final class Options extends NativeObject {
 	/// @param size target SST file size at level 1
 	/// @return `this` for chaining
 	public Options setTargetFileSizeBase(MemorySize size) {
-		try {
-			MH_SET_TARGET_FILE_SIZE_BASE.invokeExact(ptr(), size.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setTargetFileSizeBase failed", t);
-		}
+		setMemorySize(MH_SET_TARGET_FILE_SIZE_BASE, size);
+		return this;
 	}
 
 	/// Returns the configured target SST file size at level 1.
 	///
 	/// @return current target SST file size at level 1
 	public MemorySize getTargetFileSizeBase() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_TARGET_FILE_SIZE_BASE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getTargetFileSizeBase failed", t);
-		}
+		return getMemorySize(MH_GET_TARGET_FILE_SIZE_BASE);
 	}
 
 	/// Target total size for level 1; higher levels scale up from this by
@@ -851,23 +762,15 @@ public final class Options extends NativeObject {
 	/// @param size target total size for level 1
 	/// @return `this` for chaining
 	public Options setMaxBytesForLevelBase(MemorySize size) {
-		try {
-			MH_SET_MAX_BYTES_FOR_LEVEL_BASE.invokeExact(ptr(), size.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMaxBytesForLevelBase failed", t);
-		}
+		setMemorySize(MH_SET_MAX_BYTES_FOR_LEVEL_BASE, size);
+		return this;
 	}
 
 	/// Returns the configured target total size for level 1.
 	///
 	/// @return current target total size for level 1
 	public MemorySize getMaxBytesForLevelBase() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_MAX_BYTES_FOR_LEVEL_BASE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMaxBytesForLevelBase failed", t);
-		}
+		return getMemorySize(MH_GET_MAX_BYTES_FOR_LEVEL_BASE);
 	}
 
 	// -----------------------------------------------------------------------
@@ -881,23 +784,15 @@ public final class Options extends NativeObject {
 	/// @param value `true` to enable blob file storage
 	/// @return `this` for chaining
 	public Options setEnableBlobFiles(boolean value) {
-		try {
-			MH_SET_ENABLE_BLOB_FILES.invokeExact(ptr(), RocksDB.toByte(value));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setEnableBlobFiles failed", t);
-		}
+		setBoolean(MH_SET_ENABLE_BLOB_FILES, value);
+		return this;
 	}
 
 	/// Returns whether blob file storage is enabled.
 	///
 	/// @return `true` if large values are stored in separate blob files
 	public boolean getEnableBlobFiles() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_ENABLE_BLOB_FILES.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getEnableBlobFiles failed", t);
-		}
+		return getBoolean(MH_GET_ENABLE_BLOB_FILES);
 	}
 
 	/// Values strictly smaller than this size are stored inline; larger values go to blob files.
@@ -906,23 +801,15 @@ public final class Options extends NativeObject {
 	/// @param size minimum value size to externalize into a blob file
 	/// @return `this` for chaining
 	public Options setMinBlobSize(MemorySize size) {
-		try {
-			MH_SET_MIN_BLOB_SIZE.invokeExact(ptr(), size.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMinBlobSize failed", t);
-		}
+		setMemorySize(MH_SET_MIN_BLOB_SIZE, size);
+		return this;
 	}
 
 	/// Returns the minimum value size that is stored in a blob file.
 	///
 	/// @return minimum blob size threshold
 	public MemorySize getMinBlobSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_MIN_BLOB_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMinBlobSize failed", t);
-		}
+		return getMemorySize(MH_GET_MIN_BLOB_SIZE);
 	}
 
 	/// Target size for individual blob files. RocksDB rolls to a new file when this is exceeded.
@@ -931,23 +818,15 @@ public final class Options extends NativeObject {
 	/// @param size target size per blob file
 	/// @return `this` for chaining
 	public Options setBlobFileSize(MemorySize size) {
-		try {
-			MH_SET_BLOB_FILE_SIZE.invokeExact(ptr(), size.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBlobFileSize failed", t);
-		}
+		setMemorySize(MH_SET_BLOB_FILE_SIZE, size);
+		return this;
 	}
 
 	/// Returns the target size for individual blob files.
 	///
 	/// @return target blob file size
 	public MemorySize getBlobFileSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_BLOB_FILE_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBlobFileSize failed", t);
-		}
+		return getMemorySize(MH_GET_BLOB_FILE_SIZE);
 	}
 
 	/// Compression algorithm applied to blob file values. Independent of SST compression.
@@ -960,23 +839,15 @@ public final class Options extends NativeObject {
 		if (!type.isSupported()) {
 			throw new UnsupportedOperationException(type + " compression is not linked into the bundled native library");
 		}
-		try {
-			MH_SET_BLOB_COMPRESSION_TYPE.invokeExact(ptr(), type.getValue());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBlobCompressionType failed", t);
-		}
+		setInt(MH_SET_BLOB_COMPRESSION_TYPE, type.getValue());
+		return this;
 	}
 
 	/// Returns the compression algorithm applied to blob file values.
 	///
 	/// @return compression type for blob values
 	public CompressionType getBlobCompressionType() {
-		try {
-			return CompressionType.fromValue((int) MH_GET_BLOB_COMPRESSION_TYPE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBlobCompressionType failed", t);
-		}
+		return CompressionType.fromValue(getInt(MH_GET_BLOB_COMPRESSION_TYPE));
 	}
 
 	/// Enables garbage collection of obsolete blob files during compaction.
@@ -985,23 +856,15 @@ public final class Options extends NativeObject {
 	/// @param value `true` to enable blob GC during compaction
 	/// @return `this` for chaining
 	public Options setEnableBlobGc(boolean value) {
-		try {
-			MH_SET_ENABLE_BLOB_GC.invokeExact(ptr(), RocksDB.toByte(value));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setEnableBlobGc failed", t);
-		}
+		setBoolean(MH_SET_ENABLE_BLOB_GC, value);
+		return this;
 	}
 
 	/// Returns whether blob garbage collection during compaction is enabled.
 	///
 	/// @return `true` if blob GC is enabled
 	public boolean getEnableBlobGc() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_ENABLE_BLOB_GC.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getEnableBlobGc failed", t);
-		}
+		return getBoolean(MH_GET_ENABLE_BLOB_GC);
 	}
 
 	/// Blob files whose age is older than this fraction of the oldest snapshot are
@@ -1011,23 +874,15 @@ public final class Options extends NativeObject {
 	/// @param value age cutoff fraction
 	/// @return `this` for chaining
 	public Options setBlobGcAgeCutoff(Ratio value) {
-		try {
-			MH_SET_BLOB_GC_AGE_CUTOFF.invokeExact(ptr(), value.toDouble());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBlobGcAgeCutoff failed", t);
-		}
+		setDouble(MH_SET_BLOB_GC_AGE_CUTOFF, value.toDouble());
+		return this;
 	}
 
 	/// Returns the blob GC age cutoff fraction.
 	///
 	/// @return age cutoff fraction
 	public Ratio getBlobGcAgeCutoff() {
-		try {
-			return Ratio.of((double) MH_GET_BLOB_GC_AGE_CUTOFF.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBlobGcAgeCutoff failed", t);
-		}
+		return Ratio.of(getDouble(MH_GET_BLOB_GC_AGE_CUTOFF));
 	}
 
 	/// Blob files whose garbage ratio exceeds this threshold are force-compacted.
@@ -1036,23 +891,15 @@ public final class Options extends NativeObject {
 	/// @param value force-GC garbage ratio threshold
 	/// @return `this` for chaining
 	public Options setBlobGcForceThreshold(Ratio value) {
-		try {
-			MH_SET_BLOB_GC_FORCE_THRESHOLD.invokeExact(ptr(), value.toDouble());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBlobGcForceThreshold failed", t);
-		}
+		setDouble(MH_SET_BLOB_GC_FORCE_THRESHOLD, value.toDouble());
+		return this;
 	}
 
 	/// Returns the blob GC force-compaction garbage ratio threshold.
 	///
 	/// @return force-GC threshold
 	public Ratio getBlobGcForceThreshold() {
-		try {
-			return Ratio.of((double) MH_GET_BLOB_GC_FORCE_THRESHOLD.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBlobGcForceThreshold failed", t);
-		}
+		return Ratio.of(getDouble(MH_GET_BLOB_GC_FORCE_THRESHOLD));
 	}
 
 	/// Read-ahead size when reading blob files during compaction.
@@ -1061,23 +908,15 @@ public final class Options extends NativeObject {
 	/// @param size read-ahead buffer size; `MemorySize.ofBytes(0)` disables it
 	/// @return `this` for chaining
 	public Options setBlobCompactionReadaheadSize(MemorySize size) {
-		try {
-			MH_SET_BLOB_COMPACTION_READAHEAD_SIZE.invokeExact(ptr(), size.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBlobCompactionReadaheadSize failed", t);
-		}
+		setMemorySize(MH_SET_BLOB_COMPACTION_READAHEAD_SIZE, size);
+		return this;
 	}
 
 	/// Returns the read-ahead size used when reading blob files during compaction.
 	///
 	/// @return read-ahead size; [MemorySize#ZERO] means disabled
 	public MemorySize getBlobCompactionReadaheadSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_BLOB_COMPACTION_READAHEAD_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBlobCompactionReadaheadSize failed", t);
-		}
+		return getMemorySize(MH_GET_BLOB_COMPACTION_READAHEAD_SIZE);
 	}
 
 	/// LSM level at which blob file separation begins. Keys in levels below this
@@ -1086,23 +925,15 @@ public final class Options extends NativeObject {
 	/// @param level first LSM level where blobs are externalized (0 = all levels)
 	/// @return `this` for chaining
 	public Options setBlobFileStartingLevel(int level) {
-		try {
-			MH_SET_BLOB_FILE_STARTING_LEVEL.invokeExact(ptr(), level);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBlobFileStartingLevel failed", t);
-		}
+		setInt(MH_SET_BLOB_FILE_STARTING_LEVEL, level);
+		return this;
 	}
 
 	/// Returns the LSM level at which blob file separation begins.
 	///
 	/// @return first level where blobs are externalized (0 = all levels)
 	public int getBlobFileStartingLevel() {
-		try {
-			return (int) MH_GET_BLOB_FILE_STARTING_LEVEL.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBlobFileStartingLevel failed", t);
-		}
+		return getInt(MH_GET_BLOB_FILE_STARTING_LEVEL);
 	}
 
 	/// Attaches a dedicated cache for blob values.
@@ -1125,23 +956,15 @@ public final class Options extends NativeObject {
 	/// @param mode the pre-population strategy
 	/// @return `this` for chaining
 	public Options setPrepopulateBlobCache(PrepopulateBlobCache mode) {
-		try {
-			MH_SET_PREPOPULATE_BLOB_CACHE.invokeExact(ptr(), mode.value);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setPrepopulateBlobCache failed", t);
-		}
+		setInt(MH_SET_PREPOPULATE_BLOB_CACHE, mode.value);
+		return this;
 	}
 
 	/// Returns the blob cache pre-population strategy.
 	///
 	/// @return the current [PrepopulateBlobCache] mode
 	public PrepopulateBlobCache getPrepopulateBlobCache() {
-		try {
-			return PrepopulateBlobCache.fromValue((int) MH_GET_PREPOPULATE_BLOB_CACHE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getPrepopulateBlobCache failed", t);
-		}
+		return PrepopulateBlobCache.fromValue(getInt(MH_GET_PREPOPULATE_BLOB_CACHE));
 	}
 
 	// -----------------------------------------------------------------------
@@ -1167,23 +990,15 @@ public final class Options extends NativeObject {
 	/// @param level the minimum log level to emit
 	/// @return `this` for chaining
 	public Options setInfoLogLevel(LogLevel level) {
-		try {
-			MH_SET_INFO_LOG_LEVEL.invokeExact(ptr(), level.value);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setInfoLogLevel failed", t);
-		}
+		setInt(MH_SET_INFO_LOG_LEVEL, level.value);
+		return this;
 	}
 
 	/// Returns the minimum log level currently configured.
 	///
 	/// @return the active minimum [LogLevel]
 	public LogLevel getInfoLogLevel() {
-		try {
-			return LogLevel.fromValue((int) MH_GET_INFO_LOG_LEVEL.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getInfoLogLevel failed", t);
-		}
+		return LogLevel.fromValue(getInt(MH_GET_INFO_LOG_LEVEL));
 	}
 
 	/// Sets the [Env] used for all file-system and threading operations.
@@ -1311,23 +1126,15 @@ public final class Options extends NativeObject {
 	/// @param temperature the temperature hint to use for metadata files
 	/// @return `this` for chaining
 	public Options setMetadataWriteTemperature(Temperature temperature) {
-		try {
-			MH_SET_METADATA_WRITE_TEMPERATURE.invokeExact(ptr(), temperature.getValue());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMetadataWriteTemperature failed", t);
-		}
+		setInt(MH_SET_METADATA_WRITE_TEMPERATURE, temperature.getValue());
+		return this;
 	}
 
 	/// Returns the temperature hint configured for metadata block-based tables.
 	///
 	/// @return the active [Temperature] hint for metadata files
 	public Temperature getMetadataWriteTemperature() {
-		try {
-			return Temperature.fromValue((int) MH_GET_METADATA_WRITE_TEMPERATURE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMetadataWriteTemperature failed", t);
-		}
+		return Temperature.fromValue(getInt(MH_GET_METADATA_WRITE_TEMPERATURE));
 	}
 
 	/// Sets the temperature hint for WAL files.
@@ -1336,23 +1143,15 @@ public final class Options extends NativeObject {
 	/// @param temperature the temperature hint to use for WAL files
 	/// @return `this` for chaining
 	public Options setWalWriteTemperature(Temperature temperature) {
-		try {
-			MH_SET_WAL_WRITE_TEMPERATURE.invokeExact(ptr(), temperature.getValue());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setWalWriteTemperature failed", t);
-		}
+		setInt(MH_SET_WAL_WRITE_TEMPERATURE, temperature.getValue());
+		return this;
 	}
 
 	/// Returns the temperature hint configured for WAL files.
 	///
 	/// @return the active [Temperature] hint for WAL files
 	public Temperature getWalWriteTemperature() {
-		try {
-			return Temperature.fromValue((int) MH_GET_WAL_WRITE_TEMPERATURE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getWalWriteTemperature failed", t);
-		}
+		return Temperature.fromValue(getInt(MH_GET_WAL_WRITE_TEMPERATURE));
 	}
 
 	/// Sets the temperature hint for SST files placed on the last level.
@@ -1361,23 +1160,15 @@ public final class Options extends NativeObject {
 	/// @param temperature the temperature hint to use for last-level files
 	/// @return `this` for chaining
 	public Options setLastLevelTemperature(Temperature temperature) {
-		try {
-			MH_SET_LAST_LEVEL_TEMPERATURE.invokeExact(ptr(), temperature.getValue());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setLastLevelTemperature failed", t);
-		}
+		setInt(MH_SET_LAST_LEVEL_TEMPERATURE, temperature.getValue());
+		return this;
 	}
 
 	/// Returns the temperature hint configured for SST files on the last level.
 	///
 	/// @return the active [Temperature] hint for last-level files
 	public Temperature getLastLevelTemperature() {
-		try {
-			return Temperature.fromValue((int) MH_GET_LAST_LEVEL_TEMPERATURE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getLastLevelTemperature failed", t);
-		}
+		return Temperature.fromValue(getInt(MH_GET_LAST_LEVEL_TEMPERATURE));
 	}
 
 	/// Sets the temperature hint used when a new SST file is written, for levels
@@ -1387,23 +1178,15 @@ public final class Options extends NativeObject {
 	/// @param temperature the temperature hint to use for newly written files
 	/// @return `this` for chaining
 	public Options setDefaultWriteTemperature(Temperature temperature) {
-		try {
-			MH_SET_DEFAULT_WRITE_TEMPERATURE.invokeExact(ptr(), temperature.getValue());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setDefaultWriteTemperature failed", t);
-		}
+		setInt(MH_SET_DEFAULT_WRITE_TEMPERATURE, temperature.getValue());
+		return this;
 	}
 
 	/// Returns the temperature hint configured for newly written SST files.
 	///
 	/// @return the active default write [Temperature] hint
 	public Temperature getDefaultWriteTemperature() {
-		try {
-			return Temperature.fromValue((int) MH_GET_DEFAULT_WRITE_TEMPERATURE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getDefaultWriteTemperature failed", t);
-		}
+		return Temperature.fromValue(getInt(MH_GET_DEFAULT_WRITE_TEMPERATURE));
 	}
 
 	/// Sets the temperature hint assumed for existing SST files that have no
@@ -1414,23 +1197,15 @@ public final class Options extends NativeObject {
 	/// @param temperature the fallback temperature hint for files without a recorded temperature
 	/// @return `this` for chaining
 	public Options setDefaultTemperature(Temperature temperature) {
-		try {
-			MH_SET_DEFAULT_TEMPERATURE.invokeExact(ptr(), temperature.getValue());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setDefaultTemperature failed", t);
-		}
+		setInt(MH_SET_DEFAULT_TEMPERATURE, temperature.getValue());
+		return this;
 	}
 
 	/// Returns the fallback temperature hint for files without a recorded temperature.
 	///
 	/// @return the active default [Temperature] hint
 	public Temperature getDefaultTemperature() {
-		try {
-			return Temperature.fromValue((int) MH_GET_DEFAULT_TEMPERATURE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getDefaultTemperature failed", t);
-		}
+		return Temperature.fromValue(getInt(MH_GET_DEFAULT_TEMPERATURE));
 	}
 
 	@Override

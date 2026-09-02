@@ -14,7 +14,7 @@ import java.lang.invoke.MethodHandle;
 ///     db.ingestExternalFile(List.of(sstPath), opts);
 /// }
 /// ```
-public final class IngestExternalFileOptions extends NativeObject {
+public final class IngestExternalFileOptions extends AbstractOptions {
 
 	/// `rocksdb_ingestexternalfileoptions_t* rocksdb_ingestexternalfileoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -80,12 +80,8 @@ public final class IngestExternalFileOptions extends NativeObject {
 	/// @param moveFiles `true` to move files instead of copying
 	/// @return `this` for chaining
 	public IngestExternalFileOptions setMoveFiles(boolean moveFiles) {
-		try {
-			MH_SET_MOVE_FILES.invokeExact(ptr(), RocksDB.toByte(moveFiles));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions setMoveFiles failed", t);
-		}
+		setBoolean(MH_SET_MOVE_FILES, moveFiles);
+		return this;
 	}
 
 	/// If `true` (default), snapshot consistency is enforced during ingest.
@@ -93,12 +89,8 @@ public final class IngestExternalFileOptions extends NativeObject {
 	/// @param snapshotConsistency `true` to enforce snapshot consistency
 	/// @return `this` for chaining
 	public IngestExternalFileOptions setSnapshotConsistency(boolean snapshotConsistency) {
-		try {
-			MH_SET_SNAPSHOT_CONSISTENCY.invokeExact(ptr(), RocksDB.toByte(snapshotConsistency));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions setSnapshotConsistency failed", t);
-		}
+		setBoolean(MH_SET_SNAPSHOT_CONSISTENCY, snapshotConsistency);
+		return this;
 	}
 
 	/// If `true` (default), allows assigning a global sequence number to ingested files.
@@ -106,12 +98,8 @@ public final class IngestExternalFileOptions extends NativeObject {
 	/// @param allowGlobalSeqno `true` to allow global sequence number assignment
 	/// @return `this` for chaining
 	public IngestExternalFileOptions setAllowGlobalSeqno(boolean allowGlobalSeqno) {
-		try {
-			MH_SET_ALLOW_GLOBAL_SEQNO.invokeExact(ptr(), RocksDB.toByte(allowGlobalSeqno));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions setAllowGlobalSeqno failed", t);
-		}
+		setBoolean(MH_SET_ALLOW_GLOBAL_SEQNO, allowGlobalSeqno);
+		return this;
 	}
 
 	/// If `true` (default), allows a blocking flush before ingest if needed.
@@ -119,12 +107,8 @@ public final class IngestExternalFileOptions extends NativeObject {
 	/// @param allowBlockingFlush `true` to allow blocking flush before ingest
 	/// @return `this` for chaining
 	public IngestExternalFileOptions setAllowBlockingFlush(boolean allowBlockingFlush) {
-		try {
-			MH_SET_ALLOW_BLOCKING_FLUSH.invokeExact(ptr(), RocksDB.toByte(allowBlockingFlush));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions setAllowBlockingFlush failed", t);
-		}
+		setBoolean(MH_SET_ALLOW_BLOCKING_FLUSH, allowBlockingFlush);
+		return this;
 	}
 
 	/// If `true`, ingest files behind existing data (at the bottommost level).
@@ -133,12 +117,8 @@ public final class IngestExternalFileOptions extends NativeObject {
 	/// @param ingestBehind `true` to ingest behind existing data
 	/// @return `this` for chaining
 	public IngestExternalFileOptions setIngestBehind(boolean ingestBehind) {
-		try {
-			MH_SET_INGEST_BEHIND.invokeExact(ptr(), RocksDB.toByte(ingestBehind));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions setIngestBehind failed", t);
-		}
+		setBoolean(MH_SET_INGEST_BEHIND, ingestBehind);
+		return this;
 	}
 
 	/// If `true`, fails if the file cannot be placed at the bottommost level.
@@ -146,12 +126,8 @@ public final class IngestExternalFileOptions extends NativeObject {
 	/// @param failIfNotBottommostLevel `true` to fail when placement at bottommost level is not possible
 	/// @return `this` for chaining
 	public IngestExternalFileOptions setFailIfNotBottommostLevel(boolean failIfNotBottommostLevel) {
-		try {
-			MH_SET_FAIL_IF_NOT_BOTTOMMOST_LEVEL.invokeExact(ptr(), RocksDB.toByte(failIfNotBottommostLevel));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions setFailIfNotBottommostLevel failed", t);
-		}
+		setBoolean(MH_SET_FAIL_IF_NOT_BOTTOMMOST_LEVEL, failIfNotBottommostLevel);
+		return this;
 	}
 
 	@Override

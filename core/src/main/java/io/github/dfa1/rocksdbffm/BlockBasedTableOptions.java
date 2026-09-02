@@ -31,7 +31,7 @@ import java.util.Optional;
 ///
 /// Calling [#setFilterPolicy(FilterPolicy)] transfers native ownership to this
 /// config object. The `FilterPolicy` must not be used after that call.
-public final class BlockBasedTableOptions extends NativeObject {
+public final class BlockBasedTableOptions extends AbstractOptions {
 
 	// -----------------------------------------------------------------------
 	// Index type constants (mirrors rocksdb_block_based_table_index_type_*)
@@ -727,11 +727,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param blockSize desired block size
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setBlockSize(MemorySize blockSize) {
-		try {
-			MH_SET_BLOCK_SIZE.invokeExact(ptr(), blockSize.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBlockSize failed", t);
-		}
+		setMemorySize(MH_SET_BLOCK_SIZE, blockSize);
 		return this;
 	}
 
@@ -756,11 +752,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param noBlockCache `true` to disable block cache for this table
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setNoBlockCache(boolean noBlockCache) {
-		try {
-			MH_SET_NO_BLOCK_CACHE.invokeExact(ptr(), RocksDB.toByte(noBlockCache));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setNoBlockCache failed", t);
-		}
+		setBoolean(MH_SET_NO_BLOCK_CACHE, noBlockCache);
 		return this;
 	}
 
@@ -784,11 +776,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to store index/filter blocks in the block cache
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setCacheIndexAndFilterBlocks(boolean value) {
-		try {
-			MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setCacheIndexAndFilterBlocks failed", t);
-		}
+		setBoolean(MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS, value);
 		return this;
 	}
 
@@ -798,11 +786,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param indexType index type to use
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setIndexType(IndexType indexType) {
-		try {
-			MH_SET_INDEX_TYPE.invokeExact(ptr(), indexType.value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIndexType failed", t);
-		}
+		setInt(MH_SET_INDEX_TYPE, indexType.value);
 		return this;
 	}
 
@@ -812,11 +796,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param formatVersion SST format version to use
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setFormatVersion(FormatVersion formatVersion) {
-		try {
-			MH_SET_FORMAT_VERSION.invokeExact(ptr(), formatVersion.value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setFormatVersion failed", t);
-		}
+		setInt(MH_SET_FORMAT_VERSION, formatVersion.value);
 		return this;
 	}
 
@@ -824,11 +804,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current SST format version
 	public FormatVersion getFormatVersion() {
-		try {
-			return FormatVersion.fromValue((int) MH_GET_FORMAT_VERSION.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getFormatVersion failed", t);
-		}
+		return FormatVersion.fromValue(getInt(MH_GET_FORMAT_VERSION));
 	}
 
 	/// If true, a whole-key Bloom filter is built in addition to any prefix filter.
@@ -837,11 +813,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to enable whole-key filtering
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setWholeKeyFiltering(boolean value) {
-		try {
-			MH_SET_WHOLE_KEY_FILTERING.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setWholeKeyFiltering failed", t);
-		}
+		setBoolean(MH_SET_WHOLE_KEY_FILTERING, value);
 		return this;
 	}
 
@@ -851,11 +823,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to enable partitioned filters
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setPartitionFilters(boolean value) {
-		try {
-			MH_SET_PARTITION_FILTERS.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setPartitionFilters failed", t);
-		}
+		setBoolean(MH_SET_PARTITION_FILTERS, value);
 		return this;
 	}
 
@@ -870,11 +838,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param size maximum auto-readahead size
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setMaxAutoReadaheadSize(MemorySize size) {
-		try {
-			MH_SET_MAX_AUTO_READAHEAD_SIZE.invokeExact(ptr(), size.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMaxAutoReadaheadSize failed", t);
-		}
+		setMemorySize(MH_SET_MAX_AUTO_READAHEAD_SIZE, size);
 		return this;
 	}
 
@@ -882,11 +846,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current maximum auto-readahead size
 	public MemorySize getMaxAutoReadaheadSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_MAX_AUTO_READAHEAD_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMaxAutoReadaheadSize failed", t);
-		}
+		return getMemorySize(MH_GET_MAX_AUTO_READAHEAD_SIZE);
 	}
 
 	/// Read-ahead size RocksDB starts with for a new sequential scan of this table, before it
@@ -895,11 +855,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param size initial auto-readahead size
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setInitialAutoReadaheadSize(MemorySize size) {
-		try {
-			MH_SET_INITIAL_AUTO_READAHEAD_SIZE.invokeExact(ptr(), size.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setInitialAutoReadaheadSize failed", t);
-		}
+		setMemorySize(MH_SET_INITIAL_AUTO_READAHEAD_SIZE, size);
 		return this;
 	}
 
@@ -907,11 +863,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current initial auto-readahead size
 	public MemorySize getInitialAutoReadaheadSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_INITIAL_AUTO_READAHEAD_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getInitialAutoReadaheadSize failed", t);
-		}
+		return getMemorySize(MH_GET_INITIAL_AUTO_READAHEAD_SIZE);
 	}
 
 	/// Number of sequential file reads that must be observed before RocksDB doubles the
@@ -920,11 +872,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param count number of sequential reads that triggers doubling the readahead size
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setNumFileReadsForAutoReadahead(long count) {
-		try {
-			MH_SET_NUM_FILE_READS_FOR_AUTO_READAHEAD.invokeExact(ptr(), count);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setNumFileReadsForAutoReadahead failed", t);
-		}
+		setLong(MH_SET_NUM_FILE_READS_FOR_AUTO_READAHEAD, count);
 		return this;
 	}
 
@@ -933,11 +881,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current number of sequential reads that triggers doubling the readahead size
 	public long getNumFileReadsForAutoReadahead() {
-		try {
-			return (long) MH_GET_NUM_FILE_READS_FOR_AUTO_READAHEAD.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getNumFileReadsForAutoReadahead failed", t);
-		}
+		return getLong(MH_GET_NUM_FILE_READS_FOR_AUTO_READAHEAD);
 	}
 
 	// -----------------------------------------------------------------------
@@ -951,11 +895,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to insert index/filter blocks at high cache priority
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setCacheIndexAndFilterBlocksWithHighPriority(boolean value) {
-		try {
-			MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setCacheIndexAndFilterBlocksWithHighPriority failed", t);
-		}
+		setBoolean(MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY, value);
 		return this;
 	}
 
@@ -963,11 +903,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return `true` if index/filter blocks are inserted at high cache priority
 	public boolean getCacheIndexAndFilterBlocksWithHighPriority() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getCacheIndexAndFilterBlocksWithHighPriority failed", t);
-		}
+		return getBoolean(MH_GET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY);
 	}
 
 	/// Deprecated pinning control, superseded by [#setUnpartitionedPinningTier] and
@@ -978,11 +914,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to pin L0 filter and index blocks in the block cache
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setPinL0FilterAndIndexBlocksInCache(boolean value) {
-		try {
-			MH_SET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setPinL0FilterAndIndexBlocksInCache failed", t);
-		}
+		setBoolean(MH_SET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE, value);
 		return this;
 	}
 
@@ -990,11 +922,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return `true` if L0 filter and index blocks are pinned in the block cache
 	public boolean getPinL0FilterAndIndexBlocksInCache() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getPinL0FilterAndIndexBlocksInCache failed", t);
-		}
+		return getBoolean(MH_GET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE);
 	}
 
 	/// Deprecated pinning control, superseded by [#setTopLevelIndexPinningTier] (used only
@@ -1004,11 +932,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to pin the top-level index and filter
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setPinTopLevelIndexAndFilter(boolean value) {
-		try {
-			MH_SET_PIN_TOP_LEVEL_INDEX_AND_FILTER.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setPinTopLevelIndexAndFilter failed", t);
-		}
+		setBoolean(MH_SET_PIN_TOP_LEVEL_INDEX_AND_FILTER, value);
 		return this;
 	}
 
@@ -1016,11 +940,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return `true` if the top-level index and filter are pinned
 	public boolean getPinTopLevelIndexAndFilter() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_PIN_TOP_LEVEL_INDEX_AND_FILTER.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getPinTopLevelIndexAndFilter failed", t);
-		}
+		return getBoolean(MH_GET_PIN_TOP_LEVEL_INDEX_AND_FILTER);
 	}
 
 	/// The tier of block-based tables whose top-level index into metadata partitions will be
@@ -1030,11 +950,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param tier the pinning tier to apply
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setTopLevelIndexPinningTier(PinningTier tier) {
-		try {
-			MH_SET_TOP_LEVEL_INDEX_PINNING_TIER.invokeExact(ptr(), tier.value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setTopLevelIndexPinningTier failed", t);
-		}
+		setInt(MH_SET_TOP_LEVEL_INDEX_PINNING_TIER, tier.value);
 		return this;
 	}
 
@@ -1044,11 +960,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param tier the pinning tier to apply
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setPartitionPinningTier(PinningTier tier) {
-		try {
-			MH_SET_PARTITION_PINNING_TIER.invokeExact(ptr(), tier.value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setPartitionPinningTier failed", t);
-		}
+		setInt(MH_SET_PARTITION_PINNING_TIER, tier.value);
 		return this;
 	}
 
@@ -1059,11 +971,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param tier the pinning tier to apply
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setUnpartitionedPinningTier(PinningTier tier) {
-		try {
-			MH_SET_UNPARTITIONED_PINNING_TIER.invokeExact(ptr(), tier.value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setUnpartitionedPinningTier failed", t);
-		}
+		setInt(MH_SET_UNPARTITIONED_PINNING_TIER, tier.value);
 		return this;
 	}
 
@@ -1080,11 +988,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param interval number of keys between restart points
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setBlockRestartInterval(int interval) {
-		try {
-			MH_SET_BLOCK_RESTART_INTERVAL.invokeExact(ptr(), interval);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBlockRestartInterval failed", t);
-		}
+		setInt(MH_SET_BLOCK_RESTART_INTERVAL, interval);
 		return this;
 	}
 
@@ -1092,11 +996,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current block restart interval
 	public int getBlockRestartInterval() {
-		try {
-			return (int) MH_GET_BLOCK_RESTART_INTERVAL.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBlockRestartInterval failed", t);
-		}
+		return getInt(MH_GET_BLOCK_RESTART_INTERVAL);
 	}
 
 	/// Same as [#setBlockRestartInterval], but for the index block instead of data blocks.
@@ -1106,11 +1006,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param interval number of index entries between restart points
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setIndexBlockRestartInterval(int interval) {
-		try {
-			MH_SET_INDEX_BLOCK_RESTART_INTERVAL.invokeExact(ptr(), interval);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIndexBlockRestartInterval failed", t);
-		}
+		setInt(MH_SET_INDEX_BLOCK_RESTART_INTERVAL, interval);
 		return this;
 	}
 
@@ -1118,11 +1014,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current index block restart interval
 	public int getIndexBlockRestartInterval() {
-		try {
-			return (int) MH_GET_INDEX_BLOCK_RESTART_INTERVAL.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getIndexBlockRestartInterval failed", t);
-		}
+		return getInt(MH_GET_INDEX_BLOCK_RESTART_INTERVAL);
 	}
 
 	/// Approximate size of partitioned metadata blocks (index/filter partitions). Only takes
@@ -1131,11 +1023,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param size approximate metadata block size
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setMetadataBlockSize(MemorySize size) {
-		try {
-			MH_SET_METADATA_BLOCK_SIZE.invokeExact(ptr(), size.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMetadataBlockSize failed", t);
-		}
+		setMemorySize(MH_SET_METADATA_BLOCK_SIZE, size);
 		return this;
 	}
 
@@ -1143,11 +1031,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current metadata block size
 	public MemorySize getMetadataBlockSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_METADATA_BLOCK_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMetadataBlockSize failed", t);
-		}
+		return getMemorySize(MH_GET_METADATA_BLOCK_SIZE);
 	}
 
 	/// Percentage that a data block may exceed [#setBlockSize] before RocksDB starts a new
@@ -1157,11 +1041,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param percent allowed overshoot past the configured block size, as a percentage
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setBlockSizeDeviation(int percent) {
-		try {
-			MH_SET_BLOCK_SIZE_DEVIATION.invokeExact(ptr(), percent);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBlockSizeDeviation failed", t);
-		}
+		setInt(MH_SET_BLOCK_SIZE_DEVIATION, percent);
 		return this;
 	}
 
@@ -1169,11 +1049,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current block size deviation, as a percentage
 	public int getBlockSizeDeviation() {
-		try {
-			return (int) MH_GET_BLOCK_SIZE_DEVIATION.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBlockSizeDeviation failed", t);
-		}
+		return getInt(MH_GET_BLOCK_SIZE_DEVIATION);
 	}
 
 	/// If true, keys between restart points within a data block are delta-encoded against the
@@ -1183,11 +1059,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to delta-encode keys between restart points
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setUseDeltaEncoding(boolean value) {
-		try {
-			MH_SET_USE_DELTA_ENCODING.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setUseDeltaEncoding failed", t);
-		}
+		setBoolean(MH_SET_USE_DELTA_ENCODING, value);
 		return this;
 	}
 
@@ -1195,11 +1067,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return `true` if keys between restart points are delta-encoded
 	public boolean getUseDeltaEncoding() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_USE_DELTA_ENCODING.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getUseDeltaEncoding failed", t);
-		}
+		return getBoolean(MH_GET_USE_DELTA_ENCODING);
 	}
 
 	/// If true, keys and values within a data block are stored in separate areas instead of
@@ -1209,11 +1077,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to store keys and values in separate areas of a data block
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setSeparateKeyValueInDataBlock(boolean value) {
-		try {
-			MH_SET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setSeparateKeyValueInDataBlock failed", t);
-		}
+		setBoolean(MH_SET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK, value);
 		return this;
 	}
 
@@ -1221,11 +1085,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return `true` if keys and values are stored in separate areas of a data block
 	public boolean getSeparateKeyValueInDataBlock() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getSeparateKeyValueInDataBlock failed", t);
-		}
+		return getBoolean(MH_GET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK);
 	}
 
 	// -----------------------------------------------------------------------
@@ -1240,11 +1100,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to optimize filter memory tracking for lower overhead
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setOptimizeFiltersForMemory(boolean value) {
-		try {
-			MH_SET_OPTIMIZE_FILTERS_FOR_MEMORY.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setOptimizeFiltersForMemory failed", t);
-		}
+		setBoolean(MH_SET_OPTIMIZE_FILTERS_FOR_MEMORY, value);
 		return this;
 	}
 
@@ -1252,11 +1108,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return `true` if filter memory tracking is optimized for lower overhead
 	public boolean getOptimizeFiltersForMemory() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_OPTIMIZE_FILTERS_FOR_MEMORY.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getOptimizeFiltersForMemory failed", t);
-		}
+		return getBoolean(MH_GET_OPTIMIZE_FILTERS_FOR_MEMORY);
 	}
 
 	/// If true, partitioned filters are stored in their own separate blocks rather than
@@ -1266,11 +1118,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to store partitioned filters in their own blocks
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setDecouplePartitionedFilters(boolean value) {
-		try {
-			MH_SET_DECOUPLE_PARTITIONED_FILTERS.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setDecouplePartitionedFilters failed", t);
-		}
+		setBoolean(MH_SET_DECOUPLE_PARTITIONED_FILTERS, value);
 		return this;
 	}
 
@@ -1278,11 +1126,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return `true` if partitioned filters are stored in their own blocks
 	public boolean getDecouplePartitionedFilters() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_DECOUPLE_PARTITIONED_FILTERS.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getDecouplePartitionedFilters failed", t);
-		}
+		return getBoolean(MH_GET_DECOUPLE_PARTITIONED_FILTERS);
 	}
 
 	/// Target entries-to-buckets ratio for a data block's hash index, valid only when
@@ -1291,11 +1135,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param ratio target entries/buckets ratio
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setDataBlockHashTableUtilRatio(double ratio) {
-		try {
-			MH_SET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO.invokeExact(ptr(), ratio);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setDataBlockHashTableUtilRatio failed", t);
-		}
+		setDouble(MH_SET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO, ratio);
 		return this;
 	}
 
@@ -1303,11 +1143,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current data block hash table utilization ratio
 	public double getDataBlockHashTableUtilRatio() {
-		try {
-			return (double) MH_GET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getDataBlockHashTableUtilRatio failed", t);
-		}
+		return getDouble(MH_GET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO);
 	}
 
 	// -----------------------------------------------------------------------
@@ -1319,11 +1155,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param mode index shortening mode to use
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setIndexShortening(IndexShorteningMode mode) {
-		try {
-			MH_SET_INDEX_SHORTENING.invokeExact(ptr(), mode.value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIndexShortening failed", t);
-		}
+		setInt(MH_SET_INDEX_SHORTENING, mode.value);
 		return this;
 	}
 
@@ -1331,11 +1163,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current index shortening mode
 	public IndexShorteningMode getIndexShortening() {
-		try {
-			return IndexShorteningMode.fromValue((int) MH_GET_INDEX_SHORTENING.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getIndexShortening failed", t);
-		}
+		return IndexShorteningMode.fromValue(getInt(MH_GET_INDEX_SHORTENING));
 	}
 
 	/// Sets the search algorithm used within an index block at read time. Default:
@@ -1344,11 +1172,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param searchType index block search algorithm to use
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setIndexBlockSearchType(IndexSearchType searchType) {
-		try {
-			MH_SET_INDEX_BLOCK_SEARCH_TYPE.invokeExact(ptr(), searchType.value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIndexBlockSearchType failed", t);
-		}
+		setInt(MH_SET_INDEX_BLOCK_SEARCH_TYPE, searchType.value);
 		return this;
 	}
 
@@ -1356,11 +1180,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current index block search algorithm
 	public IndexSearchType getIndexBlockSearchType() {
-		try {
-			return IndexSearchType.fromValue((int) MH_GET_INDEX_BLOCK_SEARCH_TYPE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getIndexBlockSearchType failed", t);
-		}
+		return IndexSearchType.fromValue(getInt(MH_GET_INDEX_BLOCK_SEARCH_TYPE));
 	}
 
 	/// Sets the index format used for each data block's own key index. Default:
@@ -1369,11 +1189,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param indexType data block index type to use
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setDataBlockIndexType(DataBlockIndexType indexType) {
-		try {
-			MH_SET_DATA_BLOCK_INDEX_TYPE.invokeExact(ptr(), indexType.value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setDataBlockIndexType failed", t);
-		}
+		setInt(MH_SET_DATA_BLOCK_INDEX_TYPE, indexType.value);
 		return this;
 	}
 
@@ -1381,11 +1197,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current data block index type
 	public DataBlockIndexType getDataBlockIndexType() {
-		try {
-			return DataBlockIndexType.fromValue((int) MH_GET_DATA_BLOCK_INDEX_TYPE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getDataBlockIndexType failed", t);
-		}
+		return DataBlockIndexType.fromValue(getInt(MH_GET_DATA_BLOCK_INDEX_TYPE));
 	}
 
 	/// If true, index blocks are compressed like data blocks are, subject to
@@ -1394,11 +1206,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to compress index blocks
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setEnableIndexCompression(boolean value) {
-		try {
-			MH_SET_ENABLE_INDEX_COMPRESSION.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setEnableIndexCompression failed", t);
-		}
+		setBoolean(MH_SET_ENABLE_INDEX_COMPRESSION, value);
 		return this;
 	}
 
@@ -1406,11 +1214,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return `true` if index blocks are compressed
 	public boolean getEnableIndexCompression() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_ENABLE_INDEX_COMPRESSION.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getEnableIndexCompression failed", t);
-		}
+		return getBoolean(MH_GET_ENABLE_INDEX_COMPRESSION);
 	}
 
 	/// Coefficient-of-variation threshold below which a data block's key spacing is flagged
@@ -1422,11 +1226,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param threshold coefficient-of-variation threshold, or a negative value to disable
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setUniformCvThreshold(double threshold) {
-		try {
-			MH_SET_UNIFORM_CV_THRESHOLD.invokeExact(ptr(), threshold);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setUniformCvThreshold failed", t);
-		}
+		setDouble(MH_SET_UNIFORM_CV_THRESHOLD, threshold);
 		return this;
 	}
 
@@ -1434,11 +1234,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current coefficient-of-variation threshold
 	public double getUniformCvThreshold() {
-		try {
-			return (double) MH_GET_UNIFORM_CV_THRESHOLD.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getUniformCvThreshold failed", t);
-		}
+		return getDouble(MH_GET_UNIFORM_CV_THRESHOLD);
 	}
 
 	// -----------------------------------------------------------------------
@@ -1463,11 +1259,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current checksum algorithm
 	public ChecksumType getChecksumType() {
-		try {
-			return ChecksumType.fromValue((int) MH_GET_CHECKSUM.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getChecksumType failed", t);
-		}
+		return ChecksumType.fromValue(getInt(MH_GET_CHECKSUM));
 	}
 
 	/// If true, re-decompresses each compressed block immediately after compressing it during
@@ -1477,11 +1269,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to verify compression round-trips correctly on every write
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setVerifyCompression(boolean value) {
-		try {
-			MH_SET_VERIFY_COMPRESSION.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setVerifyCompression failed", t);
-		}
+		setBoolean(MH_SET_VERIFY_COMPRESSION, value);
 		return this;
 	}
 
@@ -1489,11 +1277,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return `true` if compression is verified on every write
 	public boolean getVerifyCompression() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_VERIFY_COMPRESSION.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getVerifyCompression failed", t);
-		}
+		return getBoolean(MH_GET_VERIFY_COMPRESSION);
 	}
 
 	/// If true, computes and checks a checksum over each constructed filter (Bloom/Ribbon)
@@ -1504,11 +1288,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to checksum-verify each filter right after it's built
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setDetectFilterConstructCorruption(boolean value) {
-		try {
-			MH_SET_DETECT_FILTER_CONSTRUCT_CORRUPTION.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setDetectFilterConstructCorruption failed", t);
-		}
+		setBoolean(MH_SET_DETECT_FILTER_CONSTRUCT_CORRUPTION, value);
 		return this;
 	}
 
@@ -1516,11 +1296,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return `true` if newly constructed filters are checksum-verified immediately
 	public boolean getDetectFilterConstructCorruption() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_DETECT_FILTER_CONSTRUCT_CORRUPTION.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getDetectFilterConstructCorruption failed", t);
-		}
+		return getBoolean(MH_GET_DETECT_FILTER_CONSTRUCT_CORRUPTION);
 	}
 
 	/// Enables read amplification tracking (the `rocksdb.read-amp-estimate-useful-bytes` and
@@ -1532,11 +1308,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param bytesPerBit bytes of a data block covered by each tracking bit, or `0` to disable
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setReadAmpBytesPerBit(int bytesPerBit) {
-		try {
-			MH_SET_READ_AMP_BYTES_PER_BIT.invokeExact(ptr(), bytesPerBit);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setReadAmpBytesPerBit failed", t);
-		}
+		setInt(MH_SET_READ_AMP_BYTES_PER_BIT, bytesPerBit);
 		return this;
 	}
 
@@ -1544,11 +1316,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current read amplification tracking granularity, in bytes per bit
 	public int getReadAmpBytesPerBit() {
-		try {
-			return (int) MH_GET_READ_AMP_BYTES_PER_BIT.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getReadAmpBytesPerBit failed", t);
-		}
+		return getInt(MH_GET_READ_AMP_BYTES_PER_BIT);
 	}
 
 	// -----------------------------------------------------------------------
@@ -1564,11 +1332,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param value `true` to align data blocks to filesystem block boundaries
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setBlockAlign(boolean value) {
-		try {
-			MH_SET_BLOCK_ALIGN.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBlockAlign failed", t);
-		}
+		setBoolean(MH_SET_BLOCK_ALIGN, value);
 		return this;
 	}
 
@@ -1576,11 +1340,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return `true` if data blocks are aligned to filesystem block boundaries
 	public boolean getBlockAlign() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_BLOCK_ALIGN.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBlockAlign failed", t);
-		}
+		return getBoolean(MH_GET_BLOCK_ALIGN);
 	}
 
 	/// Alignment size, in bytes, for the coarser "super block" grouping of data blocks -- a
@@ -1590,11 +1350,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param size super block alignment size
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setSuperBlockAlignmentSize(MemorySize size) {
-		try {
-			MH_SET_SUPER_BLOCK_ALIGNMENT_SIZE.invokeExact(ptr(), size.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setSuperBlockAlignmentSize failed", t);
-		}
+		setMemorySize(MH_SET_SUPER_BLOCK_ALIGNMENT_SIZE, size);
 		return this;
 	}
 
@@ -1602,11 +1358,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current super block alignment size
 	public MemorySize getSuperBlockAlignmentSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_SUPER_BLOCK_ALIGNMENT_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getSuperBlockAlignmentSize failed", t);
-		}
+		return getMemorySize(MH_GET_SUPER_BLOCK_ALIGNMENT_SIZE);
 	}
 
 	/// Divisor used to cap the padding [#setSuperBlockAlignmentSize] is allowed to introduce: the
@@ -1617,11 +1369,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param ratio divisor applied to the alignment size to cap padding overhead
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setSuperBlockAlignmentSpaceOverheadRatio(long ratio) {
-		try {
-			MH_SET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO.invokeExact(ptr(), ratio);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setSuperBlockAlignmentSpaceOverheadRatio failed", t);
-		}
+		setLong(MH_SET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO, ratio);
 		return this;
 	}
 
@@ -1629,11 +1377,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current super block alignment space overhead ratio
 	public long getSuperBlockAlignmentSpaceOverheadRatio() {
-		try {
-			return (long) MH_GET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getSuperBlockAlignmentSpaceOverheadRatio failed", t);
-		}
+		return getLong(MH_GET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO);
 	}
 
 	// -----------------------------------------------------------------------
@@ -1647,11 +1391,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @param mode when to eagerly warm the block cache
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setPrepopulateBlockCache(PrepopulateBlockCache mode) {
-		try {
-			MH_SET_PREPOPULATE_BLOCK_CACHE.invokeExact(ptr(), mode.value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setPrepopulateBlockCache failed", t);
-		}
+		setInt(MH_SET_PREPOPULATE_BLOCK_CACHE, mode.value);
 		return this;
 	}
 
@@ -1659,11 +1399,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 	///
 	/// @return current block cache prepopulation mode
 	public PrepopulateBlockCache getPrepopulateBlockCache() {
-		try {
-			return PrepopulateBlockCache.fromValue((int) MH_GET_PREPOPULATE_BLOCK_CACHE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getPrepopulateBlockCache failed", t);
-		}
+		return PrepopulateBlockCache.fromValue(getInt(MH_GET_PREPOPULATE_BLOCK_CACHE));
 	}
 
 	// -----------------------------------------------------------------------

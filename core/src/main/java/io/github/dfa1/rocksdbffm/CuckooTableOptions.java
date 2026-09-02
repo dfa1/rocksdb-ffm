@@ -20,7 +20,7 @@ import java.lang.invoke.MethodHandle;
 ///     ...
 /// }
 /// ```
-public final class CuckooTableOptions extends NativeObject {
+public final class CuckooTableOptions extends AbstractOptions {
 
 	/// `rocksdb_cuckoo_table_options_t* rocksdb_cuckoo_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -108,11 +108,7 @@ public final class CuckooTableOptions extends NativeObject {
 	/// @param ratio hash table utilization ratio
 	/// @return `this` for chaining
 	public CuckooTableOptions setHashTableRatio(double ratio) {
-		try {
-			MH_SET_HASH_TABLE_RATIO.invokeExact(ptr(), ratio);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setHashTableRatio failed", t);
-		}
+		setDouble(MH_SET_HASH_TABLE_RATIO, ratio);
 		return this;
 	}
 
@@ -120,11 +116,7 @@ public final class CuckooTableOptions extends NativeObject {
 	///
 	/// @return current hash table utilization ratio
 	public double getHashTableRatio() {
-		try {
-			return (double) MH_GET_HASH_TABLE_RATIO.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getHashTableRatio failed", t);
-		}
+		return getDouble(MH_GET_HASH_TABLE_RATIO);
 	}
 
 	/// Depth to search for a path to displace elements on collision while building the table.
@@ -134,11 +126,7 @@ public final class CuckooTableOptions extends NativeObject {
 	/// @param depth maximum search depth
 	/// @return `this` for chaining
 	public CuckooTableOptions setMaxSearchDepth(int depth) {
-		try {
-			MH_SET_MAX_SEARCH_DEPTH.invokeExact(ptr(), depth);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMaxSearchDepth failed", t);
-		}
+		setInt(MH_SET_MAX_SEARCH_DEPTH, depth);
 		return this;
 	}
 
@@ -146,11 +134,7 @@ public final class CuckooTableOptions extends NativeObject {
 	///
 	/// @return current maximum search depth
 	public int getMaxSearchDepth() {
-		try {
-			return (int) MH_GET_MAX_SEARCH_DEPTH.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMaxSearchDepth failed", t);
-		}
+		return getInt(MH_GET_MAX_SEARCH_DEPTH);
 	}
 
 	/// On collision, the builder tries inserting in the next `blockSize` locations before
@@ -160,11 +144,7 @@ public final class CuckooTableOptions extends NativeObject {
 	/// @param blockSize cuckoo block size
 	/// @return `this` for chaining
 	public CuckooTableOptions setCuckooBlockSize(int blockSize) {
-		try {
-			MH_SET_CUCKOO_BLOCK_SIZE.invokeExact(ptr(), blockSize);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setCuckooBlockSize failed", t);
-		}
+		setInt(MH_SET_CUCKOO_BLOCK_SIZE, blockSize);
 		return this;
 	}
 
@@ -172,11 +152,7 @@ public final class CuckooTableOptions extends NativeObject {
 	///
 	/// @return current cuckoo block size
 	public int getCuckooBlockSize() {
-		try {
-			return (int) MH_GET_CUCKOO_BLOCK_SIZE.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getCuckooBlockSize failed", t);
-		}
+		return getInt(MH_GET_CUCKOO_BLOCK_SIZE);
 	}
 
 	/// If `true`, the user key is treated as a `uint64_t` and its value used directly as the
@@ -186,11 +162,7 @@ public final class CuckooTableOptions extends NativeObject {
 	/// @param value `true` to use the user key directly as the hash value
 	/// @return `this` for chaining
 	public CuckooTableOptions setIdentityAsFirstHash(boolean value) {
-		try {
-			MH_SET_IDENTITY_AS_FIRST_HASH.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIdentityAsFirstHash failed", t);
-		}
+		setBoolean(MH_SET_IDENTITY_AS_FIRST_HASH, value);
 		return this;
 	}
 
@@ -198,11 +170,7 @@ public final class CuckooTableOptions extends NativeObject {
 	///
 	/// @return `true` if the user key is used directly as the hash value
 	public boolean getIdentityAsFirstHash() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_IDENTITY_AS_FIRST_HASH.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getIdentityAsFirstHash failed", t);
-		}
+		return getBoolean(MH_GET_IDENTITY_AS_FIRST_HASH);
 	}
 
 	/// If `true`, the modulo operator is used during hash calculation, which is more
@@ -213,11 +181,7 @@ public final class CuckooTableOptions extends NativeObject {
 	/// @param value `true` to use modulo-based hash calculation
 	/// @return `this` for chaining
 	public CuckooTableOptions setUseModuleHash(boolean value) {
-		try {
-			MH_SET_USE_MODULE_HASH.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setUseModuleHash failed", t);
-		}
+		setBoolean(MH_SET_USE_MODULE_HASH, value);
 		return this;
 	}
 
@@ -225,11 +189,7 @@ public final class CuckooTableOptions extends NativeObject {
 	///
 	/// @return `true` if modulo-based hash calculation is used
 	public boolean getUseModuleHash() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_USE_MODULE_HASH.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getUseModuleHash failed", t);
-		}
+		return getBoolean(MH_GET_USE_MODULE_HASH);
 	}
 
 	@Override

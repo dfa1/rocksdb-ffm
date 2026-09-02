@@ -12,7 +12,7 @@ import java.lang.invoke.MethodHandle;
 ///     db.compactRange(opts, null, null);
 /// }
 /// ```
-public final class CompactOptions extends NativeObject {
+public final class CompactOptions extends AbstractOptions {
 
 	/// `rocksdb_compactoptions_t* rocksdb_compactoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -98,11 +98,7 @@ public final class CompactOptions extends NativeObject {
 	/// @param value `true` to prevent concurrent manual compactions
 	/// @return `this` for chaining
 	public CompactOptions setExclusiveManualCompaction(boolean value) {
-		try {
-			MH_SET_EXCLUSIVE.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setExclusiveManualCompaction failed", t);
-		}
+		setBoolean(MH_SET_EXCLUSIVE, value);
 		return this;
 	}
 
@@ -110,11 +106,7 @@ public final class CompactOptions extends NativeObject {
 	///
 	/// @return `true` if no concurrent manual compactions are allowed
 	public boolean isExclusiveManualCompaction() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_EXCLUSIVE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isExclusiveManualCompaction failed", t);
-		}
+		return getBoolean(MH_GET_EXCLUSIVE);
 	}
 
 	/// The native field is RocksDB's 4-valued `BottommostLevelCompaction` enum
@@ -159,11 +151,7 @@ public final class CompactOptions extends NativeObject {
 	/// @param value `true` to move compacted output to the target level
 	/// @return `this` for chaining
 	public CompactOptions setChangeLevel(boolean value) {
-		try {
-			MH_SET_CHANGE_LEVEL.invokeExact(ptr(), RocksDB.toByte(value));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setChangeLevel failed", t);
-		}
+		setBoolean(MH_SET_CHANGE_LEVEL, value);
 		return this;
 	}
 
@@ -171,11 +159,7 @@ public final class CompactOptions extends NativeObject {
 	///
 	/// @return `true` if level change is enabled
 	public boolean isChangeLevel() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_CHANGE_LEVEL.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isChangeLevel failed", t);
-		}
+		return getBoolean(MH_GET_CHANGE_LEVEL);
 	}
 
 	/// Target output level for the compaction when [#setChangeLevel(boolean)] is
@@ -184,11 +168,7 @@ public final class CompactOptions extends NativeObject {
 	/// @param level target level index, or `-1` for the bottommost level
 	/// @return `this` for chaining
 	public CompactOptions setTargetLevel(int level) {
-		try {
-			MH_SET_TARGET_LEVEL.invokeExact(ptr(), level);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setTargetLevel failed", t);
-		}
+		setInt(MH_SET_TARGET_LEVEL, level);
 		return this;
 	}
 
@@ -196,11 +176,7 @@ public final class CompactOptions extends NativeObject {
 	///
 	/// @return target level index, or `-1` for the bottommost level
 	public int getTargetLevel() {
-		try {
-			return (int) MH_GET_TARGET_LEVEL.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getTargetLevel failed", t);
-		}
+		return getInt(MH_GET_TARGET_LEVEL);
 	}
 
 	@Override

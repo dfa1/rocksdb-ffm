@@ -15,7 +15,7 @@ import java.lang.invoke.MethodHandle;
 ///     engine.restoreDbFromLatestBackup(dbDir, restoreOpts);
 /// }
 /// ```
-public final class RestoreOptions extends NativeObject {
+public final class RestoreOptions extends AbstractOptions {
 
 	/// `rocksdb_restore_options_t* rocksdb_restore_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -56,12 +56,8 @@ public final class RestoreOptions extends NativeObject {
 	/// @param keepLogFiles `true` to preserve WAL files in the restore target
 	/// @return `this` for chaining
 	public RestoreOptions setKeepLogFiles(boolean keepLogFiles) {
-		try {
-			MH_SET_KEEP_LOG_FILES.invokeExact(ptr(), keepLogFiles ? 1 : 0);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setKeepLogFiles failed", t);
-		}
+		setInt(MH_SET_KEEP_LOG_FILES, RocksDB.toByte(keepLogFiles));
+		return this;
 	}
 
 	@Override

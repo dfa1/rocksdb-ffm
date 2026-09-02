@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 /// FFM wrapper for `rocksdb_readoptions_t`.
-public final class ReadOptions extends NativeObject {
+public final class ReadOptions extends AbstractOptions {
 
 	/// `rocksdb_readoptions_t* rocksdb_readoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -179,23 +179,15 @@ public final class ReadOptions extends NativeObject {
 	/// @param verifyChecksums `true` to verify checksums on disk reads
 	/// @return `this` for chaining
 	public ReadOptions setVerifyChecksums(boolean verifyChecksums) {
-		try {
-			MH_SET_VERIFY_CHECKSUMS.invokeExact(ptr(), RocksDB.toByte(verifyChecksums));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setVerifyChecksums failed", t);
-		}
+		setBoolean(MH_SET_VERIFY_CHECKSUMS, verifyChecksums);
+		return this;
 	}
 
 	/// Returns whether checksums are verified for data read from disk.
 	///
 	/// @return `true` if checksum verification is enabled
 	public boolean isVerifyChecksums() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_VERIFY_CHECKSUMS.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isVerifyChecksums failed", t);
-		}
+		return getBoolean(MH_GET_VERIFY_CHECKSUMS);
 	}
 
 	/// If `true`, blocks read from disk are inserted into the block cache. Set `false` for scans
@@ -204,23 +196,15 @@ public final class ReadOptions extends NativeObject {
 	/// @param fillCache `true` to populate the block cache with blocks read for this operation
 	/// @return `this` for chaining
 	public ReadOptions setFillCache(boolean fillCache) {
-		try {
-			MH_SET_FILL_CACHE.invokeExact(ptr(), RocksDB.toByte(fillCache));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setFillCache failed", t);
-		}
+		setBoolean(MH_SET_FILL_CACHE, fillCache);
+		return this;
 	}
 
 	/// Returns whether blocks read for this operation are inserted into the block cache.
 	///
 	/// @return `true` if the block cache is populated on read
 	public boolean isFillCache() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_FILL_CACHE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isFillCache failed", t);
-		}
+		return getBoolean(MH_GET_FILL_CACHE);
 	}
 
 	/// If `true`, an iterator's returned keys/values stay valid for the iterator's lifetime
@@ -230,23 +214,15 @@ public final class ReadOptions extends NativeObject {
 	/// @param pinData `true` to pin blocks backing iterator results for the iterator's lifetime
 	/// @return `this` for chaining
 	public ReadOptions setPinData(boolean pinData) {
-		try {
-			MH_SET_PIN_DATA.invokeExact(ptr(), RocksDB.toByte(pinData));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setPinData failed", t);
-		}
+		setBoolean(MH_SET_PIN_DATA, pinData);
+		return this;
 	}
 
 	/// Returns whether iterator results pin their backing blocks in memory.
 	///
 	/// @return `true` if iterator results stay valid for the iterator's lifetime
 	public boolean isPinData() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_PIN_DATA.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isPinData failed", t);
-		}
+		return getBoolean(MH_GET_PIN_DATA);
 	}
 
 	/// If `true`, creates a tailing iterator that reflects writes committed after it was created,
@@ -255,23 +231,15 @@ public final class ReadOptions extends NativeObject {
 	/// @param tailing `true` to create a tailing iterator
 	/// @return `this` for chaining
 	public ReadOptions setTailing(boolean tailing) {
-		try {
-			MH_SET_TAILING.invokeExact(ptr(), RocksDB.toByte(tailing));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setTailing failed", t);
-		}
+		setBoolean(MH_SET_TAILING, tailing);
+		return this;
 	}
 
 	/// Returns whether this creates a tailing iterator.
 	///
 	/// @return `true` if a tailing iterator is created
 	public boolean isTailing() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_TAILING.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isTailing failed", t);
-		}
+		return getBoolean(MH_GET_TAILING);
 	}
 
 	/// If `true`, forces a total-order seek even when the column family uses a prefix extractor,
@@ -281,23 +249,15 @@ public final class ReadOptions extends NativeObject {
 	/// @param totalOrderSeek `true` to bypass prefix-based seek optimizations
 	/// @return `this` for chaining
 	public ReadOptions setTotalOrderSeek(boolean totalOrderSeek) {
-		try {
-			MH_SET_TOTAL_ORDER_SEEK.invokeExact(ptr(), RocksDB.toByte(totalOrderSeek));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setTotalOrderSeek failed", t);
-		}
+		setBoolean(MH_SET_TOTAL_ORDER_SEEK, totalOrderSeek);
+		return this;
 	}
 
 	/// Returns whether total-order seek is forced, bypassing prefix-based optimizations.
 	///
 	/// @return `true` if total-order seek is forced
 	public boolean isTotalOrderSeek() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_TOTAL_ORDER_SEEK.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isTotalOrderSeek failed", t);
-		}
+		return getBoolean(MH_GET_TOTAL_ORDER_SEEK);
 	}
 
 	/// If `true`, an iterator behaves like [#setTotalOrderSeek] by default, but RocksDB switches
@@ -315,23 +275,15 @@ public final class ReadOptions extends NativeObject {
 	/// @param autoPrefixMode `true` to let RocksDB auto-select prefix-seek mode when it's safe
 	/// @return `this` for chaining
 	public ReadOptions setAutoPrefixMode(boolean autoPrefixMode) {
-		try {
-			MH_SET_AUTO_PREFIX_MODE.invokeExact(ptr(), RocksDB.toByte(autoPrefixMode));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setAutoPrefixMode failed", t);
-		}
+		setBoolean(MH_SET_AUTO_PREFIX_MODE, autoPrefixMode);
+		return this;
 	}
 
 	/// Returns whether RocksDB may automatically switch to prefix-seek mode when safe.
 	///
 	/// @return `true` if automatic prefix-seek mode is enabled
 	public boolean isAutoPrefixMode() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_AUTO_PREFIX_MODE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isAutoPrefixMode failed", t);
-		}
+		return getBoolean(MH_GET_AUTO_PREFIX_MODE);
 	}
 
 	/// If `true`, an iterator only returns entries that share the same prefix (per the column
@@ -341,23 +293,15 @@ public final class ReadOptions extends NativeObject {
 	/// @param prefixSameAsStart `true` to stop iteration at the seek key's prefix boundary
 	/// @return `this` for chaining
 	public ReadOptions setPrefixSameAsStart(boolean prefixSameAsStart) {
-		try {
-			MH_SET_PREFIX_SAME_AS_START.invokeExact(ptr(), RocksDB.toByte(prefixSameAsStart));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setPrefixSameAsStart failed", t);
-		}
+		setBoolean(MH_SET_PREFIX_SAME_AS_START, prefixSameAsStart);
+		return this;
 	}
 
 	/// Returns whether iteration is confined to the seek key's prefix.
 	///
 	/// @return `true` if iteration stops at the seek key's prefix boundary
 	public boolean isPrefixSameAsStart() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_PREFIX_SAME_AS_START.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isPrefixSameAsStart failed", t);
-		}
+		return getBoolean(MH_GET_PREFIX_SAME_AS_START);
 	}
 
 	/// Read-ahead bytes requested per disk read during a scan. A non-zero value overrides the
@@ -367,23 +311,15 @@ public final class ReadOptions extends NativeObject {
 	/// @param readaheadSize read-ahead size, or [MemorySize#ZERO] to leave it unset
 	/// @return `this` for chaining
 	public ReadOptions setReadaheadSize(MemorySize readaheadSize) {
-		try {
-			MH_SET_READAHEAD_SIZE.invokeExact(ptr(), readaheadSize.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setReadaheadSize failed", t);
-		}
+		setMemorySize(MH_SET_READAHEAD_SIZE, readaheadSize);
+		return this;
 	}
 
 	/// Returns the configured read-ahead size.
 	///
 	/// @return read-ahead size; [MemorySize#ZERO] means unset
 	public MemorySize getReadaheadSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_READAHEAD_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getReadaheadSize failed", t);
-		}
+		return getMemorySize(MH_GET_READAHEAD_SIZE);
 	}
 
 	// -----------------------------------------------------------------------

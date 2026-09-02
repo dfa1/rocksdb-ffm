@@ -6,7 +6,7 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 
 /// FFM wrapper for `rocksdb_writeoptions_t`.
-public final class WriteOptions extends NativeObject {
+public final class WriteOptions extends AbstractOptions {
 
 	/// `rocksdb_writeoptions_t* rocksdb_writeoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -126,11 +126,7 @@ public final class WriteOptions extends NativeObject {
 	/// @param sync `true` to fsync before returning
 	/// @return this instance for chaining
 	public WriteOptions setSync(boolean sync) {
-		try {
-			MH_SET_SYNC.invokeExact(ptr(), RocksDB.toByte(sync));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setSync failed", t);
-		}
+		setBoolean(MH_SET_SYNC, sync);
 		return this;
 	}
 
@@ -138,11 +134,7 @@ public final class WriteOptions extends NativeObject {
 	///
 	/// @return `true` if fsync is enabled
 	public boolean isSync() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_SYNC.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isSync failed", t);
-		}
+		return getBoolean(MH_GET_SYNC);
 	}
 
 	/// If `true`, writes bypass the write-ahead log entirely: faster, but a crash before the
@@ -151,11 +143,7 @@ public final class WriteOptions extends NativeObject {
 	/// @param disableWal `true` to skip the WAL
 	/// @return this instance for chaining
 	public WriteOptions setDisableWal(boolean disableWal) {
-		try {
-			MH_DISABLE_WAL.invokeExact(ptr(), disableWal ? 1 : 0);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setDisableWal failed", t);
-		}
+		setInt(MH_DISABLE_WAL, RocksDB.toByte(disableWal));
 		return this;
 	}
 
@@ -163,11 +151,7 @@ public final class WriteOptions extends NativeObject {
 	///
 	/// @return `true` if the WAL is skipped
 	public boolean isDisableWal() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_DISABLE_WAL.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isDisableWal failed", t);
-		}
+		return getBoolean(MH_GET_DISABLE_WAL);
 	}
 
 	/// If `true`, a `put`/`delete` targeting a column family dropped since the handle was
@@ -176,12 +160,7 @@ public final class WriteOptions extends NativeObject {
 	/// @param ignoreMissingColumnFamilies `true` to ignore a dropped column family
 	/// @return this instance for chaining
 	public WriteOptions setIgnoreMissingColumnFamilies(boolean ignoreMissingColumnFamilies) {
-		try {
-			MH_SET_IGNORE_MISSING_COLUMN_FAMILIES.invokeExact(ptr(),
-					RocksDB.toByte(ignoreMissingColumnFamilies));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIgnoreMissingColumnFamilies failed", t);
-		}
+		setBoolean(MH_SET_IGNORE_MISSING_COLUMN_FAMILIES, ignoreMissingColumnFamilies);
 		return this;
 	}
 
@@ -189,11 +168,7 @@ public final class WriteOptions extends NativeObject {
 	///
 	/// @return `true` if a missing column family is ignored
 	public boolean isIgnoreMissingColumnFamilies() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_IGNORE_MISSING_COLUMN_FAMILIES.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isIgnoreMissingColumnFamilies failed", t);
-		}
+		return getBoolean(MH_GET_IGNORE_MISSING_COLUMN_FAMILIES);
 	}
 
 	/// If `true`, the write fails immediately with an error instead of blocking when it would
@@ -202,11 +177,7 @@ public final class WriteOptions extends NativeObject {
 	/// @param noSlowdown `true` to fail fast instead of blocking on a write stall
 	/// @return this instance for chaining
 	public WriteOptions setNoSlowdown(boolean noSlowdown) {
-		try {
-			MH_SET_NO_SLOWDOWN.invokeExact(ptr(), RocksDB.toByte(noSlowdown));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setNoSlowdown failed", t);
-		}
+		setBoolean(MH_SET_NO_SLOWDOWN, noSlowdown);
 		return this;
 	}
 
@@ -214,11 +185,7 @@ public final class WriteOptions extends NativeObject {
 	///
 	/// @return `true` if the write fails fast rather than blocking
 	public boolean isNoSlowdown() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_NO_SLOWDOWN.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isNoSlowdown failed", t);
-		}
+		return getBoolean(MH_GET_NO_SLOWDOWN);
 	}
 
 	/// If `true`, marks this write as low priority: throttled ahead of normal-priority writes
@@ -227,11 +194,7 @@ public final class WriteOptions extends NativeObject {
 	/// @param lowPri `true` to mark this write as low priority
 	/// @return this instance for chaining
 	public WriteOptions setLowPri(boolean lowPri) {
-		try {
-			MH_SET_LOW_PRI.invokeExact(ptr(), RocksDB.toByte(lowPri));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setLowPri failed", t);
-		}
+		setBoolean(MH_SET_LOW_PRI, lowPri);
 		return this;
 	}
 
@@ -239,11 +202,7 @@ public final class WriteOptions extends NativeObject {
 	///
 	/// @return `true` if this write is low priority
 	public boolean isLowPri() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_LOW_PRI.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isLowPri failed", t);
-		}
+		return getBoolean(MH_GET_LOW_PRI);
 	}
 
 	/// If `true`, a hint is inserted into the memtable once per write batch instead of once per
@@ -252,12 +211,7 @@ public final class WriteOptions extends NativeObject {
 	/// @param memtableInsertHintPerBatch `true` to hint once per batch instead of once per key
 	/// @return this instance for chaining
 	public WriteOptions setMemtableInsertHintPerBatch(boolean memtableInsertHintPerBatch) {
-		try {
-			MH_SET_MEMTABLE_INSERT_HINT_PER_BATCH.invokeExact(ptr(),
-					RocksDB.toByte(memtableInsertHintPerBatch));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMemtableInsertHintPerBatch failed", t);
-		}
+		setBoolean(MH_SET_MEMTABLE_INSERT_HINT_PER_BATCH, memtableInsertHintPerBatch);
 		return this;
 	}
 
@@ -265,11 +219,7 @@ public final class WriteOptions extends NativeObject {
 	///
 	/// @return `true` if the hint is inserted once per batch
 	public boolean isMemtableInsertHintPerBatch() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_MEMTABLE_INSERT_HINT_PER_BATCH.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isMemtableInsertHintPerBatch failed", t);
-		}
+		return getBoolean(MH_GET_MEMTABLE_INSERT_HINT_PER_BATCH);
 	}
 
 	/// Overrides the rate limiter priority for this write. Only [IOPriority#USER] and
@@ -282,11 +232,7 @@ public final class WriteOptions extends NativeObject {
 	///                            [IOPriority#TOTAL] only)
 	/// @return this instance for chaining
 	public WriteOptions setRateLimiterPriority(IOPriority rateLimiterPriority) {
-		try {
-			MH_SET_RATE_LIMITER_PRIORITY.invokeExact(ptr(), rateLimiterPriority.getValue());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setRateLimiterPriority failed", t);
-		}
+		setInt(MH_SET_RATE_LIMITER_PRIORITY, rateLimiterPriority.getValue());
 		return this;
 	}
 
@@ -294,12 +240,7 @@ public final class WriteOptions extends NativeObject {
 	///
 	/// @return the active [IOPriority]
 	public IOPriority getRateLimiterPriority() {
-		try {
-			int value = (int) MH_GET_RATE_LIMITER_PRIORITY.invokeExact(ptr());
-			return IOPriority.fromValue(value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getRateLimiterPriority failed", t);
-		}
+		return IOPriority.fromValue(getInt(MH_GET_RATE_LIMITER_PRIORITY));
 	}
 
 	/// Classifies this write's originating operation for I/O tracing. `EXPERIMENTAL` and "for
@@ -308,11 +249,7 @@ public final class WriteOptions extends NativeObject {
 	/// @param ioActivity the activity to classify this write as
 	/// @return this instance for chaining
 	public WriteOptions setIoActivity(IOActivity ioActivity) {
-		try {
-			MH_SET_IO_ACTIVITY.invokeExact(ptr(), ioActivity.getValue());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIoActivity failed", t);
-		}
+		setInt(MH_SET_IO_ACTIVITY, ioActivity.getValue());
 		return this;
 	}
 
@@ -320,12 +257,7 @@ public final class WriteOptions extends NativeObject {
 	///
 	/// @return the active [IOActivity]
 	public IOActivity getIoActivity() {
-		try {
-			int value = (int) MH_GET_IO_ACTIVITY.invokeExact(ptr());
-			return IOActivity.fromValue(value);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getIoActivity failed", t);
-		}
+		return IOActivity.fromValue(getInt(MH_GET_IO_ACTIVITY));
 	}
 
 	@Override

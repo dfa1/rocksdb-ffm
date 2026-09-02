@@ -15,7 +15,7 @@ import java.lang.invoke.MethodHandle;
 ///     // ...
 /// }
 /// ```
-public final class SizeApproximationOptions extends NativeObject {
+public final class SizeApproximationOptions extends AbstractOptions {
 
 	/// `rocksdb_size_approximation_options_t* rocksdb_size_approximation_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -95,23 +95,15 @@ public final class SizeApproximationOptions extends NativeObject {
 	/// @param value `true` to include memtable data in the estimate
 	/// @return `this` for chaining
 	public SizeApproximationOptions setIncludeMemtables(boolean value) {
-		try {
-			MH_SET_INCLUDE_MEMTABLES.invokeExact(ptr(), RocksDB.toByte(value));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIncludeMemtables failed", t);
-		}
+		setBoolean(MH_SET_INCLUDE_MEMTABLES, value);
+		return this;
 	}
 
 	/// Returns whether memtable data is included in the estimate.
 	///
 	/// @return `true` if memtable data is included
 	public boolean isIncludeMemtables() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_INCLUDE_MEMTABLES.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isIncludeMemtables failed", t);
-		}
+		return getBoolean(MH_GET_INCLUDE_MEMTABLES);
 	}
 
 	/// If `true`, the estimate includes data already serialized to SST files on disk. At least
@@ -120,23 +112,15 @@ public final class SizeApproximationOptions extends NativeObject {
 	/// @param value `true` to include on-disk SST data in the estimate
 	/// @return `this` for chaining
 	public SizeApproximationOptions setIncludeFiles(boolean value) {
-		try {
-			MH_SET_INCLUDE_FILES.invokeExact(ptr(), RocksDB.toByte(value));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIncludeFiles failed", t);
-		}
+		setBoolean(MH_SET_INCLUDE_FILES, value);
+		return this;
 	}
 
 	/// Returns whether on-disk SST data is included in the estimate.
 	///
 	/// @return `true` if on-disk SST data is included
 	public boolean isIncludeFiles() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_INCLUDE_FILES.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isIncludeFiles failed", t);
-		}
+		return getBoolean(MH_GET_INCLUDE_FILES);
 	}
 
 	/// If `true`, the estimate includes an approximation of blob file data in the range,
@@ -147,23 +131,15 @@ public final class SizeApproximationOptions extends NativeObject {
 	/// @param value `true` to include a prorated blob file estimate
 	/// @return `this` for chaining
 	public SizeApproximationOptions setIncludeBlobFiles(boolean value) {
-		try {
-			MH_SET_INCLUDE_BLOB_FILES.invokeExact(ptr(), RocksDB.toByte(value));
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIncludeBlobFiles failed", t);
-		}
+		setBoolean(MH_SET_INCLUDE_BLOB_FILES, value);
+		return this;
 	}
 
 	/// Returns whether a prorated blob file estimate is included.
 	///
 	/// @return `true` if a prorated blob file estimate is included
 	public boolean isIncludeBlobFiles() {
-		try {
-			return RocksDB.fromByte((byte) MH_GET_INCLUDE_BLOB_FILES.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isIncludeBlobFiles failed", t);
-		}
+		return getBoolean(MH_GET_INCLUDE_BLOB_FILES);
 	}
 
 	/// Allows the on-disk file size portion of the estimate to be off by up to
@@ -174,23 +150,15 @@ public final class SizeApproximationOptions extends NativeObject {
 	/// @param margin allowed error margin as a fraction, or a non-positive value for exact
 	/// @return `this` for chaining
 	public SizeApproximationOptions setFilesSizeErrorMargin(double margin) {
-		try {
-			MH_SET_FILES_SIZE_ERROR_MARGIN.invokeExact(ptr(), margin);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setFilesSizeErrorMargin failed", t);
-		}
+		setDouble(MH_SET_FILES_SIZE_ERROR_MARGIN, margin);
+		return this;
 	}
 
 	/// Returns the configured file size error margin.
 	///
 	/// @return current file size error margin; non-positive means exact computation
 	public double getFilesSizeErrorMargin() {
-		try {
-			return (double) MH_GET_FILES_SIZE_ERROR_MARGIN.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getFilesSizeErrorMargin failed", t);
-		}
+		return getDouble(MH_GET_FILES_SIZE_ERROR_MARGIN);
 	}
 
 	@Override
