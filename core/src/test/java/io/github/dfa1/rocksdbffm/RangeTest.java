@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,42 +10,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RangeTest {
 
 	@Test
-	void equals_comparesArrayContentNotIdentity() {
-		// Given
-		var a = Range.of("start".getBytes(), "end".getBytes());
-		var b = Range.of("start".getBytes(), "end".getBytes());
-
-		// When
-		var equal = a.equals(b);
-
-		// Then
-		assertThat(equal).isTrue();
-	}
-
-	@Test
-	void hashCode_isConsistentWithEquals() {
-		// Given
-		var a = Range.of("start".getBytes(), "end".getBytes());
-		var b = Range.of("start".getBytes(), "end".getBytes());
-
-		// When
-		var sameHash = a.hashCode() == b.hashCode();
-
-		// Then
-		assertThat(sameHash).isTrue();
-	}
-
-	@Test
-	void equals_detectsDifferentContent() {
-		// Given
-		var a = Range.of("start".getBytes(), "end".getBytes());
-		var b = Range.of("start".getBytes(), "different-end".getBytes());
-
-		// When
-		var equal = a.equals(b);
-
-		// Then
-		assertThat(equal).isFalse();
+	void equalsAndHashCode_satisfyContract() {
+		// Given / When / Then
+		EqualsVerifier.forClass(Range.class).verify();
 	}
 
 	@Test
