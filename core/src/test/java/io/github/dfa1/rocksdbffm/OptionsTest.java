@@ -19,6 +19,9 @@ class OptionsTest {
 			assertThat(opts.getLevel0FileNumCompactionTrigger()).isEqualTo(4);
 			assertThat(opts.getTargetFileSizeBase()).isEqualTo(MemorySize.ofMB(64));
 			assertThat(opts.getMaxBytesForLevelBase()).isEqualTo(MemorySize.ofMB(256));
+			assertThat(opts.getLevel0SlowdownWritesTrigger()).isEqualTo(20);
+			assertThat(opts.getLevel0StopWritesTrigger()).isEqualTo(36);
+			assertThat(opts.getDisableAutoCompactions()).isFalse();
 		}
 	}
 
@@ -84,6 +87,45 @@ class OptionsTest {
 
 			// Then
 			assertThat(result).isEqualTo(MemorySize.ofMB(8));
+		}
+	}
+
+	@Test
+	void setLevel0SlowdownWritesTrigger_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setLevel0SlowdownWritesTrigger(5)) {
+
+			// When
+			var result = opts.getLevel0SlowdownWritesTrigger();
+
+			// Then
+			assertThat(result).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void setLevel0StopWritesTrigger_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setLevel0StopWritesTrigger(10)) {
+
+			// When
+			var result = opts.getLevel0StopWritesTrigger();
+
+			// Then
+			assertThat(result).isEqualTo(10);
+		}
+	}
+
+	@Test
+	void setDisableAutoCompactions_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setDisableAutoCompactions(true)) {
+
+			// When
+			var result = opts.getDisableAutoCompactions();
+
+			// Then
+			assertThat(result).isTrue();
 		}
 	}
 }

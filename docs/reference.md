@@ -143,16 +143,21 @@ Other read/write methods on the read-write types:
 | `setDefaultTemperature` / `getDefaultTemperature` | `Temperature`      |
 
 LSM shape and compaction triggers (each with a matching getter; defaults match upstream RocksDB —
-64 MiB write buffer, 7 levels, compact level 0 at 4 files, 64 MiB target file size, 256 MiB base
-level size):
+64 MiB write buffer, 7 levels, compact level 0 at 4 files, slow writes at 20 files, stop writes at
+36 files, 64 MiB target file size, 256 MiB base level size, auto-compaction enabled). RocksDB
+requires `stop >= slowdown >= compaction trigger` and silently raises whichever value is too low
+to satisfy it:
 
 | Method                                | Type          |
 |:---------------------------------------|:--------------|
 | `setWriteBufferSize`                   | `MemorySize`  |
 | `setNumLevels`                         | `int`         |
 | `setLevel0FileNumCompactionTrigger`    | `int`         |
+| `setLevel0SlowdownWritesTrigger`       | `int`         |
+| `setLevel0StopWritesTrigger`           | `int`         |
 | `setTargetFileSizeBase`                | `MemorySize`  |
 | `setMaxBytesForLevelBase`              | `MemorySize`  |
+| `setDisableAutoCompactions`            | `boolean`     |
 
 Blob options (used with `RocksDB.openBlob`, each with a matching getter):
 

@@ -45,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `FilterPolicy.newRibbonHybrid`: Bloom for the top levels, Ribbon below, via `bloomBeforeLevel`.
 - `MonitoringOperations.getApproximateSizes`: estimates on-disk size per key range without
   scanning, with/without a column family or `SizeApproximationOptions`. New `Range` domain type.
+- `Options`: `setLevel0SlowdownWritesTrigger`, `setLevel0StopWritesTrigger`,
+  `setDisableAutoCompactions`.
 
 ### Fixed
 

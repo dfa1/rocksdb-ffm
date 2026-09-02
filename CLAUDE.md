@@ -170,7 +170,7 @@ instance method listed below lives on the DB type (`ReadWriteDB`, `TtlDB`, …),
 |:------------------------|:--------------------------------------------------------------------------------------------------------------------------|
 | DB Open/Close/Put/Get/Delete | `RocksDB.java`                                                                                                       |
 | Options                 | `Options.java`, `ReadOptions.java`, `WriteOptions.java`                                                                   |
-| LSM shape               | `Options.setWriteBufferSize`, `setNumLevels`, `setLevel0FileNumCompactionTrigger`, `setTargetFileSizeBase`, `setMaxBytesForLevelBase` (each with a getter) — the basic memtable/level-0/file-size tuning surface; multiplier and other secondary knobs remain a Type A gap in `docs/c-api-gaps.md` |
+| LSM shape               | `Options.setWriteBufferSize`, `setNumLevels`, `setLevel0FileNumCompactionTrigger`, `setLevel0SlowdownWritesTrigger`, `setLevel0StopWritesTrigger`, `setTargetFileSizeBase`, `setMaxBytesForLevelBase`, `setDisableAutoCompactions` (each with a getter) — the basic memtable/level-0/file-size tuning surface; multiplier and other secondary knobs remain a Type A gap in `docs/c-api-gaps.md` |
 | WriteBatch              | `WriteBatch.java`                                                                                                         |
 | Transactions            | `Transaction.java`, `TransactionDB.java`, `TransactionDBOptions.java`, `TransactionOptions.java`                          |
 | Optimistic Transactions | `OptimisticTransactionDB.java`, `OptimisticTransactionOptions.java`                                                       |

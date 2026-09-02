@@ -145,6 +145,18 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER;
 	/// `int rocksdb_options_get_level0_file_num_compaction_trigger(rocksdb_options_t*);`
 	private static final MethodHandle MH_GET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER;
+	/// `void rocksdb_options_set_level0_slowdown_writes_trigger(rocksdb_options_t*, int);`
+	private static final MethodHandle MH_SET_LEVEL0_SLOWDOWN_WRITES_TRIGGER;
+	/// `int rocksdb_options_get_level0_slowdown_writes_trigger(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_LEVEL0_SLOWDOWN_WRITES_TRIGGER;
+	/// `void rocksdb_options_set_level0_stop_writes_trigger(rocksdb_options_t*, int);`
+	private static final MethodHandle MH_SET_LEVEL0_STOP_WRITES_TRIGGER;
+	/// `int rocksdb_options_get_level0_stop_writes_trigger(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_LEVEL0_STOP_WRITES_TRIGGER;
+	/// `void rocksdb_options_set_disable_auto_compactions(rocksdb_options_t*, int);`
+	private static final MethodHandle MH_SET_DISABLE_AUTO_COMPACTIONS;
+	/// `unsigned char rocksdb_options_get_disable_auto_compactions(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_DISABLE_AUTO_COMPACTIONS;
 	/// `void rocksdb_options_set_target_file_size_base(rocksdb_options_t*, uint64_t);`
 	private static final MethodHandle MH_SET_TARGET_FILE_SIZE_BASE;
 	/// `uint64_t rocksdb_options_get_target_file_size_base(rocksdb_options_t*);`
@@ -349,6 +361,30 @@ public final class Options extends NativeObject {
 		MH_GET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER = NativeLibrary.lookup(
 				"rocksdb_options_get_level0_file_num_compaction_trigger",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_LEVEL0_SLOWDOWN_WRITES_TRIGGER = NativeLibrary.lookup(
+				"rocksdb_options_set_level0_slowdown_writes_trigger",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_LEVEL0_SLOWDOWN_WRITES_TRIGGER = NativeLibrary.lookup(
+				"rocksdb_options_get_level0_slowdown_writes_trigger",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_LEVEL0_STOP_WRITES_TRIGGER = NativeLibrary.lookup(
+				"rocksdb_options_set_level0_stop_writes_trigger",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_LEVEL0_STOP_WRITES_TRIGGER = NativeLibrary.lookup(
+				"rocksdb_options_get_level0_stop_writes_trigger",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_DISABLE_AUTO_COMPACTIONS = NativeLibrary.lookup(
+				"rocksdb_options_set_disable_auto_compactions",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_DISABLE_AUTO_COMPACTIONS = NativeLibrary.lookup(
+				"rocksdb_options_get_disable_auto_compactions",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
 		MH_SET_TARGET_FILE_SIZE_BASE = NativeLibrary.lookup("rocksdb_options_set_target_file_size_base",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
@@ -702,6 +738,85 @@ public final class Options extends NativeObject {
 			return (int) MH_GET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER.invokeExact(ptr());
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("getLevel0FileNumCompactionTrigger failed", t);
+		}
+	}
+
+	/// Once the number of level-0 SST files reaches this count, RocksDB slows writes down (an
+	/// artificial per-write delay) until compaction brings the count back down -- the
+	/// write-stall "delayed" condition reported via [EventNotifier#onStallConditionsChanged].
+	/// Must be less than or equal to [#setLevel0StopWritesTrigger]; RocksDB silently raises this
+	/// to match the stop trigger otherwise. Default: 20.
+	///
+	/// @param numFiles number of level-0 files that triggers write slowdown
+	/// @return `this` for chaining
+	public Options setLevel0SlowdownWritesTrigger(int numFiles) {
+		try {
+			MH_SET_LEVEL0_SLOWDOWN_WRITES_TRIGGER.invokeExact(ptr(), numFiles);
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setLevel0SlowdownWritesTrigger failed", t);
+		}
+	}
+
+	/// Returns the configured level-0 file count that triggers write slowdown.
+	///
+	/// @return current level-0 file count that triggers write slowdown
+	public int getLevel0SlowdownWritesTrigger() {
+		try {
+			return (int) MH_GET_LEVEL0_SLOWDOWN_WRITES_TRIGGER.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getLevel0SlowdownWritesTrigger failed", t);
+		}
+	}
+
+	/// Once the number of level-0 SST files reaches this count, RocksDB stops accepting writes
+	/// entirely until compaction brings the count back down -- the write-stall "stop" condition
+	/// reported via [EventNotifier#onStallConditionsChanged]. Default: 36.
+	///
+	/// @param numFiles number of level-0 files that stops writes
+	/// @return `this` for chaining
+	public Options setLevel0StopWritesTrigger(int numFiles) {
+		try {
+			MH_SET_LEVEL0_STOP_WRITES_TRIGGER.invokeExact(ptr(), numFiles);
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setLevel0StopWritesTrigger failed", t);
+		}
+	}
+
+	/// Returns the configured level-0 file count that stops writes.
+	///
+	/// @return current level-0 file count that stops writes
+	public int getLevel0StopWritesTrigger() {
+		try {
+			return (int) MH_GET_LEVEL0_STOP_WRITES_TRIGGER.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getLevel0StopWritesTrigger failed", t);
+		}
+	}
+
+	/// If `true`, disables automatic compaction entirely -- only a manually triggered
+	/// `compactRange()` will run. Default: `false`.
+	///
+	/// @param value `true` to disable automatic compaction
+	/// @return `this` for chaining
+	public Options setDisableAutoCompactions(boolean value) {
+		try {
+			MH_SET_DISABLE_AUTO_COMPACTIONS.invokeExact(ptr(), value ? 1 : 0);
+			return this;
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setDisableAutoCompactions failed", t);
+		}
+	}
+
+	/// Returns whether automatic compaction is disabled.
+	///
+	/// @return `true` if automatic compaction is disabled
+	public boolean getDisableAutoCompactions() {
+		try {
+			return RocksDB.fromByte((byte) MH_GET_DISABLE_AUTO_COMPACTIONS.invokeExact(ptr()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("getDisableAutoCompactions failed", t);
 		}
 	}
 

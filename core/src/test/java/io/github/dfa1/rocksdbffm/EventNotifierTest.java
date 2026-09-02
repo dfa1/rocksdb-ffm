@@ -6,6 +6,8 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -139,6 +141,63 @@ class EventNotifierTest {
 
 		// Then
 		assertThat(ingestedCfNames).containsExactly("default");
+	}
+
+	@Test
+	void writeStall_firesOnStallConditionsChangedWithMatchingDetails(@TempDir Path dir) throws InterruptedException {
+		// Given — level-0 compaction/slowdown triggers both set to 1 (the lowest legal value;
+		// RocksDB requires stop >= slowdown >= compaction trigger and silently raises whichever
+		// is too low to satisfy it, so this is the only combination that can produce DELAYED
+		// from a single flush) and the stop trigger set unreachably high, so only the DELAYED
+		// condition is ever in play -- matching upstream's own SoftLimit test in db_test.cc,
+		// which isolates DELAYED the same way. STOPPED was deliberately not chosen: reaching it
+		// needs at least two L0 files, but auto-compaction reliably clears each single L0 file
+		// before a second flush can land (confirmed empirically), so it can't be hit
+		// deterministically without disabling auto-compaction -- which itself suppresses the
+		// L0-count stall check entirely (see `!mutable_cf_options.disable_auto_compactions` in
+		// `db/column_family.cc`'s `GetWriteStallConditionAndCause`).
+		//
+		// The callback itself is asynchronous relative to a synchronous `flush(wait=true)`
+		// return: per db_test.cc's `SoftLimit`, `OnStallConditionsChanged` fires from
+		// `JobContext::Clean()` on the background flush's cleanup path, not from the foreground
+		// flush call. A short bounded wait on a latch is the correct way to observe it from
+		// pure `c.h` (no `SyncPoint` equivalent is exposed); confirmed reliable across repeated
+		// runs, typically firing in well under a second.
+		CountDownLatch delayedObserved = new CountDownLatch(1);
+		List<String> columnFamilyNames = new CopyOnWriteArrayList<>();
+		List<WriteStallCondition> currentConditions = new CopyOnWriteArrayList<>();
+		List<WriteStallCondition> previousConditions = new CopyOnWriteArrayList<>();
+		EventNotifier notifier = new EventNotifier() {
+			@Override
+			public void onStallConditionsChanged(WriteStallInfo info) {
+				columnFamilyNames.add(info.columnFamilyName());
+				currentConditions.add(info.current());
+				previousConditions.add(info.previous());
+				if (info.current() == WriteStallCondition.DELAYED) {
+					delayedObserved.countDown();
+				}
+			}
+		};
+
+		try (var opts = Options.newOptions()
+				     .setCreateIfMissing(true)
+				     .setLevel0FileNumCompactionTrigger(1)
+				     .setLevel0SlowdownWritesTrigger(1)
+				     .setLevel0StopWritesTrigger(999_999)
+				     .addEventListener(notifier);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			db.flush(FlushOptions.newFlushOptions());
+			boolean fired = delayedObserved.await(5, TimeUnit.SECONDS);
+
+			// Then
+			assertThat(fired).as("onStallConditionsChanged(DELAYED) fired within 5s").isTrue();
+			assertThat(columnFamilyNames).contains("default");
+			assertThat(currentConditions).contains(WriteStallCondition.DELAYED);
+			assertThat(previousConditions).contains(WriteStallCondition.NORMAL);
+		}
 	}
 
 	@Test
