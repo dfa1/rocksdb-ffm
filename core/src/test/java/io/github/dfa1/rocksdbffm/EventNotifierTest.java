@@ -26,6 +26,16 @@ class EventNotifierTest {
 		List<String> completedCfNames = new CopyOnWriteArrayList<>();
 		List<FlushReason> completedReasons = new CopyOnWriteArrayList<>();
 		List<String> completedFilePaths = new CopyOnWriteArrayList<>();
+		List<Integer> completedCfIds = new CopyOnWriteArrayList<>();
+		List<Long> completedFileNumbers = new CopyOnWriteArrayList<>();
+		List<Long> completedOldestBlobFileNumbers = new CopyOnWriteArrayList<>();
+		List<Long> completedThreadIds = new CopyOnWriteArrayList<>();
+		List<Integer> completedJobIds = new CopyOnWriteArrayList<>();
+		List<Boolean> completedTriggeredSlowdowns = new CopyOnWriteArrayList<>();
+		List<Boolean> completedTriggeredStops = new CopyOnWriteArrayList<>();
+		List<SequenceNumber> completedSmallestSeqnos = new CopyOnWriteArrayList<>();
+		List<SequenceNumber> completedLargestSeqnos = new CopyOnWriteArrayList<>();
+		List<CompressionType> completedBlobCompressionTypes = new CopyOnWriteArrayList<>();
 		EventNotifier notifier = new EventNotifier() {
 			@Override
 			public void onFlushBegin(FlushJobInfo info) {
@@ -37,6 +47,16 @@ class EventNotifierTest {
 				completedCfNames.add(info.columnFamilyName());
 				completedReasons.add(info.flushReason());
 				completedFilePaths.add(info.filePath().toString());
+				completedCfIds.add(info.columnFamilyId());
+				completedFileNumbers.add(info.fileNumber());
+				completedOldestBlobFileNumbers.add(info.oldestBlobFileNumber());
+				completedThreadIds.add(info.threadId());
+				completedJobIds.add(info.jobId());
+				completedTriggeredSlowdowns.add(info.triggeredWritesSlowdown());
+				completedTriggeredStops.add(info.triggeredWritesStop());
+				completedSmallestSeqnos.add(info.smallestSequenceNumber());
+				completedLargestSeqnos.add(info.largestSequenceNumber());
+				completedBlobCompressionTypes.add(info.blobCompressionType());
 			}
 		};
 
@@ -53,16 +73,36 @@ class EventNotifierTest {
 		assertThat(completedCfNames).containsExactly("default");
 		assertThat(completedReasons).containsExactly(FlushReason.MANUAL_FLUSH);
 		assertThat(completedFilePaths.get(0)).endsWith(".sst");
+		assertThat(completedCfIds).containsExactly(0);
+		assertThat(completedFileNumbers.get(0)).isPositive();
+		assertThat(completedOldestBlobFileNumbers).containsExactly(0L);
+		assertThat(completedThreadIds.get(0)).isPositive();
+		assertThat(completedJobIds.get(0)).isPositive();
+		assertThat(completedTriggeredSlowdowns).containsExactly(false);
+		assertThat(completedTriggeredStops).containsExactly(false);
+		assertThat(completedSmallestSeqnos).containsExactly(SequenceNumber.of(1));
+		assertThat(completedLargestSeqnos).containsExactly(SequenceNumber.of(1));
+		assertThat(completedBlobCompressionTypes).containsExactly(CompressionType.NO_COMPRESSION);
 	}
 
 	@Test
 	void flush_firesMemTableSealed(@TempDir Path dir) {
 		// Given
 		List<String> sealedCfNames = new CopyOnWriteArrayList<>();
+		List<SequenceNumber> firstSeqnos = new CopyOnWriteArrayList<>();
+		List<SequenceNumber> earliestSeqnos = new CopyOnWriteArrayList<>();
+		List<Long> numEntries = new CopyOnWriteArrayList<>();
+		List<Long> numDeletes = new CopyOnWriteArrayList<>();
+		List<byte[]> newestUdts = new CopyOnWriteArrayList<>();
 		EventNotifier notifier = new EventNotifier() {
 			@Override
 			public void onMemTableSealed(MemTableInfo info) {
 				sealedCfNames.add(info.columnFamilyName());
+				firstSeqnos.add(info.firstSequenceNumber());
+				earliestSeqnos.add(info.earliestSequenceNumber());
+				numEntries.add(info.numEntries());
+				numDeletes.add(info.numDeletes());
+				newestUdts.add(info.newestUserDefinedTimestamp());
 			}
 		};
 
@@ -76,6 +116,11 @@ class EventNotifierTest {
 
 		// Then
 		assertThat(sealedCfNames).containsExactly("default");
+		assertThat(firstSeqnos).containsExactly(SequenceNumber.of(1));
+		assertThat(earliestSeqnos).containsExactly(SequenceNumber.of(0));
+		assertThat(numEntries).containsExactly(1L);
+		assertThat(numDeletes).containsExactly(0L);
+		assertThat(newestUdts.get(0)).isEmpty();
 	}
 
 	@Test
@@ -86,12 +131,48 @@ class EventNotifierTest {
 		List<Integer> outputLevels = new CopyOnWriteArrayList<>();
 		List<CompactionReason> reasons = new CopyOnWriteArrayList<>();
 		List<RocksDBException> statuses = new CopyOnWriteArrayList<>();
+		List<Integer> cfIds = new CopyOnWriteArrayList<>();
+		List<Long> threadIds = new CopyOnWriteArrayList<>();
+		List<Integer> jobIds = new CopyOnWriteArrayList<>();
+		List<Integer> numL0Files = new CopyOnWriteArrayList<>();
+		List<Integer> baseInputLevels = new CopyOnWriteArrayList<>();
+		List<CompressionType> compressions = new CopyOnWriteArrayList<>();
+		List<CompressionType> blobCompressionTypes = new CopyOnWriteArrayList<>();
+		List<Boolean> aborteds = new CopyOnWriteArrayList<>();
+		List<Long> inputFilesCounts = new CopyOnWriteArrayList<>();
+		List<Long> outputFilesCounts = new CopyOnWriteArrayList<>();
+		List<java.time.Duration> elapsedTimes = new CopyOnWriteArrayList<>();
+		List<Long> numCorruptKeys = new CopyOnWriteArrayList<>();
+		List<Long> inputRecords = new CopyOnWriteArrayList<>();
+		List<Long> outputRecords = new CopyOnWriteArrayList<>();
+		List<MemorySize> totalInputBytes = new CopyOnWriteArrayList<>();
+		List<MemorySize> totalOutputBytes = new CopyOnWriteArrayList<>();
+		List<Long> numInputFiles = new CopyOnWriteArrayList<>();
+		List<Long> numInputFilesAtOutputLevel = new CopyOnWriteArrayList<>();
 		EventNotifier notifier = new EventNotifier() {
 			@Override
 			public void onCompactionCompleted(CompactionJobInfo info) {
 				outputLevels.add(info.outputLevel());
 				reasons.add(info.compactionReason());
 				statuses.add(info.status());
+				cfIds.add(info.columnFamilyId());
+				threadIds.add(info.threadId());
+				jobIds.add(info.jobId());
+				numL0Files.add(info.numL0Files());
+				baseInputLevels.add(info.baseInputLevel());
+				compressions.add(info.compression());
+				blobCompressionTypes.add(info.blobCompressionType());
+				aborteds.add(info.aborted());
+				inputFilesCounts.add(info.inputFilesCount());
+				outputFilesCounts.add(info.outputFilesCount());
+				elapsedTimes.add(info.elapsed());
+				numCorruptKeys.add(info.numCorruptKeys());
+				inputRecords.add(info.inputRecords());
+				outputRecords.add(info.outputRecords());
+				totalInputBytes.add(info.totalInputBytes());
+				totalOutputBytes.add(info.totalOutputBytes());
+				numInputFiles.add(info.numInputFiles());
+				numInputFilesAtOutputLevel.add(info.numInputFilesAtOutputLevel());
 			}
 		};
 
@@ -110,6 +191,30 @@ class EventNotifierTest {
 		assertThat(outputLevels).isNotEmpty();
 		assertThat(reasons).containsExactly(CompactionReason.MANUAL_COMPACTION);
 		assertThat(statuses).allSatisfy(status -> assertThat(status).isNull());
+		assertThat(cfIds).containsExactly(0);
+		assertThat(threadIds.get(0)).isPositive();
+		assertThat(jobIds.get(0)).isPositive();
+		// RocksDB's own CompactionJobInfo::num_l0_files is not populated by BuildCompactionJobInfo
+		// upstream (see db_impl_compaction_flush.cc); a compaction-job-stats-derived field like
+		// numCorruptKeys/inputRecords/etc. can likewise legitimately stay zero depending on
+		// whether the picked compaction takes the full CompactionJob::Run() path or a cheaper one
+		// (e.g. a trivial move) -- these are asserted as non-negative rather than pinned to an
+		// exact value, so the test stays meaningful without depending on that internal choice.
+		assertThat(numL0Files.get(0)).isGreaterThanOrEqualTo(0);
+		assertThat(baseInputLevels.get(0)).isGreaterThanOrEqualTo(0);
+		assertThat(compressions.get(0)).isNotNull();
+		assertThat(blobCompressionTypes.get(0)).isNotNull();
+		assertThat(aborteds).containsExactly(false);
+		assertThat(inputFilesCounts.get(0)).isPositive();
+		assertThat(outputFilesCounts.get(0)).isPositive();
+		assertThat(elapsedTimes.get(0)).isNotNull();
+		assertThat(numCorruptKeys.get(0)).isGreaterThanOrEqualTo(0L);
+		assertThat(inputRecords.get(0)).isGreaterThanOrEqualTo(0L);
+		assertThat(outputRecords.get(0)).isGreaterThanOrEqualTo(0L);
+		assertThat(totalInputBytes.get(0)).isNotNull();
+		assertThat(totalOutputBytes.get(0)).isNotNull();
+		assertThat(numInputFiles.get(0)).isPositive();
+		assertThat(numInputFilesAtOutputLevel.get(0)).isGreaterThanOrEqualTo(0L);
 	}
 
 	@Test
@@ -125,10 +230,16 @@ class EventNotifierTest {
 		}
 
 		List<String> ingestedCfNames = new CopyOnWriteArrayList<>();
+		List<Path> externalFilePaths = new CopyOnWriteArrayList<>();
+		List<Path> internalFilePaths = new CopyOnWriteArrayList<>();
+		List<SequenceNumber> globalSeqnos = new CopyOnWriteArrayList<>();
 		EventNotifier notifier = new EventNotifier() {
 			@Override
 			public void onExternalFileIngested(ExternalFileIngestionInfo info) {
 				ingestedCfNames.add(info.columnFamilyName());
+				externalFilePaths.add(info.externalFilePath());
+				internalFilePaths.add(info.internalFilePath());
+				globalSeqnos.add(info.globalSequenceNumber());
 			}
 		};
 
@@ -141,6 +252,9 @@ class EventNotifierTest {
 
 		// Then
 		assertThat(ingestedCfNames).containsExactly("default");
+		assertThat(externalFilePaths).containsExactly(sstPath);
+		assertThat(internalFilePaths.get(0)).startsWith(dbPath).hasExtension("sst");
+		assertThat(globalSeqnos).containsExactly(SequenceNumber.of(0));
 	}
 
 	@Test
