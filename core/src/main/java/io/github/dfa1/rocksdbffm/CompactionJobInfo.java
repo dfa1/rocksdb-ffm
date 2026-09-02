@@ -148,17 +148,14 @@ public final class CompactionJobInfo {
 		}
 	}
 
-	/// Returns the outcome of the compaction.
+	/// Throws if this compaction did not succeed.
 	///
-	/// @return `null` if the compaction succeeded, or the [RocksDBException] describing why it failed
-	public RocksDBException status() {
+	/// @throws RocksDBException describing why the compaction failed, if it did
+	public void status() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MH_STATUS.invokeExact(ptr, err);
 			RocksDB.checkError(err);
-			return null;
-		} catch (RocksDBException e) {
-			return e;
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.status failed", t);
 		}

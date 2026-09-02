@@ -130,7 +130,7 @@ class EventNotifierTest {
 		// compactRange() call below is the only thing that triggers a compaction.
 		List<Integer> outputLevels = new CopyOnWriteArrayList<>();
 		List<CompactionReason> reasons = new CopyOnWriteArrayList<>();
-		List<RocksDBException> statuses = new CopyOnWriteArrayList<>();
+		List<Boolean> statusSucceeded = new CopyOnWriteArrayList<>();
 		List<Integer> cfIds = new CopyOnWriteArrayList<>();
 		List<Long> threadIds = new CopyOnWriteArrayList<>();
 		List<Integer> jobIds = new CopyOnWriteArrayList<>();
@@ -154,7 +154,12 @@ class EventNotifierTest {
 			public void onCompactionCompleted(CompactionJobInfo info) {
 				outputLevels.add(info.outputLevel());
 				reasons.add(info.compactionReason());
-				statuses.add(info.status());
+				try {
+					info.status();
+					statusSucceeded.add(true);
+				} catch (RocksDBException e) {
+					statusSucceeded.add(false);
+				}
 				cfIds.add(info.columnFamilyId());
 				threadIds.add(info.threadId());
 				jobIds.add(info.jobId());
@@ -190,7 +195,7 @@ class EventNotifierTest {
 		// Then
 		assertThat(outputLevels).isNotEmpty();
 		assertThat(reasons).containsExactly(CompactionReason.MANUAL_COMPACTION);
-		assertThat(statuses).allSatisfy(status -> assertThat(status).isNull());
+		assertThat(statusSucceeded).containsOnly(true);
 		assertThat(cfIds).containsExactly(0);
 		assertThat(threadIds.get(0)).isPositive();
 		assertThat(jobIds.get(0)).isPositive();
