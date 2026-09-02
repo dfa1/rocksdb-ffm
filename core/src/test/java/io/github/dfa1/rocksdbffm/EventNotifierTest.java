@@ -345,4 +345,34 @@ class EventNotifierTest {
 		assertThat(firstCount.get()).isPositive();
 		assertThat(secondCount.get()).isPositive();
 	}
+
+	@Test
+	void notifier_withNoOverrides_defaultCallbacksAreNoOpsAndDoNotThrow(@TempDir Path dir) {
+		// Given — a listener that overrides nothing, exercising every EventNotifier default
+		// method's no-op body (onFlushBegin/onFlushCompleted/onCompactionBegin/
+		// onCompactionCompleted/onExternalFileIngested/onMemTableSealed) via real flush,
+		// compaction, and ingestion callbacks that all land on the interface defaults.
+		EventNotifier notifier = new EventNotifier() {
+		};
+
+		Path sstPath = dir.resolve("data.sst");
+		try (var writerOpts = Options.newOptions().setCreateIfMissing(true);
+		     var writer = SstFileWriter.newSstFileWriter(writerOpts)) {
+			writer.open(sstPath);
+			writer.put("aaa".getBytes(), "val1".getBytes());
+			writer.finish();
+		}
+
+		try (var opts = Options.newOptions().setCreateIfMissing(true).addEventListener(notifier);
+		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"))) {
+			db.put("k".getBytes(), "v".getBytes());
+			db.flush(FlushOptions.newFlushOptions());
+
+			// When
+			db.ingestExternalFile(sstPath);
+			db.compactRange();
+
+			// Then — no exception escaped any default callback
+		}
+	}
 }
