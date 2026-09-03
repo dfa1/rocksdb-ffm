@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11] — 2026-09-03
+
+`EventNotifier` (flush/compaction/ingestion/background-error/stall/memtable-seal callbacks),
+tracing and replay (`RocksDBTracingOperations`, `Replayer`), `FifoCompactionOptions`/
+`UniversalCompactionOptions`/`CuckooTableOptions`/`EnvOptions`, `getApproximateSizes`, further
+`BlockBasedTableOptions`/`Options` tuning, `LRUCache`/`HyperClockCache` parity, a `System.exit()`
+deadlock fix, and two breaking renames.
+
 ### Added
 
 - `Cache`: `getTableAddressCount`/`getOccupancyCount` (load-factor diagnostics) and `disownData`
@@ -386,7 +394,8 @@ Initial release. An FFM-based RocksDB binding built from scratch against `rocksd
 - All tests migrated to the `// Given / // When / // Then` + AssertJ convention. ([c8cfae5](https://github.com/dfa1/rocksdbffm/commit/c8cfae5))
 - Error handling centralized on `RocksDB.errHolder`/`checkError`; per-class `ThreadLocal` error pointers removed in favor of a shared `Arena`-based pattern. ([736c926](https://github.com/dfa1/rocksdbffm/commit/736c926))
 
-[Unreleased]: https://github.com/dfa1/rocksdbffm/compare/v0.10...HEAD
+[Unreleased]: https://github.com/dfa1/rocksdbffm/compare/v0.11...HEAD
+[0.11]: https://github.com/dfa1/rocksdbffm/compare/v0.10...v0.11
 [0.10]: https://github.com/dfa1/rocksdbffm/compare/v0.9...v0.10
 [0.9]: https://github.com/dfa1/rocksdbffm/compare/v0.8...v0.9
 [0.8]: https://github.com/dfa1/rocksdbffm/compare/v0.7...v0.8
