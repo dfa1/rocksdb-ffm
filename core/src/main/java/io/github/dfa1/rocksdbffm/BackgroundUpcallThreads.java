@@ -109,11 +109,19 @@ final class BackgroundUpcallThreads {
 			env.setBackgroundThreads(0);
 			env.setHighPriorityBackgroundThreads(0);
 		}
-		awaitTermination(THREADS);
+		awaitTermination(THREADS, DRAIN_TIMEOUT);
 	}
 
-	private static void awaitTermination(Set<Thread> threads) {
-		long deadline = System.nanoTime() + DRAIN_TIMEOUT.toNanos();
+	/// Waits, in iteration order, for each of `threads` to terminate — stopping early once
+	/// `timeout` has elapsed since this call started, or if the waiting thread itself is
+	/// interrupted. Package-private (rather than `private`) so it can be unit tested directly
+	/// with a short `timeout`, instead of a test needing to wait out the real 5-second
+	/// [#DRAIN_TIMEOUT] to exercise the deadline-exceeded branch.
+	///
+	/// @param threads the threads to wait for
+	/// @param timeout the maximum total time to wait across all of `threads`
+	static void awaitTermination(Set<Thread> threads, Duration timeout) {
+		long deadline = System.nanoTime() + timeout.toNanos();
 		for (Thread thread : threads) {
 			long remaining = deadline - System.nanoTime();
 			if (remaining <= 0) {
