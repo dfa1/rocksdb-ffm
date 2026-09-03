@@ -243,8 +243,8 @@ point lookups (no range scans), attached via `Options.setTableFormatConfig(Cucko
 
 | Class              | Factory                                                                | Notes                                    |
 |:-------------------|:-----------------------------------------------------------------------|:-----------------------------------------|
-| `Cache` (abstract) | —                                                                      | `setCapacity`, `getCapacity`, `getUsage`, `getPinnedUsage` |
-| `LRUCache`         | `newLRUCache(MemorySize)`                                              | Sharded LRU                              |
+| `Cache` (abstract) | —                                                                      | `setCapacity`, `getCapacity`, `getUsage`, `getPinnedUsage`, `getTableAddressCount`, `getOccupancyCount`, `disownData` |
+| `LRUCache`         | `newLRUCache(MemorySize)`, `newLRUCache(MemorySize, boolean strictCapacityLimit)`, `newLRUCache(MemorySize, int numShardBits)` | Sharded LRU; the strict-capacity-limit and explicit-shard-count constructors are independent (the C API has no combined form) |
 | `HyperClockCache`  | `newHyperClockCache(MemorySize, MemorySize charge[, int numShardBits])`| `MemorySize.ZERO` charge = auto-estimate; `-1` shard bits = auto |
 | `FilterPolicy`     | `newBloom(double bitsPerKey)`, `newRibbon(double)`, `newRibbonHybrid(double, int bloomBeforeLevel)` | Bloom `10` ≈ 1% false positives; Ribbon: ~30% smaller at similar query cost, more CPU/temp space to build; hybrid mixes Bloom for the top levels (cheap to rebuild on flush) with Ribbon below (`bloomBeforeLevel=1` is RocksDB's own standard example) |
 | `RateLimiter`      | `create`, `createAutoTuned`, `createWithMode` (`READS_ONLY`, `WRITES_ONLY`, `ALL_IO`) | Rate given as `MemorySize` per second |

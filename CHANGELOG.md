@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `Cache`: `getTableAddressCount`/`getOccupancyCount` (load-factor diagnostics) and `disownData`
+  (shutdown-only leak-on-purpose call to skip cache teardown accounting).
+- `LRUCache`: `newLRUCache(MemorySize, boolean strictCapacityLimit)` and
+  `newLRUCache(MemorySize, int numShardBits)`, bringing it to parity with `HyperClockCache`.
 - `BlockBasedTableOptions`: auto-readahead tuning — `setMaxAutoReadaheadSize`/`getMaxAutoReadaheadSize`,
   `setInitialAutoReadaheadSize`/`getInitialAutoReadaheadSize`, `setNumFileReadsForAutoReadahead`/
   `getNumFileReadsForAutoReadahead`.
