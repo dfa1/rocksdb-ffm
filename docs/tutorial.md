@@ -45,7 +45,7 @@ you want to run on**. The BOM manages the versions so you never repeat them.
     <dependency>
       <groupId>io.github.dfa1</groupId>
       <artifactId>rocksdbffm-bom</artifactId>
-      <version>0.8</version>
+      <version>0.11</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>

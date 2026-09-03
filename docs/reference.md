@@ -48,7 +48,7 @@ Depend on `rocksdbffm-core` plus one native artifact per platform you ship to; d
 normal and the loader picks the matching one at startup. Gradle:
 
 ```kotlin
-implementation(platform("io.github.dfa1:rocksdbffm-bom:0.8"))
+implementation(platform("io.github.dfa1:rocksdbffm-bom:0.11"))
 implementation("io.github.dfa1:rocksdbffm-core")
 runtimeOnly("io.github.dfa1:rocksdbffm-native-linux-x86_64")
 ```
@@ -57,7 +57,7 @@ runtimeOnly("io.github.dfa1:rocksdbffm-native-linux-x86_64")
 restricted-method warning.
 
 **SBOM:** a CycloneDX SBOM is published with every release. PURL:
-`pkg:maven/io.github.dfa1/rocksdbffm-core@0.8`, which SCA tools (Syft, Grype, Trivy, osv.dev,
+`pkg:maven/io.github.dfa1/rocksdbffm-core@0.11`, which SCA tools (Syft, Grype, Trivy, osv.dev,
 GitHub Advisory DB) use to identify the artifact.
 
 ## Entry points
