@@ -23,7 +23,7 @@ import java.lang.invoke.MethodHandle;
 ///     ...
 /// }
 /// ```
-public final class UniversalCompactionOptions extends AbstractOptions {
+public final class UniversalCompactionOptions extends NativeObject {
 
 	/// When a universal compaction run stops adding more files to the batch, per
 	/// `universal_compaction.h`'s `CompactionStopStyle`.
@@ -149,7 +149,7 @@ public final class UniversalCompactionOptions extends AbstractOptions {
 	/// @param percent size-similarity threshold, as a percentage
 	/// @return `this` for chaining
 	public UniversalCompactionOptions setSizeRatio(int percent) {
-		setInt(MH_SET_SIZE_RATIO, percent);
+		NativeFields.setInt(MH_SET_SIZE_RATIO, ptr(), percent);
 		return this;
 	}
 
@@ -157,7 +157,7 @@ public final class UniversalCompactionOptions extends AbstractOptions {
 	///
 	/// @return current size-ratio percentage
 	public int getSizeRatio() {
-		return getInt(MH_GET_SIZE_RATIO);
+		return NativeFields.getInt(MH_GET_SIZE_RATIO, ptr());
 	}
 
 	/// Minimum number of files a compaction run must merge together. Default: 2.
@@ -165,7 +165,7 @@ public final class UniversalCompactionOptions extends AbstractOptions {
 	/// @param width minimum number of files per compaction run
 	/// @return `this` for chaining
 	public UniversalCompactionOptions setMinMergeWidth(int width) {
-		setInt(MH_SET_MIN_MERGE_WIDTH, width);
+		NativeFields.setInt(MH_SET_MIN_MERGE_WIDTH, ptr(), width);
 		return this;
 	}
 
@@ -173,7 +173,7 @@ public final class UniversalCompactionOptions extends AbstractOptions {
 	///
 	/// @return current minimum merge width
 	public int getMinMergeWidth() {
-		return getInt(MH_GET_MIN_MERGE_WIDTH);
+		return NativeFields.getInt(MH_GET_MIN_MERGE_WIDTH, ptr());
 	}
 
 	/// Maximum number of files a single compaction run may merge together. The underlying
@@ -184,7 +184,7 @@ public final class UniversalCompactionOptions extends AbstractOptions {
 	/// @param width maximum number of files per compaction run
 	/// @return `this` for chaining
 	public UniversalCompactionOptions setMaxMergeWidth(int width) {
-		setInt(MH_SET_MAX_MERGE_WIDTH, width);
+		NativeFields.setInt(MH_SET_MAX_MERGE_WIDTH, ptr(), width);
 		return this;
 	}
 
@@ -192,7 +192,7 @@ public final class UniversalCompactionOptions extends AbstractOptions {
 	///
 	/// @return current maximum merge width
 	public int getMaxMergeWidth() {
-		return getInt(MH_GET_MAX_MERGE_WIDTH);
+		return NativeFields.getInt(MH_GET_MAX_MERGE_WIDTH, ptr());
 	}
 
 	/// Once the estimated space amplification (extra space used by non-bottommost data, as a
@@ -203,7 +203,7 @@ public final class UniversalCompactionOptions extends AbstractOptions {
 	/// @param percent maximum tolerated space amplification, as a percentage
 	/// @return `this` for chaining
 	public UniversalCompactionOptions setMaxSizeAmplificationPercent(int percent) {
-		setInt(MH_SET_MAX_SIZE_AMPLIFICATION_PERCENT, percent);
+		NativeFields.setInt(MH_SET_MAX_SIZE_AMPLIFICATION_PERCENT, ptr(), percent);
 		return this;
 	}
 
@@ -211,7 +211,7 @@ public final class UniversalCompactionOptions extends AbstractOptions {
 	///
 	/// @return current maximum size amplification percentage
 	public int getMaxSizeAmplificationPercent() {
-		return getInt(MH_GET_MAX_SIZE_AMPLIFICATION_PERCENT);
+		return NativeFields.getInt(MH_GET_MAX_SIZE_AMPLIFICATION_PERCENT, ptr());
 	}
 
 	/// Percentage of the compaction size that is allowed to bypass the size-amplification
@@ -221,7 +221,7 @@ public final class UniversalCompactionOptions extends AbstractOptions {
 	/// @param percent percentage of compaction size using a cheaper compression level
 	/// @return `this` for chaining
 	public UniversalCompactionOptions setCompressionSizePercent(int percent) {
-		setInt(MH_SET_COMPRESSION_SIZE_PERCENT, percent);
+		NativeFields.setInt(MH_SET_COMPRESSION_SIZE_PERCENT, ptr(), percent);
 		return this;
 	}
 
@@ -229,7 +229,7 @@ public final class UniversalCompactionOptions extends AbstractOptions {
 	///
 	/// @return current compression size percentage
 	public int getCompressionSizePercent() {
-		return getInt(MH_GET_COMPRESSION_SIZE_PERCENT);
+		return NativeFields.getInt(MH_GET_COMPRESSION_SIZE_PERCENT, ptr());
 	}
 
 	/// Sets when a compaction run stops adding more files. Default: [StopStyle#TOTAL_SIZE].
@@ -237,7 +237,7 @@ public final class UniversalCompactionOptions extends AbstractOptions {
 	/// @param stopStyle the stop style to use
 	/// @return `this` for chaining
 	public UniversalCompactionOptions setStopStyle(StopStyle stopStyle) {
-		setInt(MH_SET_STOP_STYLE, stopStyle.value);
+		NativeFields.setInt(MH_SET_STOP_STYLE, ptr(), stopStyle.value);
 		return this;
 	}
 
@@ -245,7 +245,7 @@ public final class UniversalCompactionOptions extends AbstractOptions {
 	///
 	/// @return current stop style
 	public StopStyle getStopStyle() {
-		return StopStyle.fromValue(getInt(MH_GET_STOP_STYLE));
+		return StopStyle.fromValue(NativeFields.getInt(MH_GET_STOP_STYLE, ptr()));
 	}
 
 	@Override

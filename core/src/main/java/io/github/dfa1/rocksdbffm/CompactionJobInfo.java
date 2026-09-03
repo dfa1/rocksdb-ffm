@@ -128,11 +128,7 @@ public final class CompactionJobInfo {
 	///
 	/// @return the column family id
 	public int columnFamilyId() {
-		try {
-			return (int) MH_CF_ID.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.columnFamilyId failed", t);
-		}
+		return NativeFields.getInt(MH_CF_ID, ptr);
 	}
 
 	/// Returns the name of the column family being compacted.
@@ -151,13 +147,13 @@ public final class CompactionJobInfo {
 	/// Throws if this compaction did not succeed.
 	///
 	/// @throws RocksDBException describing why the compaction failed, if it did
-	public void status() {
+	public void checkStatus() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = RocksDB.errHolder(arena);
 			MH_STATUS.invokeExact(ptr, err);
 			RocksDB.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.status failed", t);
+			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.checkStatus failed", t);
 		}
 	}
 
@@ -165,208 +161,132 @@ public final class CompactionJobInfo {
 	///
 	/// @return the compaction thread id
 	public long threadId() {
-		try {
-			return (long) MH_THREAD_ID.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.threadId failed", t);
-		}
+		return NativeFields.getLong(MH_THREAD_ID, ptr);
 	}
 
 	/// Returns the id of this compaction job.
 	///
 	/// @return the job id
 	public int jobId() {
-		try {
-			return (int) MH_JOB_ID.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.jobId failed", t);
-		}
+		return NativeFields.getInt(MH_JOB_ID, ptr);
 	}
 
 	/// Returns the number of level-0 files that were part of this compaction's input.
 	///
 	/// @return the number of level-0 input files
 	public int numL0Files() {
-		try {
-			return (int) MH_NUM_L0_FILES.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.numL0Files failed", t);
-		}
+		return NativeFields.getInt(MH_NUM_L0_FILES, ptr);
 	}
 
 	/// Returns the lowest level that had files as input to this compaction.
 	///
 	/// @return the base input level
 	public int baseInputLevel() {
-		try {
-			return (int) MH_BASE_INPUT_LEVEL.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.baseInputLevel failed", t);
-		}
+		return NativeFields.getInt(MH_BASE_INPUT_LEVEL, ptr);
 	}
 
 	/// Returns the level this compaction wrote its output to.
 	///
 	/// @return the output level
 	public int outputLevel() {
-		try {
-			return (int) MH_OUTPUT_LEVEL.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.outputLevel failed", t);
-		}
+		return NativeFields.getInt(MH_OUTPUT_LEVEL, ptr);
 	}
 
 	/// Returns why this compaction was triggered.
 	///
 	/// @return the compaction reason
 	public CompactionReason compactionReason() {
-		try {
-			return CompactionReason.fromValue((int) MH_COMPACTION_REASON.invokeExact(ptr));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.compactionReason failed", t);
-		}
+		return CompactionReason.fromValue(NativeFields.getInt(MH_COMPACTION_REASON, ptr));
 	}
 
 	/// Returns the compression type used for this compaction's output.
 	///
 	/// @return the output compression type
 	public CompressionType compression() {
-		try {
-			return CompressionType.fromValue((int) MH_COMPRESSION.invokeExact(ptr));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.compression failed", t);
-		}
+		return CompressionType.fromValue(NativeFields.getInt(MH_COMPRESSION, ptr));
 	}
 
 	/// Returns the compression type used for blob values referenced by this compaction.
 	///
 	/// @return the blob compression type
 	public CompressionType blobCompressionType() {
-		try {
-			return CompressionType.fromValue((int) MH_BLOB_COMPRESSION_TYPE.invokeExact(ptr));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.blobCompressionType failed", t);
-		}
+		return CompressionType.fromValue(NativeFields.getInt(MH_BLOB_COMPRESSION_TYPE, ptr));
 	}
 
 	/// Returns whether this compaction was aborted before completing.
 	///
 	/// @return `true` if the compaction was aborted
 	public boolean aborted() {
-		try {
-			return (byte) MH_ABORTED.invokeExact(ptr) != 0;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.aborted failed", t);
-		}
+		return NativeFields.getBoolean(MH_ABORTED, ptr);
 	}
 
 	/// Returns the number of input files across all input levels.
 	///
 	/// @return the input file count
 	public long inputFilesCount() {
-		try {
-			return (long) MH_INPUT_FILES_COUNT.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.inputFilesCount failed", t);
-		}
+		return NativeFields.getLong(MH_INPUT_FILES_COUNT, ptr);
 	}
 
 	/// Returns the number of output files produced by this compaction.
 	///
 	/// @return the output file count
 	public long outputFilesCount() {
-		try {
-			return (long) MH_OUTPUT_FILES_COUNT.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.outputFilesCount failed", t);
-		}
+		return NativeFields.getLong(MH_OUTPUT_FILES_COUNT, ptr);
 	}
 
 	/// Returns how long this compaction took to run.
 	///
 	/// @return the elapsed time
 	public java.time.Duration elapsed() {
-		try {
-			return java.time.Duration.ofNanos((long) MH_ELAPSED_MICROS.invokeExact(ptr) * 1000);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.elapsed failed", t);
-		}
+		return java.time.Duration.ofNanos(NativeFields.getLong(MH_ELAPSED_MICROS, ptr) * 1000);
 	}
 
 	/// Returns the number of corrupt keys encountered while compacting.
 	///
 	/// @return the number of corrupt keys
 	public long numCorruptKeys() {
-		try {
-			return (long) MH_NUM_CORRUPT_KEYS.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.numCorruptKeys failed", t);
-		}
+		return NativeFields.getLong(MH_NUM_CORRUPT_KEYS, ptr);
 	}
 
 	/// Returns the number of records read as input to this compaction.
 	///
 	/// @return the input record count
 	public long inputRecords() {
-		try {
-			return (long) MH_INPUT_RECORDS.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.inputRecords failed", t);
-		}
+		return NativeFields.getLong(MH_INPUT_RECORDS, ptr);
 	}
 
 	/// Returns the number of records written as output by this compaction.
 	///
 	/// @return the output record count
 	public long outputRecords() {
-		try {
-			return (long) MH_OUTPUT_RECORDS.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.outputRecords failed", t);
-		}
+		return NativeFields.getLong(MH_OUTPUT_RECORDS, ptr);
 	}
 
 	/// Returns the total size of this compaction's input files.
 	///
 	/// @return the total input size
 	public MemorySize totalInputBytes() {
-		try {
-			return MemorySize.ofBytes((long) MH_TOTAL_INPUT_BYTES.invokeExact(ptr));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.totalInputBytes failed", t);
-		}
+		return NativeFields.getMemorySize(MH_TOTAL_INPUT_BYTES, ptr);
 	}
 
 	/// Returns the total size of this compaction's output files.
 	///
 	/// @return the total output size
 	public MemorySize totalOutputBytes() {
-		try {
-			return MemorySize.ofBytes((long) MH_TOTAL_OUTPUT_BYTES.invokeExact(ptr));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.totalOutputBytes failed", t);
-		}
+		return NativeFields.getMemorySize(MH_TOTAL_OUTPUT_BYTES, ptr);
 	}
 
 	/// Returns the number of input files, counted the same way as [#inputFilesCount()].
 	///
 	/// @return the number of input files
 	public long numInputFiles() {
-		try {
-			return (long) MH_NUM_INPUT_FILES.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.numInputFiles failed", t);
-		}
+		return NativeFields.getLong(MH_NUM_INPUT_FILES, ptr);
 	}
 
 	/// Returns the number of input files that were at the output level already.
 	///
 	/// @return the number of input files at the output level
 	public long numInputFilesAtOutputLevel() {
-		try {
-			return (long) MH_NUM_INPUT_FILES_AT_OUTPUT_LEVEL.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.numInputFilesAtOutputLevel failed", t);
-		}
+		return NativeFields.getLong(MH_NUM_INPUT_FILES_AT_OUTPUT_LEVEL, ptr);
 	}
 }

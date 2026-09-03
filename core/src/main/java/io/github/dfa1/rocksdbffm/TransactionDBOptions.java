@@ -9,7 +9,7 @@ import java.time.Duration;
 /// FFM wrapper for `rocksdb_transactiondb_options_t` — global, database-wide settings for a
 /// [TransactionDB] (lock manager sizing, timeouts, and write policy). Per-transaction settings
 /// (snapshot, deadlock detection, per-call lock timeout) live on [TransactionOptions] instead.
-public final class TransactionDBOptions extends AbstractOptions {
+public final class TransactionDBOptions extends NativeObject {
 
 	/// `rocksdb_transactiondb_options_t* rocksdb_transactiondb_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -180,7 +180,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	/// @param maxNumLocks max locks; `-1` for unlimited
 	/// @return this instance for chaining
 	public TransactionDBOptions setMaxNumLocks(long maxNumLocks) {
-		setLong(MH_SET_MAX_NUM_LOCKS, maxNumLocks);
+		NativeFields.setLong(MH_SET_MAX_NUM_LOCKS, ptr(), maxNumLocks);
 		return this;
 	}
 
@@ -188,7 +188,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	///
 	/// @return max locks; `-1` means unlimited
 	public long getMaxNumLocks() {
-		return getLong(MH_GET_MAX_NUM_LOCKS);
+		return NativeFields.getLong(MH_GET_MAX_NUM_LOCKS, ptr());
 	}
 
 	/// Maximum number of deadlocks to track in the deadlock detection buffer. Default: 5.
@@ -196,7 +196,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	/// @param maxNumDeadlocks max tracked deadlocks
 	/// @return this instance for chaining
 	public TransactionDBOptions setMaxNumDeadlocks(int maxNumDeadlocks) {
-		setInt(MH_SET_MAX_NUM_DEADLOCKS, maxNumDeadlocks);
+		NativeFields.setInt(MH_SET_MAX_NUM_DEADLOCKS, ptr(), maxNumDeadlocks);
 		return this;
 	}
 
@@ -204,7 +204,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	///
 	/// @return max tracked deadlocks
 	public int getMaxNumDeadlocks() {
-		return getInt(MH_GET_MAX_NUM_DEADLOCKS);
+		return NativeFields.getInt(MH_GET_MAX_NUM_DEADLOCKS, ptr());
 	}
 
 	/// Number of sub-lock-tables. Increasing reduces lock contention. Default: 16.
@@ -212,7 +212,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	/// @param numStripes number of lock-table stripes
 	/// @return this instance for chaining
 	public TransactionDBOptions setNumStripes(long numStripes) {
-		setLong(MH_SET_NUM_STRIPES, numStripes);
+		NativeFields.setLong(MH_SET_NUM_STRIPES, ptr(), numStripes);
 		return this;
 	}
 
@@ -220,7 +220,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	///
 	/// @return number of lock-table stripes
 	public long getNumStripes() {
-		return getLong(MH_GET_NUM_STRIPES);
+		return NativeFields.getLong(MH_GET_NUM_STRIPES, ptr());
 	}
 
 	/// Default wait timeout for acquiring a lock via [TransactionDB], used when a transaction
@@ -307,7 +307,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	/// @param writePolicy the write policy
 	/// @return this instance for chaining
 	public TransactionDBOptions setWritePolicy(WritePolicy writePolicy) {
-		setInt(MH_SET_WRITE_POLICY, writePolicy.getValue());
+		NativeFields.setInt(MH_SET_WRITE_POLICY, ptr(), writePolicy.getValue());
 		return this;
 	}
 
@@ -315,7 +315,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	///
 	/// @return the active [WritePolicy]
 	public WritePolicy getWritePolicy() {
-		return WritePolicy.fromValue(getInt(MH_GET_WRITE_POLICY));
+		return WritePolicy.fromValue(NativeFields.getInt(MH_GET_WRITE_POLICY, ptr()));
 	}
 
 	/// If `true`, [Transaction#rollback()] on a key with a merge operand rolls back by
@@ -325,7 +325,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	/// @param value `true` to roll back merge operands
 	/// @return this instance for chaining
 	public TransactionDBOptions setRollbackMergeOperands(boolean value) {
-		setBoolean(MH_SET_ROLLBACK_MERGE_OPERANDS, value);
+		NativeFields.setBoolean(MH_SET_ROLLBACK_MERGE_OPERANDS, ptr(), value);
 		return this;
 	}
 
@@ -333,7 +333,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	///
 	/// @return `true` if merge operands are rolled back
 	public boolean getRollbackMergeOperands() {
-		return getBoolean(MH_GET_ROLLBACK_MERGE_OPERANDS);
+		return NativeFields.getBoolean(MH_GET_ROLLBACK_MERGE_OPERANDS, ptr());
 	}
 
 	/// If `true`, uses a lock manager that locks each key individually rather than by range,
@@ -342,7 +342,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	/// @param value `true` to use the per-key point lock manager
 	/// @return this instance for chaining
 	public TransactionDBOptions setUsePerKeyPointLockMgr(boolean value) {
-		setBoolean(MH_SET_USE_PER_KEY_POINT_LOCK_MGR, value);
+		NativeFields.setBoolean(MH_SET_USE_PER_KEY_POINT_LOCK_MGR, ptr(), value);
 		return this;
 	}
 
@@ -350,7 +350,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	///
 	/// @return `true` if the per-key point lock manager is active
 	public boolean getUsePerKeyPointLockMgr() {
-		return getBoolean(MH_GET_USE_PER_KEY_POINT_LOCK_MGR);
+		return NativeFields.getBoolean(MH_GET_USE_PER_KEY_POINT_LOCK_MGR, ptr());
 	}
 
 	/// If `true`, skips two-phase locking and relies on the write policy alone for isolation.
@@ -360,7 +360,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	/// @param value `true` to skip concurrency control
 	/// @return this instance for chaining
 	public TransactionDBOptions setSkipConcurrencyControl(boolean value) {
-		setBoolean(MH_SET_SKIP_CONCURRENCY_CONTROL, value);
+		NativeFields.setBoolean(MH_SET_SKIP_CONCURRENCY_CONTROL, ptr(), value);
 		return this;
 	}
 
@@ -368,7 +368,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	///
 	/// @return `true` if concurrency control is skipped
 	public boolean getSkipConcurrencyControl() {
-		return getBoolean(MH_GET_SKIP_CONCURRENCY_CONTROL);
+		return NativeFields.getBoolean(MH_GET_SKIP_CONCURRENCY_CONTROL, ptr());
 	}
 
 	/// Default write-batch size at which a transaction using [WritePolicy#WRITE_PREPARED] or
@@ -380,7 +380,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	/// @param defaultWriteBatchFlushThreshold flush threshold; [MemorySize#ZERO] disables it
 	/// @return this instance for chaining
 	public TransactionDBOptions setDefaultWriteBatchFlushThreshold(MemorySize defaultWriteBatchFlushThreshold) {
-		setMemorySize(MH_SET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD, defaultWriteBatchFlushThreshold);
+		NativeFields.setMemorySize(MH_SET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD, ptr(), defaultWriteBatchFlushThreshold);
 		return this;
 	}
 
@@ -388,7 +388,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	///
 	/// @return flush threshold; [MemorySize#ZERO] means disabled
 	public MemorySize getDefaultWriteBatchFlushThreshold() {
-		return getMemorySize(MH_GET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD);
+		return NativeFields.getMemorySize(MH_GET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD, ptr());
 	}
 
 	/// If `true`, validates user-defined timestamp sizes for consistency across column families.
@@ -397,7 +397,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	/// @param value `true` to enable user-defined-timestamp validation
 	/// @return this instance for chaining
 	public TransactionDBOptions setEnableUdtValidation(boolean value) {
-		setBoolean(MH_SET_ENABLE_UDT_VALIDATION, value);
+		NativeFields.setBoolean(MH_SET_ENABLE_UDT_VALIDATION, ptr(), value);
 		return this;
 	}
 
@@ -405,7 +405,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	///
 	/// @return `true` if user-defined-timestamp validation is enabled
 	public boolean getEnableUdtValidation() {
-		return getBoolean(MH_GET_ENABLE_UDT_VALIDATION);
+		return NativeFields.getBoolean(MH_GET_ENABLE_UDT_VALIDATION, ptr());
 	}
 
 	/// Number of keys in a transaction's write batch above which commit bypasses the memtable
@@ -416,7 +416,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	/// @param txnCommitBypassMemtableThreshold key-count threshold; `0` disables the bypass
 	/// @return this instance for chaining
 	public TransactionDBOptions setTxnCommitBypassMemtableThreshold(int txnCommitBypassMemtableThreshold) {
-		setInt(MH_SET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD, txnCommitBypassMemtableThreshold);
+		NativeFields.setInt(MH_SET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD, ptr(), txnCommitBypassMemtableThreshold);
 		return this;
 	}
 
@@ -424,7 +424,7 @@ public final class TransactionDBOptions extends AbstractOptions {
 	///
 	/// @return key-count threshold; `0` means the bypass is disabled
 	public int getTxnCommitBypassMemtableThreshold() {
-		return getInt(MH_GET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD);
+		return NativeFields.getInt(MH_GET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD, ptr());
 	}
 
 	@Override

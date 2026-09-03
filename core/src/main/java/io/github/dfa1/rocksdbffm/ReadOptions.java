@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 /// FFM wrapper for `rocksdb_readoptions_t`.
-public final class ReadOptions extends AbstractOptions {
+public final class ReadOptions extends NativeObject {
 
 	/// `rocksdb_readoptions_t* rocksdb_readoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -179,7 +179,7 @@ public final class ReadOptions extends AbstractOptions {
 	/// @param verifyChecksums `true` to verify checksums on disk reads
 	/// @return `this` for chaining
 	public ReadOptions setVerifyChecksums(boolean verifyChecksums) {
-		setBoolean(MH_SET_VERIFY_CHECKSUMS, verifyChecksums);
+		NativeFields.setBoolean(MH_SET_VERIFY_CHECKSUMS, ptr(), verifyChecksums);
 		return this;
 	}
 
@@ -187,7 +187,7 @@ public final class ReadOptions extends AbstractOptions {
 	///
 	/// @return `true` if checksum verification is enabled
 	public boolean isVerifyChecksums() {
-		return getBoolean(MH_GET_VERIFY_CHECKSUMS);
+		return NativeFields.getBoolean(MH_GET_VERIFY_CHECKSUMS, ptr());
 	}
 
 	/// If `true`, blocks read from disk are inserted into the block cache. Set `false` for scans
@@ -196,7 +196,7 @@ public final class ReadOptions extends AbstractOptions {
 	/// @param fillCache `true` to populate the block cache with blocks read for this operation
 	/// @return `this` for chaining
 	public ReadOptions setFillCache(boolean fillCache) {
-		setBoolean(MH_SET_FILL_CACHE, fillCache);
+		NativeFields.setBoolean(MH_SET_FILL_CACHE, ptr(), fillCache);
 		return this;
 	}
 
@@ -204,7 +204,7 @@ public final class ReadOptions extends AbstractOptions {
 	///
 	/// @return `true` if the block cache is populated on read
 	public boolean isFillCache() {
-		return getBoolean(MH_GET_FILL_CACHE);
+		return NativeFields.getBoolean(MH_GET_FILL_CACHE, ptr());
 	}
 
 	/// If `true`, an iterator's returned keys/values stay valid for the iterator's lifetime
@@ -214,7 +214,7 @@ public final class ReadOptions extends AbstractOptions {
 	/// @param pinData `true` to pin blocks backing iterator results for the iterator's lifetime
 	/// @return `this` for chaining
 	public ReadOptions setPinData(boolean pinData) {
-		setBoolean(MH_SET_PIN_DATA, pinData);
+		NativeFields.setBoolean(MH_SET_PIN_DATA, ptr(), pinData);
 		return this;
 	}
 
@@ -222,7 +222,7 @@ public final class ReadOptions extends AbstractOptions {
 	///
 	/// @return `true` if iterator results stay valid for the iterator's lifetime
 	public boolean isPinData() {
-		return getBoolean(MH_GET_PIN_DATA);
+		return NativeFields.getBoolean(MH_GET_PIN_DATA, ptr());
 	}
 
 	/// If `true`, creates a tailing iterator that reflects writes committed after it was created,
@@ -231,7 +231,7 @@ public final class ReadOptions extends AbstractOptions {
 	/// @param tailing `true` to create a tailing iterator
 	/// @return `this` for chaining
 	public ReadOptions setTailing(boolean tailing) {
-		setBoolean(MH_SET_TAILING, tailing);
+		NativeFields.setBoolean(MH_SET_TAILING, ptr(), tailing);
 		return this;
 	}
 
@@ -239,7 +239,7 @@ public final class ReadOptions extends AbstractOptions {
 	///
 	/// @return `true` if a tailing iterator is created
 	public boolean isTailing() {
-		return getBoolean(MH_GET_TAILING);
+		return NativeFields.getBoolean(MH_GET_TAILING, ptr());
 	}
 
 	/// If `true`, forces a total-order seek even when the column family uses a prefix extractor,
@@ -249,7 +249,7 @@ public final class ReadOptions extends AbstractOptions {
 	/// @param totalOrderSeek `true` to bypass prefix-based seek optimizations
 	/// @return `this` for chaining
 	public ReadOptions setTotalOrderSeek(boolean totalOrderSeek) {
-		setBoolean(MH_SET_TOTAL_ORDER_SEEK, totalOrderSeek);
+		NativeFields.setBoolean(MH_SET_TOTAL_ORDER_SEEK, ptr(), totalOrderSeek);
 		return this;
 	}
 
@@ -257,7 +257,7 @@ public final class ReadOptions extends AbstractOptions {
 	///
 	/// @return `true` if total-order seek is forced
 	public boolean isTotalOrderSeek() {
-		return getBoolean(MH_GET_TOTAL_ORDER_SEEK);
+		return NativeFields.getBoolean(MH_GET_TOTAL_ORDER_SEEK, ptr());
 	}
 
 	/// If `true`, an iterator behaves like [#setTotalOrderSeek] by default, but RocksDB switches
@@ -275,7 +275,7 @@ public final class ReadOptions extends AbstractOptions {
 	/// @param autoPrefixMode `true` to let RocksDB auto-select prefix-seek mode when it's safe
 	/// @return `this` for chaining
 	public ReadOptions setAutoPrefixMode(boolean autoPrefixMode) {
-		setBoolean(MH_SET_AUTO_PREFIX_MODE, autoPrefixMode);
+		NativeFields.setBoolean(MH_SET_AUTO_PREFIX_MODE, ptr(), autoPrefixMode);
 		return this;
 	}
 
@@ -283,7 +283,7 @@ public final class ReadOptions extends AbstractOptions {
 	///
 	/// @return `true` if automatic prefix-seek mode is enabled
 	public boolean isAutoPrefixMode() {
-		return getBoolean(MH_GET_AUTO_PREFIX_MODE);
+		return NativeFields.getBoolean(MH_GET_AUTO_PREFIX_MODE, ptr());
 	}
 
 	/// If `true`, an iterator only returns entries that share the same prefix (per the column
@@ -293,7 +293,7 @@ public final class ReadOptions extends AbstractOptions {
 	/// @param prefixSameAsStart `true` to stop iteration at the seek key's prefix boundary
 	/// @return `this` for chaining
 	public ReadOptions setPrefixSameAsStart(boolean prefixSameAsStart) {
-		setBoolean(MH_SET_PREFIX_SAME_AS_START, prefixSameAsStart);
+		NativeFields.setBoolean(MH_SET_PREFIX_SAME_AS_START, ptr(), prefixSameAsStart);
 		return this;
 	}
 
@@ -301,7 +301,7 @@ public final class ReadOptions extends AbstractOptions {
 	///
 	/// @return `true` if iteration stops at the seek key's prefix boundary
 	public boolean isPrefixSameAsStart() {
-		return getBoolean(MH_GET_PREFIX_SAME_AS_START);
+		return NativeFields.getBoolean(MH_GET_PREFIX_SAME_AS_START, ptr());
 	}
 
 	/// Read-ahead bytes requested per disk read during a scan. A non-zero value overrides the
@@ -311,7 +311,7 @@ public final class ReadOptions extends AbstractOptions {
 	/// @param readaheadSize read-ahead size, or [MemorySize#ZERO] to leave it unset
 	/// @return `this` for chaining
 	public ReadOptions setReadaheadSize(MemorySize readaheadSize) {
-		setMemorySize(MH_SET_READAHEAD_SIZE, readaheadSize);
+		NativeFields.setMemorySize(MH_SET_READAHEAD_SIZE, ptr(), readaheadSize);
 		return this;
 	}
 
@@ -319,7 +319,7 @@ public final class ReadOptions extends AbstractOptions {
 	///
 	/// @return read-ahead size; [MemorySize#ZERO] means unset
 	public MemorySize getReadaheadSize() {
-		return getMemorySize(MH_GET_READAHEAD_SIZE);
+		return NativeFields.getMemorySize(MH_GET_READAHEAD_SIZE, ptr());
 	}
 
 	// -----------------------------------------------------------------------

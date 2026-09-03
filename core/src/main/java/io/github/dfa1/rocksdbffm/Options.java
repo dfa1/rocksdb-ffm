@@ -17,7 +17,7 @@ import java.lang.invoke.MethodHandle;
 ///
 /// Note: the Options object must remain open until after RocksDB.openReadWrite() returns;
 /// it can be closed immediately after that call.
-public final class Options extends AbstractOptions {
+public final class Options extends NativeObject {
 
 	/// `rocksdb_options_t* rocksdb_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -420,7 +420,7 @@ public final class Options extends AbstractOptions {
 	/// @param value `true` to create the DB if absent
 	/// @return `this` for chaining
 	public Options setCreateIfMissing(boolean value) {
-		setBoolean(MH_SET_CREATE_IF_MISSING, value);
+		NativeFields.setBoolean(MH_SET_CREATE_IF_MISSING, ptr(), value);
 		return this;
 	}
 
@@ -428,7 +428,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return `true` if the DB is created on open when absent
 	public boolean getCreateIfMissing() {
-		return getBoolean(MH_GET_CREATE_IF_MISSING);
+		return NativeFields.getBoolean(MH_GET_CREATE_IF_MISSING, ptr());
 	}
 
 	/// Enables statistics gathering for this DB.
@@ -448,7 +448,7 @@ public final class Options extends AbstractOptions {
 	/// @param level the desired statistics collection level
 	/// @return `this` for chaining
 	public Options setStatisticsLevel(StatsLevel level) {
-		setInt(MH_SET_STATISTICS_LEVEL, level.getValue());
+		NativeFields.setInt(MH_SET_STATISTICS_LEVEL, ptr(), level.getValue());
 		return this;
 	}
 
@@ -456,7 +456,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return the active [StatsLevel]
 	public StatsLevel getStatisticsLevel() {
-		return StatsLevel.fromValue(getInt(MH_GET_STATISTICS_LEVEL));
+		return StatsLevel.fromValue(NativeFields.getInt(MH_GET_STATISTICS_LEVEL, ptr()));
 	}
 
 	/// Returns a human-readable statistics summary, or `null` if statistics are not enabled.
@@ -498,7 +498,6 @@ public final class Options extends AbstractOptions {
 		}
 	}
 
-
 	/// Sets the compression algorithm for all levels.
 	///
 	/// @param type the compression algorithm to use
@@ -508,7 +507,7 @@ public final class Options extends AbstractOptions {
 		if (!type.isSupported()) {
 			throw new UnsupportedOperationException(type + " compression is not linked into the bundled native library");
 		}
-		setInt(MH_SET_COMPRESSION, type.getValue());
+		NativeFields.setInt(MH_SET_COMPRESSION, ptr(), type.getValue());
 		return this;
 	}
 
@@ -516,7 +515,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return the active compression type
 	public CompressionType getCompression() {
-		return CompressionType.fromValue(getInt(MH_GET_COMPRESSION));
+		return CompressionType.fromValue(NativeFields.getInt(MH_GET_COMPRESSION, ptr()));
 	}
 
 	/// Which strategy RocksDB uses to pick which SST files to compact and when, per `c.h`'s
@@ -556,7 +555,7 @@ public final class Options extends AbstractOptions {
 	/// @param style the compaction style to use
 	/// @return `this` for chaining
 	public Options setCompactionStyle(CompactionStyle style) {
-		setInt(MH_SET_COMPACTION_STYLE, style.value);
+		NativeFields.setInt(MH_SET_COMPACTION_STYLE, ptr(), style.value);
 		return this;
 	}
 
@@ -564,7 +563,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return current compaction style
 	public CompactionStyle getCompactionStyle() {
-		return CompactionStyle.fromValue(getInt(MH_GET_COMPACTION_STYLE));
+		return CompactionStyle.fromValue(NativeFields.getInt(MH_GET_COMPACTION_STYLE, ptr()));
 	}
 
 	/// Configures FIFO compaction. Only takes effect when [#setCompactionStyle] is
@@ -637,7 +636,7 @@ public final class Options extends AbstractOptions {
 	/// @param size memtable size threshold that triggers a flush
 	/// @return `this` for chaining
 	public Options setWriteBufferSize(MemorySize size) {
-		setMemorySize(MH_SET_WRITE_BUFFER_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_WRITE_BUFFER_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -645,7 +644,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return current memtable size threshold that triggers a flush
 	public MemorySize getWriteBufferSize() {
-		return getMemorySize(MH_GET_WRITE_BUFFER_SIZE);
+		return NativeFields.getMemorySize(MH_GET_WRITE_BUFFER_SIZE, ptr());
 	}
 
 	/// Number of levels in the LSM tree for this column family. Default: 7.
@@ -653,7 +652,7 @@ public final class Options extends AbstractOptions {
 	/// @param numLevels number of levels
 	/// @return `this` for chaining
 	public Options setNumLevels(int numLevels) {
-		setInt(MH_SET_NUM_LEVELS, numLevels);
+		NativeFields.setInt(MH_SET_NUM_LEVELS, ptr(), numLevels);
 		return this;
 	}
 
@@ -661,7 +660,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return current number of levels
 	public int getNumLevels() {
-		return getInt(MH_GET_NUM_LEVELS);
+		return NativeFields.getInt(MH_GET_NUM_LEVELS, ptr());
 	}
 
 	/// Once the number of level-0 SST files reaches this count, RocksDB triggers a compaction
@@ -673,7 +672,7 @@ public final class Options extends AbstractOptions {
 	/// @param numFiles number of level-0 files that triggers compaction
 	/// @return `this` for chaining
 	public Options setLevel0FileNumCompactionTrigger(int numFiles) {
-		setInt(MH_SET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER, numFiles);
+		NativeFields.setInt(MH_SET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER, ptr(), numFiles);
 		return this;
 	}
 
@@ -681,7 +680,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return current level-0 file count that triggers compaction
 	public int getLevel0FileNumCompactionTrigger() {
-		return getInt(MH_GET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER);
+		return NativeFields.getInt(MH_GET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER, ptr());
 	}
 
 	/// Once the number of level-0 SST files reaches this count, RocksDB slows writes down (an
@@ -693,7 +692,7 @@ public final class Options extends AbstractOptions {
 	/// @param numFiles number of level-0 files that triggers write slowdown
 	/// @return `this` for chaining
 	public Options setLevel0SlowdownWritesTrigger(int numFiles) {
-		setInt(MH_SET_LEVEL0_SLOWDOWN_WRITES_TRIGGER, numFiles);
+		NativeFields.setInt(MH_SET_LEVEL0_SLOWDOWN_WRITES_TRIGGER, ptr(), numFiles);
 		return this;
 	}
 
@@ -701,7 +700,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return current level-0 file count that triggers write slowdown
 	public int getLevel0SlowdownWritesTrigger() {
-		return getInt(MH_GET_LEVEL0_SLOWDOWN_WRITES_TRIGGER);
+		return NativeFields.getInt(MH_GET_LEVEL0_SLOWDOWN_WRITES_TRIGGER, ptr());
 	}
 
 	/// Once the number of level-0 SST files reaches this count, RocksDB stops accepting writes
@@ -711,7 +710,7 @@ public final class Options extends AbstractOptions {
 	/// @param numFiles number of level-0 files that stops writes
 	/// @return `this` for chaining
 	public Options setLevel0StopWritesTrigger(int numFiles) {
-		setInt(MH_SET_LEVEL0_STOP_WRITES_TRIGGER, numFiles);
+		NativeFields.setInt(MH_SET_LEVEL0_STOP_WRITES_TRIGGER, ptr(), numFiles);
 		return this;
 	}
 
@@ -719,7 +718,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return current level-0 file count that stops writes
 	public int getLevel0StopWritesTrigger() {
-		return getInt(MH_GET_LEVEL0_STOP_WRITES_TRIGGER);
+		return NativeFields.getInt(MH_GET_LEVEL0_STOP_WRITES_TRIGGER, ptr());
 	}
 
 	/// If `true`, disables automatic compaction entirely -- only a manually triggered
@@ -728,7 +727,7 @@ public final class Options extends AbstractOptions {
 	/// @param value `true` to disable automatic compaction
 	/// @return `this` for chaining
 	public Options setDisableAutoCompactions(boolean value) {
-		setInt(MH_SET_DISABLE_AUTO_COMPACTIONS, RocksDB.toByte(value));
+		NativeFields.setInt(MH_SET_DISABLE_AUTO_COMPACTIONS, ptr(), RocksDB.toByte(value));
 		return this;
 	}
 
@@ -736,7 +735,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return `true` if automatic compaction is disabled
 	public boolean getDisableAutoCompactions() {
-		return getBoolean(MH_GET_DISABLE_AUTO_COMPACTIONS);
+		return NativeFields.getBoolean(MH_GET_DISABLE_AUTO_COMPACTIONS, ptr());
 	}
 
 	/// Target size for SST files at level 1; higher levels scale up from this by
@@ -745,7 +744,7 @@ public final class Options extends AbstractOptions {
 	/// @param size target SST file size at level 1
 	/// @return `this` for chaining
 	public Options setTargetFileSizeBase(MemorySize size) {
-		setMemorySize(MH_SET_TARGET_FILE_SIZE_BASE, size);
+		NativeFields.setMemorySize(MH_SET_TARGET_FILE_SIZE_BASE, ptr(), size);
 		return this;
 	}
 
@@ -753,7 +752,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return current target SST file size at level 1
 	public MemorySize getTargetFileSizeBase() {
-		return getMemorySize(MH_GET_TARGET_FILE_SIZE_BASE);
+		return NativeFields.getMemorySize(MH_GET_TARGET_FILE_SIZE_BASE, ptr());
 	}
 
 	/// Target total size for level 1; higher levels scale up from this by
@@ -762,7 +761,7 @@ public final class Options extends AbstractOptions {
 	/// @param size target total size for level 1
 	/// @return `this` for chaining
 	public Options setMaxBytesForLevelBase(MemorySize size) {
-		setMemorySize(MH_SET_MAX_BYTES_FOR_LEVEL_BASE, size);
+		NativeFields.setMemorySize(MH_SET_MAX_BYTES_FOR_LEVEL_BASE, ptr(), size);
 		return this;
 	}
 
@@ -770,7 +769,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return current target total size for level 1
 	public MemorySize getMaxBytesForLevelBase() {
-		return getMemorySize(MH_GET_MAX_BYTES_FOR_LEVEL_BASE);
+		return NativeFields.getMemorySize(MH_GET_MAX_BYTES_FOR_LEVEL_BASE, ptr());
 	}
 
 	// -----------------------------------------------------------------------
@@ -784,7 +783,7 @@ public final class Options extends AbstractOptions {
 	/// @param value `true` to enable blob file storage
 	/// @return `this` for chaining
 	public Options setEnableBlobFiles(boolean value) {
-		setBoolean(MH_SET_ENABLE_BLOB_FILES, value);
+		NativeFields.setBoolean(MH_SET_ENABLE_BLOB_FILES, ptr(), value);
 		return this;
 	}
 
@@ -792,7 +791,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return `true` if large values are stored in separate blob files
 	public boolean getEnableBlobFiles() {
-		return getBoolean(MH_GET_ENABLE_BLOB_FILES);
+		return NativeFields.getBoolean(MH_GET_ENABLE_BLOB_FILES, ptr());
 	}
 
 	/// Values strictly smaller than this size are stored inline; larger values go to blob files.
@@ -801,7 +800,7 @@ public final class Options extends AbstractOptions {
 	/// @param size minimum value size to externalize into a blob file
 	/// @return `this` for chaining
 	public Options setMinBlobSize(MemorySize size) {
-		setMemorySize(MH_SET_MIN_BLOB_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_MIN_BLOB_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -809,7 +808,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return minimum blob size threshold
 	public MemorySize getMinBlobSize() {
-		return getMemorySize(MH_GET_MIN_BLOB_SIZE);
+		return NativeFields.getMemorySize(MH_GET_MIN_BLOB_SIZE, ptr());
 	}
 
 	/// Target size for individual blob files. RocksDB rolls to a new file when this is exceeded.
@@ -818,7 +817,7 @@ public final class Options extends AbstractOptions {
 	/// @param size target size per blob file
 	/// @return `this` for chaining
 	public Options setBlobFileSize(MemorySize size) {
-		setMemorySize(MH_SET_BLOB_FILE_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_BLOB_FILE_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -826,7 +825,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return target blob file size
 	public MemorySize getBlobFileSize() {
-		return getMemorySize(MH_GET_BLOB_FILE_SIZE);
+		return NativeFields.getMemorySize(MH_GET_BLOB_FILE_SIZE, ptr());
 	}
 
 	/// Compression algorithm applied to blob file values. Independent of SST compression.
@@ -839,7 +838,7 @@ public final class Options extends AbstractOptions {
 		if (!type.isSupported()) {
 			throw new UnsupportedOperationException(type + " compression is not linked into the bundled native library");
 		}
-		setInt(MH_SET_BLOB_COMPRESSION_TYPE, type.getValue());
+		NativeFields.setInt(MH_SET_BLOB_COMPRESSION_TYPE, ptr(), type.getValue());
 		return this;
 	}
 
@@ -847,7 +846,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return compression type for blob values
 	public CompressionType getBlobCompressionType() {
-		return CompressionType.fromValue(getInt(MH_GET_BLOB_COMPRESSION_TYPE));
+		return CompressionType.fromValue(NativeFields.getInt(MH_GET_BLOB_COMPRESSION_TYPE, ptr()));
 	}
 
 	/// Enables garbage collection of obsolete blob files during compaction.
@@ -856,7 +855,7 @@ public final class Options extends AbstractOptions {
 	/// @param value `true` to enable blob GC during compaction
 	/// @return `this` for chaining
 	public Options setEnableBlobGc(boolean value) {
-		setBoolean(MH_SET_ENABLE_BLOB_GC, value);
+		NativeFields.setBoolean(MH_SET_ENABLE_BLOB_GC, ptr(), value);
 		return this;
 	}
 
@@ -864,7 +863,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return `true` if blob GC is enabled
 	public boolean getEnableBlobGc() {
-		return getBoolean(MH_GET_ENABLE_BLOB_GC);
+		return NativeFields.getBoolean(MH_GET_ENABLE_BLOB_GC, ptr());
 	}
 
 	/// Blob files whose age is older than this fraction of the oldest snapshot are
@@ -874,7 +873,7 @@ public final class Options extends AbstractOptions {
 	/// @param value age cutoff fraction
 	/// @return `this` for chaining
 	public Options setBlobGcAgeCutoff(Ratio value) {
-		setDouble(MH_SET_BLOB_GC_AGE_CUTOFF, value.toDouble());
+		NativeFields.setDouble(MH_SET_BLOB_GC_AGE_CUTOFF, ptr(), value.toDouble());
 		return this;
 	}
 
@@ -882,7 +881,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return age cutoff fraction
 	public Ratio getBlobGcAgeCutoff() {
-		return Ratio.of(getDouble(MH_GET_BLOB_GC_AGE_CUTOFF));
+		return Ratio.of(NativeFields.getDouble(MH_GET_BLOB_GC_AGE_CUTOFF, ptr()));
 	}
 
 	/// Blob files whose garbage ratio exceeds this threshold are force-compacted.
@@ -891,7 +890,7 @@ public final class Options extends AbstractOptions {
 	/// @param value force-GC garbage ratio threshold
 	/// @return `this` for chaining
 	public Options setBlobGcForceThreshold(Ratio value) {
-		setDouble(MH_SET_BLOB_GC_FORCE_THRESHOLD, value.toDouble());
+		NativeFields.setDouble(MH_SET_BLOB_GC_FORCE_THRESHOLD, ptr(), value.toDouble());
 		return this;
 	}
 
@@ -899,7 +898,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return force-GC threshold
 	public Ratio getBlobGcForceThreshold() {
-		return Ratio.of(getDouble(MH_GET_BLOB_GC_FORCE_THRESHOLD));
+		return Ratio.of(NativeFields.getDouble(MH_GET_BLOB_GC_FORCE_THRESHOLD, ptr()));
 	}
 
 	/// Read-ahead size when reading blob files during compaction.
@@ -908,7 +907,7 @@ public final class Options extends AbstractOptions {
 	/// @param size read-ahead buffer size; `MemorySize.ofBytes(0)` disables it
 	/// @return `this` for chaining
 	public Options setBlobCompactionReadaheadSize(MemorySize size) {
-		setMemorySize(MH_SET_BLOB_COMPACTION_READAHEAD_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_BLOB_COMPACTION_READAHEAD_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -916,7 +915,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return read-ahead size; [MemorySize#ZERO] means disabled
 	public MemorySize getBlobCompactionReadaheadSize() {
-		return getMemorySize(MH_GET_BLOB_COMPACTION_READAHEAD_SIZE);
+		return NativeFields.getMemorySize(MH_GET_BLOB_COMPACTION_READAHEAD_SIZE, ptr());
 	}
 
 	/// LSM level at which blob file separation begins. Keys in levels below this
@@ -925,7 +924,7 @@ public final class Options extends AbstractOptions {
 	/// @param level first LSM level where blobs are externalized (0 = all levels)
 	/// @return `this` for chaining
 	public Options setBlobFileStartingLevel(int level) {
-		setInt(MH_SET_BLOB_FILE_STARTING_LEVEL, level);
+		NativeFields.setInt(MH_SET_BLOB_FILE_STARTING_LEVEL, ptr(), level);
 		return this;
 	}
 
@@ -933,7 +932,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return first level where blobs are externalized (0 = all levels)
 	public int getBlobFileStartingLevel() {
-		return getInt(MH_GET_BLOB_FILE_STARTING_LEVEL);
+		return NativeFields.getInt(MH_GET_BLOB_FILE_STARTING_LEVEL, ptr());
 	}
 
 	/// Attaches a dedicated cache for blob values.
@@ -956,7 +955,7 @@ public final class Options extends AbstractOptions {
 	/// @param mode the pre-population strategy
 	/// @return `this` for chaining
 	public Options setPrepopulateBlobCache(PrepopulateBlobCache mode) {
-		setInt(MH_SET_PREPOPULATE_BLOB_CACHE, mode.value);
+		NativeFields.setInt(MH_SET_PREPOPULATE_BLOB_CACHE, ptr(), mode.value);
 		return this;
 	}
 
@@ -964,7 +963,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return the current [PrepopulateBlobCache] mode
 	public PrepopulateBlobCache getPrepopulateBlobCache() {
-		return PrepopulateBlobCache.fromValue(getInt(MH_GET_PREPOPULATE_BLOB_CACHE));
+		return PrepopulateBlobCache.fromValue(NativeFields.getInt(MH_GET_PREPOPULATE_BLOB_CACHE, ptr()));
 	}
 
 	// -----------------------------------------------------------------------
@@ -990,7 +989,7 @@ public final class Options extends AbstractOptions {
 	/// @param level the minimum log level to emit
 	/// @return `this` for chaining
 	public Options setInfoLogLevel(LogLevel level) {
-		setInt(MH_SET_INFO_LOG_LEVEL, level.value);
+		NativeFields.setInt(MH_SET_INFO_LOG_LEVEL, ptr(), level.value);
 		return this;
 	}
 
@@ -998,7 +997,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return the active minimum [LogLevel]
 	public LogLevel getInfoLogLevel() {
-		return LogLevel.fromValue(getInt(MH_GET_INFO_LOG_LEVEL));
+		return LogLevel.fromValue(NativeFields.getInt(MH_GET_INFO_LOG_LEVEL, ptr()));
 	}
 
 	/// Sets the [Env] used for all file-system and threading operations.
@@ -1126,7 +1125,7 @@ public final class Options extends AbstractOptions {
 	/// @param temperature the temperature hint to use for metadata files
 	/// @return `this` for chaining
 	public Options setMetadataWriteTemperature(Temperature temperature) {
-		setInt(MH_SET_METADATA_WRITE_TEMPERATURE, temperature.getValue());
+		NativeFields.setInt(MH_SET_METADATA_WRITE_TEMPERATURE, ptr(), temperature.getValue());
 		return this;
 	}
 
@@ -1134,7 +1133,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return the active [Temperature] hint for metadata files
 	public Temperature getMetadataWriteTemperature() {
-		return Temperature.fromValue(getInt(MH_GET_METADATA_WRITE_TEMPERATURE));
+		return Temperature.fromValue(NativeFields.getInt(MH_GET_METADATA_WRITE_TEMPERATURE, ptr()));
 	}
 
 	/// Sets the temperature hint for WAL files.
@@ -1143,7 +1142,7 @@ public final class Options extends AbstractOptions {
 	/// @param temperature the temperature hint to use for WAL files
 	/// @return `this` for chaining
 	public Options setWalWriteTemperature(Temperature temperature) {
-		setInt(MH_SET_WAL_WRITE_TEMPERATURE, temperature.getValue());
+		NativeFields.setInt(MH_SET_WAL_WRITE_TEMPERATURE, ptr(), temperature.getValue());
 		return this;
 	}
 
@@ -1151,7 +1150,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return the active [Temperature] hint for WAL files
 	public Temperature getWalWriteTemperature() {
-		return Temperature.fromValue(getInt(MH_GET_WAL_WRITE_TEMPERATURE));
+		return Temperature.fromValue(NativeFields.getInt(MH_GET_WAL_WRITE_TEMPERATURE, ptr()));
 	}
 
 	/// Sets the temperature hint for SST files placed on the last level.
@@ -1160,7 +1159,7 @@ public final class Options extends AbstractOptions {
 	/// @param temperature the temperature hint to use for last-level files
 	/// @return `this` for chaining
 	public Options setLastLevelTemperature(Temperature temperature) {
-		setInt(MH_SET_LAST_LEVEL_TEMPERATURE, temperature.getValue());
+		NativeFields.setInt(MH_SET_LAST_LEVEL_TEMPERATURE, ptr(), temperature.getValue());
 		return this;
 	}
 
@@ -1168,7 +1167,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return the active [Temperature] hint for last-level files
 	public Temperature getLastLevelTemperature() {
-		return Temperature.fromValue(getInt(MH_GET_LAST_LEVEL_TEMPERATURE));
+		return Temperature.fromValue(NativeFields.getInt(MH_GET_LAST_LEVEL_TEMPERATURE, ptr()));
 	}
 
 	/// Sets the temperature hint used when a new SST file is written, for levels
@@ -1178,7 +1177,7 @@ public final class Options extends AbstractOptions {
 	/// @param temperature the temperature hint to use for newly written files
 	/// @return `this` for chaining
 	public Options setDefaultWriteTemperature(Temperature temperature) {
-		setInt(MH_SET_DEFAULT_WRITE_TEMPERATURE, temperature.getValue());
+		NativeFields.setInt(MH_SET_DEFAULT_WRITE_TEMPERATURE, ptr(), temperature.getValue());
 		return this;
 	}
 
@@ -1186,7 +1185,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return the active default write [Temperature] hint
 	public Temperature getDefaultWriteTemperature() {
-		return Temperature.fromValue(getInt(MH_GET_DEFAULT_WRITE_TEMPERATURE));
+		return Temperature.fromValue(NativeFields.getInt(MH_GET_DEFAULT_WRITE_TEMPERATURE, ptr()));
 	}
 
 	/// Sets the temperature hint assumed for existing SST files that have no
@@ -1197,7 +1196,7 @@ public final class Options extends AbstractOptions {
 	/// @param temperature the fallback temperature hint for files without a recorded temperature
 	/// @return `this` for chaining
 	public Options setDefaultTemperature(Temperature temperature) {
-		setInt(MH_SET_DEFAULT_TEMPERATURE, temperature.getValue());
+		NativeFields.setInt(MH_SET_DEFAULT_TEMPERATURE, ptr(), temperature.getValue());
 		return this;
 	}
 
@@ -1205,7 +1204,7 @@ public final class Options extends AbstractOptions {
 	///
 	/// @return the active default [Temperature] hint
 	public Temperature getDefaultTemperature() {
-		return Temperature.fromValue(getInt(MH_GET_DEFAULT_TEMPERATURE));
+		return Temperature.fromValue(NativeFields.getInt(MH_GET_DEFAULT_TEMPERATURE, ptr()));
 	}
 
 	@Override

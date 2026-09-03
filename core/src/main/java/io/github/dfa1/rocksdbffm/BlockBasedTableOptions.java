@@ -31,7 +31,7 @@ import java.util.Optional;
 ///
 /// Calling [#setFilterPolicy(FilterPolicy)] transfers native ownership to this
 /// config object. The `FilterPolicy` must not be used after that call.
-public final class BlockBasedTableOptions extends AbstractOptions {
+public final class BlockBasedTableOptions extends NativeObject {
 
 	// -----------------------------------------------------------------------
 	// Index type constants (mirrors rocksdb_block_based_table_index_type_*)
@@ -727,7 +727,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param blockSize desired block size
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setBlockSize(MemorySize blockSize) {
-		setMemorySize(MH_SET_BLOCK_SIZE, blockSize);
+		NativeFields.setMemorySize(MH_SET_BLOCK_SIZE, ptr(), blockSize);
 		return this;
 	}
 
@@ -752,7 +752,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param noBlockCache `true` to disable block cache for this table
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setNoBlockCache(boolean noBlockCache) {
-		setBoolean(MH_SET_NO_BLOCK_CACHE, noBlockCache);
+		NativeFields.setBoolean(MH_SET_NO_BLOCK_CACHE, ptr(), noBlockCache);
 		return this;
 	}
 
@@ -776,7 +776,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to store index/filter blocks in the block cache
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setCacheIndexAndFilterBlocks(boolean value) {
-		setBoolean(MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS, value);
+		NativeFields.setBoolean(MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS, ptr(), value);
 		return this;
 	}
 
@@ -786,7 +786,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param indexType index type to use
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setIndexType(IndexType indexType) {
-		setInt(MH_SET_INDEX_TYPE, indexType.value);
+		NativeFields.setInt(MH_SET_INDEX_TYPE, ptr(), indexType.value);
 		return this;
 	}
 
@@ -796,7 +796,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param formatVersion SST format version to use
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setFormatVersion(FormatVersion formatVersion) {
-		setInt(MH_SET_FORMAT_VERSION, formatVersion.value);
+		NativeFields.setInt(MH_SET_FORMAT_VERSION, ptr(), formatVersion.value);
 		return this;
 	}
 
@@ -804,7 +804,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current SST format version
 	public FormatVersion getFormatVersion() {
-		return FormatVersion.fromValue(getInt(MH_GET_FORMAT_VERSION));
+		return FormatVersion.fromValue(NativeFields.getInt(MH_GET_FORMAT_VERSION, ptr()));
 	}
 
 	/// If true, a whole-key Bloom filter is built in addition to any prefix filter.
@@ -813,7 +813,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to enable whole-key filtering
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setWholeKeyFiltering(boolean value) {
-		setBoolean(MH_SET_WHOLE_KEY_FILTERING, value);
+		NativeFields.setBoolean(MH_SET_WHOLE_KEY_FILTERING, ptr(), value);
 		return this;
 	}
 
@@ -823,7 +823,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to enable partitioned filters
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setPartitionFilters(boolean value) {
-		setBoolean(MH_SET_PARTITION_FILTERS, value);
+		NativeFields.setBoolean(MH_SET_PARTITION_FILTERS, ptr(), value);
 		return this;
 	}
 
@@ -838,7 +838,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param size maximum auto-readahead size
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setMaxAutoReadaheadSize(MemorySize size) {
-		setMemorySize(MH_SET_MAX_AUTO_READAHEAD_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_MAX_AUTO_READAHEAD_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -846,7 +846,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current maximum auto-readahead size
 	public MemorySize getMaxAutoReadaheadSize() {
-		return getMemorySize(MH_GET_MAX_AUTO_READAHEAD_SIZE);
+		return NativeFields.getMemorySize(MH_GET_MAX_AUTO_READAHEAD_SIZE, ptr());
 	}
 
 	/// Read-ahead size RocksDB starts with for a new sequential scan of this table, before it
@@ -855,7 +855,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param size initial auto-readahead size
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setInitialAutoReadaheadSize(MemorySize size) {
-		setMemorySize(MH_SET_INITIAL_AUTO_READAHEAD_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_INITIAL_AUTO_READAHEAD_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -863,7 +863,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current initial auto-readahead size
 	public MemorySize getInitialAutoReadaheadSize() {
-		return getMemorySize(MH_GET_INITIAL_AUTO_READAHEAD_SIZE);
+		return NativeFields.getMemorySize(MH_GET_INITIAL_AUTO_READAHEAD_SIZE, ptr());
 	}
 
 	/// Number of sequential file reads that must be observed before RocksDB doubles the
@@ -872,7 +872,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param count number of sequential reads that triggers doubling the readahead size
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setNumFileReadsForAutoReadahead(long count) {
-		setLong(MH_SET_NUM_FILE_READS_FOR_AUTO_READAHEAD, count);
+		NativeFields.setLong(MH_SET_NUM_FILE_READS_FOR_AUTO_READAHEAD, ptr(), count);
 		return this;
 	}
 
@@ -881,7 +881,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current number of sequential reads that triggers doubling the readahead size
 	public long getNumFileReadsForAutoReadahead() {
-		return getLong(MH_GET_NUM_FILE_READS_FOR_AUTO_READAHEAD);
+		return NativeFields.getLong(MH_GET_NUM_FILE_READS_FOR_AUTO_READAHEAD, ptr());
 	}
 
 	// -----------------------------------------------------------------------
@@ -895,7 +895,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to insert index/filter blocks at high cache priority
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setCacheIndexAndFilterBlocksWithHighPriority(boolean value) {
-		setBoolean(MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY, value);
+		NativeFields.setBoolean(MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY, ptr(), value);
 		return this;
 	}
 
@@ -903,7 +903,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if index/filter blocks are inserted at high cache priority
 	public boolean getCacheIndexAndFilterBlocksWithHighPriority() {
-		return getBoolean(MH_GET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY);
+		return NativeFields.getBoolean(MH_GET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY, ptr());
 	}
 
 	/// Deprecated pinning control, superseded by [#setUnpartitionedPinningTier] and
@@ -914,7 +914,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to pin L0 filter and index blocks in the block cache
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setPinL0FilterAndIndexBlocksInCache(boolean value) {
-		setBoolean(MH_SET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE, value);
+		NativeFields.setBoolean(MH_SET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE, ptr(), value);
 		return this;
 	}
 
@@ -922,7 +922,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if L0 filter and index blocks are pinned in the block cache
 	public boolean getPinL0FilterAndIndexBlocksInCache() {
-		return getBoolean(MH_GET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE);
+		return NativeFields.getBoolean(MH_GET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE, ptr());
 	}
 
 	/// Deprecated pinning control, superseded by [#setTopLevelIndexPinningTier] (used only
@@ -932,7 +932,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to pin the top-level index and filter
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setPinTopLevelIndexAndFilter(boolean value) {
-		setBoolean(MH_SET_PIN_TOP_LEVEL_INDEX_AND_FILTER, value);
+		NativeFields.setBoolean(MH_SET_PIN_TOP_LEVEL_INDEX_AND_FILTER, ptr(), value);
 		return this;
 	}
 
@@ -940,7 +940,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if the top-level index and filter are pinned
 	public boolean getPinTopLevelIndexAndFilter() {
-		return getBoolean(MH_GET_PIN_TOP_LEVEL_INDEX_AND_FILTER);
+		return NativeFields.getBoolean(MH_GET_PIN_TOP_LEVEL_INDEX_AND_FILTER, ptr());
 	}
 
 	/// The tier of block-based tables whose top-level index into metadata partitions will be
@@ -950,7 +950,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param tier the pinning tier to apply
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setTopLevelIndexPinningTier(PinningTier tier) {
-		setInt(MH_SET_TOP_LEVEL_INDEX_PINNING_TIER, tier.value);
+		NativeFields.setInt(MH_SET_TOP_LEVEL_INDEX_PINNING_TIER, ptr(), tier.value);
 		return this;
 	}
 
@@ -960,7 +960,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param tier the pinning tier to apply
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setPartitionPinningTier(PinningTier tier) {
-		setInt(MH_SET_PARTITION_PINNING_TIER, tier.value);
+		NativeFields.setInt(MH_SET_PARTITION_PINNING_TIER, ptr(), tier.value);
 		return this;
 	}
 
@@ -971,7 +971,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param tier the pinning tier to apply
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setUnpartitionedPinningTier(PinningTier tier) {
-		setInt(MH_SET_UNPARTITIONED_PINNING_TIER, tier.value);
+		NativeFields.setInt(MH_SET_UNPARTITIONED_PINNING_TIER, ptr(), tier.value);
 		return this;
 	}
 
@@ -988,7 +988,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param interval number of keys between restart points
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setBlockRestartInterval(int interval) {
-		setInt(MH_SET_BLOCK_RESTART_INTERVAL, interval);
+		NativeFields.setInt(MH_SET_BLOCK_RESTART_INTERVAL, ptr(), interval);
 		return this;
 	}
 
@@ -996,7 +996,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current block restart interval
 	public int getBlockRestartInterval() {
-		return getInt(MH_GET_BLOCK_RESTART_INTERVAL);
+		return NativeFields.getInt(MH_GET_BLOCK_RESTART_INTERVAL, ptr());
 	}
 
 	/// Same as [#setBlockRestartInterval], but for the index block instead of data blocks.
@@ -1006,7 +1006,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param interval number of index entries between restart points
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setIndexBlockRestartInterval(int interval) {
-		setInt(MH_SET_INDEX_BLOCK_RESTART_INTERVAL, interval);
+		NativeFields.setInt(MH_SET_INDEX_BLOCK_RESTART_INTERVAL, ptr(), interval);
 		return this;
 	}
 
@@ -1014,7 +1014,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current index block restart interval
 	public int getIndexBlockRestartInterval() {
-		return getInt(MH_GET_INDEX_BLOCK_RESTART_INTERVAL);
+		return NativeFields.getInt(MH_GET_INDEX_BLOCK_RESTART_INTERVAL, ptr());
 	}
 
 	/// Approximate size of partitioned metadata blocks (index/filter partitions). Only takes
@@ -1023,7 +1023,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param size approximate metadata block size
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setMetadataBlockSize(MemorySize size) {
-		setMemorySize(MH_SET_METADATA_BLOCK_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_METADATA_BLOCK_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -1031,7 +1031,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current metadata block size
 	public MemorySize getMetadataBlockSize() {
-		return getMemorySize(MH_GET_METADATA_BLOCK_SIZE);
+		return NativeFields.getMemorySize(MH_GET_METADATA_BLOCK_SIZE, ptr());
 	}
 
 	/// Percentage that a data block may exceed [#setBlockSize] before RocksDB starts a new
@@ -1041,7 +1041,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param percent allowed overshoot past the configured block size, as a percentage
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setBlockSizeDeviation(int percent) {
-		setInt(MH_SET_BLOCK_SIZE_DEVIATION, percent);
+		NativeFields.setInt(MH_SET_BLOCK_SIZE_DEVIATION, ptr(), percent);
 		return this;
 	}
 
@@ -1049,7 +1049,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current block size deviation, as a percentage
 	public int getBlockSizeDeviation() {
-		return getInt(MH_GET_BLOCK_SIZE_DEVIATION);
+		return NativeFields.getInt(MH_GET_BLOCK_SIZE_DEVIATION, ptr());
 	}
 
 	/// If true, keys between restart points within a data block are delta-encoded against the
@@ -1059,7 +1059,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to delta-encode keys between restart points
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setUseDeltaEncoding(boolean value) {
-		setBoolean(MH_SET_USE_DELTA_ENCODING, value);
+		NativeFields.setBoolean(MH_SET_USE_DELTA_ENCODING, ptr(), value);
 		return this;
 	}
 
@@ -1067,7 +1067,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if keys between restart points are delta-encoded
 	public boolean getUseDeltaEncoding() {
-		return getBoolean(MH_GET_USE_DELTA_ENCODING);
+		return NativeFields.getBoolean(MH_GET_USE_DELTA_ENCODING, ptr());
 	}
 
 	/// If true, keys and values within a data block are stored in separate areas instead of
@@ -1077,7 +1077,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to store keys and values in separate areas of a data block
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setSeparateKeyValueInDataBlock(boolean value) {
-		setBoolean(MH_SET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK, value);
+		NativeFields.setBoolean(MH_SET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK, ptr(), value);
 		return this;
 	}
 
@@ -1085,7 +1085,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if keys and values are stored in separate areas of a data block
 	public boolean getSeparateKeyValueInDataBlock() {
-		return getBoolean(MH_GET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK);
+		return NativeFields.getBoolean(MH_GET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK, ptr());
 	}
 
 	// -----------------------------------------------------------------------
@@ -1100,7 +1100,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to optimize filter memory tracking for lower overhead
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setOptimizeFiltersForMemory(boolean value) {
-		setBoolean(MH_SET_OPTIMIZE_FILTERS_FOR_MEMORY, value);
+		NativeFields.setBoolean(MH_SET_OPTIMIZE_FILTERS_FOR_MEMORY, ptr(), value);
 		return this;
 	}
 
@@ -1108,7 +1108,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if filter memory tracking is optimized for lower overhead
 	public boolean getOptimizeFiltersForMemory() {
-		return getBoolean(MH_GET_OPTIMIZE_FILTERS_FOR_MEMORY);
+		return NativeFields.getBoolean(MH_GET_OPTIMIZE_FILTERS_FOR_MEMORY, ptr());
 	}
 
 	/// If true, partitioned filters are stored in their own separate blocks rather than
@@ -1118,7 +1118,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to store partitioned filters in their own blocks
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setDecouplePartitionedFilters(boolean value) {
-		setBoolean(MH_SET_DECOUPLE_PARTITIONED_FILTERS, value);
+		NativeFields.setBoolean(MH_SET_DECOUPLE_PARTITIONED_FILTERS, ptr(), value);
 		return this;
 	}
 
@@ -1126,7 +1126,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if partitioned filters are stored in their own blocks
 	public boolean getDecouplePartitionedFilters() {
-		return getBoolean(MH_GET_DECOUPLE_PARTITIONED_FILTERS);
+		return NativeFields.getBoolean(MH_GET_DECOUPLE_PARTITIONED_FILTERS, ptr());
 	}
 
 	/// Target entries-to-buckets ratio for a data block's hash index, valid only when
@@ -1135,7 +1135,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param ratio target entries/buckets ratio
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setDataBlockHashTableUtilRatio(double ratio) {
-		setDouble(MH_SET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO, ratio);
+		NativeFields.setDouble(MH_SET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO, ptr(), ratio);
 		return this;
 	}
 
@@ -1143,7 +1143,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current data block hash table utilization ratio
 	public double getDataBlockHashTableUtilRatio() {
-		return getDouble(MH_GET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO);
+		return NativeFields.getDouble(MH_GET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO, ptr());
 	}
 
 	// -----------------------------------------------------------------------
@@ -1155,7 +1155,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param mode index shortening mode to use
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setIndexShortening(IndexShorteningMode mode) {
-		setInt(MH_SET_INDEX_SHORTENING, mode.value);
+		NativeFields.setInt(MH_SET_INDEX_SHORTENING, ptr(), mode.value);
 		return this;
 	}
 
@@ -1163,7 +1163,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current index shortening mode
 	public IndexShorteningMode getIndexShortening() {
-		return IndexShorteningMode.fromValue(getInt(MH_GET_INDEX_SHORTENING));
+		return IndexShorteningMode.fromValue(NativeFields.getInt(MH_GET_INDEX_SHORTENING, ptr()));
 	}
 
 	/// Sets the search algorithm used within an index block at read time. Default:
@@ -1172,7 +1172,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param searchType index block search algorithm to use
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setIndexBlockSearchType(IndexSearchType searchType) {
-		setInt(MH_SET_INDEX_BLOCK_SEARCH_TYPE, searchType.value);
+		NativeFields.setInt(MH_SET_INDEX_BLOCK_SEARCH_TYPE, ptr(), searchType.value);
 		return this;
 	}
 
@@ -1180,7 +1180,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current index block search algorithm
 	public IndexSearchType getIndexBlockSearchType() {
-		return IndexSearchType.fromValue(getInt(MH_GET_INDEX_BLOCK_SEARCH_TYPE));
+		return IndexSearchType.fromValue(NativeFields.getInt(MH_GET_INDEX_BLOCK_SEARCH_TYPE, ptr()));
 	}
 
 	/// Sets the index format used for each data block's own key index. Default:
@@ -1189,7 +1189,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param indexType data block index type to use
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setDataBlockIndexType(DataBlockIndexType indexType) {
-		setInt(MH_SET_DATA_BLOCK_INDEX_TYPE, indexType.value);
+		NativeFields.setInt(MH_SET_DATA_BLOCK_INDEX_TYPE, ptr(), indexType.value);
 		return this;
 	}
 
@@ -1197,7 +1197,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current data block index type
 	public DataBlockIndexType getDataBlockIndexType() {
-		return DataBlockIndexType.fromValue(getInt(MH_GET_DATA_BLOCK_INDEX_TYPE));
+		return DataBlockIndexType.fromValue(NativeFields.getInt(MH_GET_DATA_BLOCK_INDEX_TYPE, ptr()));
 	}
 
 	/// If true, index blocks are compressed like data blocks are, subject to
@@ -1206,7 +1206,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to compress index blocks
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setEnableIndexCompression(boolean value) {
-		setBoolean(MH_SET_ENABLE_INDEX_COMPRESSION, value);
+		NativeFields.setBoolean(MH_SET_ENABLE_INDEX_COMPRESSION, ptr(), value);
 		return this;
 	}
 
@@ -1214,7 +1214,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if index blocks are compressed
 	public boolean getEnableIndexCompression() {
-		return getBoolean(MH_GET_ENABLE_INDEX_COMPRESSION);
+		return NativeFields.getBoolean(MH_GET_ENABLE_INDEX_COMPRESSION, ptr());
 	}
 
 	/// Coefficient-of-variation threshold below which a data block's key spacing is flagged
@@ -1226,7 +1226,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param threshold coefficient-of-variation threshold, or a negative value to disable
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setUniformCvThreshold(double threshold) {
-		setDouble(MH_SET_UNIFORM_CV_THRESHOLD, threshold);
+		NativeFields.setDouble(MH_SET_UNIFORM_CV_THRESHOLD, ptr(), threshold);
 		return this;
 	}
 
@@ -1234,7 +1234,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current coefficient-of-variation threshold
 	public double getUniformCvThreshold() {
-		return getDouble(MH_GET_UNIFORM_CV_THRESHOLD);
+		return NativeFields.getDouble(MH_GET_UNIFORM_CV_THRESHOLD, ptr());
 	}
 
 	// -----------------------------------------------------------------------
@@ -1259,7 +1259,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current checksum algorithm
 	public ChecksumType getChecksumType() {
-		return ChecksumType.fromValue(getInt(MH_GET_CHECKSUM));
+		return ChecksumType.fromValue(NativeFields.getInt(MH_GET_CHECKSUM, ptr()));
 	}
 
 	/// If true, re-decompresses each compressed block immediately after compressing it during
@@ -1269,7 +1269,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to verify compression round-trips correctly on every write
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setVerifyCompression(boolean value) {
-		setBoolean(MH_SET_VERIFY_COMPRESSION, value);
+		NativeFields.setBoolean(MH_SET_VERIFY_COMPRESSION, ptr(), value);
 		return this;
 	}
 
@@ -1277,7 +1277,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if compression is verified on every write
 	public boolean getVerifyCompression() {
-		return getBoolean(MH_GET_VERIFY_COMPRESSION);
+		return NativeFields.getBoolean(MH_GET_VERIFY_COMPRESSION, ptr());
 	}
 
 	/// If true, computes and checks a checksum over each constructed filter (Bloom/Ribbon)
@@ -1288,7 +1288,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to checksum-verify each filter right after it's built
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setDetectFilterConstructCorruption(boolean value) {
-		setBoolean(MH_SET_DETECT_FILTER_CONSTRUCT_CORRUPTION, value);
+		NativeFields.setBoolean(MH_SET_DETECT_FILTER_CONSTRUCT_CORRUPTION, ptr(), value);
 		return this;
 	}
 
@@ -1296,7 +1296,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if newly constructed filters are checksum-verified immediately
 	public boolean getDetectFilterConstructCorruption() {
-		return getBoolean(MH_GET_DETECT_FILTER_CONSTRUCT_CORRUPTION);
+		return NativeFields.getBoolean(MH_GET_DETECT_FILTER_CONSTRUCT_CORRUPTION, ptr());
 	}
 
 	/// Enables read amplification tracking (the `rocksdb.read-amp-estimate-useful-bytes` and
@@ -1308,7 +1308,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param bytesPerBit bytes of a data block covered by each tracking bit, or `0` to disable
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setReadAmpBytesPerBit(int bytesPerBit) {
-		setInt(MH_SET_READ_AMP_BYTES_PER_BIT, bytesPerBit);
+		NativeFields.setInt(MH_SET_READ_AMP_BYTES_PER_BIT, ptr(), bytesPerBit);
 		return this;
 	}
 
@@ -1316,7 +1316,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current read amplification tracking granularity, in bytes per bit
 	public int getReadAmpBytesPerBit() {
-		return getInt(MH_GET_READ_AMP_BYTES_PER_BIT);
+		return NativeFields.getInt(MH_GET_READ_AMP_BYTES_PER_BIT, ptr());
 	}
 
 	// -----------------------------------------------------------------------
@@ -1332,7 +1332,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param value `true` to align data blocks to filesystem block boundaries
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setBlockAlign(boolean value) {
-		setBoolean(MH_SET_BLOCK_ALIGN, value);
+		NativeFields.setBoolean(MH_SET_BLOCK_ALIGN, ptr(), value);
 		return this;
 	}
 
@@ -1340,7 +1340,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if data blocks are aligned to filesystem block boundaries
 	public boolean getBlockAlign() {
-		return getBoolean(MH_GET_BLOCK_ALIGN);
+		return NativeFields.getBoolean(MH_GET_BLOCK_ALIGN, ptr());
 	}
 
 	/// Alignment size, in bytes, for the coarser "super block" grouping of data blocks -- a
@@ -1350,7 +1350,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param size super block alignment size
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setSuperBlockAlignmentSize(MemorySize size) {
-		setMemorySize(MH_SET_SUPER_BLOCK_ALIGNMENT_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_SUPER_BLOCK_ALIGNMENT_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -1358,7 +1358,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current super block alignment size
 	public MemorySize getSuperBlockAlignmentSize() {
-		return getMemorySize(MH_GET_SUPER_BLOCK_ALIGNMENT_SIZE);
+		return NativeFields.getMemorySize(MH_GET_SUPER_BLOCK_ALIGNMENT_SIZE, ptr());
 	}
 
 	/// Divisor used to cap the padding [#setSuperBlockAlignmentSize] is allowed to introduce: the
@@ -1369,7 +1369,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param ratio divisor applied to the alignment size to cap padding overhead
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setSuperBlockAlignmentSpaceOverheadRatio(long ratio) {
-		setLong(MH_SET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO, ratio);
+		NativeFields.setLong(MH_SET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO, ptr(), ratio);
 		return this;
 	}
 
@@ -1377,7 +1377,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current super block alignment space overhead ratio
 	public long getSuperBlockAlignmentSpaceOverheadRatio() {
-		return getLong(MH_GET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO);
+		return NativeFields.getLong(MH_GET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO, ptr());
 	}
 
 	// -----------------------------------------------------------------------
@@ -1391,7 +1391,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	/// @param mode when to eagerly warm the block cache
 	/// @return `this` for chaining
 	public BlockBasedTableOptions setPrepopulateBlockCache(PrepopulateBlockCache mode) {
-		setInt(MH_SET_PREPOPULATE_BLOCK_CACHE, mode.value);
+		NativeFields.setInt(MH_SET_PREPOPULATE_BLOCK_CACHE, ptr(), mode.value);
 		return this;
 	}
 
@@ -1399,7 +1399,7 @@ public final class BlockBasedTableOptions extends AbstractOptions {
 	///
 	/// @return current block cache prepopulation mode
 	public PrepopulateBlockCache getPrepopulateBlockCache() {
-		return PrepopulateBlockCache.fromValue(getInt(MH_GET_PREPOPULATE_BLOCK_CACHE));
+		return PrepopulateBlockCache.fromValue(NativeFields.getInt(MH_GET_PREPOPULATE_BLOCK_CACHE, ptr()));
 	}
 
 	// -----------------------------------------------------------------------

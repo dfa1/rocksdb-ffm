@@ -92,23 +92,15 @@ public final class Env extends NativeObject {
 	/// @param n number of low-priority background threads
 	/// @return `this` for chaining
 	public Env setBackgroundThreads(int n) {
-		try {
-			MH_SET_BACKGROUND_THREADS.invokeExact(ptr(), n);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBackgroundThreads failed", t);
-		}
+		NativeFields.setInt(MH_SET_BACKGROUND_THREADS, ptr(), n);
+		return this;
 	}
 
 	/// Returns the number of low-priority background threads.
 	///
 	/// @return current low-priority thread count
 	public int getBackgroundThreads() {
-		try {
-			return (int) MH_GET_BACKGROUND_THREADS.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBackgroundThreads failed", t);
-		}
+		return NativeFields.getInt(MH_GET_BACKGROUND_THREADS, ptr());
 	}
 
 	/// Sets the number of high-priority background threads (used for compaction).
@@ -116,23 +108,15 @@ public final class Env extends NativeObject {
 	/// @param n number of high-priority background threads
 	/// @return `this` for chaining
 	public Env setHighPriorityBackgroundThreads(int n) {
-		try {
-			MH_SET_HIGH_PRIORITY_BACKGROUND_THREADS.invokeExact(ptr(), n);
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setHighPriorityBackgroundThreads failed", t);
-		}
+		NativeFields.setInt(MH_SET_HIGH_PRIORITY_BACKGROUND_THREADS, ptr(), n);
+		return this;
 	}
 
 	/// Returns the number of high-priority background threads.
 	///
 	/// @return current high-priority thread count
 	public int getHighPriorityBackgroundThreads() {
-		try {
-			return (int) MH_GET_HIGH_PRIORITY_BACKGROUND_THREADS.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getHighPriorityBackgroundThreads failed", t);
-		}
+		return NativeFields.getInt(MH_GET_HIGH_PRIORITY_BACKGROUND_THREADS, ptr());
 	}
 
 	@Override

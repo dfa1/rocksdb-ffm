@@ -22,7 +22,7 @@ import java.lang.invoke.MethodHandle;
 ///     ...
 /// }
 /// ```
-public final class FifoCompactionOptions extends AbstractOptions {
+public final class FifoCompactionOptions extends NativeObject {
 
 	/// `rocksdb_fifo_compaction_options_t* rocksdb_fifo_compaction_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -105,7 +105,7 @@ public final class FifoCompactionOptions extends AbstractOptions {
 	/// @param value `true` to allow compacting old files together instead of dropping them
 	/// @return `this` for chaining
 	public FifoCompactionOptions setAllowCompaction(boolean value) {
-		setBoolean(MH_SET_ALLOW_COMPACTION, value);
+		NativeFields.setBoolean(MH_SET_ALLOW_COMPACTION, ptr(), value);
 		return this;
 	}
 
@@ -113,7 +113,7 @@ public final class FifoCompactionOptions extends AbstractOptions {
 	///
 	/// @return `true` if compacting old files together is allowed
 	public boolean getAllowCompaction() {
-		return getBoolean(MH_GET_ALLOW_COMPACTION);
+		return NativeFields.getBoolean(MH_GET_ALLOW_COMPACTION, ptr());
 	}
 
 	/// Once the total size of all SST files exceeds this, the oldest file is dropped (or, with
@@ -123,7 +123,7 @@ public final class FifoCompactionOptions extends AbstractOptions {
 	/// @param size maximum total size of all SST files
 	/// @return `this` for chaining
 	public FifoCompactionOptions setMaxTableFilesSize(MemorySize size) {
-		setMemorySize(MH_SET_MAX_TABLE_FILES_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_MAX_TABLE_FILES_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -131,7 +131,7 @@ public final class FifoCompactionOptions extends AbstractOptions {
 	///
 	/// @return current maximum total SST file size
 	public MemorySize getMaxTableFilesSize() {
-		return getMemorySize(MH_GET_MAX_TABLE_FILES_SIZE);
+		return NativeFields.getMemorySize(MH_GET_MAX_TABLE_FILES_SIZE, ptr());
 	}
 
 	/// Upper bound on the total size of data files (excludes metadata like index/filter
@@ -140,7 +140,7 @@ public final class FifoCompactionOptions extends AbstractOptions {
 	/// @param size maximum total size of data files
 	/// @return `this` for chaining
 	public FifoCompactionOptions setMaxDataFilesSize(MemorySize size) {
-		setMemorySize(MH_SET_MAX_DATA_FILES_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_MAX_DATA_FILES_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -148,7 +148,7 @@ public final class FifoCompactionOptions extends AbstractOptions {
 	///
 	/// @return current maximum total data file size
 	public MemorySize getMaxDataFilesSize() {
-		return getMemorySize(MH_GET_MAX_DATA_FILES_SIZE);
+		return NativeFields.getMemorySize(MH_GET_MAX_DATA_FILES_SIZE, ptr());
 	}
 
 	/// If true, uses the key-value ratio (rather than raw file size) to decide when to drop
@@ -157,7 +157,7 @@ public final class FifoCompactionOptions extends AbstractOptions {
 	/// @param value `true` to use the key-value ratio for FIFO compaction decisions
 	/// @return `this` for chaining
 	public FifoCompactionOptions setUseKvRatioCompaction(boolean value) {
-		setBoolean(MH_SET_USE_KV_RATIO_COMPACTION, value);
+		NativeFields.setBoolean(MH_SET_USE_KV_RATIO_COMPACTION, ptr(), value);
 		return this;
 	}
 
@@ -165,7 +165,7 @@ public final class FifoCompactionOptions extends AbstractOptions {
 	///
 	/// @return `true` if the key-value ratio is used for FIFO compaction decisions
 	public boolean getUseKvRatioCompaction() {
-		return getBoolean(MH_GET_USE_KV_RATIO_COMPACTION);
+		return NativeFields.getBoolean(MH_GET_USE_KV_RATIO_COMPACTION, ptr());
 	}
 
 	@Override

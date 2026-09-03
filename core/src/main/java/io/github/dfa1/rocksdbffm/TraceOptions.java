@@ -22,7 +22,7 @@ import java.util.Set;
 ///     db.endTrace();
 /// }
 /// ```
-public final class TraceOptions extends AbstractOptions {
+public final class TraceOptions extends NativeObject {
 
 	/// `rocksdb_trace_options_t* rocksdb_trace_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -100,7 +100,7 @@ public final class TraceOptions extends AbstractOptions {
 	/// @param size maximum trace file size
 	/// @return `this` for chaining
 	public TraceOptions setMaxTraceFileSize(MemorySize size) {
-		setMemorySize(MH_SET_MAX_TRACE_FILE_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_MAX_TRACE_FILE_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -108,7 +108,7 @@ public final class TraceOptions extends AbstractOptions {
 	///
 	/// @return current maximum trace file size
 	public MemorySize getMaxTraceFileSize() {
-		return getMemorySize(MH_GET_MAX_TRACE_FILE_SIZE);
+		return NativeFields.getMemorySize(MH_GET_MAX_TRACE_FILE_SIZE, ptr());
 	}
 
 	/// Captures one operation out of every `frequency`, evaluated after [#setFilter(Set)]
@@ -117,7 +117,7 @@ public final class TraceOptions extends AbstractOptions {
 	/// @param frequency sampling frequency; must be at least `1`
 	/// @return `this` for chaining
 	public TraceOptions setSamplingFrequency(long frequency) {
-		setLong(MH_SET_SAMPLING_FREQUENCY, frequency);
+		NativeFields.setLong(MH_SET_SAMPLING_FREQUENCY, ptr(), frequency);
 		return this;
 	}
 
@@ -125,7 +125,7 @@ public final class TraceOptions extends AbstractOptions {
 	///
 	/// @return current sampling frequency
 	public long getSamplingFrequency() {
-		return getLong(MH_GET_SAMPLING_FREQUENCY);
+		return NativeFields.getLong(MH_GET_SAMPLING_FREQUENCY, ptr());
 	}
 
 	/// Excludes the given operation types from the trace, evaluated before
@@ -134,11 +134,7 @@ public final class TraceOptions extends AbstractOptions {
 	/// @param filters operation types to exclude
 	/// @return `this` for chaining
 	public TraceOptions setFilter(Set<TraceFilter> filters) {
-		try {
-			MH_SET_FILTER.invokeExact(ptr(), TraceFilter.toMask(filters));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setFilter failed", t);
-		}
+		NativeFields.setLong(MH_SET_FILTER, ptr(), TraceFilter.toMask(filters));
 		return this;
 	}
 
@@ -146,11 +142,7 @@ public final class TraceOptions extends AbstractOptions {
 	///
 	/// @return current filter set; empty means every operation type is traced
 	public Set<TraceFilter> getFilter() {
-		try {
-			return TraceFilter.fromMask((long) MH_GET_FILTER.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getFilter failed", t);
-		}
+		return TraceFilter.fromMask(NativeFields.getLong(MH_GET_FILTER, ptr()));
 	}
 
 	/// If `true`, write records in the trace preserve the WAL's exact order, at some
@@ -159,7 +151,7 @@ public final class TraceOptions extends AbstractOptions {
 	/// @param value `true` to preserve write order
 	/// @return `this` for chaining
 	public TraceOptions setPreserveWriteOrder(boolean value) {
-		setBoolean(MH_SET_PRESERVE_WRITE_ORDER, value);
+		NativeFields.setBoolean(MH_SET_PRESERVE_WRITE_ORDER, ptr(), value);
 		return this;
 	}
 
@@ -167,7 +159,7 @@ public final class TraceOptions extends AbstractOptions {
 	///
 	/// @return `true` if write order is preserved
 	public boolean getPreserveWriteOrder() {
-		return getBoolean(MH_GET_PRESERVE_WRITE_ORDER);
+		return NativeFields.getBoolean(MH_GET_PRESERVE_WRITE_ORDER, ptr());
 	}
 
 	@Override

@@ -83,11 +83,7 @@ public final class FlushJobInfo {
 	///
 	/// @return the column family id
 	public int columnFamilyId() {
-		try {
-			return (int) MH_CF_ID.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.columnFamilyId failed", t);
-		}
+		return NativeFields.getInt(MH_CF_ID, ptr);
 	}
 
 	/// Returns the name of the column family that was flushed.
@@ -120,109 +116,69 @@ public final class FlushJobInfo {
 	///
 	/// @return the flushed file's number
 	public long fileNumber() {
-		try {
-			return (long) MH_FILE_NUMBER.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.fileNumber failed", t);
-		}
+		return NativeFields.getLong(MH_FILE_NUMBER, ptr);
 	}
 
 	/// Returns the number of the oldest blob file this flush's SST file references.
 	///
 	/// @return the oldest referenced blob file number
 	public long oldestBlobFileNumber() {
-		try {
-			return (long) MH_OLDEST_BLOB_FILE_NUMBER.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.oldestBlobFileNumber failed", t);
-		}
+		return NativeFields.getLong(MH_OLDEST_BLOB_FILE_NUMBER, ptr);
 	}
 
 	/// Returns the id of the thread that performed this flush.
 	///
 	/// @return the flush thread id
 	public long threadId() {
-		try {
-			return (long) MH_THREAD_ID.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.threadId failed", t);
-		}
+		return NativeFields.getLong(MH_THREAD_ID, ptr);
 	}
 
 	/// Returns the id of this flush job.
 	///
 	/// @return the job id
 	public int jobId() {
-		try {
-			return (int) MH_JOB_ID.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.jobId failed", t);
-		}
+		return NativeFields.getInt(MH_JOB_ID, ptr);
 	}
 
 	/// Returns whether this flush triggered a write slowdown.
 	///
 	/// @return `true` if writes were slowed down as a result of this flush
 	public boolean triggeredWritesSlowdown() {
-		try {
-			return (byte) MH_TRIGGERED_WRITES_SLOWDOWN.invokeExact(ptr) != 0;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.triggeredWritesSlowdown failed", t);
-		}
+		return NativeFields.getBoolean(MH_TRIGGERED_WRITES_SLOWDOWN, ptr);
 	}
 
 	/// Returns whether this flush triggered writes to stop entirely.
 	///
 	/// @return `true` if writes were stopped as a result of this flush
 	public boolean triggeredWritesStop() {
-		try {
-			return (byte) MH_TRIGGERED_WRITES_STOP.invokeExact(ptr) != 0;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.triggeredWritesStop failed", t);
-		}
+		return NativeFields.getBoolean(MH_TRIGGERED_WRITES_STOP, ptr);
 	}
 
 	/// Returns the smallest sequence number written to the flushed SST file.
 	///
 	/// @return the smallest sequence number
 	public SequenceNumber smallestSequenceNumber() {
-		try {
-			return SequenceNumber.of((long) MH_SMALLEST_SEQNO.invokeExact(ptr));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.smallestSequenceNumber failed", t);
-		}
+		return SequenceNumber.of(NativeFields.getLong(MH_SMALLEST_SEQNO, ptr));
 	}
 
 	/// Returns the largest sequence number written to the flushed SST file.
 	///
 	/// @return the largest sequence number
 	public SequenceNumber largestSequenceNumber() {
-		try {
-			return SequenceNumber.of((long) MH_LARGEST_SEQNO.invokeExact(ptr));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.largestSequenceNumber failed", t);
-		}
+		return SequenceNumber.of(NativeFields.getLong(MH_LARGEST_SEQNO, ptr));
 	}
 
 	/// Returns why this flush was triggered.
 	///
 	/// @return the flush reason
 	public FlushReason flushReason() {
-		try {
-			return FlushReason.fromValue((int) MH_FLUSH_REASON.invokeExact(ptr));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.flushReason failed", t);
-		}
+		return FlushReason.fromValue(NativeFields.getInt(MH_FLUSH_REASON, ptr));
 	}
 
 	/// Returns the compression type used for blob values referenced by this flush.
 	///
 	/// @return the blob compression type
 	public CompressionType blobCompressionType() {
-		try {
-			return CompressionType.fromValue((int) MH_BLOB_COMPRESSION_TYPE.invokeExact(ptr));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.blobCompressionType failed", t);
-		}
+		return CompressionType.fromValue(NativeFields.getInt(MH_BLOB_COMPRESSION_TYPE, ptr));
 	}
 }

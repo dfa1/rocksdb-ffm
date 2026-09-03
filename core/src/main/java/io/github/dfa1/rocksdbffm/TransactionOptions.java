@@ -10,7 +10,7 @@ import java.util.Objects;
 /// FFM wrapper for `rocksdb_transaction_options_t` — per-transaction settings passed to
 /// [TransactionDB#beginTransaction]. Database-wide settings (lock manager sizing, write
 /// policy) live on [TransactionDBOptions] instead.
-public final class TransactionOptions extends AbstractOptions {
+public final class TransactionOptions extends NativeObject {
 
 	/// `rocksdb_transaction_options_t* rocksdb_transaction_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -210,7 +210,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @param value `true` to take a snapshot at transaction start
 	/// @return this instance for chaining
 	public TransactionOptions setSetSnapshot(boolean value) {
-		setBoolean(MH_SET_SET_SNAPSHOT, value);
+		NativeFields.setBoolean(MH_SET_SET_SNAPSHOT, ptr(), value);
 		return this;
 	}
 
@@ -218,7 +218,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return `true` if a snapshot is taken at transaction start
 	public boolean getSetSnapshot() {
-		return getBoolean(MH_GET_SET_SNAPSHOT);
+		return NativeFields.getBoolean(MH_GET_SET_SNAPSHOT, ptr());
 	}
 
 	/// If true, the transaction will detect deadlocks and return an error
@@ -227,7 +227,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @param value `true` to enable deadlock detection
 	/// @return this instance for chaining
 	public TransactionOptions setDeadlockDetect(boolean value) {
-		setBoolean(MH_SET_DEADLOCK_DETECT, value);
+		NativeFields.setBoolean(MH_SET_DEADLOCK_DETECT, ptr(), value);
 		return this;
 	}
 
@@ -235,7 +235,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return `true` if deadlock detection is enabled
 	public boolean getDeadlockDetect() {
-		return getBoolean(MH_GET_DEADLOCK_DETECT);
+		return NativeFields.getBoolean(MH_GET_DEADLOCK_DETECT, ptr());
 	}
 
 	/// If `true`, recovery replays only the most recent commit-time write batch for each key,
@@ -245,7 +245,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @param value `true` to use only the last commit-time write batch during recovery
 	/// @return this instance for chaining
 	public TransactionOptions setUseOnlyTheLastCommitTimeBatchForRecovery(boolean value) {
-		setBoolean(MH_SET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY, value);
+		NativeFields.setBoolean(MH_SET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY, ptr(), value);
 		return this;
 	}
 
@@ -253,7 +253,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return `true` if only the last commit-time write batch is used during recovery
 	public boolean getUseOnlyTheLastCommitTimeBatchForRecovery() {
-		return getBoolean(MH_GET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY);
+		return NativeFields.getBoolean(MH_GET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY, ptr());
 	}
 
 	/// Timeout to wait for a lock. `null` falls back to
@@ -265,7 +265,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @return this instance for chaining
 	/// @throws IllegalArgumentException if `lockTimeout` is negative
 	public TransactionOptions setLockTimeout(Duration lockTimeout) {
-		setLong(MH_SET_LOCK_TIMEOUT, toMillisOrNoTimeout(lockTimeout));
+		NativeFields.setLong(MH_SET_LOCK_TIMEOUT, ptr(), toMillisOrNoTimeout(lockTimeout));
 		return this;
 	}
 
@@ -273,7 +273,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return lock timeout, or `null` if falling back to the [TransactionDB]-wide default
 	public Duration getLockTimeout() {
-		return millisToDurationOrNull(getLong(MH_GET_LOCK_TIMEOUT));
+		return millisToDurationOrNull(NativeFields.getLong(MH_GET_LOCK_TIMEOUT, ptr()));
 	}
 
 	/// Timeout for detecting deadlocks between waiting transactions, always clamped below
@@ -290,7 +290,7 @@ public final class TransactionOptions extends AbstractOptions {
 		if (deadlockTimeoutUs.isNegative()) {
 			throw new IllegalArgumentException("deadlockTimeoutUs must not be negative: " + deadlockTimeoutUs);
 		}
-		setLong(MH_SET_DEADLOCK_TIMEOUT_US, deadlockTimeoutUs.toNanos() / 1_000L);
+		NativeFields.setLong(MH_SET_DEADLOCK_TIMEOUT_US, ptr(), deadlockTimeoutUs.toNanos() / 1_000L);
 		return this;
 	}
 
@@ -298,7 +298,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return deadlock detection timeout, at microsecond resolution
 	public Duration getDeadlockTimeoutUs() {
-		return Duration.ofNanos(getLong(MH_GET_DEADLOCK_TIMEOUT_US) * 1_000L);
+		return Duration.ofNanos(NativeFields.getLong(MH_GET_DEADLOCK_TIMEOUT_US, ptr()) * 1_000L);
 	}
 
 	/// Duration after which this transaction, if it has not been committed, is considered
@@ -309,7 +309,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @return this instance for chaining
 	/// @throws IllegalArgumentException if `expiration` is negative
 	public TransactionOptions setExpiration(Duration expiration) {
-		setLong(MH_SET_EXPIRATION, toMillisOrNoTimeout(expiration));
+		NativeFields.setLong(MH_SET_EXPIRATION, ptr(), toMillisOrNoTimeout(expiration));
 		return this;
 	}
 
@@ -317,7 +317,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return expiration duration, or `null` if expiration is disabled
 	public Duration getExpiration() {
-		return millisToDurationOrNull(getLong(MH_GET_EXPIRATION));
+		return millisToDurationOrNull(NativeFields.getLong(MH_GET_EXPIRATION, ptr()));
 	}
 
 	/// Converts `duration` to milliseconds for a `rocksdb_transaction_options_t` field, or to
@@ -350,7 +350,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @param deadlockDetectDepth max wait-for graph depth
 	/// @return this instance for chaining
 	public TransactionOptions setDeadlockDetectDepth(long deadlockDetectDepth) {
-		setLong(MH_SET_DEADLOCK_DETECT_DEPTH, deadlockDetectDepth);
+		NativeFields.setLong(MH_SET_DEADLOCK_DETECT_DEPTH, ptr(), deadlockDetectDepth);
 		return this;
 	}
 
@@ -358,7 +358,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return max wait-for graph depth
 	public long getDeadlockDetectDepth() {
-		return getLong(MH_GET_DEADLOCK_DETECT_DEPTH);
+		return NativeFields.getLong(MH_GET_DEADLOCK_DETECT_DEPTH, ptr());
 	}
 
 	/// Maximum size of the transaction's underlying write batch. [MemorySize#ZERO] means no
@@ -367,7 +367,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @param maxWriteBatchSize max write batch size; [MemorySize#ZERO] means unlimited
 	/// @return this instance for chaining
 	public TransactionOptions setMaxWriteBatchSize(MemorySize maxWriteBatchSize) {
-		setMemorySize(MH_SET_MAX_WRITE_BATCH_SIZE, maxWriteBatchSize);
+		NativeFields.setMemorySize(MH_SET_MAX_WRITE_BATCH_SIZE, ptr(), maxWriteBatchSize);
 		return this;
 	}
 
@@ -375,7 +375,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return max write batch size; [MemorySize#ZERO] means unlimited
 	public MemorySize getMaxWriteBatchSize() {
-		return getMemorySize(MH_GET_MAX_WRITE_BATCH_SIZE);
+		return NativeFields.getMemorySize(MH_GET_MAX_WRITE_BATCH_SIZE, ptr());
 	}
 
 	/// If `true`, skips two-phase locking for this transaction alone, overriding
@@ -384,7 +384,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @param value `true` to skip concurrency control for this transaction
 	/// @return this instance for chaining
 	public TransactionOptions setSkipConcurrencyControl(boolean value) {
-		setBoolean(MH_SET_SKIP_CONCURRENCY_CONTROL, value);
+		NativeFields.setBoolean(MH_SET_SKIP_CONCURRENCY_CONTROL, ptr(), value);
 		return this;
 	}
 
@@ -392,7 +392,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return `true` if concurrency control is skipped
 	public boolean getSkipConcurrencyControl() {
-		return getBoolean(MH_GET_SKIP_CONCURRENCY_CONTROL);
+		return NativeFields.getBoolean(MH_GET_SKIP_CONCURRENCY_CONTROL, ptr());
 	}
 
 	/// If `true`, skips the prepare phase of two-phase commit; the transaction commits
@@ -402,7 +402,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @param value `true` to skip the prepare phase
 	/// @return this instance for chaining
 	public TransactionOptions setSkipPrepare(boolean value) {
-		setBoolean(MH_SET_SKIP_PREPARE, value);
+		NativeFields.setBoolean(MH_SET_SKIP_PREPARE, ptr(), value);
 		return this;
 	}
 
@@ -410,7 +410,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return `true` if the prepare phase is skipped
 	public boolean getSkipPrepare() {
-		return getBoolean(MH_GET_SKIP_PREPARE);
+		return NativeFields.getBoolean(MH_GET_SKIP_PREPARE, ptr());
 	}
 
 	/// Write-batch size at which this transaction flushes its buffered writes early,
@@ -425,8 +425,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///                                 this transaction, `null` inherits the DB-wide default
 	/// @return this instance for chaining
 	public TransactionOptions setWriteBatchFlushThreshold(MemorySize writeBatchFlushThreshold) {
-		setLong(MH_SET_WRITE_BATCH_FLUSH_THRESHOLD,
-				writeBatchFlushThreshold == null ? -1L : writeBatchFlushThreshold.toBytes());
+		NativeFields.setLong(MH_SET_WRITE_BATCH_FLUSH_THRESHOLD, ptr(), writeBatchFlushThreshold == null ? -1L : writeBatchFlushThreshold.toBytes());
 		return this;
 	}
 
@@ -435,7 +434,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @return flush threshold, [MemorySize#ZERO] if disabled for this transaction, or `null`
 	/// if inheriting the DB-wide default
 	public MemorySize getWriteBatchFlushThreshold() {
-		long threshold = getLong(MH_GET_WRITE_BATCH_FLUSH_THRESHOLD);
+		long threshold = NativeFields.getLong(MH_GET_WRITE_BATCH_FLUSH_THRESHOLD, ptr());
 		return threshold < 0 ? null : MemorySize.ofBytes(threshold);
 	}
 
@@ -445,7 +444,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @param value `true` to track per-column-family timestamp size
 	/// @return this instance for chaining
 	public TransactionOptions setWriteBatchTrackTimestampSize(boolean value) {
-		setBoolean(MH_SET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE, value);
+		NativeFields.setBoolean(MH_SET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE, ptr(), value);
 		return this;
 	}
 
@@ -453,7 +452,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return `true` if timestamp size tracking is enabled
 	public boolean getWriteBatchTrackTimestampSize() {
-		return getBoolean(MH_GET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE);
+		return NativeFields.getBoolean(MH_GET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE, ptr());
 	}
 
 	/// If `true`, this transaction's commit bypasses the memtable and writes directly to L0,
@@ -462,7 +461,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @param value `true` to bypass the memtable on commit
 	/// @return this instance for chaining
 	public TransactionOptions setCommitBypassMemtable(boolean value) {
-		setBoolean(MH_SET_COMMIT_BYPASS_MEMTABLE, value);
+		NativeFields.setBoolean(MH_SET_COMMIT_BYPASS_MEMTABLE, ptr(), value);
 		return this;
 	}
 
@@ -470,7 +469,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return `true` if commit bypasses the memtable
 	public boolean getCommitBypassMemtable() {
-		return getBoolean(MH_GET_COMMIT_BYPASS_MEMTABLE);
+		return NativeFields.getBoolean(MH_GET_COMMIT_BYPASS_MEMTABLE, ptr());
 	}
 
 	/// Number of keys above which this transaction is treated as "large" for commit
@@ -479,7 +478,7 @@ public final class TransactionOptions extends AbstractOptions {
 	/// @param largeTxnCommitOptimizeThreshold key-count threshold; `0` disables the optimization
 	/// @return this instance for chaining
 	public TransactionOptions setLargeTxnCommitOptimizeThreshold(int largeTxnCommitOptimizeThreshold) {
-		setInt(MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD, largeTxnCommitOptimizeThreshold);
+		NativeFields.setInt(MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD, ptr(), largeTxnCommitOptimizeThreshold);
 		return this;
 	}
 
@@ -487,7 +486,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return key-count threshold; `0` means the optimization is disabled
 	public int getLargeTxnCommitOptimizeThreshold() {
-		return getInt(MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD);
+		return NativeFields.getInt(MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD, ptr());
 	}
 
 	/// Total byte size above which this transaction is treated as "large" for commit
@@ -498,7 +497,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///                                            disables the optimization
 	/// @return this instance for chaining
 	public TransactionOptions setLargeTxnCommitOptimizeByteThreshold(MemorySize largeTxnCommitOptimizeByteThreshold) {
-		setMemorySize(MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD, largeTxnCommitOptimizeByteThreshold);
+		NativeFields.setMemorySize(MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD, ptr(), largeTxnCommitOptimizeByteThreshold);
 		return this;
 	}
 
@@ -506,7 +505,7 @@ public final class TransactionOptions extends AbstractOptions {
 	///
 	/// @return byte-size threshold; [MemorySize#ZERO] means the optimization is disabled
 	public MemorySize getLargeTxnCommitOptimizeByteThreshold() {
-		return getMemorySize(MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD);
+		return NativeFields.getMemorySize(MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD, ptr());
 	}
 
 	@Override

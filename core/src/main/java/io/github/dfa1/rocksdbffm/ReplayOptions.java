@@ -17,7 +17,7 @@ import java.lang.invoke.MethodHandle;
 ///     replayer.replay(opts);
 /// }
 /// ```
-public final class ReplayOptions extends AbstractOptions {
+public final class ReplayOptions extends NativeObject {
 
 	/// `rocksdb_replay_options_t* rocksdb_replay_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -73,7 +73,7 @@ public final class ReplayOptions extends AbstractOptions {
 	/// @param numThreads number of replay threads
 	/// @return `this` for chaining
 	public ReplayOptions setNumThreads(int numThreads) {
-		setInt(MH_SET_NUM_THREADS, numThreads);
+		NativeFields.setInt(MH_SET_NUM_THREADS, ptr(), numThreads);
 		return this;
 	}
 
@@ -81,7 +81,7 @@ public final class ReplayOptions extends AbstractOptions {
 	///
 	/// @return current number of replay threads
 	public int getNumThreads() {
-		return getInt(MH_GET_NUM_THREADS);
+		return NativeFields.getInt(MH_GET_NUM_THREADS, ptr());
 	}
 
 	/// Speed multiplier applied to the original capture timing: `2.0` replays twice as fast as
@@ -90,7 +90,7 @@ public final class ReplayOptions extends AbstractOptions {
 	/// @param fastForward speed multiplier; must be positive
 	/// @return `this` for chaining
 	public ReplayOptions setFastForward(double fastForward) {
-		setDouble(MH_SET_FAST_FORWARD, fastForward);
+		NativeFields.setDouble(MH_SET_FAST_FORWARD, ptr(), fastForward);
 		return this;
 	}
 
@@ -98,7 +98,7 @@ public final class ReplayOptions extends AbstractOptions {
 	///
 	/// @return current speed multiplier
 	public double getFastForward() {
-		return getDouble(MH_GET_FAST_FORWARD);
+		return NativeFields.getDouble(MH_GET_FAST_FORWARD, ptr());
 	}
 
 	@Override

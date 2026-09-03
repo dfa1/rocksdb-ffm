@@ -20,7 +20,7 @@ import java.lang.invoke.MethodHandle;
 ///     ...
 /// }
 /// ```
-public final class CuckooTableOptions extends AbstractOptions {
+public final class CuckooTableOptions extends NativeObject {
 
 	/// `rocksdb_cuckoo_table_options_t* rocksdb_cuckoo_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -108,7 +108,7 @@ public final class CuckooTableOptions extends AbstractOptions {
 	/// @param ratio hash table utilization ratio
 	/// @return `this` for chaining
 	public CuckooTableOptions setHashTableRatio(double ratio) {
-		setDouble(MH_SET_HASH_TABLE_RATIO, ratio);
+		NativeFields.setDouble(MH_SET_HASH_TABLE_RATIO, ptr(), ratio);
 		return this;
 	}
 
@@ -116,7 +116,7 @@ public final class CuckooTableOptions extends AbstractOptions {
 	///
 	/// @return current hash table utilization ratio
 	public double getHashTableRatio() {
-		return getDouble(MH_GET_HASH_TABLE_RATIO);
+		return NativeFields.getDouble(MH_GET_HASH_TABLE_RATIO, ptr());
 	}
 
 	/// Depth to search for a path to displace elements on collision while building the table.
@@ -126,7 +126,7 @@ public final class CuckooTableOptions extends AbstractOptions {
 	/// @param depth maximum search depth
 	/// @return `this` for chaining
 	public CuckooTableOptions setMaxSearchDepth(int depth) {
-		setInt(MH_SET_MAX_SEARCH_DEPTH, depth);
+		NativeFields.setInt(MH_SET_MAX_SEARCH_DEPTH, ptr(), depth);
 		return this;
 	}
 
@@ -134,7 +134,7 @@ public final class CuckooTableOptions extends AbstractOptions {
 	///
 	/// @return current maximum search depth
 	public int getMaxSearchDepth() {
-		return getInt(MH_GET_MAX_SEARCH_DEPTH);
+		return NativeFields.getInt(MH_GET_MAX_SEARCH_DEPTH, ptr());
 	}
 
 	/// On collision, the builder tries inserting in the next `blockSize` locations before
@@ -144,7 +144,7 @@ public final class CuckooTableOptions extends AbstractOptions {
 	/// @param blockSize cuckoo block size
 	/// @return `this` for chaining
 	public CuckooTableOptions setCuckooBlockSize(int blockSize) {
-		setInt(MH_SET_CUCKOO_BLOCK_SIZE, blockSize);
+		NativeFields.setInt(MH_SET_CUCKOO_BLOCK_SIZE, ptr(), blockSize);
 		return this;
 	}
 
@@ -152,7 +152,7 @@ public final class CuckooTableOptions extends AbstractOptions {
 	///
 	/// @return current cuckoo block size
 	public int getCuckooBlockSize() {
-		return getInt(MH_GET_CUCKOO_BLOCK_SIZE);
+		return NativeFields.getInt(MH_GET_CUCKOO_BLOCK_SIZE, ptr());
 	}
 
 	/// If `true`, the user key is treated as a `uint64_t` and its value used directly as the
@@ -162,7 +162,7 @@ public final class CuckooTableOptions extends AbstractOptions {
 	/// @param value `true` to use the user key directly as the hash value
 	/// @return `this` for chaining
 	public CuckooTableOptions setIdentityAsFirstHash(boolean value) {
-		setBoolean(MH_SET_IDENTITY_AS_FIRST_HASH, value);
+		NativeFields.setBoolean(MH_SET_IDENTITY_AS_FIRST_HASH, ptr(), value);
 		return this;
 	}
 
@@ -170,7 +170,7 @@ public final class CuckooTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if the user key is used directly as the hash value
 	public boolean getIdentityAsFirstHash() {
-		return getBoolean(MH_GET_IDENTITY_AS_FIRST_HASH);
+		return NativeFields.getBoolean(MH_GET_IDENTITY_AS_FIRST_HASH, ptr());
 	}
 
 	/// If `true`, the modulo operator is used during hash calculation, which is more
@@ -181,7 +181,7 @@ public final class CuckooTableOptions extends AbstractOptions {
 	/// @param value `true` to use modulo-based hash calculation
 	/// @return `this` for chaining
 	public CuckooTableOptions setUseModuleHash(boolean value) {
-		setBoolean(MH_SET_USE_MODULE_HASH, value);
+		NativeFields.setBoolean(MH_SET_USE_MODULE_HASH, ptr(), value);
 		return this;
 	}
 
@@ -189,7 +189,7 @@ public final class CuckooTableOptions extends AbstractOptions {
 	///
 	/// @return `true` if modulo-based hash calculation is used
 	public boolean getUseModuleHash() {
-		return getBoolean(MH_GET_USE_MODULE_HASH);
+		return NativeFields.getBoolean(MH_GET_USE_MODULE_HASH, ptr());
 	}
 
 	@Override

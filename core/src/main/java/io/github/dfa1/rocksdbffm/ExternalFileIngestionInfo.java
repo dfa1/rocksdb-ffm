@@ -84,10 +84,6 @@ public final class ExternalFileIngestionInfo {
 	///
 	/// @return the global sequence number
 	public SequenceNumber globalSequenceNumber() {
-		try {
-			return SequenceNumber.of((long) MH_GLOBAL_SEQNO.invokeExact(ptr));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ExternalFileIngestionInfo.globalSequenceNumber failed", t);
-		}
+		return SequenceNumber.of(NativeFields.getLong(MH_GLOBAL_SEQNO, ptr));
 	}
 }

@@ -155,7 +155,7 @@ class EventNotifierTest {
 				outputLevels.add(info.outputLevel());
 				reasons.add(info.compactionReason());
 				try {
-					info.status();
+					info.checkStatus();
 					statusSucceeded.add(true);
 				} catch (RocksDBException e) {
 					statusSucceeded.add(false);

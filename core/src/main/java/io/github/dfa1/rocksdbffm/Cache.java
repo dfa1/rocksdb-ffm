@@ -51,44 +51,28 @@ public abstract class Cache extends NativeObject {
 	///
 	/// @param capacity new cache capacity
 	public void setCapacity(MemorySize capacity) {
-		try {
-			MH_SET_CAPACITY.invokeExact(ptr(), capacity.toBytes());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setCapacity failed", t);
-		}
+		NativeFields.setMemorySize(MH_SET_CAPACITY, ptr(), capacity);
 	}
 
 	/// Returns the configured capacity of the cache.
 	///
 	/// @return cache capacity
 	public MemorySize getCapacity() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_CAPACITY.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getCapacity failed", t);
-		}
+		return NativeFields.getMemorySize(MH_GET_CAPACITY, ptr());
 	}
 
 	/// Returns the current memory usage of the cache.
 	///
 	/// @return current usage
 	public MemorySize getUsage() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_USAGE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getUsage failed", t);
-		}
+		return NativeFields.getMemorySize(MH_GET_USAGE, ptr());
 	}
 
 	/// Returns the amount of memory currently pinned (not eligible for eviction).
 	///
 	/// @return pinned memory usage
 	public MemorySize getPinnedUsage() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_PINNED_USAGE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getPinnedUsage failed", t);
-		}
+		return NativeFields.getMemorySize(MH_GET_PINNED_USAGE, ptr());
 	}
 
 	@Override

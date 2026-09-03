@@ -15,7 +15,7 @@ import java.lang.invoke.MethodHandle;
 ///     // ...
 /// }
 /// ```
-public final class SizeApproximationOptions extends AbstractOptions {
+public final class SizeApproximationOptions extends NativeObject {
 
 	/// `rocksdb_size_approximation_options_t* rocksdb_size_approximation_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -95,7 +95,7 @@ public final class SizeApproximationOptions extends AbstractOptions {
 	/// @param value `true` to include memtable data in the estimate
 	/// @return `this` for chaining
 	public SizeApproximationOptions setIncludeMemtables(boolean value) {
-		setBoolean(MH_SET_INCLUDE_MEMTABLES, value);
+		NativeFields.setBoolean(MH_SET_INCLUDE_MEMTABLES, ptr(), value);
 		return this;
 	}
 
@@ -103,7 +103,7 @@ public final class SizeApproximationOptions extends AbstractOptions {
 	///
 	/// @return `true` if memtable data is included
 	public boolean isIncludeMemtables() {
-		return getBoolean(MH_GET_INCLUDE_MEMTABLES);
+		return NativeFields.getBoolean(MH_GET_INCLUDE_MEMTABLES, ptr());
 	}
 
 	/// If `true`, the estimate includes data already serialized to SST files on disk. At least
@@ -112,7 +112,7 @@ public final class SizeApproximationOptions extends AbstractOptions {
 	/// @param value `true` to include on-disk SST data in the estimate
 	/// @return `this` for chaining
 	public SizeApproximationOptions setIncludeFiles(boolean value) {
-		setBoolean(MH_SET_INCLUDE_FILES, value);
+		NativeFields.setBoolean(MH_SET_INCLUDE_FILES, ptr(), value);
 		return this;
 	}
 
@@ -120,7 +120,7 @@ public final class SizeApproximationOptions extends AbstractOptions {
 	///
 	/// @return `true` if on-disk SST data is included
 	public boolean isIncludeFiles() {
-		return getBoolean(MH_GET_INCLUDE_FILES);
+		return NativeFields.getBoolean(MH_GET_INCLUDE_FILES, ptr());
 	}
 
 	/// If `true`, the estimate includes an approximation of blob file data in the range,
@@ -131,7 +131,7 @@ public final class SizeApproximationOptions extends AbstractOptions {
 	/// @param value `true` to include a prorated blob file estimate
 	/// @return `this` for chaining
 	public SizeApproximationOptions setIncludeBlobFiles(boolean value) {
-		setBoolean(MH_SET_INCLUDE_BLOB_FILES, value);
+		NativeFields.setBoolean(MH_SET_INCLUDE_BLOB_FILES, ptr(), value);
 		return this;
 	}
 
@@ -139,7 +139,7 @@ public final class SizeApproximationOptions extends AbstractOptions {
 	///
 	/// @return `true` if a prorated blob file estimate is included
 	public boolean isIncludeBlobFiles() {
-		return getBoolean(MH_GET_INCLUDE_BLOB_FILES);
+		return NativeFields.getBoolean(MH_GET_INCLUDE_BLOB_FILES, ptr());
 	}
 
 	/// Allows the on-disk file size portion of the estimate to be off by up to
@@ -150,7 +150,7 @@ public final class SizeApproximationOptions extends AbstractOptions {
 	/// @param margin allowed error margin as a fraction, or a non-positive value for exact
 	/// @return `this` for chaining
 	public SizeApproximationOptions setFilesSizeErrorMargin(double margin) {
-		setDouble(MH_SET_FILES_SIZE_ERROR_MARGIN, margin);
+		NativeFields.setDouble(MH_SET_FILES_SIZE_ERROR_MARGIN, ptr(), margin);
 		return this;
 	}
 
@@ -158,7 +158,7 @@ public final class SizeApproximationOptions extends AbstractOptions {
 	///
 	/// @return current file size error margin; non-positive means exact computation
 	public double getFilesSizeErrorMargin() {
-		return getDouble(MH_GET_FILES_SIZE_ERROR_MARGIN);
+		return NativeFields.getDouble(MH_GET_FILES_SIZE_ERROR_MARGIN, ptr());
 	}
 
 	@Override

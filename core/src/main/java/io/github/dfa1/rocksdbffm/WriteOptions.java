@@ -6,7 +6,7 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 
 /// FFM wrapper for `rocksdb_writeoptions_t`.
-public final class WriteOptions extends AbstractOptions {
+public final class WriteOptions extends NativeObject {
 
 	/// `rocksdb_writeoptions_t* rocksdb_writeoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -126,7 +126,7 @@ public final class WriteOptions extends AbstractOptions {
 	/// @param sync `true` to fsync before returning
 	/// @return this instance for chaining
 	public WriteOptions setSync(boolean sync) {
-		setBoolean(MH_SET_SYNC, sync);
+		NativeFields.setBoolean(MH_SET_SYNC, ptr(), sync);
 		return this;
 	}
 
@@ -134,7 +134,7 @@ public final class WriteOptions extends AbstractOptions {
 	///
 	/// @return `true` if fsync is enabled
 	public boolean isSync() {
-		return getBoolean(MH_GET_SYNC);
+		return NativeFields.getBoolean(MH_GET_SYNC, ptr());
 	}
 
 	/// If `true`, writes bypass the write-ahead log entirely: faster, but a crash before the
@@ -143,7 +143,7 @@ public final class WriteOptions extends AbstractOptions {
 	/// @param disableWal `true` to skip the WAL
 	/// @return this instance for chaining
 	public WriteOptions setDisableWal(boolean disableWal) {
-		setInt(MH_DISABLE_WAL, RocksDB.toByte(disableWal));
+		NativeFields.setInt(MH_DISABLE_WAL, ptr(), RocksDB.toByte(disableWal));
 		return this;
 	}
 
@@ -151,7 +151,7 @@ public final class WriteOptions extends AbstractOptions {
 	///
 	/// @return `true` if the WAL is skipped
 	public boolean isDisableWal() {
-		return getBoolean(MH_GET_DISABLE_WAL);
+		return NativeFields.getBoolean(MH_GET_DISABLE_WAL, ptr());
 	}
 
 	/// If `true`, a `put`/`delete` targeting a column family dropped since the handle was
@@ -160,7 +160,7 @@ public final class WriteOptions extends AbstractOptions {
 	/// @param ignoreMissingColumnFamilies `true` to ignore a dropped column family
 	/// @return this instance for chaining
 	public WriteOptions setIgnoreMissingColumnFamilies(boolean ignoreMissingColumnFamilies) {
-		setBoolean(MH_SET_IGNORE_MISSING_COLUMN_FAMILIES, ignoreMissingColumnFamilies);
+		NativeFields.setBoolean(MH_SET_IGNORE_MISSING_COLUMN_FAMILIES, ptr(), ignoreMissingColumnFamilies);
 		return this;
 	}
 
@@ -168,7 +168,7 @@ public final class WriteOptions extends AbstractOptions {
 	///
 	/// @return `true` if a missing column family is ignored
 	public boolean isIgnoreMissingColumnFamilies() {
-		return getBoolean(MH_GET_IGNORE_MISSING_COLUMN_FAMILIES);
+		return NativeFields.getBoolean(MH_GET_IGNORE_MISSING_COLUMN_FAMILIES, ptr());
 	}
 
 	/// If `true`, the write fails immediately with an error instead of blocking when it would
@@ -177,7 +177,7 @@ public final class WriteOptions extends AbstractOptions {
 	/// @param noSlowdown `true` to fail fast instead of blocking on a write stall
 	/// @return this instance for chaining
 	public WriteOptions setNoSlowdown(boolean noSlowdown) {
-		setBoolean(MH_SET_NO_SLOWDOWN, noSlowdown);
+		NativeFields.setBoolean(MH_SET_NO_SLOWDOWN, ptr(), noSlowdown);
 		return this;
 	}
 
@@ -185,7 +185,7 @@ public final class WriteOptions extends AbstractOptions {
 	///
 	/// @return `true` if the write fails fast rather than blocking
 	public boolean isNoSlowdown() {
-		return getBoolean(MH_GET_NO_SLOWDOWN);
+		return NativeFields.getBoolean(MH_GET_NO_SLOWDOWN, ptr());
 	}
 
 	/// If `true`, marks this write as low priority: throttled ahead of normal-priority writes
@@ -194,7 +194,7 @@ public final class WriteOptions extends AbstractOptions {
 	/// @param lowPri `true` to mark this write as low priority
 	/// @return this instance for chaining
 	public WriteOptions setLowPri(boolean lowPri) {
-		setBoolean(MH_SET_LOW_PRI, lowPri);
+		NativeFields.setBoolean(MH_SET_LOW_PRI, ptr(), lowPri);
 		return this;
 	}
 
@@ -202,7 +202,7 @@ public final class WriteOptions extends AbstractOptions {
 	///
 	/// @return `true` if this write is low priority
 	public boolean isLowPri() {
-		return getBoolean(MH_GET_LOW_PRI);
+		return NativeFields.getBoolean(MH_GET_LOW_PRI, ptr());
 	}
 
 	/// If `true`, a hint is inserted into the memtable once per write batch instead of once per
@@ -211,7 +211,7 @@ public final class WriteOptions extends AbstractOptions {
 	/// @param memtableInsertHintPerBatch `true` to hint once per batch instead of once per key
 	/// @return this instance for chaining
 	public WriteOptions setMemtableInsertHintPerBatch(boolean memtableInsertHintPerBatch) {
-		setBoolean(MH_SET_MEMTABLE_INSERT_HINT_PER_BATCH, memtableInsertHintPerBatch);
+		NativeFields.setBoolean(MH_SET_MEMTABLE_INSERT_HINT_PER_BATCH, ptr(), memtableInsertHintPerBatch);
 		return this;
 	}
 
@@ -219,7 +219,7 @@ public final class WriteOptions extends AbstractOptions {
 	///
 	/// @return `true` if the hint is inserted once per batch
 	public boolean isMemtableInsertHintPerBatch() {
-		return getBoolean(MH_GET_MEMTABLE_INSERT_HINT_PER_BATCH);
+		return NativeFields.getBoolean(MH_GET_MEMTABLE_INSERT_HINT_PER_BATCH, ptr());
 	}
 
 	/// Overrides the rate limiter priority for this write. Only [IOPriority#USER] and
@@ -232,7 +232,7 @@ public final class WriteOptions extends AbstractOptions {
 	///                            [IOPriority#TOTAL] only)
 	/// @return this instance for chaining
 	public WriteOptions setRateLimiterPriority(IOPriority rateLimiterPriority) {
-		setInt(MH_SET_RATE_LIMITER_PRIORITY, rateLimiterPriority.getValue());
+		NativeFields.setInt(MH_SET_RATE_LIMITER_PRIORITY, ptr(), rateLimiterPriority.getValue());
 		return this;
 	}
 
@@ -240,7 +240,7 @@ public final class WriteOptions extends AbstractOptions {
 	///
 	/// @return the active [IOPriority]
 	public IOPriority getRateLimiterPriority() {
-		return IOPriority.fromValue(getInt(MH_GET_RATE_LIMITER_PRIORITY));
+		return IOPriority.fromValue(NativeFields.getInt(MH_GET_RATE_LIMITER_PRIORITY, ptr()));
 	}
 
 	/// Classifies this write's originating operation for I/O tracing. `EXPERIMENTAL` and "for
@@ -249,7 +249,7 @@ public final class WriteOptions extends AbstractOptions {
 	/// @param ioActivity the activity to classify this write as
 	/// @return this instance for chaining
 	public WriteOptions setIoActivity(IOActivity ioActivity) {
-		setInt(MH_SET_IO_ACTIVITY, ioActivity.getValue());
+		NativeFields.setInt(MH_SET_IO_ACTIVITY, ptr(), ioActivity.getValue());
 		return this;
 	}
 
@@ -257,7 +257,7 @@ public final class WriteOptions extends AbstractOptions {
 	///
 	/// @return the active [IOActivity]
 	public IOActivity getIoActivity() {
-		return IOActivity.fromValue(getInt(MH_GET_IO_ACTIVITY));
+		return IOActivity.fromValue(NativeFields.getInt(MH_GET_IO_ACTIVITY, ptr()));
 	}
 
 	@Override

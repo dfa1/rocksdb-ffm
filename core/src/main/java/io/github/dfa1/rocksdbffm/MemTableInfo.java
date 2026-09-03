@@ -63,11 +63,7 @@ public final class MemTableInfo {
 	///
 	/// @return the first sequence number
 	public SequenceNumber firstSequenceNumber() {
-		try {
-			return SequenceNumber.of((long) MH_FIRST_SEQNO.invokeExact(ptr));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("MemTableInfo.firstSequenceNumber failed", t);
-		}
+		return SequenceNumber.of(NativeFields.getLong(MH_FIRST_SEQNO, ptr));
 	}
 
 	/// Returns the earliest sequence number still readable through this memtable, accounting for
@@ -75,33 +71,21 @@ public final class MemTableInfo {
 	///
 	/// @return the earliest sequence number
 	public SequenceNumber earliestSequenceNumber() {
-		try {
-			return SequenceNumber.of((long) MH_EARLIEST_SEQNO.invokeExact(ptr));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("MemTableInfo.earliestSequenceNumber failed", t);
-		}
+		return SequenceNumber.of(NativeFields.getLong(MH_EARLIEST_SEQNO, ptr));
 	}
 
 	/// Returns the total number of entries (puts, merges, and deletes) in this memtable.
 	///
 	/// @return the number of entries
 	public long numEntries() {
-		try {
-			return (long) MH_NUM_ENTRIES.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("MemTableInfo.numEntries failed", t);
-		}
+		return NativeFields.getLong(MH_NUM_ENTRIES, ptr);
 	}
 
 	/// Returns the number of delete entries in this memtable.
 	///
 	/// @return the number of deletes
 	public long numDeletes() {
-		try {
-			return (long) MH_NUM_DELETES.invokeExact(ptr);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("MemTableInfo.numDeletes failed", t);
-		}
+		return NativeFields.getLong(MH_NUM_DELETES, ptr);
 	}
 
 	/// Returns the newest user-defined timestamp stored in this memtable, if user-defined

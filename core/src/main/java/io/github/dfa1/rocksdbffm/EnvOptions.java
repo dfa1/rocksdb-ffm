@@ -20,7 +20,7 @@ import java.lang.invoke.MethodHandle;
 ///     ...
 /// }
 /// ```
-public final class EnvOptions extends AbstractOptions {
+public final class EnvOptions extends NativeObject {
 
 	/// `rocksdb_envoptions_t* rocksdb_envoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -178,7 +178,7 @@ public final class EnvOptions extends AbstractOptions {
 	/// @param value `true` to use `mmap` for reads
 	/// @return `this` for chaining
 	public EnvOptions setUseMmapReads(boolean value) {
-		setBoolean(MH_SET_USE_MMAP_READS, value);
+		NativeFields.setBoolean(MH_SET_USE_MMAP_READS, ptr(), value);
 		return this;
 	}
 
@@ -186,7 +186,7 @@ public final class EnvOptions extends AbstractOptions {
 	///
 	/// @return `true` if reads go through `mmap`
 	public boolean getUseMmapReads() {
-		return getBoolean(MH_GET_USE_MMAP_READS);
+		return NativeFields.getBoolean(MH_GET_USE_MMAP_READS, ptr());
 	}
 
 	/// If true, writes go through `mmap` instead of regular `write` calls. Default: `false`.
@@ -194,7 +194,7 @@ public final class EnvOptions extends AbstractOptions {
 	/// @param value `true` to use `mmap` for writes
 	/// @return `this` for chaining
 	public EnvOptions setUseMmapWrites(boolean value) {
-		setBoolean(MH_SET_USE_MMAP_WRITES, value);
+		NativeFields.setBoolean(MH_SET_USE_MMAP_WRITES, ptr(), value);
 		return this;
 	}
 
@@ -202,7 +202,7 @@ public final class EnvOptions extends AbstractOptions {
 	///
 	/// @return `true` if writes go through `mmap`
 	public boolean getUseMmapWrites() {
-		return getBoolean(MH_GET_USE_MMAP_WRITES);
+		return NativeFields.getBoolean(MH_GET_USE_MMAP_WRITES, ptr());
 	}
 
 	/// If true, uses direct I/O (`O_DIRECT`) for reads, bypassing the OS page cache. Avoids
@@ -213,7 +213,7 @@ public final class EnvOptions extends AbstractOptions {
 	/// @param value `true` to use direct I/O for reads
 	/// @return `this` for chaining
 	public EnvOptions setUseDirectReads(boolean value) {
-		setBoolean(MH_SET_USE_DIRECT_READS, value);
+		NativeFields.setBoolean(MH_SET_USE_DIRECT_READS, ptr(), value);
 		return this;
 	}
 
@@ -221,7 +221,7 @@ public final class EnvOptions extends AbstractOptions {
 	///
 	/// @return `true` if direct I/O is used for reads
 	public boolean getUseDirectReads() {
-		return getBoolean(MH_GET_USE_DIRECT_READS);
+		return NativeFields.getBoolean(MH_GET_USE_DIRECT_READS, ptr());
 	}
 
 	/// If true, uses direct I/O (`O_DIRECT`) for writes, bypassing the OS page cache. Default:
@@ -230,7 +230,7 @@ public final class EnvOptions extends AbstractOptions {
 	/// @param value `true` to use direct I/O for writes
 	/// @return `this` for chaining
 	public EnvOptions setUseDirectWrites(boolean value) {
-		setBoolean(MH_SET_USE_DIRECT_WRITES, value);
+		NativeFields.setBoolean(MH_SET_USE_DIRECT_WRITES, ptr(), value);
 		return this;
 	}
 
@@ -238,7 +238,7 @@ public final class EnvOptions extends AbstractOptions {
 	///
 	/// @return `true` if direct I/O is used for writes
 	public boolean getUseDirectWrites() {
-		return getBoolean(MH_GET_USE_DIRECT_WRITES);
+		return NativeFields.getBoolean(MH_GET_USE_DIRECT_WRITES, ptr());
 	}
 
 	/// If true, allows `fallocate` to preallocate disk space for a file before writing to it,
@@ -247,7 +247,7 @@ public final class EnvOptions extends AbstractOptions {
 	/// @param value `true` to allow `fallocate`
 	/// @return `this` for chaining
 	public EnvOptions setAllowFallocate(boolean value) {
-		setBoolean(MH_SET_ALLOW_FALLOCATE, value);
+		NativeFields.setBoolean(MH_SET_ALLOW_FALLOCATE, ptr(), value);
 		return this;
 	}
 
@@ -255,7 +255,7 @@ public final class EnvOptions extends AbstractOptions {
 	///
 	/// @return `true` if `fallocate` is allowed
 	public boolean getAllowFallocate() {
-		return getBoolean(MH_GET_ALLOW_FALLOCATE);
+		return NativeFields.getBoolean(MH_GET_ALLOW_FALLOCATE, ptr());
 	}
 
 	/// If true, sets the close-on-exec flag on file descriptors RocksDB opens, so they don't
@@ -264,7 +264,7 @@ public final class EnvOptions extends AbstractOptions {
 	/// @param value `true` to set close-on-exec on opened file descriptors
 	/// @return `this` for chaining
 	public EnvOptions setFdCloexec(boolean value) {
-		setBoolean(MH_SET_FD_CLOEXEC, value);
+		NativeFields.setBoolean(MH_SET_FD_CLOEXEC, ptr(), value);
 		return this;
 	}
 
@@ -272,7 +272,7 @@ public final class EnvOptions extends AbstractOptions {
 	///
 	/// @return `true` if close-on-exec is set on opened file descriptors
 	public boolean getFdCloexec() {
-		return getBoolean(MH_GET_FD_CLOEXEC);
+		return NativeFields.getBoolean(MH_GET_FD_CLOEXEC, ptr());
 	}
 
 	/// Issues a periodic `sync` (via `sync_file_range` on Linux) after every this-many bytes
@@ -282,7 +282,7 @@ public final class EnvOptions extends AbstractOptions {
 	/// @param size number of bytes between periodic syncs
 	/// @return `this` for chaining
 	public EnvOptions setBytesPerSync(MemorySize size) {
-		setMemorySize(MH_SET_BYTES_PER_SYNC, size);
+		NativeFields.setMemorySize(MH_SET_BYTES_PER_SYNC, ptr(), size);
 		return this;
 	}
 
@@ -290,7 +290,7 @@ public final class EnvOptions extends AbstractOptions {
 	///
 	/// @return current bytes-per-sync interval
 	public MemorySize getBytesPerSync() {
-		return getMemorySize(MH_GET_BYTES_PER_SYNC);
+		return NativeFields.getMemorySize(MH_GET_BYTES_PER_SYNC, ptr());
 	}
 
 	/// If true, the periodic sync triggered by [#setBytesPerSync] blocks until the sync
@@ -299,7 +299,7 @@ public final class EnvOptions extends AbstractOptions {
 	/// @param value `true` to block until each periodic sync completes
 	/// @return `this` for chaining
 	public EnvOptions setStrictBytesPerSync(boolean value) {
-		setBoolean(MH_SET_STRICT_BYTES_PER_SYNC, value);
+		NativeFields.setBoolean(MH_SET_STRICT_BYTES_PER_SYNC, ptr(), value);
 		return this;
 	}
 
@@ -307,7 +307,7 @@ public final class EnvOptions extends AbstractOptions {
 	///
 	/// @return `true` if periodic syncs block until completion
 	public boolean getStrictBytesPerSync() {
-		return getBoolean(MH_GET_STRICT_BYTES_PER_SYNC);
+		return NativeFields.getBoolean(MH_GET_STRICT_BYTES_PER_SYNC, ptr());
 	}
 
 	/// If true, `fallocate` preallocates space without changing the file's reported size
@@ -316,7 +316,7 @@ public final class EnvOptions extends AbstractOptions {
 	/// @param value `true` to keep the reported file size unchanged when preallocating
 	/// @return `this` for chaining
 	public EnvOptions setFallocateWithKeepSize(boolean value) {
-		setBoolean(MH_SET_FALLOCATE_WITH_KEEP_SIZE, value);
+		NativeFields.setBoolean(MH_SET_FALLOCATE_WITH_KEEP_SIZE, ptr(), value);
 		return this;
 	}
 
@@ -324,7 +324,7 @@ public final class EnvOptions extends AbstractOptions {
 	///
 	/// @return `true` if `fallocate` keeps the reported file size unchanged
 	public boolean getFallocateWithKeepSize() {
-		return getBoolean(MH_GET_FALLOCATE_WITH_KEEP_SIZE);
+		return NativeFields.getBoolean(MH_GET_FALLOCATE_WITH_KEEP_SIZE, ptr());
 	}
 
 	/// Readahead size used specifically for compaction reads (as opposed to regular reads).
@@ -333,7 +333,7 @@ public final class EnvOptions extends AbstractOptions {
 	/// @param size compaction readahead size
 	/// @return `this` for chaining
 	public EnvOptions setCompactionReadaheadSize(MemorySize size) {
-		setMemorySize(MH_SET_COMPACTION_READAHEAD_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_COMPACTION_READAHEAD_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -341,7 +341,7 @@ public final class EnvOptions extends AbstractOptions {
 	///
 	/// @return current compaction readahead size
 	public MemorySize getCompactionReadaheadSize() {
-		return getMemorySize(MH_GET_COMPACTION_READAHEAD_SIZE);
+		return NativeFields.getMemorySize(MH_GET_COMPACTION_READAHEAD_SIZE, ptr());
 	}
 
 	/// Maximum buffer size used for writing to a single file before flushing to disk. Default:
@@ -350,7 +350,7 @@ public final class EnvOptions extends AbstractOptions {
 	/// @param size maximum write buffer size
 	/// @return `this` for chaining
 	public EnvOptions setWritableFileMaxBufferSize(MemorySize size) {
-		setMemorySize(MH_SET_WRITABLE_FILE_MAX_BUFFER_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_WRITABLE_FILE_MAX_BUFFER_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -358,7 +358,7 @@ public final class EnvOptions extends AbstractOptions {
 	///
 	/// @return current maximum write buffer size
 	public MemorySize getWritableFileMaxBufferSize() {
-		return getMemorySize(MH_GET_WRITABLE_FILE_MAX_BUFFER_SIZE);
+		return NativeFields.getMemorySize(MH_GET_WRITABLE_FILE_MAX_BUFFER_SIZE, ptr());
 	}
 
 	/// Attaches a [RateLimiter] to throttle this file's I/O. `rateLimiter` remains owned by

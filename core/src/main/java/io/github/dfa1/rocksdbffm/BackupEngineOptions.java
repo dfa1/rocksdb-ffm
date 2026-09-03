@@ -25,7 +25,7 @@ import java.nio.file.Path;
 ///
 /// If [#setEnv(Env)] is called, the provided [Env] must remain open for the
 /// lifetime of any [BackupEngine] opened with these options.
-public final class BackupEngineOptions extends AbstractOptions {
+public final class BackupEngineOptions extends NativeObject {
 
 	/// `rocksdb_backup_engine_options_t* rocksdb_backup_engine_options_create(const char* backup_dir);`
 	private static final MethodHandle MH_CREATE;
@@ -221,7 +221,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	/// @param val `true` to enable SST sharing
 	/// @return `this` for chaining
 	public BackupEngineOptions setShareTableFiles(boolean val) {
-		setBoolean(MH_SET_SHARE_TABLE_FILES, val);
+		NativeFields.setBoolean(MH_SET_SHARE_TABLE_FILES, ptr(), val);
 		return this;
 	}
 
@@ -229,7 +229,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	///
 	/// @return `true` if SST sharing is enabled
 	public boolean isShareTableFiles() {
-		return getBoolean(MH_GET_SHARE_TABLE_FILES);
+		return NativeFields.getBoolean(MH_GET_SHARE_TABLE_FILES, ptr());
 	}
 
 	/// If `true`, each file is synced after writing. Safer but slower. Default: `true`.
@@ -237,7 +237,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	/// @param val `true` to enable sync after each file write
 	/// @return `this` for chaining
 	public BackupEngineOptions setSync(boolean val) {
-		setBoolean(MH_SET_SYNC, val);
+		NativeFields.setBoolean(MH_SET_SYNC, ptr(), val);
 		return this;
 	}
 
@@ -245,7 +245,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	///
 	/// @return `true` if sync-after-write is enabled
 	public boolean isSync() {
-		return getBoolean(MH_GET_SYNC);
+		return NativeFields.getBoolean(MH_GET_SYNC, ptr());
 	}
 
 	/// If `true`, existing backup data in the backup directory is deleted when the
@@ -254,7 +254,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	/// @param val `true` to destroy existing backup data on open
 	/// @return `this` for chaining
 	public BackupEngineOptions setDestroyOldData(boolean val) {
-		setBoolean(MH_SET_DESTROY_OLD_DATA, val);
+		NativeFields.setBoolean(MH_SET_DESTROY_OLD_DATA, ptr(), val);
 		return this;
 	}
 
@@ -262,7 +262,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	///
 	/// @return `true` if destroy-old-data is enabled
 	public boolean isDestroyOldData() {
-		return getBoolean(MH_GET_DESTROY_OLD_DATA);
+		return NativeFields.getBoolean(MH_GET_DESTROY_OLD_DATA, ptr());
 	}
 
 	/// If `true`, WAL/log files are included in backups. Default: `true`.
@@ -270,7 +270,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	/// @param val `true` to include WAL/log files in each backup
 	/// @return `this` for chaining
 	public BackupEngineOptions setBackupLogFiles(boolean val) {
-		setBoolean(MH_SET_BACKUP_LOG_FILES, val);
+		NativeFields.setBoolean(MH_SET_BACKUP_LOG_FILES, ptr(), val);
 		return this;
 	}
 
@@ -278,7 +278,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	///
 	/// @return `true` if log file backup is enabled
 	public boolean isBackupLogFiles() {
-		return getBoolean(MH_GET_BACKUP_LOG_FILES);
+		return NativeFields.getBoolean(MH_GET_BACKUP_LOG_FILES, ptr());
 	}
 
 	/// Maximum rate at which the backup engine copies files to the backup directory.
@@ -287,7 +287,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	/// @param limit maximum backup copy rate; `MemorySize.ofBytes(0)` means unlimited
 	/// @return `this` for chaining
 	public BackupEngineOptions setBackupRateLimit(MemorySize limit) {
-		setMemorySize(MH_SET_BACKUP_RATE_LIMIT, limit);
+		NativeFields.setMemorySize(MH_SET_BACKUP_RATE_LIMIT, ptr(), limit);
 		return this;
 	}
 
@@ -295,7 +295,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	///
 	/// @return the rate limit; `MemorySize.ofBytes(0)` means unlimited
 	public MemorySize getBackupRateLimit() {
-		return getMemorySize(MH_GET_BACKUP_RATE_LIMIT);
+		return NativeFields.getMemorySize(MH_GET_BACKUP_RATE_LIMIT, ptr());
 	}
 
 	/// Maximum rate at which the backup engine copies files during a restore.
@@ -304,7 +304,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	/// @param limit maximum restore copy rate; `MemorySize.ofBytes(0)` means unlimited
 	/// @return `this` for chaining
 	public BackupEngineOptions setRestoreRateLimit(MemorySize limit) {
-		setMemorySize(MH_SET_RESTORE_RATE_LIMIT, limit);
+		NativeFields.setMemorySize(MH_SET_RESTORE_RATE_LIMIT, ptr(), limit);
 		return this;
 	}
 
@@ -312,7 +312,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	///
 	/// @return the rate limit; `MemorySize.ofBytes(0)` means unlimited
 	public MemorySize getRestoreRateLimit() {
-		return getMemorySize(MH_GET_RESTORE_RATE_LIMIT);
+		return NativeFields.getMemorySize(MH_GET_RESTORE_RATE_LIMIT, ptr());
 	}
 
 	/// Number of background threads used for backup/restore. Default: `1`.
@@ -320,7 +320,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	/// @param val number of background threads
 	/// @return `this` for chaining
 	public BackupEngineOptions setMaxBackgroundOperations(int val) {
-		setInt(MH_SET_MAX_BACKGROUND_OPERATIONS, val);
+		NativeFields.setInt(MH_SET_MAX_BACKGROUND_OPERATIONS, ptr(), val);
 		return this;
 	}
 
@@ -328,7 +328,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	///
 	/// @return number of background threads
 	public int getMaxBackgroundOperations() {
-		return getInt(MH_GET_MAX_BACKGROUND_OPERATIONS);
+		return NativeFields.getInt(MH_GET_MAX_BACKGROUND_OPERATIONS, ptr());
 	}
 
 	/// How many bytes to copy before invoking the progress callback. Default: `4 MB`.
@@ -336,7 +336,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	/// @param size bytes between progress callback invocations
 	/// @return `this` for chaining
 	public BackupEngineOptions setCallbackTriggerIntervalSize(MemorySize size) {
-		setMemorySize(MH_SET_CALLBACK_TRIGGER_INTERVAL_SIZE, size);
+		NativeFields.setMemorySize(MH_SET_CALLBACK_TRIGGER_INTERVAL_SIZE, ptr(), size);
 		return this;
 	}
 
@@ -344,7 +344,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	///
 	/// @return the callback trigger interval size
 	public MemorySize getCallbackTriggerIntervalSize() {
-		return getMemorySize(MH_GET_CALLBACK_TRIGGER_INTERVAL_SIZE);
+		return NativeFields.getMemorySize(MH_GET_CALLBACK_TRIGGER_INTERVAL_SIZE, ptr());
 	}
 
 	/// Number of the most recent backups to open on engine startup.
@@ -353,7 +353,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	/// @param val number of recent backups to open; `-1` means all
 	/// @return `this` for chaining
 	public BackupEngineOptions setMaxValidBackupsToOpen(int val) {
-		setInt(MH_SET_MAX_VALID_BACKUPS_TO_OPEN, val);
+		NativeFields.setInt(MH_SET_MAX_VALID_BACKUPS_TO_OPEN, ptr(), val);
 		return this;
 	}
 
@@ -361,7 +361,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	///
 	/// @return the limit; `-1` means all backups are opened
 	public int getMaxValidBackupsToOpen() {
-		return getInt(MH_GET_MAX_VALID_BACKUPS_TO_OPEN);
+		return NativeFields.getInt(MH_GET_MAX_VALID_BACKUPS_TO_OPEN, ptr());
 	}
 
 	/// Naming scheme for shared SST files. See RocksDB docs for valid values.
@@ -370,7 +370,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	/// @param val the naming scheme integer value
 	/// @return `this` for chaining
 	public BackupEngineOptions setShareFilesWithChecksumNaming(int val) {
-		setInt(MH_SET_SHARE_FILES_WITH_CHECKSUM_NAMING, val);
+		NativeFields.setInt(MH_SET_SHARE_FILES_WITH_CHECKSUM_NAMING, ptr(), val);
 		return this;
 	}
 
@@ -378,7 +378,7 @@ public final class BackupEngineOptions extends AbstractOptions {
 	///
 	/// @return the naming scheme integer value
 	public int getShareFilesWithChecksumNaming() {
-		return getInt(MH_GET_SHARE_FILES_WITH_CHECKSUM_NAMING);
+		return NativeFields.getInt(MH_GET_SHARE_FILES_WITH_CHECKSUM_NAMING, ptr());
 	}
 
 	@Override
