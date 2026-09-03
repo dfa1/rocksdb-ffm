@@ -25,7 +25,7 @@ import java.util.OptionalLong;
 /// }
 /// ```
 public final class TransactionDB extends NativeObjectWithBaseDb
-		implements MonitoringOperations, RocksDBTracingOperations {
+		implements RocksDBMonitoringOperations, RocksDBTracingOperations {
 
 	// -----------------------------------------------------------------------
 	// Method handles
@@ -183,7 +183,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	}
 
 	/// Returns the base `rocksdb_t*` pointer. Overridden only to widen visibility to `public`,
-	/// satisfying [MonitoringOperations#dbPtr()] — the guard itself lives in
+	/// satisfying [RocksDBMonitoringOperations#dbPtr()] — the guard itself lives in
 	/// [NativeObjectWithBaseDb#dbPtr()].
 	///
 	/// @return the base DB pointer

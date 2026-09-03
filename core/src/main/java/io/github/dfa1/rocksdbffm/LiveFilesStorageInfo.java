@@ -11,7 +11,7 @@ import java.util.NoSuchElementException;
 /// FFM wrapper for `rocksdb_livefiles_storage_info_t`: every file needed to reconstruct a
 /// database — SST files, WAL, MANIFEST, `CURRENT`, `OPTIONS`, blob files, and more — not just
 /// the SST-only view [LiveFiles] gives. Captured at the moment
-/// [MonitoringOperations#getLiveFilesStorageInfo] was called.
+/// [RocksDBMonitoringOperations#getLiveFilesStorageInfo] was called.
 ///
 /// Each [LiveFileStorageInfo] returned by [#get(int)] or iteration is a lazy view over this
 /// native list, the same pattern [LiveFileInfo] uses over [LiveFiles]: no field is read from

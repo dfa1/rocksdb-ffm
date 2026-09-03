@@ -234,7 +234,7 @@ class LiveFileInfoTest {
 	}
 
 	// -----------------------------------------------------------------------
-	// TransactionDB (implements MonitoringOperations directly, not RocksDBReadOperations)
+	// TransactionDB (implements RocksDBMonitoringOperations directly, not RocksDBReadOperations)
 	// -----------------------------------------------------------------------
 
 	@Test

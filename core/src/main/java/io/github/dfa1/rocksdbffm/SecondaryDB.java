@@ -27,7 +27,7 @@ import java.lang.invoke.MethodHandle;
 /// }
 /// ```
 public final class SecondaryDB extends NativeObjectWithChildren
-		implements RocksDBReadOperations, MonitoringOperations, RocksDBTracingOperations {
+		implements RocksDBReadOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
 
 	// -----------------------------------------------------------------------
 	// Method handles unique to SecondaryDB

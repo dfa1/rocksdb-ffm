@@ -7,13 +7,13 @@ import java.nio.file.Path;
 /// [TransactionDB] (reached through its base DB pointer, see
 /// [NativeObjectWithBaseDb#dbPtr()]). Implemented directly, alongside [RocksDBReadOperations]
 /// and/or [RocksDBWriteOperations] where applicable, by the same set of types as
-/// [MonitoringOperations]: `ReadWriteDB`, `TtlDB`, `BlobDB`, `OptimisticTransactionDB`,
+/// [RocksDBMonitoringOperations]: `ReadWriteDB`, `TtlDB`, `BlobDB`, `OptimisticTransactionDB`,
 /// `ReadOnlyDB`, `SecondaryDB`, `TransactionDB`.
 ///
 /// A separate interface rather than folded into [RocksDBWriteOperations]: `rocksdb_start_trace`/
 /// `rocksdb_end_trace` operate on the plain `rocksdb_t*` and capture reads as well as writes,
 /// so tracing is available on read-only and secondary handles too, not just write-capable ones
-/// — the same reasoning that keeps [MonitoringOperations] separate.
+/// — the same reasoning that keeps [RocksDBMonitoringOperations] separate.
 public interface RocksDBTracingOperations {
 
 	/// Returns the native `rocksdb_t*` pointer to operate on.

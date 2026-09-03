@@ -24,7 +24,7 @@ import java.lang.foreign.MemorySegment;
 /// Blob-specific statistics are available via [Property#BLOB_STATS],
 /// [Property#NUM_BLOB_FILES], [Property#TOTAL_BLOB_FILE_SIZE], etc.
 public final class BlobDB extends NativeObjectWithChildren
-		implements RocksDBReadOperations, RocksDBWriteOperations, MonitoringOperations, RocksDBTracingOperations {
+		implements RocksDBReadOperations, RocksDBWriteOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
 
 	BlobDB(MemorySegment ptr) {
 		super(ptr);

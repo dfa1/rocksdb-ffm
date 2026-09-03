@@ -18,7 +18,7 @@ import java.util.OptionalLong;
 /// genuinely different native symbols than the ones these defaults call), per the project
 /// convention that a `MethodHandle` must never be routed through a shared call site (it
 /// defeats `invokeExact`'s compile-time constant folding). [TransactionDB] implements
-/// [MonitoringOperations] separately, though — `getLiveFiles()` has no such per-type native
+/// [RocksDBMonitoringOperations] separately, though — `getLiveFiles()` has no such per-type native
 /// symbol to duplicate, so nothing stops it sharing that one surface even though it can't share
 /// this one. [OptimisticTransactionDB] has no such dedicated C API for direct ops — it always
 /// goes through the base `rocksdb_t*` — so it implements this interface directly instead.

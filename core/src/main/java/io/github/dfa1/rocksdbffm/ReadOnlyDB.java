@@ -12,7 +12,7 @@ import java.lang.foreign.MemorySegment;
 /// }
 /// ```
 public final class ReadOnlyDB extends NativeObjectWithChildren
-		implements RocksDBReadOperations, MonitoringOperations, RocksDBTracingOperations {
+		implements RocksDBReadOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
 
 	ReadOnlyDB(MemorySegment ptr) {
 		super(ptr);

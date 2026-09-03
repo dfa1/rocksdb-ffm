@@ -3,7 +3,7 @@ package io.github.dfa1.rocksdbffm;
 import java.util.Arrays;
 
 /// A half-open key range `[startKey, endKey)`, used by
-/// [MonitoringOperations#getApproximateSizes(java.util.List)] and its overloads to describe
+/// [RocksDBMonitoringOperations#getApproximateSizes(java.util.List)] and its overloads to describe
 /// which portions of the keyspace to estimate the size of.
 ///
 /// No native resource is associated with this record.

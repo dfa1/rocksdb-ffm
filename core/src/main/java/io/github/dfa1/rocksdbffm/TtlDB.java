@@ -17,7 +17,7 @@ import java.time.Duration;
 /// }
 /// ```
 public final class TtlDB extends NativeObjectWithChildren
-		implements RocksDBReadOperations, RocksDBWriteOperations, MonitoringOperations, RocksDBTracingOperations {
+		implements RocksDBReadOperations, RocksDBWriteOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
 
 	private final Duration ttl;
 

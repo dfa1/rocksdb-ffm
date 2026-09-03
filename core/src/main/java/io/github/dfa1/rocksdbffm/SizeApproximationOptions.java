@@ -5,7 +5,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 
-/// Options controlling [MonitoringOperations#getApproximateSizes(SizeApproximationOptions, java.util.List)]
+/// Options controlling [RocksDBMonitoringOperations#getApproximateSizes(SizeApproximationOptions, java.util.List)]
 /// and its column-family-scoped overload -- what data to count toward the estimate, and how
 /// precise the estimate needs to be.
 ///

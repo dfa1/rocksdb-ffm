@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /// FFM wrapper for `rocksdb_livefiles_t`: metadata for every live SST file belonging to a
-/// database, captured at the moment [MonitoringOperations#getLiveFiles()] was called.
+/// database, captured at the moment [RocksDBMonitoringOperations#getLiveFiles()] was called.
 ///
 /// Each [LiveFileInfo] returned by [#get(int)] or iteration is a lazy view over this native
 /// list — no field is read from native memory until the matching accessor is called, so

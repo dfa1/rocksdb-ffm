@@ -14,7 +14,7 @@ import java.util.List;
 /// ([#getLiveFilesStorageInfo()]) — SST, WAL, MANIFEST, `CURRENT`, `OPTIONS`, blob files, and
 /// more, everything needed to reconstruct the database, not just SST. [#getApproximateSizes(List)]
 /// estimates the on-disk footprint of one or more key ranges without scanning them.
-public interface MonitoringOperations {
+public interface RocksDBMonitoringOperations {
 
 	/// Returns the native `rocksdb_t*` pointer to operate on.
 	///

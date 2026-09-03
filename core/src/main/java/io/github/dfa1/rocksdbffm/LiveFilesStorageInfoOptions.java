@@ -5,7 +5,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 
-/// Options controlling [MonitoringOperations#getLiveFilesStorageInfo(LiveFilesStorageInfoOptions)].
+/// Options controlling [RocksDBMonitoringOperations#getLiveFilesStorageInfo(LiveFilesStorageInfoOptions)].
 ///
 /// ```
 /// try (var opts = LiveFilesStorageInfoOptions.create().setIncludeChecksumInfo(true);
