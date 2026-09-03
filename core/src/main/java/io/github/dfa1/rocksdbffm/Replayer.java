@@ -127,12 +127,8 @@ public final class Replayer extends NativeObject {
 	///
 	/// @return capture start time
 	public Instant getHeaderTimestamp() {
-		try {
-			long micros = (long) MH_GET_HEADER_TIMESTAMP.invokeExact(ptr());
-			return Instant.EPOCH.plus(micros, ChronoUnit.MICROS);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getHeaderTimestamp failed", t);
-		}
+		long micros = NativeFields.getLong(MH_GET_HEADER_TIMESTAMP, ptr());
+		return Instant.EPOCH.plus(micros, ChronoUnit.MICROS);
 	}
 
 	/// Reissues every operation recorded in the trace file against the target database,

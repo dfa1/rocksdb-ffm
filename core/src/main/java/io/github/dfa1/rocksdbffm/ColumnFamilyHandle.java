@@ -51,11 +51,7 @@ public final class ColumnFamilyHandle extends NativeObject {
 	///
 	/// @return column family ID
 	public int getId() {
-		try {
-			return (int) MH_GET_ID.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getId failed", t);
-		}
+		return NativeFields.getInt(MH_GET_ID, ptr());
 	}
 
 	/// Returns the name of this column family.

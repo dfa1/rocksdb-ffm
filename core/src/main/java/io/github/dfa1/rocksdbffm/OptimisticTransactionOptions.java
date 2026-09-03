@@ -9,7 +9,7 @@ import java.lang.invoke.MethodHandle;
 ///
 /// Unlike pessimistic [TransactionOptions], there is no deadlock detection
 /// or lock timeout — conflicts are detected at [Transaction#commit()] time.
-public final class OptimisticTransactionOptions extends AbstractOptions {
+public final class OptimisticTransactionOptions extends NativeObject {
 
 	/// `rocksdb_optimistictransaction_options_t* rocksdb_optimistictransaction_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -59,7 +59,7 @@ public final class OptimisticTransactionOptions extends AbstractOptions {
 	/// @param value `true` to take a snapshot at transaction start
 	/// @return `this` for chaining
 	public OptimisticTransactionOptions setSetSnapshot(boolean value) {
-		setBoolean(MH_SET_SET_SNAPSHOT, value);
+		NativeFields.setBoolean(MH_SET_SET_SNAPSHOT, ptr(), value);
 		return this;
 	}
 
@@ -67,7 +67,7 @@ public final class OptimisticTransactionOptions extends AbstractOptions {
 	///
 	/// @return `true` if a snapshot is taken at transaction start
 	public boolean getSetSnapshot() {
-		return getBoolean(MH_GET_SET_SNAPSHOT);
+		return NativeFields.getBoolean(MH_GET_SET_SNAPSHOT, ptr());
 	}
 
 	@Override

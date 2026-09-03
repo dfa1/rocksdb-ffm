@@ -15,7 +15,7 @@ import java.lang.invoke.MethodHandle;
 ///     db.flush(fo);
 /// }
 /// ```
-public final class FlushOptions extends AbstractOptions {
+public final class FlushOptions extends NativeObject {
 
 	/// `rocksdb_flushoptions_t* rocksdb_flushoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -61,7 +61,7 @@ public final class FlushOptions extends AbstractOptions {
 	/// @param wait `true` to wait for flush completion, `false` for async
 	/// @return `this` for chaining
 	public FlushOptions setWait(boolean wait) {
-		setBoolean(MH_SET_WAIT, wait);
+		NativeFields.setBoolean(MH_SET_WAIT, ptr(), wait);
 		return this;
 	}
 
@@ -69,7 +69,7 @@ public final class FlushOptions extends AbstractOptions {
 	///
 	/// @return `true` if flush blocks until the memtable is written to disk
 	public boolean isWait() {
-		return getBoolean(MH_GET_WAIT);
+		return NativeFields.getBoolean(MH_GET_WAIT, ptr());
 	}
 
 	@Override

@@ -12,7 +12,7 @@ import java.lang.invoke.MethodHandle;
 ///     db.compactRange(opts, null, null);
 /// }
 /// ```
-public final class CompactOptions extends AbstractOptions {
+public final class CompactOptions extends NativeObject {
 
 	/// `rocksdb_compactoptions_t* rocksdb_compactoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -98,7 +98,7 @@ public final class CompactOptions extends AbstractOptions {
 	/// @param value `true` to prevent concurrent manual compactions
 	/// @return `this` for chaining
 	public CompactOptions setExclusiveManualCompaction(boolean value) {
-		setBoolean(MH_SET_EXCLUSIVE, value);
+		NativeFields.setBoolean(MH_SET_EXCLUSIVE, ptr(), value);
 		return this;
 	}
 
@@ -106,7 +106,7 @@ public final class CompactOptions extends AbstractOptions {
 	///
 	/// @return `true` if no concurrent manual compactions are allowed
 	public boolean isExclusiveManualCompaction() {
-		return getBoolean(MH_GET_EXCLUSIVE);
+		return NativeFields.getBoolean(MH_GET_EXCLUSIVE, ptr());
 	}
 
 	/// The native field is RocksDB's 4-valued `BottommostLevelCompaction` enum
@@ -151,7 +151,7 @@ public final class CompactOptions extends AbstractOptions {
 	/// @param value `true` to move compacted output to the target level
 	/// @return `this` for chaining
 	public CompactOptions setChangeLevel(boolean value) {
-		setBoolean(MH_SET_CHANGE_LEVEL, value);
+		NativeFields.setBoolean(MH_SET_CHANGE_LEVEL, ptr(), value);
 		return this;
 	}
 
@@ -159,7 +159,7 @@ public final class CompactOptions extends AbstractOptions {
 	///
 	/// @return `true` if level change is enabled
 	public boolean isChangeLevel() {
-		return getBoolean(MH_GET_CHANGE_LEVEL);
+		return NativeFields.getBoolean(MH_GET_CHANGE_LEVEL, ptr());
 	}
 
 	/// Target output level for the compaction when [#setChangeLevel(boolean)] is
@@ -168,7 +168,7 @@ public final class CompactOptions extends AbstractOptions {
 	/// @param level target level index, or `-1` for the bottommost level
 	/// @return `this` for chaining
 	public CompactOptions setTargetLevel(int level) {
-		setInt(MH_SET_TARGET_LEVEL, level);
+		NativeFields.setInt(MH_SET_TARGET_LEVEL, ptr(), level);
 		return this;
 	}
 
@@ -176,7 +176,7 @@ public final class CompactOptions extends AbstractOptions {
 	///
 	/// @return target level index, or `-1` for the bottommost level
 	public int getTargetLevel() {
-		return getInt(MH_GET_TARGET_LEVEL);
+		return NativeFields.getInt(MH_GET_TARGET_LEVEL, ptr());
 	}
 
 	@Override

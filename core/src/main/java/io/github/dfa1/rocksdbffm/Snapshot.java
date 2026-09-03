@@ -83,11 +83,7 @@ public final class Snapshot extends NativeObject {
 	///
 	/// @return the snapshot's sequence number
 	public SequenceNumber sequenceNumber() {
-		try {
-			return SequenceNumber.of((long) MH_SEQUENCE_NUMBER.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("snapshot sequenceNumber failed", t);
-		}
+		return SequenceNumber.of(NativeFields.getLong(MH_SEQUENCE_NUMBER, ptr()));
 	}
 
 	@Override

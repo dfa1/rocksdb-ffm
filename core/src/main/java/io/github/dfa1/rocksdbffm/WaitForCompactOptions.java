@@ -15,7 +15,7 @@ import java.time.Duration;
 ///     db.waitForCompact(opts);
 /// }
 /// ```
-public final class WaitForCompactOptions extends AbstractOptions {
+public final class WaitForCompactOptions extends NativeObject {
 
 	/// `rocksdb_wait_for_compact_options_t* rocksdb_wait_for_compact_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -92,7 +92,7 @@ public final class WaitForCompactOptions extends AbstractOptions {
 	/// @param value `true` to abort on pause instead of blocking
 	/// @return `this` for chaining
 	public WaitForCompactOptions setAbortOnPause(boolean value) {
-		setBoolean(MH_SET_ABORT_ON_PAUSE, value);
+		NativeFields.setBoolean(MH_SET_ABORT_ON_PAUSE, ptr(), value);
 		return this;
 	}
 
@@ -100,7 +100,7 @@ public final class WaitForCompactOptions extends AbstractOptions {
 	///
 	/// @return `true` if abort-on-pause is enabled
 	public boolean isAbortOnPause() {
-		return getBoolean(MH_GET_ABORT_ON_PAUSE);
+		return NativeFields.getBoolean(MH_GET_ABORT_ON_PAUSE, ptr());
 	}
 
 	/// If `true`, triggers a memtable flush before waiting for compaction.
@@ -109,7 +109,7 @@ public final class WaitForCompactOptions extends AbstractOptions {
 	/// @param value `true` to flush before waiting
 	/// @return `this` for chaining
 	public WaitForCompactOptions setFlush(boolean value) {
-		setBoolean(MH_SET_FLUSH, value);
+		NativeFields.setBoolean(MH_SET_FLUSH, ptr(), value);
 		return this;
 	}
 
@@ -117,7 +117,7 @@ public final class WaitForCompactOptions extends AbstractOptions {
 	///
 	/// @return `true` if flush-before-wait is enabled
 	public boolean isFlush() {
-		return getBoolean(MH_GET_FLUSH);
+		return NativeFields.getBoolean(MH_GET_FLUSH, ptr());
 	}
 
 	/// If `true`, closes the DB after all compactions finish.
@@ -126,7 +126,7 @@ public final class WaitForCompactOptions extends AbstractOptions {
 	/// @param value `true` to close the DB once compaction is complete
 	/// @return `this` for chaining
 	public WaitForCompactOptions setCloseDb(boolean value) {
-		setBoolean(MH_SET_CLOSE_DB, value);
+		NativeFields.setBoolean(MH_SET_CLOSE_DB, ptr(), value);
 		return this;
 	}
 
@@ -134,7 +134,7 @@ public final class WaitForCompactOptions extends AbstractOptions {
 	///
 	/// @return `true` if close-after-compact is enabled
 	public boolean isCloseDb() {
-		return getBoolean(MH_GET_CLOSE_DB);
+		return NativeFields.getBoolean(MH_GET_CLOSE_DB, ptr());
 	}
 
 	/// Maximum time to wait. [Duration#ZERO] means no timeout.
@@ -143,7 +143,7 @@ public final class WaitForCompactOptions extends AbstractOptions {
 	/// @param timeout maximum wait duration; [Duration#ZERO] disables the timeout
 	/// @return `this` for chaining
 	public WaitForCompactOptions setTimeout(Duration timeout) {
-		setLong(MH_SET_TIMEOUT, timeout.toNanos() / 1_000L);
+		NativeFields.setLong(MH_SET_TIMEOUT, ptr(), timeout.toNanos() / 1_000L);
 		return this;
 	}
 
@@ -151,7 +151,7 @@ public final class WaitForCompactOptions extends AbstractOptions {
 	///
 	/// @return configured timeout duration
 	public Duration getTimeout() {
-		return Duration.ofNanos(getLong(MH_GET_TIMEOUT) * 1000L);
+		return Duration.ofNanos(NativeFields.getLong(MH_GET_TIMEOUT, ptr()) * 1000L);
 	}
 
 	@Override

@@ -14,7 +14,7 @@ import java.lang.invoke.MethodHandle;
 ///     db.ingestExternalFile(List.of(sstPath), opts);
 /// }
 /// ```
-public final class IngestExternalFileOptions extends AbstractOptions {
+public final class IngestExternalFileOptions extends NativeObject {
 
 	/// `rocksdb_ingestexternalfileoptions_t* rocksdb_ingestexternalfileoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -80,7 +80,7 @@ public final class IngestExternalFileOptions extends AbstractOptions {
 	/// @param moveFiles `true` to move files instead of copying
 	/// @return `this` for chaining
 	public IngestExternalFileOptions setMoveFiles(boolean moveFiles) {
-		setBoolean(MH_SET_MOVE_FILES, moveFiles);
+		NativeFields.setBoolean(MH_SET_MOVE_FILES, ptr(), moveFiles);
 		return this;
 	}
 
@@ -89,7 +89,7 @@ public final class IngestExternalFileOptions extends AbstractOptions {
 	/// @param snapshotConsistency `true` to enforce snapshot consistency
 	/// @return `this` for chaining
 	public IngestExternalFileOptions setSnapshotConsistency(boolean snapshotConsistency) {
-		setBoolean(MH_SET_SNAPSHOT_CONSISTENCY, snapshotConsistency);
+		NativeFields.setBoolean(MH_SET_SNAPSHOT_CONSISTENCY, ptr(), snapshotConsistency);
 		return this;
 	}
 
@@ -98,7 +98,7 @@ public final class IngestExternalFileOptions extends AbstractOptions {
 	/// @param allowGlobalSeqno `true` to allow global sequence number assignment
 	/// @return `this` for chaining
 	public IngestExternalFileOptions setAllowGlobalSeqno(boolean allowGlobalSeqno) {
-		setBoolean(MH_SET_ALLOW_GLOBAL_SEQNO, allowGlobalSeqno);
+		NativeFields.setBoolean(MH_SET_ALLOW_GLOBAL_SEQNO, ptr(), allowGlobalSeqno);
 		return this;
 	}
 
@@ -107,7 +107,7 @@ public final class IngestExternalFileOptions extends AbstractOptions {
 	/// @param allowBlockingFlush `true` to allow blocking flush before ingest
 	/// @return `this` for chaining
 	public IngestExternalFileOptions setAllowBlockingFlush(boolean allowBlockingFlush) {
-		setBoolean(MH_SET_ALLOW_BLOCKING_FLUSH, allowBlockingFlush);
+		NativeFields.setBoolean(MH_SET_ALLOW_BLOCKING_FLUSH, ptr(), allowBlockingFlush);
 		return this;
 	}
 
@@ -117,7 +117,7 @@ public final class IngestExternalFileOptions extends AbstractOptions {
 	/// @param ingestBehind `true` to ingest behind existing data
 	/// @return `this` for chaining
 	public IngestExternalFileOptions setIngestBehind(boolean ingestBehind) {
-		setBoolean(MH_SET_INGEST_BEHIND, ingestBehind);
+		NativeFields.setBoolean(MH_SET_INGEST_BEHIND, ptr(), ingestBehind);
 		return this;
 	}
 
@@ -126,7 +126,7 @@ public final class IngestExternalFileOptions extends AbstractOptions {
 	/// @param failIfNotBottommostLevel `true` to fail when placement at bottommost level is not possible
 	/// @return `this` for chaining
 	public IngestExternalFileOptions setFailIfNotBottommostLevel(boolean failIfNotBottommostLevel) {
-		setBoolean(MH_SET_FAIL_IF_NOT_BOTTOMMOST_LEVEL, failIfNotBottommostLevel);
+		NativeFields.setBoolean(MH_SET_FAIL_IF_NOT_BOTTOMMOST_LEVEL, ptr(), failIfNotBottommostLevel);
 		return this;
 	}
 

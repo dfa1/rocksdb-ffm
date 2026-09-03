@@ -129,12 +129,8 @@ public final class SstFileManager extends NativeObject {
 	/// @param maxAllowedSpace maximum allowed space; `0` means no limit
 	/// @return this instance for chaining
 	public SstFileManager setMaxAllowedSpaceUsage(MemorySize maxAllowedSpace) {
-		try {
-			MH_SET_MAX_ALLOWED_SPACE_USAGE.invokeExact(ptr(), maxAllowedSpace.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMaxAllowedSpaceUsage failed", t);
-		}
+		NativeFields.setMemorySize(MH_SET_MAX_ALLOWED_SPACE_USAGE, ptr(), maxAllowedSpace);
+		return this;
 	}
 
 	/// Sets additional buffer space reserved during compaction on top of
@@ -144,23 +140,15 @@ public final class SstFileManager extends NativeObject {
 	/// @param compactionBufferSize buffer space to reserve during compaction
 	/// @return this instance for chaining
 	public SstFileManager setCompactionBufferSize(MemorySize compactionBufferSize) {
-		try {
-			MH_SET_COMPACTION_BUFFER_SIZE.invokeExact(ptr(), compactionBufferSize.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setCompactionBufferSize failed", t);
-		}
+		NativeFields.setMemorySize(MH_SET_COMPACTION_BUFFER_SIZE, ptr(), compactionBufferSize);
+		return this;
 	}
 
 	/// Returns `true` if total SST file usage has reached the configured maximum.
 	///
 	/// @return `true` if the space limit has been reached
 	public boolean isMaxAllowedSpaceReached() {
-		try {
-			return RocksDB.fromByte((byte) MH_IS_MAX_ALLOWED_SPACE_REACHED.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isMaxAllowedSpaceReached failed", t);
-		}
+		return NativeFields.getBoolean(MH_IS_MAX_ALLOWED_SPACE_REACHED, ptr());
 	}
 
 	/// Returns `true` if total SST file usage including in-progress compaction
@@ -168,45 +156,29 @@ public final class SstFileManager extends NativeObject {
 	///
 	/// @return `true` if the space limit has been reached including compaction output
 	public boolean isMaxAllowedSpaceReachedIncludingCompactions() {
-		try {
-			return RocksDB.fromByte((byte) MH_IS_MAX_ALLOWED_SPACE_REACHED_INCLUDING_COMPACTIONS.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isMaxAllowedSpaceReachedIncludingCompactions failed", t);
-		}
+		return NativeFields.getBoolean(MH_IS_MAX_ALLOWED_SPACE_REACHED_INCLUDING_COMPACTIONS, ptr());
 	}
 
 	/// Returns the total size (in bytes) of all tracked SST files.
 	///
 	/// @return total size of all tracked SST files
 	public MemorySize getTotalSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_TOTAL_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getTotalSize failed", t);
-		}
+		return NativeFields.getMemorySize(MH_GET_TOTAL_SIZE, ptr());
 	}
 
 	/// Returns the total size (in bytes) of all trash (pending-delete) SST files.
 	///
 	/// @return total size of all pending-delete SST files
 	public MemorySize getTotalTrashSize() {
-		try {
-			return MemorySize.ofBytes((long) MH_GET_TOTAL_TRASH_SIZE.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getTotalTrashSize failed", t);
-		}
+		return NativeFields.getMemorySize(MH_GET_TOTAL_TRASH_SIZE, ptr());
 	}
 
 	/// Returns the trash-file deletion rate.
 	///
 	/// @return the deletion rate, [MemorySize#ZERO] for synchronous deletion, or `null` if unlimited
 	public MemorySize getDeleteRateBytesPerSecond() {
-		try {
-			long rate = (long) MH_GET_DELETE_RATE_BYTES_PER_SECOND.invokeExact(ptr());
-			return rate < 0 ? null : MemorySize.ofBytes(rate);
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getDeleteRateBytesPerSecond failed", t);
-		}
+		long rate = NativeFields.getLong(MH_GET_DELETE_RATE_BYTES_PER_SECOND, ptr());
+		return rate < 0 ? null : MemorySize.ofBytes(rate);
 	}
 
 	/// Sets the rate at which trash SST files are deleted.
@@ -220,12 +192,8 @@ public final class SstFileManager extends NativeObject {
 	/// @param deleteRate deletion rate, [MemorySize#ZERO] for synchronous, or `null` for unlimited
 	/// @return this instance for chaining
 	public SstFileManager setDeleteRateBytesPerSecond(MemorySize deleteRate) {
-		try {
-			MH_SET_DELETE_RATE_BYTES_PER_SECOND.invokeExact(ptr(), deleteRate == null ? -1L : deleteRate.toBytes());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setDeleteRateBytesPerSecond failed", t);
-		}
+		NativeFields.setLong(MH_SET_DELETE_RATE_BYTES_PER_SECOND, ptr(), deleteRate == null ? -1L : deleteRate.toBytes());
+		return this;
 	}
 
 	/// Returns the maximum ratio of trash to total SST files before RocksDB
@@ -234,11 +202,7 @@ public final class SstFileManager extends NativeObject {
 	///
 	/// @return current max trash-to-total ratio
 	public Ratio getMaxTrashDbRatio() {
-		try {
-			return Ratio.of((double) MH_GET_MAX_TRASH_DB_RATIO.invokeExact(ptr()));
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getMaxTrashDbRatio failed", t);
-		}
+		return Ratio.of(NativeFields.getDouble(MH_GET_MAX_TRASH_DB_RATIO, ptr()));
 	}
 
 	/// Sets the maximum ratio of trash to total SST files.
@@ -248,12 +212,8 @@ public final class SstFileManager extends NativeObject {
 	/// @param ratio max trash-to-total ratio
 	/// @return this instance for chaining
 	public SstFileManager setMaxTrashDbRatio(Ratio ratio) {
-		try {
-			MH_SET_MAX_TRASH_DB_RATIO.invokeExact(ptr(), ratio.toDouble());
-			return this;
-		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setMaxTrashDbRatio failed", t);
-		}
+		NativeFields.setDouble(MH_SET_MAX_TRASH_DB_RATIO, ptr(), ratio.toDouble());
+		return this;
 	}
 
 	@Override

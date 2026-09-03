@@ -13,7 +13,7 @@ import java.lang.invoke.MethodHandle;
 ///     // ...
 /// }
 /// ```
-public final class LiveFilesStorageInfoOptions extends AbstractOptions {
+public final class LiveFilesStorageInfoOptions extends NativeObject {
 
 	/// `rocksdb_livefiles_storage_info_options_t* rocksdb_livefiles_storage_info_options_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -85,7 +85,7 @@ public final class LiveFilesStorageInfoOptions extends AbstractOptions {
 	/// @param value `true` to compute and include per-file checksums
 	/// @return `this` for chaining
 	public LiveFilesStorageInfoOptions setIncludeChecksumInfo(boolean value) {
-		setBoolean(MH_SET_INCLUDE_CHECKSUM_INFO, value);
+		NativeFields.setBoolean(MH_SET_INCLUDE_CHECKSUM_INFO, ptr(), value);
 		return this;
 	}
 
@@ -93,7 +93,7 @@ public final class LiveFilesStorageInfoOptions extends AbstractOptions {
 	///
 	/// @return `true` if checksum info is included
 	public boolean isIncludeChecksumInfo() {
-		return getBoolean(MH_GET_INCLUDE_CHECKSUM_INFO);
+		return NativeFields.getBoolean(MH_GET_INCLUDE_CHECKSUM_INFO, ptr());
 	}
 
 	/// Flushes memtables first if the total size of live WAL files is at least this size (and
@@ -103,7 +103,7 @@ public final class LiveFilesStorageInfoOptions extends AbstractOptions {
 	/// @param size WAL-size flush threshold; [MemorySize#ZERO] always flushes
 	/// @return `this` for chaining
 	public LiveFilesStorageInfoOptions setWalSizeForFlush(MemorySize size) {
-		setMemorySize(MH_SET_WAL_SIZE_FOR_FLUSH, size);
+		NativeFields.setMemorySize(MH_SET_WAL_SIZE_FOR_FLUSH, ptr(), size);
 		return this;
 	}
 
@@ -111,7 +111,7 @@ public final class LiveFilesStorageInfoOptions extends AbstractOptions {
 	///
 	/// @return the WAL-size flush threshold
 	public MemorySize getWalSizeForFlush() {
-		return getMemorySize(MH_GET_WAL_SIZE_FOR_FLUSH);
+		return NativeFields.getMemorySize(MH_GET_WAL_SIZE_FOR_FLUSH, ptr());
 	}
 
 	/// If `true`, flushes all column families atomically when a flush is performed —
@@ -122,7 +122,7 @@ public final class LiveFilesStorageInfoOptions extends AbstractOptions {
 	/// @param value `true` to force an atomic flush across column families
 	/// @return `this` for chaining
 	public LiveFilesStorageInfoOptions setAtomicFlush(boolean value) {
-		setBoolean(MH_SET_ATOMIC_FLUSH, value);
+		NativeFields.setBoolean(MH_SET_ATOMIC_FLUSH, ptr(), value);
 		return this;
 	}
 
@@ -130,7 +130,7 @@ public final class LiveFilesStorageInfoOptions extends AbstractOptions {
 	///
 	/// @return `true` if atomic flush is forced
 	public boolean isAtomicFlush() {
-		return getBoolean(MH_GET_ATOMIC_FLUSH);
+		return NativeFields.getBoolean(MH_GET_ATOMIC_FLUSH, ptr());
 	}
 
 	@Override
