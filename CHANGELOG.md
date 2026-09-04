@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Options`: `setMaxBackgroundJobs`, `setMaxOpenFiles`, `setMaxFileOpeningThreads`,
+  `setAdviseRandomOnOpen`, `setSkipStatsUpdateOnDbOpen` (background jobs & file handles);
+  `increaseParallelism`, `setUnorderedWrite`, `setBytesPerSync`, `setUseDirectReads`,
+  `setUseDirectIoForFlushAndCompaction`, `setCompactionPriority` (`CompactionPriority` enum),
+  `setBottommostCompressionType` (write-path tuning); `setMaxWriteBufferNumber`;
+  `setHashSkipListMemTableFactory`, `setHashLinkListMemTableFactory`, `setVectorMemTableFactory`
+  (memtable factory selection) — all confirmed gaps from porting a production app off `rocksdbjni`
+- `PlainTableOptions` and `Options.setTableFormatConfig(PlainTableOptions)`: in-memory
+  hash-indexed SST format for fixed-size keys and read-heavy point lookups
+
+### Fixed
+
+- `CopyResult`'s javadoc now states the fill-mode contract on `ByteBuffer` copy destinations
+  explicitly (position advances, limit untouched — caller must `flip()`), cross-referenced from
+  `RocksIterator.key/value(ByteBuffer)` and `RocksDBReadOperations.get(ByteBuffer, ByteBuffer)`;
+  this differs from `rocksdbjni`'s auto-flipping equivalents and was silently returning stale
+  buffer contents for a caller that assumed the same
+
 ## [0.11] — 2026-09-03
 
 `EventNotifier` (flush/compaction/ingestion/background-error/stall/memtable-seal callbacks),

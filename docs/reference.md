@@ -157,7 +157,40 @@ to satisfy it:
 | `setLevel0StopWritesTrigger`           | `int`         |
 | `setTargetFileSizeBase`                | `MemorySize`  |
 | `setMaxBytesForLevelBase`              | `MemorySize`  |
+| `setMaxWriteBufferNumber`              | `int`         |
 | `setDisableAutoCompactions`            | `boolean`     |
+
+Background jobs and file handles (each with a matching getter):
+
+| Method                              | Type          |
+|:-------------------------------------|:--------------|
+| `setMaxBackgroundJobs`               | `int`         |
+| `setMaxOpenFiles`                    | `int`         |
+| `setMaxFileOpeningThreads`           | `int`         |
+| `setAdviseRandomOnOpen`              | `boolean`     |
+| `setSkipStatsUpdateOnDbOpen`         | `boolean`     |
+
+Write-path tuning (each with a matching getter, except `increaseParallelism`, a one-shot helper
+with no stored value to read back):
+
+| Method                                          | Type                        |
+|:-------------------------------------------------|:----------------------------|
+| `increaseParallelism`                            | `int` (no getter)           |
+| `setUnorderedWrite`                              | `boolean`                   |
+| `setBytesPerSync`                                | `MemorySize`                |
+| `setUseDirectReads`                              | `boolean`                   |
+| `setUseDirectIoForFlushAndCompaction`            | `boolean`                   |
+| `setCompactionPriority` / `getCompactionPriority`| `Options.CompactionPriority`|
+| `setBottommostCompressionType`                   | `CompressionType`           |
+
+Memtable factory (no getter — `c.h` exposes no way to read back which factory is configured,
+same as `setTableFormatConfig`):
+
+| Method                              | Type                    |
+|:-------------------------------------|:------------------------|
+| `setHashSkipListMemTableFactory`     | `long, int, int`        |
+| `setHashLinkListMemTableFactory`     | `long`                  |
+| `setVectorMemTableFactory`           | — (no parameters)       |
 
 Blob options (used with `RocksDB.openBlob`, each with a matching getter):
 
@@ -240,6 +273,23 @@ point lookups (no range scans), attached via `Options.setTableFormatConfig(Cucko
 | `setCuckooBlockSize`       | `int`     | `5`     |
 | `setIdentityAsFirstHash`   | `boolean` | `false` |
 | `setUseModuleHash`         | `boolean` | `true`  |
+
+`PlainTableOptions.newPlainTableOptions()` — in-memory hash-indexed SST format for fixed-size
+keys and read-heavy point lookups (no efficient range scans, no block compression), attached via
+`Options.setTableFormatConfig(PlainTableOptions)`. Unlike `BlockBasedTableOptions`/
+`CuckooTableOptions`, this is a plain value holder with no native counterpart to close —
+`rocksdb_options_set_plain_table_factory` takes its configuration as scalars directly:
+
+| Method                   | Type           | Default                  |
+|:--------------------------|:---------------|:--------------------------|
+| `setUserKeyLength`        | `int`          | `VARIABLE_LENGTH` (`0`)  |
+| `setBloomBitsPerKey`      | `int`          | `10`                     |
+| `setHashTableRatio`       | `double`       | `0.75`                   |
+| `setIndexSparseness`      | `long`         | `16`                     |
+| `setHugePageTlbSize`      | `long`         | `0`                      |
+| `setEncodingType`         | `EncodingType` | `PLAIN`                  |
+| `setFullScanMode`         | `boolean`      | `false`                  |
+| `setStoreIndexInFile`     | `boolean`      | `false`                  |
 
 | Class              | Factory                                                                | Notes                                    |
 |:-------------------|:-----------------------------------------------------------------------|:-----------------------------------------|
@@ -426,7 +476,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Transactions (pessimistic) |   ✅    | `TransactionDB`, savepoints, get-for-update                                                 |
 | Optimistic transactions    |   ✅    | Conflict detection at commit                                                                |
 | Checkpoints                |   ✅    | Point-in-time on-disk snapshot                                                              |
-| Table options              |   ✅    | `BlockBasedTableOptions`, `CuckooTableOptions`, `LRUCache`, `HyperClockCache`, `FilterPolicy` (Bloom, Ribbon)     |
+| Table options              |   ✅    | `BlockBasedTableOptions`, `CuckooTableOptions`, `PlainTableOptions`, `LRUCache`, `HyperClockCache`, `FilterPolicy` (Bloom, Ribbon) |
 | Iterators                  |   ✅    | seek/seekForPrev/next/prev; all three tiers                                                 |
 | Snapshots                  |   ✅    | `ReadOptions.setSnapshot`, sequence numbers                                                 |
 | Flush                      |   ✅    | `flush(FlushOptions)`, `flushWal(boolean)`                                                  |

@@ -142,4 +142,224 @@ class OptionsTest {
 			assertThat(stillOpen).isNotNull();
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// Background jobs and file handles
+	// -----------------------------------------------------------------------
+
+	@Test
+	void setMaxBackgroundJobs_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setMaxBackgroundJobs(4)) {
+
+			// When
+			var result = opts.getMaxBackgroundJobs();
+
+			// Then
+			assertThat(result).isEqualTo(4);
+		}
+	}
+
+	@Test
+	void setMaxOpenFiles_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setMaxOpenFiles(100)) {
+
+			// When
+			var result = opts.getMaxOpenFiles();
+
+			// Then
+			assertThat(result).isEqualTo(100);
+		}
+	}
+
+	@Test
+	void setMaxFileOpeningThreads_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setMaxFileOpeningThreads(8)) {
+
+			// When
+			var result = opts.getMaxFileOpeningThreads();
+
+			// Then
+			assertThat(result).isEqualTo(8);
+		}
+	}
+
+	@Test
+	void setAdviseRandomOnOpen_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setAdviseRandomOnOpen(false)) {
+
+			// When
+			var result = opts.getAdviseRandomOnOpen();
+
+			// Then
+			assertThat(result).isFalse();
+		}
+	}
+
+	@Test
+	void setSkipStatsUpdateOnDbOpen_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setSkipStatsUpdateOnDbOpen(true)) {
+
+			// When
+			var result = opts.getSkipStatsUpdateOnDbOpen();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Write-path tuning
+	// -----------------------------------------------------------------------
+
+	@Test
+	void increaseParallelism_doesNotThrowAndReturnsThisForChaining() {
+		// Given
+
+		// When
+		try (var opts = Options.newOptions().increaseParallelism(4)) {
+
+			// Then
+			assertThat(opts).isNotNull();
+		}
+	}
+
+	@Test
+	void setUnorderedWrite_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setUnorderedWrite(true)) {
+
+			// When
+			var result = opts.getUnorderedWrite();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void setBytesPerSync_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setBytesPerSync(MemorySize.ofMB(1))) {
+
+			// When
+			var result = opts.getBytesPerSync();
+
+			// Then
+			assertThat(result).isEqualTo(MemorySize.ofMB(1));
+		}
+	}
+
+	@Test
+	void setUseDirectReads_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setUseDirectReads(true)) {
+
+			// When
+			var result = opts.getUseDirectReads();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void setUseDirectIoForFlushAndCompaction_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setUseDirectIoForFlushAndCompaction(true)) {
+
+			// When
+			var result = opts.getUseDirectIoForFlushAndCompaction();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void setCompactionPriority_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setCompactionPriority(Options.CompactionPriority.ROUND_ROBIN)) {
+
+			// When
+			var result = opts.getCompactionPriority();
+
+			// Then
+			assertThat(result).isEqualTo(Options.CompactionPriority.ROUND_ROBIN);
+		}
+	}
+
+	@Test
+	void setBottommostCompressionType_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setBottommostCompressionType(CompressionType.NO_COMPRESSION)) {
+
+			// When
+			var result = opts.getBottommostCompressionType();
+
+			// Then
+			assertThat(result).isEqualTo(CompressionType.NO_COMPRESSION);
+		}
+	}
+
+	@Test
+	void setMaxWriteBufferNumber_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setMaxWriteBufferNumber(4)) {
+
+			// When
+			var result = opts.getMaxWriteBufferNumber();
+
+			// Then
+			assertThat(result).isEqualTo(4);
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Memtable factory
+	// -----------------------------------------------------------------------
+
+	@Test
+	void setHashSkipListMemTableFactory_doesNotThrowAndReturnsThisForChaining() {
+		// Given
+
+		// When
+		try (var opts = Options.newOptions()
+				.setPrefixExtractor(SliceTransform.newFixedPrefix(4))
+				.setHashSkipListMemTableFactory(1000, 4, 4)) {
+
+			// Then
+			assertThat(opts).isNotNull();
+		}
+	}
+
+	@Test
+	void setHashLinkListMemTableFactory_doesNotThrowAndReturnsThisForChaining() {
+		// Given
+
+		// When
+		try (var opts = Options.newOptions()
+				.setPrefixExtractor(SliceTransform.newFixedPrefix(4))
+				.setHashLinkListMemTableFactory(1000)) {
+
+			// Then
+			assertThat(opts).isNotNull();
+		}
+	}
+
+	@Test
+	void setVectorMemTableFactory_doesNotThrowAndReturnsThisForChaining() {
+		// Given
+
+		// When
+		try (var opts = Options.newOptions().setVectorMemTableFactory()) {
+
+			// Then
+			assertThat(opts).isNotNull();
+		}
+	}
 }

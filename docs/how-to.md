@@ -699,6 +699,18 @@ try (var options = Options.newOptions()
 }
 ```
 
+There is no combined statistics object across several DB instances the way C++'s
+`std::shared_ptr<Statistics>` allows — `c.h` has no `rocksdb_statistics_t` to build once and
+attach to multiple `Options` (see [c-api-gaps.md](c-api-gaps.md)'s Type B entry). Each DB's
+`Options` tracks its own counters independently; combine them in Java by summing the ticker you
+care about across the `Options` instances you kept open:
+
+```java
+long totalHits = openDbOptions.stream()
+		.mapToLong(o -> o.getTickerCount(TickerType.BLOCK_CACHE_HIT))
+		.sum();
+```
+
 ## Profile a single operation
 
 `PerfContext` is thread-local and measures the calling thread only.

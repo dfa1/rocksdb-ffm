@@ -298,6 +298,44 @@ class RocksIteratorTest {
 	}
 
 	@Test
+	void key_value_byteBuffer_leavesDstInFillMode_flipRequiredBeforeReading(@TempDir Path dir) {
+		// Given — a reused/pooled buffer, as a connection pool would hand back: still at its
+		// old limit (capacity) and carrying stale bytes past where the next copy will land,
+		// unlike a freshly allocated buffer which starts zeroed
+		try (var db = RocksDB.openReadWrite(dir)) {
+			db.put("hi".getBytes(), "ok".getBytes());
+
+			try (RocksIterator it = db.newIterator()) {
+				it.seekToFirst();
+				assertThat(it.isValid()).isTrue();
+
+				ByteBuffer keyBuf = ByteBuffer.allocateDirect(64);
+				for (int i = 0; i < keyBuf.capacity(); i++) {
+					keyBuf.put((byte) 0xFF);
+				}
+				keyBuf.clear(); // position=0, limit=capacity=64 — mimics a reused pool buffer
+
+				// When
+				CopyResult result = it.key(keyBuf);
+
+				// Then — only position advances; limit is untouched (fill mode, matches
+				// ReadableByteChannel#read, not rocksdbjni's auto-flipping equivalent)
+				assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
+				assertThat(keyBuf.position()).isEqualTo(2);
+				assertThat(keyBuf.limit()).isEqualTo(64);
+
+				// When — the caller flips before reading, as CopyResult's contract requires
+				keyBuf.flip();
+				byte[] keyBytes = new byte[keyBuf.remaining()];
+				keyBuf.get(keyBytes);
+
+				// Then — exactly the copied key, none of the stale 0xFF tail bytes
+				assertThat(keyBytes).isEqualTo("hi".getBytes());
+			}
+		}
+	}
+
+	@Test
 	void key_value_byteBuffer_returnsNotEnoughCapacity_whenTooSmall(@TempDir Path dir) {
 		// Given
 		try (var db = RocksDB.openReadWrite(dir)) {

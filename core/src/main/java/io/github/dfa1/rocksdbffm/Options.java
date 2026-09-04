@@ -31,6 +31,8 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_BLOCK_BASED_TABLE_FACTORY;
 	/// `void rocksdb_options_set_cuckoo_table_factory(rocksdb_options_t* opt, rocksdb_cuckoo_table_options_t* table_options);`
 	private static final MethodHandle MH_SET_CUCKOO_TABLE_FACTORY;
+	/// `void rocksdb_options_set_plain_table_factory(rocksdb_options_t*, uint32_t, int, double, size_t, size_t, char, unsigned char, unsigned char);`
+	private static final MethodHandle MH_SET_PLAIN_TABLE_FACTORY;
 	/// `void rocksdb_options_enable_statistics(rocksdb_options_t*);`
 	private static final MethodHandle MH_ENABLE_STATISTICS;
 	/// `void rocksdb_options_set_statistics_level(rocksdb_options_t*, int level);`
@@ -141,6 +143,16 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_NUM_LEVELS;
 	/// `int rocksdb_options_get_num_levels(rocksdb_options_t*);`
 	private static final MethodHandle MH_GET_NUM_LEVELS;
+	/// `void rocksdb_options_set_max_write_buffer_number(rocksdb_options_t*, int);`
+	private static final MethodHandle MH_SET_MAX_WRITE_BUFFER_NUMBER;
+	/// `int rocksdb_options_get_max_write_buffer_number(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_MAX_WRITE_BUFFER_NUMBER;
+	/// `void rocksdb_options_set_hash_skip_list_rep(rocksdb_options_t*, size_t, int32_t, int32_t);`
+	private static final MethodHandle MH_SET_HASH_SKIP_LIST_REP;
+	/// `void rocksdb_options_set_hash_link_list_rep(rocksdb_options_t*, size_t);`
+	private static final MethodHandle MH_SET_HASH_LINK_LIST_REP;
+	/// `void rocksdb_options_set_memtable_vector_rep(rocksdb_options_t*);`
+	private static final MethodHandle MH_SET_MEMTABLE_VECTOR_REP;
 	/// `void rocksdb_options_set_level0_file_num_compaction_trigger(rocksdb_options_t*, int);`
 	private static final MethodHandle MH_SET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER;
 	/// `int rocksdb_options_get_level0_file_num_compaction_trigger(rocksdb_options_t*);`
@@ -165,6 +177,52 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_MAX_BYTES_FOR_LEVEL_BASE;
 	/// `uint64_t rocksdb_options_get_max_bytes_for_level_base(rocksdb_options_t*);`
 	private static final MethodHandle MH_GET_MAX_BYTES_FOR_LEVEL_BASE;
+	/// `void rocksdb_options_set_max_background_jobs(rocksdb_options_t*, int);`
+	private static final MethodHandle MH_SET_MAX_BACKGROUND_JOBS;
+	/// `int rocksdb_options_get_max_background_jobs(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_MAX_BACKGROUND_JOBS;
+	/// `void rocksdb_options_set_max_open_files(rocksdb_options_t*, int);`
+	private static final MethodHandle MH_SET_MAX_OPEN_FILES;
+	/// `int rocksdb_options_get_max_open_files(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_MAX_OPEN_FILES;
+	/// `void rocksdb_options_set_max_file_opening_threads(rocksdb_options_t*, int);`
+	private static final MethodHandle MH_SET_MAX_FILE_OPENING_THREADS;
+	/// `int rocksdb_options_get_max_file_opening_threads(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_MAX_FILE_OPENING_THREADS;
+	/// `void rocksdb_options_set_advise_random_on_open(rocksdb_options_t*, unsigned char);`
+	private static final MethodHandle MH_SET_ADVISE_RANDOM_ON_OPEN;
+	/// `unsigned char rocksdb_options_get_advise_random_on_open(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_ADVISE_RANDOM_ON_OPEN;
+	/// `void rocksdb_options_set_skip_stats_update_on_db_open(rocksdb_options_t* opt, unsigned char val);`
+	private static final MethodHandle MH_SET_SKIP_STATS_UPDATE_ON_DB_OPEN;
+	/// `unsigned char rocksdb_options_get_skip_stats_update_on_db_open(rocksdb_options_t* opt);`
+	private static final MethodHandle MH_GET_SKIP_STATS_UPDATE_ON_DB_OPEN;
+	/// `void rocksdb_options_increase_parallelism(rocksdb_options_t* opt, int total_threads);`
+	private static final MethodHandle MH_INCREASE_PARALLELISM;
+	/// `void rocksdb_options_set_unordered_write(rocksdb_options_t*, unsigned char);`
+	private static final MethodHandle MH_SET_UNORDERED_WRITE;
+	/// `unsigned char rocksdb_options_get_unordered_write(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_UNORDERED_WRITE;
+	/// `void rocksdb_options_set_bytes_per_sync(rocksdb_options_t*, uint64_t);`
+	private static final MethodHandle MH_SET_BYTES_PER_SYNC;
+	/// `uint64_t rocksdb_options_get_bytes_per_sync(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_BYTES_PER_SYNC;
+	/// `void rocksdb_options_set_use_direct_reads(rocksdb_options_t*, unsigned char);`
+	private static final MethodHandle MH_SET_USE_DIRECT_READS;
+	/// `unsigned char rocksdb_options_get_use_direct_reads(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_USE_DIRECT_READS;
+	/// `void rocksdb_options_set_use_direct_io_for_flush_and_compaction(rocksdb_options_t*, unsigned char);`
+	private static final MethodHandle MH_SET_USE_DIRECT_IO_FOR_FLUSH_AND_COMPACTION;
+	/// `unsigned char rocksdb_options_get_use_direct_io_for_flush_and_compaction(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_USE_DIRECT_IO_FOR_FLUSH_AND_COMPACTION;
+	/// `void rocksdb_options_set_compaction_pri(rocksdb_options_t*, int);`
+	private static final MethodHandle MH_SET_COMPACTION_PRI;
+	/// `int rocksdb_options_get_compaction_pri(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_COMPACTION_PRI;
+	/// `void rocksdb_options_set_bottommost_compression(rocksdb_options_t*, int);`
+	private static final MethodHandle MH_SET_BOTTOMMOST_COMPRESSION;
+	/// `int rocksdb_options_get_bottommost_compression(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_BOTTOMMOST_COMPRESSION;
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
@@ -185,6 +243,12 @@ public final class Options extends NativeObject {
 		MH_SET_CUCKOO_TABLE_FACTORY = NativeLibrary.lookup(
 				"rocksdb_options_set_cuckoo_table_factory",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_SET_PLAIN_TABLE_FACTORY = NativeLibrary.lookup(
+				"rocksdb_options_set_plain_table_factory",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+						ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG,
+						ValueLayout.JAVA_BYTE, ValueLayout.JAVA_BYTE, ValueLayout.JAVA_BYTE));
 
 		MH_ENABLE_STATISTICS = NativeLibrary.lookup("rocksdb_options_enable_statistics",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
@@ -354,6 +418,22 @@ public final class Options extends NativeObject {
 		MH_GET_NUM_LEVELS = NativeLibrary.lookup("rocksdb_options_get_num_levels",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
+		MH_SET_MAX_WRITE_BUFFER_NUMBER = NativeLibrary.lookup("rocksdb_options_set_max_write_buffer_number",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_MAX_WRITE_BUFFER_NUMBER = NativeLibrary.lookup("rocksdb_options_get_max_write_buffer_number",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_HASH_SKIP_LIST_REP = NativeLibrary.lookup("rocksdb_options_set_hash_skip_list_rep",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
+
+		MH_SET_HASH_LINK_LIST_REP = NativeLibrary.lookup("rocksdb_options_set_hash_link_list_rep",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_SET_MEMTABLE_VECTOR_REP = NativeLibrary.lookup("rocksdb_options_set_memtable_vector_rep",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+
 		MH_SET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER = NativeLibrary.lookup(
 				"rocksdb_options_set_level0_file_num_compaction_trigger",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
@@ -397,6 +477,79 @@ public final class Options extends NativeObject {
 
 		MH_GET_MAX_BYTES_FOR_LEVEL_BASE = NativeLibrary.lookup("rocksdb_options_get_max_bytes_for_level_base",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_MAX_BACKGROUND_JOBS = NativeLibrary.lookup("rocksdb_options_set_max_background_jobs",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_MAX_BACKGROUND_JOBS = NativeLibrary.lookup("rocksdb_options_get_max_background_jobs",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_MAX_OPEN_FILES = NativeLibrary.lookup("rocksdb_options_set_max_open_files",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_MAX_OPEN_FILES = NativeLibrary.lookup("rocksdb_options_get_max_open_files",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_MAX_FILE_OPENING_THREADS = NativeLibrary.lookup("rocksdb_options_set_max_file_opening_threads",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_MAX_FILE_OPENING_THREADS = NativeLibrary.lookup("rocksdb_options_get_max_file_opening_threads",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_ADVISE_RANDOM_ON_OPEN = NativeLibrary.lookup("rocksdb_options_set_advise_random_on_open",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_ADVISE_RANDOM_ON_OPEN = NativeLibrary.lookup("rocksdb_options_get_advise_random_on_open",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_SKIP_STATS_UPDATE_ON_DB_OPEN = NativeLibrary.lookup(
+				"rocksdb_options_set_skip_stats_update_on_db_open",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_SKIP_STATS_UPDATE_ON_DB_OPEN = NativeLibrary.lookup(
+				"rocksdb_options_get_skip_stats_update_on_db_open",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_INCREASE_PARALLELISM = NativeLibrary.lookup("rocksdb_options_increase_parallelism",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_SET_UNORDERED_WRITE = NativeLibrary.lookup("rocksdb_options_set_unordered_write",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_UNORDERED_WRITE = NativeLibrary.lookup("rocksdb_options_get_unordered_write",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_BYTES_PER_SYNC = NativeLibrary.lookup("rocksdb_options_set_bytes_per_sync",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_BYTES_PER_SYNC = NativeLibrary.lookup("rocksdb_options_get_bytes_per_sync",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_USE_DIRECT_READS = NativeLibrary.lookup("rocksdb_options_set_use_direct_reads",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_USE_DIRECT_READS = NativeLibrary.lookup("rocksdb_options_get_use_direct_reads",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_USE_DIRECT_IO_FOR_FLUSH_AND_COMPACTION = NativeLibrary.lookup(
+				"rocksdb_options_set_use_direct_io_for_flush_and_compaction",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_USE_DIRECT_IO_FOR_FLUSH_AND_COMPACTION = NativeLibrary.lookup(
+				"rocksdb_options_get_use_direct_io_for_flush_and_compaction",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_COMPACTION_PRI = NativeLibrary.lookup("rocksdb_options_set_compaction_pri",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_COMPACTION_PRI = NativeLibrary.lookup("rocksdb_options_get_compaction_pri",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_BOTTOMMOST_COMPRESSION = NativeLibrary.lookup("rocksdb_options_set_bottommost_compression",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_BOTTOMMOST_COMPRESSION = NativeLibrary.lookup("rocksdb_options_get_bottommost_compression",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 	}
 
 	private Options(MemorySegment ptr) {
@@ -625,6 +778,31 @@ public final class Options extends NativeObject {
 		return this;
 	}
 
+	/// Configures PlainTable format for this DB -- an in-memory hash-indexed SST format
+	/// optimized for fixed-size keys and read-heavy point-lookup workloads. Unlike the other
+	/// `setTableFormatConfig` overloads, `tableConfig` is a plain value holder with no native
+	/// counterpart to transfer ownership of or close -- see [PlainTableOptions]'s class doc.
+	/// Pair with [#setPrefixExtractor] to build PlainTable's hash buckets.
+	///
+	/// @param tableConfig the PlainTable options to apply
+	/// @return `this` for chaining
+	public Options setTableFormatConfig(PlainTableOptions tableConfig) {
+		try {
+			MH_SET_PLAIN_TABLE_FACTORY.invokeExact(ptr(),
+					tableConfig.getUserKeyLength(),
+					tableConfig.getBloomBitsPerKey(),
+					tableConfig.getHashTableRatio(),
+					tableConfig.getIndexSparseness(),
+					tableConfig.getHugePageTlbSize(),
+					(byte) tableConfig.getEncodingType().getValue(),
+					RocksDB.toByte(tableConfig.isFullScanMode()),
+					RocksDB.toByte(tableConfig.isStoreIndexInFile()));
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setTableFormatConfig failed", t);
+		}
+		return this;
+	}
+
 	// -----------------------------------------------------------------------
 	// LSM shape and compaction triggers
 	// -----------------------------------------------------------------------
@@ -661,6 +839,24 @@ public final class Options extends NativeObject {
 	/// @return current number of levels
 	public int getNumLevels() {
 		return NativeFields.getInt(MH_GET_NUM_LEVELS, ptr());
+	}
+
+	/// Maximum number of memtables, both active and immutable-pending-flush, held in memory
+	/// at once. Values above 1 let writes continue into a fresh memtable while an older one is
+	/// still being flushed, at the cost of more memory. Default: 2.
+	///
+	/// @param number maximum number of memtables held in memory at once
+	/// @return `this` for chaining
+	public Options setMaxWriteBufferNumber(int number) {
+		NativeFields.setInt(MH_SET_MAX_WRITE_BUFFER_NUMBER, ptr(), number);
+		return this;
+	}
+
+	/// Returns the configured maximum number of memtables held in memory at once.
+	///
+	/// @return current maximum number of memtables held in memory at once
+	public int getMaxWriteBufferNumber() {
+		return NativeFields.getInt(MH_GET_MAX_WRITE_BUFFER_NUMBER, ptr());
 	}
 
 	/// Once the number of level-0 SST files reaches this count, RocksDB triggers a compaction
@@ -1205,6 +1401,325 @@ public final class Options extends NativeObject {
 	/// @return the active default [Temperature] hint
 	public Temperature getDefaultTemperature() {
 		return Temperature.fromValue(NativeFields.getInt(MH_GET_DEFAULT_TEMPERATURE, ptr()));
+	}
+
+	// -----------------------------------------------------------------------
+	// Background jobs and file handles
+	// -----------------------------------------------------------------------
+
+	/// Maximum number of concurrent background flush and compaction jobs. Default: 2.
+	///
+	/// @param jobs maximum number of concurrent background jobs
+	/// @return `this` for chaining
+	public Options setMaxBackgroundJobs(int jobs) {
+		NativeFields.setInt(MH_SET_MAX_BACKGROUND_JOBS, ptr(), jobs);
+		return this;
+	}
+
+	/// Returns the configured maximum number of concurrent background jobs.
+	///
+	/// @return current maximum number of concurrent background jobs
+	public int getMaxBackgroundJobs() {
+		return NativeFields.getInt(MH_GET_MAX_BACKGROUND_JOBS, ptr());
+	}
+
+	/// Maximum number of open file handles RocksDB may keep cached across all SST files;
+	/// `-1` means always keep every file open. Lowering this bounds file-descriptor usage at
+	/// the cost of extra open/close syscalls under a large working set. Default: `-1`.
+	///
+	/// @param files maximum number of open files, or `-1` for unlimited
+	/// @return `this` for chaining
+	public Options setMaxOpenFiles(int files) {
+		NativeFields.setInt(MH_SET_MAX_OPEN_FILES, ptr(), files);
+		return this;
+	}
+
+	/// Returns the configured maximum number of open file handles.
+	///
+	/// @return current maximum number of open files, or `-1` if unlimited
+	public int getMaxOpenFiles() {
+		return NativeFields.getInt(MH_GET_MAX_OPEN_FILES, ptr());
+	}
+
+	/// Maximum number of threads used to open SST files in parallel when opening the DB.
+	/// Higher values speed up startup with a large number of files at the cost of more
+	/// concurrent I/O. Default: 16.
+	///
+	/// @param threads maximum number of file-opening threads
+	/// @return `this` for chaining
+	public Options setMaxFileOpeningThreads(int threads) {
+		NativeFields.setInt(MH_SET_MAX_FILE_OPENING_THREADS, ptr(), threads);
+		return this;
+	}
+
+	/// Returns the configured maximum number of file-opening threads.
+	///
+	/// @return current maximum number of file-opening threads
+	public int getMaxFileOpeningThreads() {
+		return NativeFields.getInt(MH_GET_MAX_FILE_OPENING_THREADS, ptr());
+	}
+
+	/// If `true`, hints the OS that file reads are random access (`POSIX_FADV_RANDOM`),
+	/// disabling readahead for table files. Default: `true`.
+	///
+	/// @param value `true` to advise the OS that reads are random access
+	/// @return `this` for chaining
+	public Options setAdviseRandomOnOpen(boolean value) {
+		NativeFields.setBoolean(MH_SET_ADVISE_RANDOM_ON_OPEN, ptr(), value);
+		return this;
+	}
+
+	/// Returns whether the OS is advised that reads are random access.
+	///
+	/// @return `true` if the OS is advised that reads are random access
+	public boolean getAdviseRandomOnOpen() {
+		return NativeFields.getBoolean(MH_GET_ADVISE_RANDOM_ON_OPEN, ptr());
+	}
+
+	/// If `true`, skips updating per-column-family stats (e.g. number of files, levels) when
+	/// opening the DB, shaving time off startup at the cost of stale stats until the first
+	/// flush or compaction refreshes them. Default: `false`.
+	///
+	/// @param value `true` to skip the stats update on open
+	/// @return `this` for chaining
+	public Options setSkipStatsUpdateOnDbOpen(boolean value) {
+		NativeFields.setBoolean(MH_SET_SKIP_STATS_UPDATE_ON_DB_OPEN, ptr(), value);
+		return this;
+	}
+
+	/// Returns whether the stats update on open is skipped.
+	///
+	/// @return `true` if the stats update on open is skipped
+	public boolean getSkipStatsUpdateOnDbOpen() {
+		return NativeFields.getBoolean(MH_GET_SKIP_STATS_UPDATE_ON_DB_OPEN, ptr());
+	}
+
+	// -----------------------------------------------------------------------
+	// Write-path tuning
+	// -----------------------------------------------------------------------
+
+	/// Which strategy RocksDB uses to prioritize which SST files to compact first within a
+	/// level, per `c.h`'s anonymous `rocksdb_k_*_compaction_pri` enum (backed by C++'s
+	/// `CompactionPri`).
+	public enum CompactionPriority {
+		/// The default: slightly prioritizes larger files, weighted down by their number of
+		/// pending deletes.
+		BY_COMPENSATED_SIZE(0),
+		/// Compacts the file whose data was written longest ago first. Reduces write
+		/// amplification.
+		OLDEST_LARGEST_SEQ_FIRST(1),
+		/// Compacts the file whose key range has gone longest without being pushed to the
+		/// next level first. Reduces read amplification.
+		OLDEST_SMALLEST_SEQ_FIRST(2),
+		/// Compacts the file with the smallest ratio of overlapping-next-level-size to
+		/// own-size first. Minimizes write amplification; a good default for most workloads.
+		MIN_OVERLAPPING_RATIO(3),
+		/// Keeps a per-level cursor and always compacts the file next to it, cycling through
+		/// files in order rather than by a size/overlap heuristic.
+		ROUND_ROBIN(4);
+
+		final int value;
+
+		CompactionPriority(int value) {
+			this.value = value;
+		}
+
+		static CompactionPriority fromValue(int value) {
+			return switch (value) {
+				case 0 -> BY_COMPENSATED_SIZE;
+				case 1 -> OLDEST_LARGEST_SEQ_FIRST;
+				case 2 -> OLDEST_SMALLEST_SEQ_FIRST;
+				case 3 -> MIN_OVERLAPPING_RATIO;
+				case 4 -> ROUND_ROBIN;
+				default -> throw new IllegalArgumentException("Unknown CompactionPriority value: " + value);
+			};
+		}
+	}
+
+	/// Applies a one-shot heuristic that derives several parallelism-related settings (e.g.
+	/// background jobs, subcompactions, write-buffer count) from `totalThreads`, matching the
+	/// number of cores available for RocksDB's own background work. Unlike the rest of this
+	/// section, this has no matching getter: it's a write-only helper that fans out into other
+	/// options rather than a single stored value.
+	///
+	/// @param totalThreads number of threads to size background parallelism for
+	/// @return `this` for chaining
+	public Options increaseParallelism(int totalThreads) {
+		try {
+			MH_INCREASE_PARALLELISM.invokeExact(ptr(), totalThreads);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("increaseParallelism failed", t);
+		}
+		return this;
+	}
+
+	/// If `true`, allows out-of-order writes when there's no dependency on the sequence number
+	/// order (e.g. no user-defined timestamps, no merge operator sensitive to write order).
+	/// Improves write throughput on multi-core machines at the cost of that ordering guarantee.
+	/// Default: `false`.
+	///
+	/// @param value `true` to allow unordered writes
+	/// @return `this` for chaining
+	public Options setUnorderedWrite(boolean value) {
+		NativeFields.setBoolean(MH_SET_UNORDERED_WRITE, ptr(), value);
+		return this;
+	}
+
+	/// Returns whether unordered writes are allowed.
+	///
+	/// @return `true` if unordered writes are allowed
+	public boolean getUnorderedWrite() {
+		return NativeFields.getBoolean(MH_GET_UNORDERED_WRITE, ptr());
+	}
+
+	/// Threshold of bytes written before RocksDB forces an `fsync` on the currently active SST
+	/// file, smoothing out I/O instead of a single large sync at file close. `0` disables this
+	/// smoothing. Default: 0.
+	///
+	/// @param size byte threshold that triggers an intermediate `fsync`, or a zero-byte
+	///             [MemorySize] to disable
+	/// @return `this` for chaining
+	public Options setBytesPerSync(MemorySize size) {
+		NativeFields.setMemorySize(MH_SET_BYTES_PER_SYNC, ptr(), size);
+		return this;
+	}
+
+	/// Returns the configured `fsync` byte threshold.
+	///
+	/// @return current byte threshold that triggers an intermediate `fsync`
+	public MemorySize getBytesPerSync() {
+		return NativeFields.getMemorySize(MH_GET_BYTES_PER_SYNC, ptr());
+	}
+
+	/// If `true`, uses `O_DIRECT` for user reads, bypassing the OS page cache. Default: `false`.
+	///
+	/// @param value `true` to use direct I/O for reads
+	/// @return `this` for chaining
+	public Options setUseDirectReads(boolean value) {
+		NativeFields.setBoolean(MH_SET_USE_DIRECT_READS, ptr(), value);
+		return this;
+	}
+
+	/// Returns whether direct I/O is used for reads.
+	///
+	/// @return `true` if direct I/O is used for reads
+	public boolean getUseDirectReads() {
+		return NativeFields.getBoolean(MH_GET_USE_DIRECT_READS, ptr());
+	}
+
+	/// If `true`, uses `O_DIRECT` for flush and compaction output, bypassing the OS page cache.
+	/// Default: `false`.
+	///
+	/// @param value `true` to use direct I/O for flush and compaction
+	/// @return `this` for chaining
+	public Options setUseDirectIoForFlushAndCompaction(boolean value) {
+		NativeFields.setBoolean(MH_SET_USE_DIRECT_IO_FOR_FLUSH_AND_COMPACTION, ptr(), value);
+		return this;
+	}
+
+	/// Returns whether direct I/O is used for flush and compaction output.
+	///
+	/// @return `true` if direct I/O is used for flush and compaction output
+	public boolean getUseDirectIoForFlushAndCompaction() {
+		return NativeFields.getBoolean(MH_GET_USE_DIRECT_IO_FOR_FLUSH_AND_COMPACTION, ptr());
+	}
+
+	/// Sets which strategy RocksDB uses to prioritize files for compaction within a level.
+	/// Default: [CompactionPriority#BY_COMPENSATED_SIZE].
+	///
+	/// @param priority the compaction priority strategy to use
+	/// @return `this` for chaining
+	public Options setCompactionPriority(CompactionPriority priority) {
+		NativeFields.setInt(MH_SET_COMPACTION_PRI, ptr(), priority.value);
+		return this;
+	}
+
+	/// Returns the configured compaction priority strategy.
+	///
+	/// @return current compaction priority strategy
+	public CompactionPriority getCompactionPriority() {
+		return CompactionPriority.fromValue(NativeFields.getInt(MH_GET_COMPACTION_PRI, ptr()));
+	}
+
+	/// Sets the compression algorithm for the bottommost level only, overriding
+	/// [#setCompression] there -- typically a stronger/slower algorithm (e.g.
+	/// [CompressionType#ZSTD]) since the bottommost level holds the most data and is
+	/// compacted least often.
+	///
+	/// @param type the compression algorithm to use for the bottommost level
+	/// @return `this` for chaining
+	/// @throws UnsupportedOperationException if `type` isn't linked into the bundled native library
+	public Options setBottommostCompressionType(CompressionType type) {
+		if (!type.isSupported()) {
+			throw new UnsupportedOperationException(type + " compression is not linked into the bundled native library");
+		}
+		NativeFields.setInt(MH_SET_BOTTOMMOST_COMPRESSION, ptr(), type.getValue());
+		return this;
+	}
+
+	/// Returns the compression algorithm configured for the bottommost level.
+	///
+	/// @return the active bottommost-level compression type
+	public CompressionType getBottommostCompressionType() {
+		return CompressionType.fromValue(NativeFields.getInt(MH_GET_BOTTOMMOST_COMPRESSION, ptr()));
+	}
+
+	// -----------------------------------------------------------------------
+	// Memtable factory
+	// -----------------------------------------------------------------------
+	//
+	// Selects the in-memory representation backing the active memtable, replacing the default
+	// SkipList. Each factory is a one-shot selection with no matching getter -- like
+	// setTableFormatConfig, c.h exposes no way to read back which memtable factory is
+	// currently configured.
+
+	/// Selects a hash-table-of-skiplists memtable, indexed by [#setPrefixExtractor]'s prefix.
+	/// Speeds up prefix `Seek()` at the cost of full-key iteration order across different
+	/// prefixes. Requires a prefix extractor to be set; behaves like the default SkipList
+	/// memtable otherwise.
+	///
+	/// @param bucketCount       number of hash buckets
+	/// @param height            skiplist height for each bucket
+	/// @param branchingFactor   skiplist branching factor for each bucket
+	/// @return `this` for chaining
+	public Options setHashSkipListMemTableFactory(long bucketCount, int height, int branchingFactor) {
+		try {
+			MH_SET_HASH_SKIP_LIST_REP.invokeExact(ptr(), bucketCount, height, branchingFactor);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setHashSkipListMemTableFactory failed", t);
+		}
+		return this;
+	}
+
+	/// Selects a hash-table-of-sorted-linked-lists memtable, indexed by [#setPrefixExtractor]'s
+	/// prefix. Lighter-weight than [#setHashSkipListMemTableFactory] per bucket, at the cost of
+	/// O(n) insertion within a bucket instead of O(log n). Requires a prefix extractor to be
+	/// set; behaves like the default SkipList memtable otherwise.
+	///
+	/// @param bucketCount number of hash buckets
+	/// @return `this` for chaining
+	public Options setHashLinkListMemTableFactory(long bucketCount) {
+		try {
+			MH_SET_HASH_LINK_LIST_REP.invokeExact(ptr(), bucketCount);
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setHashLinkListMemTableFactory failed", t);
+		}
+		return this;
+	}
+
+	/// Selects a plain vector memtable: appends writes to an unsorted vector and only sorts on
+	/// flush. Useful for bulk-loading workloads with few reads against the active memtable, since
+	/// it avoids the SkipList's per-insert ordering cost; degrades to a linear scan for any read
+	/// or iteration issued before the next flush.
+	///
+	/// @return `this` for chaining
+	public Options setVectorMemTableFactory() {
+		try {
+			MH_SET_MEMTABLE_VECTOR_REP.invokeExact(ptr());
+		} catch (Throwable t) {
+			throw RocksDB.wrapInvokeFailure("setVectorMemTableFactory failed", t);
+		}
+		return this;
 	}
 
 	@Override

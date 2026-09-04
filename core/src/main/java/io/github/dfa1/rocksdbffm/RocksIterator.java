@@ -367,6 +367,10 @@ public final class RocksIterator extends NativeObject {
 	/// Copies the current key into `dst`. Copies nothing when `dst`'s remaining capacity is
 	/// too small. Only call when [#isValid()] is true.
 	///
+	/// See [CopyResult]'s class doc for the fill-mode contract on `dst`: on success only its
+	/// position advances, so call `dst.flip()` before reading — a required extra step for
+	/// callers migrating from `rocksdbjni`, whose equivalent flips for you.
+	///
 	/// @param dst destination buffer to copy the key into
 	/// @return [CopyResult.Copied] if copied, or [CopyResult.NotEnoughCapacity] if `dst` is too small
 	public CopyResult key(ByteBuffer dst) {
@@ -382,6 +386,10 @@ public final class RocksIterator extends NativeObject {
 
 	/// Copies the current value into `dst`. Copies nothing when `dst`'s remaining capacity is
 	/// too small. Only call when [#isValid()] is true.
+	///
+	/// See [CopyResult]'s class doc for the fill-mode contract on `dst`: on success only its
+	/// position advances, so call `dst.flip()` before reading — a required extra step for
+	/// callers migrating from `rocksdbjni`, whose equivalent flips for you.
 	///
 	/// @param dst destination buffer to copy the value into
 	/// @return [CopyResult.Copied] if copied, or [CopyResult.NotEnoughCapacity] if `dst` is too small

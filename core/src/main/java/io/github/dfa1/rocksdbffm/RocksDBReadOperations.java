@@ -56,6 +56,10 @@ public interface RocksDBReadOperations {
 	/// Single-copy get via `rocksdb_get_into_buffer` + direct output [ByteBuffer].
 	/// Copies nothing into `value` when its remaining capacity is too small.
 	///
+	/// See [CopyResult]'s class doc for the fill-mode contract on `value`: on success only its
+	/// position advances, so call `value.flip()` before reading — a required extra step for
+	/// callers migrating from `rocksdbjni`, whose equivalent flips for you.
+	///
 	/// @param key   direct [ByteBuffer] containing the key
 	/// @param value direct [ByteBuffer] to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
@@ -149,6 +153,10 @@ public interface RocksDBReadOperations {
 
 	/// Single-copy get from `cf` via `rocksdb_get_into_buffer_cf` + direct output [ByteBuffer].
 	/// Copies nothing into `value` when its remaining capacity is too small.
+	///
+	/// See [CopyResult]'s class doc for the fill-mode contract on `value`: on success only its
+	/// position advances, so call `value.flip()` before reading — a required extra step for
+	/// callers migrating from `rocksdbjni`, whose equivalent flips for you.
 	///
 	/// @param cf    column family to read from
 	/// @param key   direct [ByteBuffer] containing the key
