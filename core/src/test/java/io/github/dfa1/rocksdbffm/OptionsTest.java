@@ -320,6 +320,62 @@ class OptionsTest {
 	}
 
 	// -----------------------------------------------------------------------
+	// Memtable tuning
+	// -----------------------------------------------------------------------
+
+	@Test
+	void setMemtablePrefixBloomSizeRatio_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setMemtablePrefixBloomSizeRatio(0.1)) {
+
+			// When
+			var result = opts.getMemtablePrefixBloomSizeRatio();
+
+			// Then
+			assertThat(result).isEqualTo(0.1);
+		}
+	}
+
+	@Test
+	void setMemtableWholeKeyFiltering_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setMemtableWholeKeyFiltering(true)) {
+
+			// When
+			var result = opts.getMemtableWholeKeyFiltering();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void setMemtableHugePageSize_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setMemtableHugePageSize(MemorySize.ofMB(2))) {
+
+			// When
+			var result = opts.getMemtableHugePageSize();
+
+			// Then
+			assertThat(result).isEqualTo(MemorySize.ofMB(2));
+		}
+	}
+
+	@Test
+	void setBloomLocality_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setBloomLocality(1)) {
+
+			// When
+			var result = opts.getBloomLocality();
+
+			// Then
+			assertThat(result).isEqualTo(1);
+		}
+	}
+
+	// -----------------------------------------------------------------------
 	// Memtable factory
 	// -----------------------------------------------------------------------
 

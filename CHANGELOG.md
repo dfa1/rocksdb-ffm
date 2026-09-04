@@ -17,7 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `setHashSkipListMemTableFactory`, `setHashLinkListMemTableFactory`, `setVectorMemTableFactory`
   (memtable factory selection) — all confirmed gaps from porting a production app off `rocksdbjni`
 - `PlainTableOptions` and `Options.setTableFormatConfig(PlainTableOptions)`: in-memory
-  hash-indexed SST format for fixed-size keys and read-heavy point lookups
+  hash-indexed SST format
+- `Options`: `setMemtablePrefixBloomSizeRatio`, `setMemtableWholeKeyFiltering`,
+  `setMemtableHugePageSize`, `setBloomLocality` — memtable-level bloom filter/arena tuning that
+  applies on top of any memtable factory for fixed-size keys and read-heavy point lookups
 
 ### Fixed
 

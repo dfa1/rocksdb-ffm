@@ -223,6 +223,22 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_BOTTOMMOST_COMPRESSION;
 	/// `int rocksdb_options_get_bottommost_compression(rocksdb_options_t*);`
 	private static final MethodHandle MH_GET_BOTTOMMOST_COMPRESSION;
+	/// `void rocksdb_options_set_memtable_prefix_bloom_size_ratio(rocksdb_options_t*, double);`
+	private static final MethodHandle MH_SET_MEMTABLE_PREFIX_BLOOM_SIZE_RATIO;
+	/// `double rocksdb_options_get_memtable_prefix_bloom_size_ratio(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_MEMTABLE_PREFIX_BLOOM_SIZE_RATIO;
+	/// `void rocksdb_options_set_memtable_whole_key_filtering(rocksdb_options_t*, unsigned char);`
+	private static final MethodHandle MH_SET_MEMTABLE_WHOLE_KEY_FILTERING;
+	/// `unsigned char rocksdb_options_get_memtable_whole_key_filtering(rocksdb_options_t* opt);`
+	private static final MethodHandle MH_GET_MEMTABLE_WHOLE_KEY_FILTERING;
+	/// `void rocksdb_options_set_memtable_huge_page_size(rocksdb_options_t*, size_t);`
+	private static final MethodHandle MH_SET_MEMTABLE_HUGE_PAGE_SIZE;
+	/// `size_t rocksdb_options_get_memtable_huge_page_size(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_MEMTABLE_HUGE_PAGE_SIZE;
+	/// `void rocksdb_options_set_bloom_locality(rocksdb_options_t*, uint32_t);`
+	private static final MethodHandle MH_SET_BLOOM_LOCALITY;
+	/// `uint32_t rocksdb_options_get_bloom_locality(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_BLOOM_LOCALITY;
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
@@ -549,6 +565,34 @@ public final class Options extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
 		MH_GET_BOTTOMMOST_COMPRESSION = NativeLibrary.lookup("rocksdb_options_get_bottommost_compression",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_MEMTABLE_PREFIX_BLOOM_SIZE_RATIO = NativeLibrary.lookup(
+				"rocksdb_options_set_memtable_prefix_bloom_size_ratio",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
+
+		MH_GET_MEMTABLE_PREFIX_BLOOM_SIZE_RATIO = NativeLibrary.lookup(
+				"rocksdb_options_get_memtable_prefix_bloom_size_ratio",
+				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
+
+		MH_SET_MEMTABLE_WHOLE_KEY_FILTERING = NativeLibrary.lookup(
+				"rocksdb_options_set_memtable_whole_key_filtering",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_MEMTABLE_WHOLE_KEY_FILTERING = NativeLibrary.lookup(
+				"rocksdb_options_get_memtable_whole_key_filtering",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_MEMTABLE_HUGE_PAGE_SIZE = NativeLibrary.lookup("rocksdb_options_set_memtable_huge_page_size",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_MEMTABLE_HUGE_PAGE_SIZE = NativeLibrary.lookup("rocksdb_options_get_memtable_huge_page_size",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_BLOOM_LOCALITY = NativeLibrary.lookup("rocksdb_options_set_bloom_locality",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_BLOOM_LOCALITY = NativeLibrary.lookup("rocksdb_options_get_bloom_locality",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 	}
 
@@ -1662,6 +1706,89 @@ public final class Options extends NativeObject {
 	/// @return the active bottommost-level compression type
 	public CompressionType getBottommostCompressionType() {
 		return CompressionType.fromValue(NativeFields.getInt(MH_GET_BOTTOMMOST_COMPRESSION, ptr()));
+	}
+
+	// -----------------------------------------------------------------------
+	// Memtable tuning
+	// -----------------------------------------------------------------------
+	//
+	// Applies to the memtable's own bloom filter and arena allocation, independent of which
+	// memtable factory is selected below (default SkipList, hash-skiplist, or hash-linklist).
+
+	/// Builds a bloom filter inside the memtable itself, sized as this fraction of the write
+	/// buffer, keyed by [#setPrefixExtractor]'s prefix -- speeds up prefix `Seek()` against the
+	/// still-unflushed memtable, the memtable-side counterpart to what
+	/// [#setHashSkipListMemTableFactory]/[#setHashLinkListMemTableFactory] do for the memtable's
+	/// own lookup structure. `0` disables it. Requires a prefix extractor to be set. Default: 0.
+	///
+	/// @param ratio memtable bloom filter size as a fraction of the write buffer, or `0` to disable
+	/// @return `this` for chaining
+	public Options setMemtablePrefixBloomSizeRatio(double ratio) {
+		NativeFields.setDouble(MH_SET_MEMTABLE_PREFIX_BLOOM_SIZE_RATIO, ptr(), ratio);
+		return this;
+	}
+
+	/// Returns the configured memtable bloom filter size ratio.
+	///
+	/// @return current memtable bloom filter size ratio, or `0` if disabled
+	public double getMemtablePrefixBloomSizeRatio() {
+		return NativeFields.getDouble(MH_GET_MEMTABLE_PREFIX_BLOOM_SIZE_RATIO, ptr());
+	}
+
+	/// If `true`, [#setMemtablePrefixBloomSizeRatio]'s memtable bloom filter also indexes whole
+	/// keys, not just prefixes -- speeds up exact `Get()`s against the memtable in addition to
+	/// prefix `Seek()`s. Has no effect unless a memtable prefix bloom filter is configured.
+	/// Default: `false`.
+	///
+	/// @param value `true` to also index whole keys in the memtable bloom filter
+	/// @return `this` for chaining
+	public Options setMemtableWholeKeyFiltering(boolean value) {
+		NativeFields.setBoolean(MH_SET_MEMTABLE_WHOLE_KEY_FILTERING, ptr(), value);
+		return this;
+	}
+
+	/// Returns whether the memtable bloom filter also indexes whole keys.
+	///
+	/// @return `true` if the memtable bloom filter also indexes whole keys
+	public boolean getMemtableWholeKeyFiltering() {
+		return NativeFields.getBoolean(MH_GET_MEMTABLE_WHOLE_KEY_FILTERING, ptr());
+	}
+
+	/// Size of the huge-page TLB to allocate the memtable's arena from, independent of which
+	/// memtable factory is selected. `0` allocates from regular `malloc` instead. Requires the
+	/// OS to have huge pages reserved (e.g. `sysctl -w vm.nr_hugepages=20` on Linux).
+	/// Default: 0 (disabled).
+	///
+	/// @param size huge-page TLB byte size, or a zero-byte [MemorySize] to disable
+	/// @return `this` for chaining
+	public Options setMemtableHugePageSize(MemorySize size) {
+		NativeFields.setMemorySize(MH_SET_MEMTABLE_HUGE_PAGE_SIZE, ptr(), size);
+		return this;
+	}
+
+	/// Returns the configured memtable huge-page TLB size.
+	///
+	/// @return current memtable huge-page TLB byte size, or zero if disabled
+	public MemorySize getMemtableHugePageSize() {
+		return NativeFields.getMemorySize(MH_GET_MEMTABLE_HUGE_PAGE_SIZE, ptr());
+	}
+
+	/// Controls memory locality of the memtable's bloom filter bits: `0` disables locality
+	/// grouping; higher values group more of a key's bloom bits into the same cache line, at
+	/// the cost of a slightly higher false-positive rate. Default: 0.
+	///
+	/// @param locality bloom filter memory locality level, or `0` to disable
+	/// @return `this` for chaining
+	public Options setBloomLocality(int locality) {
+		NativeFields.setInt(MH_SET_BLOOM_LOCALITY, ptr(), locality);
+		return this;
+	}
+
+	/// Returns the configured bloom filter memory locality level.
+	///
+	/// @return current bloom filter memory locality level, or `0` if disabled
+	public int getBloomLocality() {
+		return NativeFields.getInt(MH_GET_BLOOM_LOCALITY, ptr());
 	}
 
 	// -----------------------------------------------------------------------

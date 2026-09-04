@@ -183,6 +183,16 @@ with no stored value to read back):
 | `setCompactionPriority` / `getCompactionPriority`| `Options.CompactionPriority`|
 | `setBottommostCompressionType`                   | `CompressionType`           |
 
+Memtable tuning (each with a matching getter; applies regardless of which memtable factory below
+is selected):
+
+| Method                                | Type          |
+|:---------------------------------------|:--------------|
+| `setMemtablePrefixBloomSizeRatio`      | `double`      |
+| `setMemtableWholeKeyFiltering`         | `boolean`     |
+| `setMemtableHugePageSize`              | `MemorySize`  |
+| `setBloomLocality`                     | `int`         |
+
 Memtable factory (no getter — `c.h` exposes no way to read back which factory is configured,
 same as `setTableFormatConfig`):
 
