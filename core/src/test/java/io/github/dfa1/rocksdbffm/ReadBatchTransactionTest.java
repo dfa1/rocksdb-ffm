@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class TransactionReadBatchTest {
+class ReadBatchTransactionTest {
 
 	private static TransactionDB openDb(Path path) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
@@ -35,8 +35,8 @@ class TransactionReadBatchTest {
 		     var txn = db.beginTransaction(wo)) {
 
 			// When / Then
-			assertThatThrownBy(() -> TransactionReadBatch.create(txn, 0)).isInstanceOf(IllegalArgumentException.class);
-			assertThatThrownBy(() -> TransactionReadBatch.create(txn, -1)).isInstanceOf(IllegalArgumentException.class);
+			assertThatThrownBy(() -> ReadBatchTransaction.create(txn, 0)).isInstanceOf(IllegalArgumentException.class);
+			assertThatThrownBy(() -> ReadBatchTransaction.create(txn, -1)).isInstanceOf(IllegalArgumentException.class);
 		}
 	}
 
@@ -46,7 +46,7 @@ class TransactionReadBatchTest {
 		try (var db = openDb(dir);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo);
-		     var batch = TransactionReadBatch.create(txn, 7)) {
+		     var batch = ReadBatchTransaction.create(txn, 7)) {
 
 			// When
 			int capacity = batch.capacity();
@@ -62,7 +62,7 @@ class TransactionReadBatchTest {
 		try (var db = openDb(dir);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo)) {
-			var batch = TransactionReadBatch.create(txn, 2);
+			var batch = ReadBatchTransaction.create(txn, 2);
 			batch.close();
 
 			// When / Then
@@ -80,7 +80,7 @@ class TransactionReadBatchTest {
 		try (var db = openDb(dir);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo);
-		     var batch = TransactionReadBatch.create(txn, 3)) {
+		     var batch = ReadBatchTransaction.create(txn, 3)) {
 			txn.put("a".getBytes(), "1".getBytes());
 			txn.put("b".getBytes(), "2".getBytes());
 
@@ -106,7 +106,7 @@ class TransactionReadBatchTest {
 			}
 
 			try (var txn = db.beginTransaction(wo);
-			     var batch = TransactionReadBatch.create(txn, 3)) {
+			     var batch = ReadBatchTransaction.create(txn, 3)) {
 
 				// When
 				List<byte[]> result = batch.getForUpdate(List.of("a".getBytes(), "missing".getBytes(), "b".getBytes()));
@@ -126,7 +126,7 @@ class TransactionReadBatchTest {
 		try (var db = openDb(dir);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo);
-		     var batch = TransactionReadBatch.create(txn, 1)) {
+		     var batch = ReadBatchTransaction.create(txn, 1)) {
 
 			// When / Then
 			assertThatThrownBy(() -> batch.get(List.of("a".getBytes(), "b".getBytes())))
@@ -140,7 +140,7 @@ class TransactionReadBatchTest {
 		try (var db = openDb(dir);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo);
-		     var batch = TransactionReadBatch.create(txn, 4)) {
+		     var batch = ReadBatchTransaction.create(txn, 4)) {
 
 			// When
 			List<byte[]> result = batch.get(List.<byte[]>of());
@@ -157,7 +157,7 @@ class TransactionReadBatchTest {
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo);
-		     var batch = TransactionReadBatch.create(txn, cf, 2)) {
+		     var batch = ReadBatchTransaction.create(txn, cf, 2)) {
 			txn.put(cf, "x".getBytes(), "9".getBytes());
 
 			// When
@@ -179,7 +179,7 @@ class TransactionReadBatchTest {
 		try (var db = openDb(dir);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo);
-		     var batch = TransactionReadBatch.create(txn, 2)) {
+		     var batch = ReadBatchTransaction.create(txn, 2)) {
 			txn.put("a".getBytes(), "1".getBytes());
 
 			List<ByteBuffer> keys = List.of(directBuffer("a"), directBuffer("missing"));
@@ -207,7 +207,7 @@ class TransactionReadBatchTest {
 			}
 
 			try (var txn = db.beginTransaction(wo);
-			     var batch = TransactionReadBatch.create(txn, 1)) {
+			     var batch = ReadBatchTransaction.create(txn, 1)) {
 				ByteBuffer foundValue = ByteBuffer.allocateDirect(16);
 
 				// When
@@ -227,7 +227,7 @@ class TransactionReadBatchTest {
 		try (var db = openDb(dir);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo);
-		     var batch = TransactionReadBatch.create(txn, 2)) {
+		     var batch = ReadBatchTransaction.create(txn, 2)) {
 
 			// When / Then
 			assertThatThrownBy(() -> batch.get(List.of(directBuffer("a"), directBuffer("b")),
@@ -247,14 +247,14 @@ class TransactionReadBatchTest {
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo);
 		     Arena arena = Arena.ofConfined();
-		     var batch = TransactionReadBatch.create(txn, 3)) {
+		     var batch = ReadBatchTransaction.create(txn, 3)) {
 			txn.put("a".getBytes(), "1".getBytes());
 			txn.put("b".getBytes(), "2".getBytes());
 
 			// When
 			List<String> result = batch.get(
 					List.of(nativeKey(arena, "a"), nativeKey(arena, "missing"), nativeKey(arena, "b")),
-					TransactionReadBatchTest::decode);
+					ReadBatchTransactionTest::decode);
 
 			// Then
 			assertThat(result).containsExactly("1", null, "2");
@@ -273,11 +273,11 @@ class TransactionReadBatchTest {
 
 			try (var txn = db.beginTransaction(wo);
 			     Arena arena = Arena.ofConfined();
-			     var batch = TransactionReadBatch.create(txn, 1)) {
+			     var batch = ReadBatchTransaction.create(txn, 1)) {
 
 				// When
 				List<String> result = batch.getForUpdate(List.of(nativeKey(arena, "a")),
-						TransactionReadBatchTest::decode);
+						ReadBatchTransactionTest::decode);
 
 				// Then
 				assertThat(result).containsExactly("1");

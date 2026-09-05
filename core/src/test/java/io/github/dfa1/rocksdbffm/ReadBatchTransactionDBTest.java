@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class TransactionDBReadBatchTest {
+class ReadBatchTransactionDBTest {
 
 	private static TransactionDB openDb(Path path) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
@@ -33,8 +33,8 @@ class TransactionDBReadBatchTest {
 		try (var db = openDb(dir)) {
 
 			// When / Then
-			assertThatThrownBy(() -> TransactionDBReadBatch.create(db, 0)).isInstanceOf(IllegalArgumentException.class);
-			assertThatThrownBy(() -> TransactionDBReadBatch.create(db, -1)).isInstanceOf(IllegalArgumentException.class);
+			assertThatThrownBy(() -> ReadBatchTransactionDB.create(db, 0)).isInstanceOf(IllegalArgumentException.class);
+			assertThatThrownBy(() -> ReadBatchTransactionDB.create(db, -1)).isInstanceOf(IllegalArgumentException.class);
 		}
 	}
 
@@ -42,7 +42,7 @@ class TransactionDBReadBatchTest {
 	void capacity_returnsConfiguredValue(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir);
-		     var batch = TransactionDBReadBatch.create(db, 7)) {
+		     var batch = ReadBatchTransactionDB.create(db, 7)) {
 
 			// When
 			int capacity = batch.capacity();
@@ -56,7 +56,7 @@ class TransactionDBReadBatchTest {
 	void close_isIdempotent(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir)) {
-			var batch = TransactionDBReadBatch.create(db, 2);
+			var batch = ReadBatchTransactionDB.create(db, 2);
 			batch.close();
 
 			// When / Then
@@ -73,14 +73,14 @@ class TransactionDBReadBatchTest {
 		// Given
 		try (var db = openDb(dir);
 		     Arena arena = Arena.ofConfined();
-		     var batch = TransactionDBReadBatch.create(db, 4)) {
+		     var batch = ReadBatchTransactionDB.create(db, 4)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
 			// When
 			List<String> result = batch.get(
 					List.of(nativeKey(arena, "a"), nativeKey(arena, "missing"), nativeKey(arena, "b")),
-					TransactionDBReadBatchTest::decode);
+					ReadBatchTransactionDBTest::decode);
 
 			// Then
 			assertThat(result).containsExactly("1", null, "2");
@@ -92,18 +92,18 @@ class TransactionDBReadBatchTest {
 		// Given
 		try (var db = openDb(dir);
 		     Arena arena = Arena.ofConfined();
-		     var batch = TransactionDBReadBatch.create(db, 3)) {
+		     var batch = ReadBatchTransactionDB.create(db, 3)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
 			// When
 			List<String> first = batch.get(
 					List.of(nativeKey(arena, "a"), nativeKey(arena, "missing"), nativeKey(arena, "b")),
-					TransactionDBReadBatchTest::decode);
+					ReadBatchTransactionDBTest::decode);
 
 			db.put("c".getBytes(), "3".getBytes());
 			List<String> second = batch.get(
-					List.of(nativeKey(arena, "c"), nativeKey(arena, "a")), TransactionDBReadBatchTest::decode);
+					List.of(nativeKey(arena, "c"), nativeKey(arena, "a")), ReadBatchTransactionDBTest::decode);
 
 			// Then
 			assertThat(first).containsExactly("1", null, "2");
@@ -116,12 +116,12 @@ class TransactionDBReadBatchTest {
 		// Given
 		try (var db = openDb(dir);
 		     Arena arena = Arena.ofConfined();
-		     var batch = TransactionDBReadBatch.create(db, 2)) {
+		     var batch = ReadBatchTransactionDB.create(db, 2)) {
 
 			// When / Then
 			assertThatThrownBy(() -> batch.get(
 					List.of(nativeKey(arena, "a"), nativeKey(arena, "b"), nativeKey(arena, "c")),
-					TransactionDBReadBatchTest::decode))
+					ReadBatchTransactionDBTest::decode))
 					.isInstanceOf(IllegalArgumentException.class);
 		}
 	}
@@ -130,10 +130,10 @@ class TransactionDBReadBatchTest {
 	void get_emptyKeyList_returnsEmptyList(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir);
-		     var batch = TransactionDBReadBatch.create(db, 4)) {
+		     var batch = ReadBatchTransactionDB.create(db, 4)) {
 
 			// When
-			List<String> result = batch.get(List.<MemorySegment>of(), TransactionDBReadBatchTest::decode);
+			List<String> result = batch.get(List.<MemorySegment>of(), ReadBatchTransactionDBTest::decode);
 
 			// Then
 			assertThat(result).isEmpty();
@@ -146,12 +146,12 @@ class TransactionDBReadBatchTest {
 		try (var db = openDb(dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     Arena arena = Arena.ofConfined();
-		     var batch = TransactionDBReadBatch.create(db, cf, 2)) {
+		     var batch = ReadBatchTransactionDB.create(db, cf, 2)) {
 			db.put(cf, "x".getBytes(), "9".getBytes());
 
 			// When
 			List<String> result = batch.get(
-					List.of(nativeKey(arena, "x"), nativeKey(arena, "y")), TransactionDBReadBatchTest::decode);
+					List.of(nativeKey(arena, "x"), nativeKey(arena, "y")), ReadBatchTransactionDBTest::decode);
 
 			// Then
 			assertThat(result).containsExactly("9", null);
@@ -163,7 +163,7 @@ class TransactionDBReadBatchTest {
 		// Given
 		try (var db = openDb(dir);
 		     Arena arena = Arena.ofConfined();
-		     var batch = TransactionDBReadBatch.create(db, 1)) {
+		     var batch = ReadBatchTransactionDB.create(db, 1)) {
 			db.put("a".getBytes(), "1".getBytes());
 
 			try (Snapshot snap = db.getSnapshot();
@@ -172,7 +172,7 @@ class TransactionDBReadBatchTest {
 
 				// When
 				List<String> result = batch.get(readOptions, List.of(nativeKey(arena, "a")),
-						TransactionDBReadBatchTest::decode);
+						ReadBatchTransactionDBTest::decode);
 
 				// Then — snapshot predates the second write
 				assertThat(result).containsExactly("1");
@@ -188,7 +188,7 @@ class TransactionDBReadBatchTest {
 	void get_byteArray_returnsValuesInOrderWithNullForNotFound(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir);
-		     var batch = TransactionDBReadBatch.create(db, 3)) {
+		     var batch = ReadBatchTransactionDB.create(db, 3)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -207,7 +207,7 @@ class TransactionDBReadBatchTest {
 		// Given
 		try (var db = openDb(dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
-		     var batch = TransactionDBReadBatch.create(db, cf, 2)) {
+		     var batch = ReadBatchTransactionDB.create(db, cf, 2)) {
 			db.put(cf, "x".getBytes(), "9".getBytes());
 
 			// When
@@ -227,7 +227,7 @@ class TransactionDBReadBatchTest {
 	void get_byteBuffer_copiesFoundValuesAndAdvancesPosition(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir);
-		     var batch = TransactionDBReadBatch.create(db, 2)) {
+		     var batch = ReadBatchTransactionDB.create(db, 2)) {
 			db.put("a".getBytes(), "1".getBytes());
 
 			List<ByteBuffer> keys = List.of(directBuffer("a"), directBuffer("missing"));
@@ -250,7 +250,7 @@ class TransactionDBReadBatchTest {
 	void get_byteBuffer_notEnoughCapacity_reportsRequiredLength(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir);
-		     var batch = TransactionDBReadBatch.create(db, 1)) {
+		     var batch = ReadBatchTransactionDB.create(db, 1)) {
 			db.put("a".getBytes(), "toolong".getBytes());
 
 			// When
@@ -265,7 +265,7 @@ class TransactionDBReadBatchTest {
 	void get_byteBuffer_mismatchedSizes_throws(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir);
-		     var batch = TransactionDBReadBatch.create(db, 2)) {
+		     var batch = ReadBatchTransactionDB.create(db, 2)) {
 
 			// When / Then
 			assertThatThrownBy(() -> batch.get(List.of(directBuffer("a"), directBuffer("b")),

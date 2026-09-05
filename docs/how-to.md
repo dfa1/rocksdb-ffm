@@ -19,6 +19,7 @@ Every snippet omits imports; all types live in `io.github.dfa1.rocksdbffm`.
 - [Merge values without a read-modify-write](#merge-values-without-a-read-modify-write)
 - [Run a pessimistic transaction](#run-a-pessimistic-transaction)
 - [Run an optimistic transaction](#run-an-optimistic-transaction)
+- [Batch reads against a TransactionDB or Transaction](#batch-reads-against-a-transactiondb-or-transaction)
 - [Expire keys automatically](#expire-keys-automatically)
 - [Take a checkpoint](#take-a-checkpoint)
 - [Back up and restore](#back-up-and-restore)
@@ -426,6 +427,38 @@ try (var options = Options.newOptions().setCreateIfMissing(true);
 	}
 }
 ```
+
+## Batch reads against a TransactionDB or Transaction
+
+[`ReadBatch`](#batch-multiple-reads-together) only works against the six `RocksDBReadOperations`
+types — `TransactionDB` and `Transaction` bind their own, separate multi-get native symbols, which
+return values as malloc'd buffers instead of `PinnableSlice`s. `ReadBatchTransactionDB` and
+`ReadBatchTransaction` cover that gap with the same reusable, preallocated shape and all three
+access tiers.
+
+`ReadBatchTransactionDB` batches `TransactionDB`'s direct reads — bypassing any open transaction,
+same as `TransactionDB.get()`:
+
+```java
+try (var batch = ReadBatchTransactionDB.create(db, 100)) {
+	List<byte[]> values = batch.get(keys); // one entry per key, null where not found
+}
+```
+
+`ReadBatchTransaction` batches reads inside an already-open `Transaction` — read-your-own-writes,
+plus `getForUpdate` to additionally lock each key for the rest of the transaction. It works for a
+transaction from either `TransactionDB.beginTransaction()` or
+`OptimisticTransactionDB.beginTransaction()`, since both hand back the same `Transaction` type:
+
+```java
+try (var batch = ReadBatchTransaction.create(txn, 100)) {
+	List<byte[]> values = batch.get(keys);          // no lock taken
+	List<byte[]> locked = batch.getForUpdate(keys); // each key locked, like getForUpdate(key, true)
+}
+```
+
+Both fix their column family at `create` the same way `ReadBatch` does — pass one as the second
+argument for a CF-scoped batch (`ReadBatchTransactionDB.create(db, cf, 100)`).
 
 ## Expire keys automatically
 

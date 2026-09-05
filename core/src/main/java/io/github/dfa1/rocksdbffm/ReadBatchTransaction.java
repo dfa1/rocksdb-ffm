@@ -12,15 +12,15 @@ import java.util.List;
 /// (and, optionally, the same column family), all three tiers, in two modes: plain [#get] reads
 /// committed-or-in-this-transaction data, [#getForUpdate] additionally takes a lock on each key
 /// like [Transaction#get(MemorySegment, Mapper)]'s `_for_update` single-key counterpart. Same
-/// reuse shape and malloc'd-buffer value representation as [TransactionDBReadBatch] — see
+/// reuse shape and malloc'd-buffer value representation as [ReadBatchTransactionDB] — see
 /// [RawMultiGet] for the shared collection logic.
 ///
 /// ```
-/// try (var batch = TransactionReadBatch.create(txn, 16)) {
+/// try (var batch = ReadBatchTransaction.create(txn, 16)) {
 ///     List<byte[]> values = batch.getForUpdate(keys);
 /// }
 /// ```
-public final class TransactionReadBatch implements AutoCloseable {
+public final class ReadBatchTransaction implements AutoCloseable {
 
 	/// `void rocksdb_transaction_multi_get(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, size_t num_keys, const char* const* keys_list, const size_t* keys_list_sizes, char** values_list, size_t* values_list_sizes, char** errs);`
 	private static final MethodHandle MH_MULTI_GET;
@@ -61,7 +61,7 @@ public final class TransactionReadBatch implements AutoCloseable {
 	private final ColumnFamilyHandle cf;
 	private final RawMultiGet.Buffers bufs;
 
-	private TransactionReadBatch(Transaction txn, ColumnFamilyHandle cf, int capacity) {
+	private ReadBatchTransaction(Transaction txn, ColumnFamilyHandle cf, int capacity) {
 		this.txn = txn;
 		this.cf = cf;
 		this.bufs = RawMultiGet.Buffers.allocate(capacity, cf != null);
@@ -72,8 +72,8 @@ public final class TransactionReadBatch implements AutoCloseable {
 	///
 	/// @param txn      transaction to read from
 	/// @param capacity maximum number of keys any single call may pass; must be positive
-	/// @return a new [TransactionReadBatch]; caller must close it
-	public static TransactionReadBatch create(Transaction txn, int capacity) {
+	/// @return a new [ReadBatchTransaction]; caller must close it
+	public static ReadBatchTransaction create(Transaction txn, int capacity) {
 		return create(txn, null, capacity);
 	}
 
@@ -83,9 +83,9 @@ public final class TransactionReadBatch implements AutoCloseable {
 	/// @param txn      transaction to read from
 	/// @param cf       column family every key in every call belongs to
 	/// @param capacity maximum number of keys any single call may pass; must be positive
-	/// @return a new [TransactionReadBatch]; caller must close it
-	public static TransactionReadBatch create(Transaction txn, ColumnFamilyHandle cf, int capacity) {
-		return new TransactionReadBatch(txn, cf, capacity);
+	/// @return a new [ReadBatchTransaction]; caller must close it
+	public static ReadBatchTransaction create(Transaction txn, ColumnFamilyHandle cf, int capacity) {
+		return new ReadBatchTransaction(txn, cf, capacity);
 	}
 
 	/// The maximum number of keys a single call on this batch may pass.
@@ -147,11 +147,11 @@ public final class TransactionReadBatch implements AutoCloseable {
 				byte[] key = keys.get(i);
 				RawMultiGet.writeKeySlot(bufs.keysArr, bufs.keySizesArr, i, RocksDB.toNative(callArena, key), key.length);
 			}
-			RocksDB.requireNoNullEntries(bufs.keysArr, n, "TransactionReadBatch keys array");
+			RocksDB.requireNoNullEntries(bufs.keysArr, n, "ReadBatchTransaction keys array");
 			invoke(readOptions, n, forUpdate);
 			return RawMultiGet.collectBytes(bufs.valuesListArr, bufs.valuesListSizesArr, bufs.errsArr, n);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("TransactionReadBatch.get failed", t);
+			throw RocksDB.wrapInvokeFailure("ReadBatchTransaction.get failed", t);
 		}
 	}
 
@@ -217,11 +217,11 @@ public final class TransactionReadBatch implements AutoCloseable {
 				ByteBuffer key = keys.get(i);
 				RawMultiGet.writeKeySlot(bufs.keysArr, bufs.keySizesArr, i, MemorySegment.ofBuffer(key), key.remaining());
 			}
-			RocksDB.requireNoNullEntries(bufs.keysArr, n, "TransactionReadBatch keys array");
+			RocksDB.requireNoNullEntries(bufs.keysArr, n, "ReadBatchTransaction keys array");
 			invoke(readOptions, n, forUpdate);
 			return RawMultiGet.collectBuffers(bufs.valuesListArr, bufs.valuesListSizesArr, bufs.errsArr, n, values);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("TransactionReadBatch.get failed", t);
+			throw RocksDB.wrapInvokeFailure("ReadBatchTransaction.get failed", t);
 		}
 	}
 
@@ -290,18 +290,18 @@ public final class TransactionReadBatch implements AutoCloseable {
 				MemorySegment key = keys.get(i);
 				RawMultiGet.writeKeySlot(bufs.keysArr, bufs.keySizesArr, i, key, key.byteSize());
 			}
-			RocksDB.requireNoNullEntries(bufs.keysArr, n, "TransactionReadBatch keys array");
+			RocksDB.requireNoNullEntries(bufs.keysArr, n, "ReadBatchTransaction keys array");
 			invoke(readOptions, n, forUpdate);
 			return RawMultiGet.collect(bufs.valuesListArr, bufs.valuesListSizesArr, bufs.errsArr, n, fn);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("TransactionReadBatch.get failed", t);
+			throw RocksDB.wrapInvokeFailure("ReadBatchTransaction.get failed", t);
 		}
 	}
 
 	/// Invokes the plain or `_cf` native call, in either mode, depending on whether this batch
 	/// was created with a column family — filling the per-key column-family array the `_cf`
 	/// variants require with `cf`'s handle repeated `n` times, same as
-	/// [TransactionDBReadBatch#invoke(ReadOptions, int)]. Each of the four native symbols gets
+	/// [ReadBatchTransactionDB#invoke(ReadOptions, int)]. Each of the four native symbols gets
 	/// its own direct `invokeExact` call site on its own `static final` field rather than a
 	/// shared local variable, so the JIT can still treat every call target as a compile-time
 	/// constant.

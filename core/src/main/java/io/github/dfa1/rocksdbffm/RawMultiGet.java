@@ -10,8 +10,8 @@ import java.util.Objects;
 
 /// Shared bookkeeping for the `char** values_list` + `size_t* values_list_sizes` + `char** errs`
 /// multi-get shape used by `rocksdb_transactiondb_multi_get[_cf]` and
-/// `rocksdb_transaction_multi_get[_for_update][_cf]` (see [TransactionDBReadBatch],
-/// [TransactionReadBatch]) — malloc'd raw buffers freed via [RocksDB#free(MemorySegment)], unlike
+/// `rocksdb_transaction_multi_get[_for_update][_cf]` (see [ReadBatchTransactionDB],
+/// [ReadBatchTransaction]) — malloc'd raw buffers freed via [RocksDB#free(MemorySegment)], unlike
 /// [ReadBatch]'s `rocksdb_pinnableslice_t**` values, which are wrapped and released through
 /// [PinnableSlice]. Not-found uses the same convention either way: a NULL entry, with no
 /// corresponding `errs` entry set.
@@ -25,8 +25,8 @@ final class RawMultiGet {
 	private RawMultiGet() {
 	}
 
-	/// Preallocated bookkeeping shared verbatim by [TransactionDBReadBatch] and
-	/// [TransactionReadBatch]: keys/key-sizes for the call, values-list/values-list-sizes/errs for
+	/// Preallocated bookkeeping shared verbatim by [ReadBatchTransactionDB] and
+	/// [ReadBatchTransaction]: keys/key-sizes for the call, values-list/values-list-sizes/errs for
 	/// the results, and — only when a column family was fixed at batch-create time — a per-key
 	/// column-family array. Both native call families take one column family per key, unlike
 	/// `rocksdb_batched_multi_get_cf`'s single shared handle, but a batch's own UX still fixes one
