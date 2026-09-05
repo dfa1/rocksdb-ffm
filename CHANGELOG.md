@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12] — 2026-09-05
+
+`ldb`/`sst_dump` CLI tool wrappers (Windows included), `CompactionFilter`/`CompactionFilterFactory`,
+`PlainTableOptions`, memtable/write-path/background-job `Options` tuning, and a `ByteBuffer` doc fix.
+
 ### Added
 
 - `Options`: `setMaxBackgroundJobs`, `setMaxOpenFiles`, `setMaxFileOpeningThreads`,
@@ -425,7 +430,8 @@ Initial release. An FFM-based RocksDB binding built from scratch against `rocksd
 - All tests migrated to the `// Given / // When / // Then` + AssertJ convention. ([c8cfae5](https://github.com/dfa1/rocksdbffm/commit/c8cfae5))
 - Error handling centralized on `RocksDB.errHolder`/`checkError`; per-class `ThreadLocal` error pointers removed in favor of a shared `Arena`-based pattern. ([736c926](https://github.com/dfa1/rocksdbffm/commit/736c926))
 
-[Unreleased]: https://github.com/dfa1/rocksdbffm/compare/v0.11...HEAD
+[Unreleased]: https://github.com/dfa1/rocksdbffm/compare/v0.12...HEAD
+[0.12]: https://github.com/dfa1/rocksdbffm/compare/v0.11...v0.12
 [0.11]: https://github.com/dfa1/rocksdbffm/compare/v0.10...v0.11
 [0.10]: https://github.com/dfa1/rocksdbffm/compare/v0.9...v0.10
 [0.9]: https://github.com/dfa1/rocksdbffm/compare/v0.8...v0.9
