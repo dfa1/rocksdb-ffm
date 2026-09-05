@@ -428,7 +428,14 @@ cmake --build "$BUILD_DIR" --target rocksdb-shared --target ldb --target sst_dum
 # (RocksDB's OUTPUT_NAME override to "rocksdb.dll" only applies when
 # NOT WIN32), so rename it to match the librocksdb.<ext> convention used by
 # every other classifier.
+#
+# ldb.exe/sst_dump.exe are defined in rocksdb/tools/CMakeLists.txt (pulled in
+# via add_subdirectory(tools)), and CMake's default RUNTIME_OUTPUT_DIRECTORY
+# for a Makefile/Ninja generator mirrors the source tree per subdirectory
+# with no top-level override in play here — unlike rocksdb-shared (defined at
+# the top-level CMakeLists.txt and landing directly in $BUILD_DIR), they land
+# in $BUILD_DIR/tools/, not $BUILD_DIR/ itself.
 # ---------------------------------------------------------------------------
 cp "$BUILD_DIR/librocksdb-shared.dll" "$DEST_DIR/$LIB_NAME"
-cp "$BUILD_DIR/ldb.exe" "$BUILD_DIR/sst_dump.exe" "$DEST_DIR/"
+cp "$BUILD_DIR/tools/ldb.exe" "$BUILD_DIR/tools/sst_dump.exe" "$DEST_DIR/"
 echo "[build-rocksdb-windows] Installed: $DEST_DIR/$LIB_NAME, ldb.exe, sst_dump.exe"
