@@ -424,11 +424,19 @@ Java callback that decides, per `Put`-originated key-value pair rewritten during
 keep it, drop it (`FilterDecision.remove()`), or replace its value (`FilterDecision.changeValue`)
 — attach via `Options.setCompactionFilter`. Merge operands are never passed to it (routed through
 a separate C++-only `FilterMergeOperand`, filter merge semantics inside `MergeOperator` instead);
-shared across every concurrent background compaction unless/until a `CompactionFilterFactory`
-wrapper exists (tracked in [c-api-gaps.md](c-api-gaps.md)), so `fn` must be thread-safe; a
-`changeValue` decision copies into a small per-compaction-thread native scratch buffer, reused
-and grown as needed rather than allocated fresh per call, since `rocksdb_compactionfilter_create`'s
-C API has no free hook for it (unlike `rocksdb_mergeoperator_create`'s `delete_value`).
+a single instance attached this way is shared across every concurrent background compaction, so
+`fn` must be thread-safe; a `changeValue` decision copies into a small per-compaction-thread
+native scratch buffer, reused and grown as needed rather than allocated fresh per call, since
+`rocksdb_compactionfilter_create`'s C API has no free hook for it (unlike
+`rocksdb_mergeoperator_create`'s `delete_value`).
+
+`CompactionFilterFactory.create(String name, CreateFilterFn fn)` (`rocksdb_compactionfilterfactory_create`)
+attaches via `Options.setCompactionFilterFactory` instead: RocksDB calls `fn` once per table-file
+creation, on the single thread performing that compaction, and destroys the returned
+`CompactionFilter` once the compaction finishes — no shared-instance thread-safety requirement,
+unlike the direct `CompactionFilter` above. `fn` receives a `CompactionFilterContext`
+(`isFullCompaction()`/`isManualCompaction()`) describing why the compaction is running, and may
+return `null` to run that compaction with no filter at all.
 
 ## Observability
 
@@ -530,7 +538,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Merge                      |   ✅    | `merge()` write op on all 7 write-capable types (byte[]/ByteBuffer/MemorySegment, CF variants), see [#8](https://github.com/dfa1/rocksdbffm/issues/8); requires a `MergeOperator` configured via `Options.setMergeOperator`, else calls fail with `RocksDBException` |
 | MergeOperator               |   ✅    | `MergeOperator.uint64Add()` (built-in `rocksdb_options_set_uint64add_merge_operator`) and `MergeOperator.custom(String, FullMergeFn)` (`rocksdb_mergeoperator_create()` — `full_merge` implemented in Java, `partial_merge` always declines; `fn` receives zero-copy `MemorySegment` views of key/existing-value/operands instead of copied `byte[]`s, see [#94](https://github.com/dfa1/rocksdbffm/issues/94)) |
 | Tracing & Replay           |   ✅    | `RocksDBTracingOperations.startTrace`/`endTrace` (`rocksdb_start_trace`/`rocksdb_end_trace`) capture every op to a file, tuned via `TraceOptions` (rollover size, sampling frequency, per-op-type `TraceFilter` exclusion, write-order preservation) — its own interface, implemented by the same broad set of types as `RocksDBMonitoringOperations` (including read-only and secondary handles, since tracing captures reads too); `Replayer` (`rocksdb_new_default_replayer`) + `ReplayOptions` reissue a captured trace against a target database (any CF set, concurrency, speed multiplier) — no callback plumbing needed, since RocksDB decodes the trace file internally. No parity gap with `rocksdbjni`: it has capture only (via a JNI-only `DB::StartTrace` path with a pluggable `TraceWriter` sink, file-only here) and no replayer at all |
-| CompactionFilter           |   ✅    | `CompactionFilter.create(String, FilterFn)` (`rocksdb_compactionfilter_create`) + `Options.setCompactionFilter`; direct filter only, no `CompactionFilterFactory` wrapper yet (see [c-api-gaps.md](c-api-gaps.md)) |
+| CompactionFilter           |   ✅    | `CompactionFilter.create(String, FilterFn)` (`rocksdb_compactionfilter_create`) + `Options.setCompactionFilter`; `CompactionFilterFactory.create(String, CreateFilterFn)` (`rocksdb_compactionfilterfactory_create`) + `Options.setCompactionFilterFactory` for a fresh, thread-confined filter per compaction |
 | Custom comparators         |   ❌    | `rocksdb_comparator_create()` exists in the C API                                           |
 | Advanced column family     |   ❌    | Per-CF compaction style, level multipliers                                                  |
 | Advanced memtable config   |   ❌    | SkipList tuning, hash-memtable variants                                                     |
