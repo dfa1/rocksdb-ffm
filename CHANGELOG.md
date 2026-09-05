@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   applies on top of any memtable factory for fixed-size keys and read-heavy point lookups
 - `CompactionFilter` and `Options.setCompactionFilter` — callback-based custom compaction logic
   (keep/remove/change-value per key)
+- `CompactionFilterFactory`, `CompactionFilterContext`, and `Options.setCompactionFilterFactory` —
+  a fresh, thread-confined `CompactionFilter` per compaction instead of one instance shared across
+  every concurrent compaction, with `isFullCompaction()`/`isManualCompaction()` context
 
 ### Fixed
 

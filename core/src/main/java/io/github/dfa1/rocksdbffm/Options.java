@@ -1355,6 +1355,18 @@ public final class Options extends NativeObject {
 		return this;
 	}
 
+	/// Attaches a [CompactionFilterFactory] that creates a fresh [CompactionFilter] for each
+	/// compaction, instead of sharing one filter across every concurrent compaction.
+	///
+	/// Transfers ownership: `factory`'s `close()` becomes a no-op afterward.
+	///
+	/// @param factory the compaction filter factory to attach; ownership is transferred
+	/// @return `this` for chaining
+	public Options setCompactionFilterFactory(CompactionFilterFactory factory) {
+		factory.applyTo(ptr());
+		return this;
+	}
+
 	/// Attaches an [EventNotifier] that receives RocksDB's internal lifecycle events (flushes,
 	/// compactions, external file ingestion, background errors, write stalls, memtable seals).
 	///
