@@ -1,6 +1,6 @@
 package io.github.dfa1.rocksdbffm.ldb;
 
-import io.github.dfa1.rocksdbffm.NativeToolSupport;
+import io.github.dfa1.rocksdbffm.NativeTool;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -10,7 +10,9 @@ import java.util.Arrays;
 /// output, and error streams and exiting with the same exit code.
 ///
 /// Requires a `rocksdbffm-native-<platform>` dependency matching the current
-/// platform on the classpath alongside this jar.
+/// platform on the classpath alongside this jar. See the
+/// [how-to recipe](https://github.com/dfa1/rocksdb-ffm/blob/main/docs/how-to.md#inspect-a-database-with-ldb-and-sst_dump)
+/// for a full runnable `java -cp` example.
 public final class Main {
 
 	private Main() {
@@ -22,8 +24,8 @@ public final class Main {
 	///
 	/// @param args arguments to forward verbatim to `ldb`
 	public static void main(String[] args) {
-		Path toolDirectory = NativeToolSupport.extractToolDirectory();
-		int exitCode = NativeToolSupport.runInherited(toolDirectory, "ldb", Arrays.asList(args));
+		Path toolDirectory = NativeTool.extractToolDirectory();
+		int exitCode = NativeTool.runInherited(toolDirectory, "ldb", Arrays.asList(args));
 		System.exit(exitCode);
 	}
 }

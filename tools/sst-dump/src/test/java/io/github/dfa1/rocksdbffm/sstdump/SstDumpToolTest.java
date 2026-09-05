@@ -1,20 +1,17 @@
 package io.github.dfa1.rocksdbffm.sstdump;
 
+import io.github.dfa1.rocksdbffm.NativeTool;
 import io.github.dfa1.rocksdbffm.Options;
 import io.github.dfa1.rocksdbffm.SstFileWriter;
-import io.github.dfa1.rocksdbffm.ToolResult;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-// ldb/sst_dump are not bundled for windows-* classifiers yet (see docs/reference.md#artifacts).
-@DisabledOnOs(OS.WINDOWS)
 class SstDumpToolTest {
 
 	@Test
@@ -23,7 +20,7 @@ class SstDumpToolTest {
 		Path sstPath = writeSstFile(dir);
 
 		// When
-		ToolResult result = SstDumpTool.identify(sstPath);
+		NativeTool.Result result = SstDumpTool.identify(sstPath);
 
 		// Then
 		assertThat(result.isSuccess())
@@ -38,10 +35,19 @@ class SstDumpToolTest {
 		Files.writeString(notSst, "not an sst file");
 
 		// When
-		ToolResult result = SstDumpTool.identify(notSst);
+		NativeTool.Result result = SstDumpTool.identify(notSst);
 
 		// Then
 		assertThat(result.isSuccess()).isFalse();
+	}
+
+	@Test
+	void request_noCommand_throwsIllegalStateException(@TempDir Path dir) {
+		// Given
+		var request = SstDumpTool.request(writeSstFile(dir));
+
+		// When / Then
+		assertThatThrownBy(request::run).isInstanceOf(IllegalStateException.class);
 	}
 
 	@Test
@@ -50,7 +56,7 @@ class SstDumpToolTest {
 		Path sstPath = writeSstFile(dir);
 
 		// When
-		ToolResult result = SstDumpTool.request(sstPath).command(SstDumpCommand.SCAN).run();
+		NativeTool.Result result = SstDumpTool.request(sstPath).command(SstDumpCommand.SCAN).run();
 
 		// Then
 		assertThat(result.isSuccess())

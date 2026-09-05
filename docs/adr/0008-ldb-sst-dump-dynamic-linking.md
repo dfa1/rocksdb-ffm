@@ -10,7 +10,7 @@
 
 `tools/ldb`/`tools/sst-dump` wrap RocksDB's own admin/inspection CLIs (`tools/ldb.cc`,
 `tools/sst_dump.cc`) — not part of `rocksdb/c.h`, so there is no FFM path for them; the only option
-is to bundle and shell out to the prebuilt binaries, the same way `NativeLibrary`/`NativeToolSupport`
+is to bundle and shell out to the prebuilt binaries, the same way `NativeLibrary`/`NativeTool`
 already extract `librocksdb.*` from classpath resources at runtime.
 
 `scripts/build-rocksdb.sh` builds these with `zig cc`/`zig c++` (see [ADR 0002](0002-why-zig.md)),
@@ -88,7 +88,7 @@ for the original repro:
 - Restores the SONAME/versioned-symlink plumbing the static-link attempt had removed:
   `scripts/build-rocksdb.sh` computes `librocksdb.so.$MAJOR.$MINOR` from
   `include/rocksdb/version.h` and ships it as a `librocksdb.soname` text file;
-  `NativeToolSupport`/`NativeLibrary` read that file at extraction time to symlink it next to the
+  `NativeTool`/`NativeLibrary` read that file at extraction time to symlink it next to the
   extracted library and set `DYLD_LIBRARY_PATH`/`LD_LIBRARY_PATH`. More moving parts than the (now
   rejected) static build's "just copy the binary" simplicity.
 - `-Bsymbolic` does not hide `librocksdb.so`'s libc++ symbols from its dynamic symbol table — it only
@@ -110,6 +110,20 @@ for the original repro:
   differently from ELF's flat interposition) and was not re-validated for the *specific* interposition
   failure mode — only that the build and existing tests still pass, which they did before this fix
   too.
+
+## Windows
+
+`windows-*` classifiers do not go through this decision at all. `scripts/build-rocksdb-windows.sh`
+builds `ldb`/`sst_dump` via RocksDB's CMake build (see [ADR 0002](0002-why-zig.md) for why CMake
+instead of the POSIX Makefile on this platform), and `rocksdb/CMakeLists.txt`'s own
+`if(ROCKSDB_BUILD_SHARED AND NOT WIN32)` only ever selects the shared library as the tools' link
+target off Windows — on Windows it always falls back to the static library, with no CMake option to
+override that short of patching the vendored `CMakeLists.txt` (out of scope; the submodule is pinned,
+not ours to edit). So `ldb.exe`/`sst_dump.exe` end up self-contained and statically linked
+unconditionally, the same shape the static-linking alternative above was rejected for on POSIX — but
+here it isn't a choice this project made, it's upstream CMake's own behavior, and there is no libc++
+double-copy risk to begin with since there's only ever one linked copy. Accepted as a Windows-specific
+tradeoff: larger binaries, but no SONAME/symlink/`LD_LIBRARY_PATH`-equivalent plumbing needed either.
 
 ## Alternatives considered
 
@@ -135,7 +149,8 @@ for the original repro:
   `make ldb sst_dump` invocations
 - [ADR 0002](0002-why-zig.md) — why `zig cc`/`zig c++` is the project's cross-compiler, and the
   hermeticity property (no system sysroot) that ruled out relying on a system libc++
-- `core/.../NativeToolSupport.java`, `core/.../NativeLibrary.java` — the SONAME-symlink extraction
-  logic this decision depends on
+- `core/.../NativeTool.java`, `core/.../NativeLibrary.java` — the SONAME-symlink extraction logic
+  this decision depends on (POSIX only; `NativeTool` skips it on Windows, see Windows section above)
+- `scripts/build-rocksdb-windows.sh` — the Windows CMake build (`WITH_CORE_TOOLS`, `USE_RTTI`)
 - [`-Bsymbolic`](https://sourceware.org/binutils/docs/ld/Options.html) — the lld/GNU-ld linker option
   this decision relies on

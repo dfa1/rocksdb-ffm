@@ -9,7 +9,7 @@
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>rocksdbffm-ldb</artifactId>
+	<artifactId>rocksdbffm-tool-ldb</artifactId>
 	<name>RocksDB FFM ldb Tool</name>
 	<packaging>jar</packaging>
 
@@ -21,7 +21,7 @@
 		</dependency>
 
 		<!-- native: test scope only, matching core/pom.xml — the published
-		     rocksdbffm-ldb jar ships no native binaries; a consumer adds the
+		     rocksdbffm-tool-ldb jar ships no native binaries; a consumer adds the
 		     one rocksdbffm-native-<their-platform> dependency themselves,
 		     exactly as they already must for rocksdbffm-core. -->
 		<dependency>

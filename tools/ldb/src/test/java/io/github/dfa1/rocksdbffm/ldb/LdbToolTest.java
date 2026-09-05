@@ -1,18 +1,14 @@
 package io.github.dfa1.rocksdbffm.ldb;
 
+import io.github.dfa1.rocksdbffm.NativeTool;
 import io.github.dfa1.rocksdbffm.RocksDB;
-import io.github.dfa1.rocksdbffm.ToolResult;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// ldb/sst_dump are not bundled for windows-* classifiers yet (see docs/reference.md#artifacts).
-@DisabledOnOs(OS.WINDOWS)
 class LdbToolTest {
 
 	@Test
@@ -23,7 +19,7 @@ class LdbToolTest {
 		}
 
 		// When
-		ToolResult result = LdbTool.checkConsistency(dir);
+		NativeTool.Result result = LdbTool.checkConsistency(dir);
 
 		// Then
 		assertThat(result.isSuccess())
@@ -39,7 +35,7 @@ class LdbToolTest {
 		}
 
 		// When
-		ToolResult result = LdbTool.manifestDump(dir, false);
+		NativeTool.Result result = LdbTool.manifestDump(dir, false);
 
 		// Then
 		assertThat(result.isSuccess())
@@ -56,7 +52,7 @@ class LdbToolTest {
 		}
 
 		// When
-		ToolResult result = LdbTool.run(dir, "list_column_families");
+		NativeTool.Result result = LdbTool.run(dir, "list_column_families");
 
 		// Then
 		assertThat(result.isSuccess())

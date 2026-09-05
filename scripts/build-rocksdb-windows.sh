@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Build RocksDB shared library for Windows using CMake + zig cc/c++ and
-# install it into the caller's resources directory so Maven bundles it in
-# the JAR.
+# Build the RocksDB shared library plus the ldb/sst_dump CLI tools for
+# Windows using CMake + zig cc/c++, and install them into the caller's
+# resources directory so Maven bundles them in the JAR.
 #
 # RocksDB's POSIX Makefile (used by build-rocksdb.sh) has no Windows target,
 # so Windows goes through RocksDB's CMake build instead, with zig cc/c++
@@ -57,7 +57,7 @@ DEST_DIR="$OUTPUT_RESOURCES/native/$CLASSIFIER"
 mkdir -p "$DEST_DIR"
 
 # Skip if already built (CI cache or repeated local builds)
-if [ -f "$DEST_DIR/$LIB_NAME" ]; then
+if [ -f "$DEST_DIR/$LIB_NAME" ] && [ -f "$DEST_DIR/ldb.exe" ]; then
     echo "[build-rocksdb-windows] $DEST_DIR/$LIB_NAME already exists, skipping build."
     exit 0
 fi
@@ -372,9 +372,34 @@ fi
 # ---------------------------------------------------------------------------
 # Configure + build. ZSTD/LZ4 come from $ZSTD_LZ4_CMAKE_ARGS above; Snappy/
 # Zlib/liburing stay disabled to keep the cross-compile otherwise hermetic
-# (same as build-rocksdb.sh). Tests/tools are disabled since only the shared
-# lib is needed. FAIL_ON_WARNINGS is off because zig/MinGW headers trigger
-# warnings RocksDB's own CMake build does not expect.
+# (same as build-rocksdb.sh). Tests/db_stress/benchmark/trace tools are
+# disabled; WITH_CORE_TOOLS stays ON to also build `ldb`/`sst_dump`
+# (tools/ldb.cc, tools/sst_dump.cc — RocksDB's own admin/inspection CLIs, no
+# `rocksdb/c.h` equivalent, wrapped the same way as the POSIX classifiers'
+# ldb/sst_dump built by build-rocksdb.sh). FAIL_ON_WARNINGS is off because
+# zig/MinGW headers trigger warnings RocksDB's own CMake build does not
+# expect.
+#
+# USE_RTTI=ON: same requirement as build-rocksdb.sh's USE_RTTI=1 for the
+# POSIX Makefile build — tools/ldb.cc's Customizable-based option parsing
+# needs RTTI (dynamic_cast), and CMakeLists.txt's own USE_RTTI=AUTO default
+# disables it in Release builds (`/GR-` on MSVC-style flags, which zig cc
+# also honors on this target) exactly like the Makefile's DEBUG_LEVEL=0
+# default does, failing the same way at *link* time otherwise.
+#
+# Unlike the POSIX classifiers, `ldb.exe`/`sst_dump.exe` end up statically
+# linked against RocksDB here regardless of ROCKSDB_BUILD_SHARED=ON: CMake's
+# own `if(ROCKSDB_BUILD_SHARED AND NOT WIN32)` (rocksdb/CMakeLists.txt) only
+# ever selects the shared library as ROCKSDB_LIB — the target the tools link
+# against — off Windows. There is no CMake option to override that on this
+# target short of patching the vendored CMakeLists.txt, which is out of
+# scope (the submodule is pinned, not ours to edit — see CLAUDE.md). So the
+# ADR 0008 dynamic-linking approach (and its libc++ double-copy interposition
+# fix) is POSIX-only; `ldb.exe`/`sst_dump.exe` ship self-contained and
+# noticeably larger (tens of MB apiece, RocksDB's own static-link default)
+# instead of the ~300KB dynamically-linked POSIX binaries. That also means no
+# `librocksdb_tools.dll`/SONAME-symlink dance is needed for Windows: the
+# tools carry no runtime dependency on `librocksdb.dll` at all.
 # ---------------------------------------------------------------------------
 BUILD_DIR="$(mktemp -d)"
 trap 'rm -rf "$WRAPPER_DIR" "$BUILD_DIR"' EXIT
@@ -390,12 +415,13 @@ cmake -S "$ROCKSDB_DIR" -B "$BUILD_DIR" -G "$CMAKE_GENERATOR" \
     -DCMAKE_BUILD_TYPE=Release \
     -DPORTABLE=1 \
     -DROCKSDB_BUILD_SHARED=ON \
+    -DUSE_RTTI=ON \
     "${ZSTD_LZ4_CMAKE_ARGS[@]}" \
     -DWITH_SNAPPY=OFF -DWITH_ZLIB=OFF -DWITH_LIBURING=OFF \
-    -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -DWITH_BENCHMARK_TOOLS=OFF -DWITH_CORE_TOOLS=OFF -DWITH_TRACE_TOOLS=OFF \
+    -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -DWITH_BENCHMARK_TOOLS=OFF -DWITH_CORE_TOOLS=ON -DWITH_TRACE_TOOLS=OFF \
     -DFAIL_ON_WARNINGS=OFF
 
-cmake --build "$BUILD_DIR" --target rocksdb-shared -j"$JOBS"
+cmake --build "$BUILD_DIR" --target rocksdb-shared --target ldb --target sst_dump -j"$JOBS"
 
 # ---------------------------------------------------------------------------
 # Install. CMake's default Windows/GNU naming is "librocksdb-shared.dll"
@@ -404,4 +430,5 @@ cmake --build "$BUILD_DIR" --target rocksdb-shared -j"$JOBS"
 # every other classifier.
 # ---------------------------------------------------------------------------
 cp "$BUILD_DIR/librocksdb-shared.dll" "$DEST_DIR/$LIB_NAME"
-echo "[build-rocksdb-windows] Installed: $DEST_DIR/$LIB_NAME"
+cp "$BUILD_DIR/ldb.exe" "$BUILD_DIR/sst_dump.exe" "$DEST_DIR/"
+echo "[build-rocksdb-windows] Installed: $DEST_DIR/$LIB_NAME, ldb.exe, sst_dump.exe"

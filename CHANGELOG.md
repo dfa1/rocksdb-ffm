@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CompactionFilterFactory`, `CompactionFilterContext`, and `Options.setCompactionFilterFactory` —
   a fresh, thread-confined `CompactionFilter` per compaction instead of one instance shared across
   every concurrent compaction, with `isFullCompaction()`/`isManualCompaction()` context
+- `rocksdbffm-tool-ldb`/`rocksdbffm-tool-sstdump`: `LdbTool`/`SstDumpTool` wrap RocksDB's bundled
+  `ldb`/`sst_dump` CLIs (offline DB inspection/admin, single-SST-file inspection) as subprocesses,
+  also directly `java -jar`-able. Bundled for all five classifiers, including `windows-*`.
 
 ### Fixed
 
