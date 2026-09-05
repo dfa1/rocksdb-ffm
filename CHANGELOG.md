@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Options`: `setMemtablePrefixBloomSizeRatio`, `setMemtableWholeKeyFiltering`,
   `setMemtableHugePageSize`, `setBloomLocality` — memtable-level bloom filter/arena tuning that
   applies on top of any memtable factory for fixed-size keys and read-heavy point lookups
+- `CompactionFilter` and `Options.setCompactionFilter` — callback-based custom compaction logic
+  (keep/remove/change-value per key)
 
 ### Fixed
 
