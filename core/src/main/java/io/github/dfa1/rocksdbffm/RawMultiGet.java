@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
@@ -22,6 +23,62 @@ import java.util.Objects;
 final class RawMultiGet {
 
 	private RawMultiGet() {
+	}
+
+	/// Preallocated bookkeeping shared verbatim by [TransactionDBReadBatch] and
+	/// [TransactionReadBatch]: keys/key-sizes for the call, values-list/values-list-sizes/errs for
+	/// the results, and — only when a column family was fixed at batch-create time — a per-key
+	/// column-family array. Both native call families take one column family per key, unlike
+	/// `rocksdb_batched_multi_get_cf`'s single shared handle, but a batch's own UX still fixes one
+	/// column family for its whole lifetime, so [#cfArr] just gets refilled with the same handle
+	/// repeated `n` times before each call.
+	static final class Buffers implements AutoCloseable {
+
+		private final Arena arena;
+		private final int capacity;
+		final MemorySegment keysArr;
+		final MemorySegment keySizesArr;
+		final MemorySegment valuesListArr;
+		final MemorySegment valuesListSizesArr;
+		final MemorySegment errsArr;
+		/// `null` unless this batch was created with a column family.
+		final MemorySegment cfArr;
+		private boolean closed;
+
+		private Buffers(int capacity, boolean withCf) {
+			this.arena = Arena.ofConfined();
+			this.capacity = capacity;
+			this.keysArr = arena.allocate(ValueLayout.ADDRESS, capacity);
+			this.keySizesArr = arena.allocate(ValueLayout.JAVA_LONG, capacity);
+			this.valuesListArr = arena.allocate(ValueLayout.ADDRESS, capacity);
+			this.valuesListSizesArr = arena.allocate(ValueLayout.JAVA_LONG, capacity);
+			this.errsArr = arena.allocate(ValueLayout.ADDRESS, capacity);
+			this.cfArr = withCf ? arena.allocate(ValueLayout.ADDRESS, capacity) : null;
+		}
+
+		/// Allocates a fresh set of buffers for up to `capacity` keys per call.
+		///
+		/// @param capacity maximum number of keys any single call may pass; must be positive
+		/// @param withCf   whether to also allocate the per-key column-family array
+		/// @return a new [Buffers]; caller must close it
+		static Buffers allocate(int capacity, boolean withCf) {
+			if (capacity <= 0) {
+				throw new IllegalArgumentException("capacity must be positive: " + capacity);
+			}
+			return new Buffers(capacity, withCf);
+		}
+
+		int capacity() {
+			return capacity;
+		}
+
+		@Override
+		public void close() {
+			if (!closed) {
+				closed = true;
+				arena.close();
+			}
+		}
 	}
 
 	/// Writes both halves of key slot `i` together, mirroring `ReadBatch.writeKeySlot`.
@@ -82,6 +139,33 @@ final class RawMultiGet {
 		}
 	}
 
+	/// Maps every found value through `fn` with no intermediate copy, freeing each raw buffer
+	/// exactly once. If any key reported a genuine error, every value is drained instead (so
+	/// nothing leaks) and that error is thrown — nothing here is mapped, since the result would be
+	/// discarded anyway.
+	static <R> List<R> collect(MemorySegment valuesListArr, MemorySegment valuesListSizesArr, MemorySegment errsArr, int n, Mapper<R> fn) {
+		RocksDBException firstError = collectErrors(errsArr, n);
+		if (firstError != null) {
+			drainValues(valuesListArr, n);
+			throw firstError;
+		}
+		List<R> result = new ArrayList<>(n);
+		for (int i = 0; i < n; i++) {
+			MemorySegment valuePtr = valuesListArr.getAtIndex(ValueLayout.ADDRESS, i);
+			if (MemorySegment.NULL.equals(valuePtr)) {
+				result.add(null);
+			} else {
+				long len = valuesListSizesArr.getAtIndex(ValueLayout.JAVA_LONG, i);
+				MemorySegment view = valuePtr.reinterpret(len).asReadOnly();
+				R mapped = fn.map(view);
+				Objects.requireNonNull(mapped, "Mapper.map(MemorySegment) must not return null");
+				result.add(mapped);
+				RocksDB.free(valuePtr);
+			}
+		}
+		return result;
+	}
+
 	/// Same walk-and-drain contract as [#collect], but copies each found value to a `byte[]`
 	/// instead of mapping it through a callback.
 	static List<byte[]> collectBytes(MemorySegment valuesListArr, MemorySegment valuesListSizesArr, MemorySegment errsArr, int n) {
@@ -127,33 +211,6 @@ final class RawMultiGet {
 					dest.position(dest.position() + (int) len);
 					result.add(CopyResult.Copied.INSTANCE);
 				}
-				RocksDB.free(valuePtr);
-			}
-		}
-		return result;
-	}
-
-	/// Maps every found value through `fn` with no intermediate copy, freeing each raw buffer
-	/// exactly once. If any key reported a genuine error, every value is drained instead (so
-	/// nothing leaks) and that error is thrown — nothing here is mapped, since the result would be
-	/// discarded anyway.
-	static <R> List<R> collect(MemorySegment valuesListArr, MemorySegment valuesListSizesArr, MemorySegment errsArr, int n, Mapper<R> fn) {
-		RocksDBException firstError = collectErrors(errsArr, n);
-		if (firstError != null) {
-			drainValues(valuesListArr, n);
-			throw firstError;
-		}
-		List<R> result = new ArrayList<>(n);
-		for (int i = 0; i < n; i++) {
-			MemorySegment valuePtr = valuesListArr.getAtIndex(ValueLayout.ADDRESS, i);
-			if (MemorySegment.NULL.equals(valuePtr)) {
-				result.add(null);
-			} else {
-				long len = valuesListSizesArr.getAtIndex(ValueLayout.JAVA_LONG, i);
-				MemorySegment view = valuePtr.reinterpret(len).asReadOnly();
-				R mapped = fn.map(view);
-				Objects.requireNonNull(mapped, "Mapper.map(MemorySegment) must not return null");
-				result.add(mapped);
 				RocksDB.free(valuePtr);
 			}
 		}

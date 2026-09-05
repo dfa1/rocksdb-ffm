@@ -42,29 +42,14 @@ public final class TransactionDBReadBatch implements AutoCloseable {
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
-	private final Arena arena;
 	private final TransactionDB db;
 	private final ColumnFamilyHandle cf;
-	private final int capacity;
-	private final MemorySegment keysArr;
-	private final MemorySegment keySizesArr;
-	private final MemorySegment valuesListArr;
-	private final MemorySegment valuesListSizesArr;
-	private final MemorySegment errsArr;
-	private final MemorySegment cfArr;
-	private boolean closed;
+	private final RawMultiGet.Buffers bufs;
 
 	private TransactionDBReadBatch(TransactionDB db, ColumnFamilyHandle cf, int capacity) {
-		this.arena = Arena.ofConfined();
 		this.db = db;
 		this.cf = cf;
-		this.capacity = capacity;
-		this.keysArr = arena.allocate(ValueLayout.ADDRESS, capacity);
-		this.keySizesArr = arena.allocate(ValueLayout.JAVA_LONG, capacity);
-		this.valuesListArr = arena.allocate(ValueLayout.ADDRESS, capacity);
-		this.valuesListSizesArr = arena.allocate(ValueLayout.JAVA_LONG, capacity);
-		this.errsArr = arena.allocate(ValueLayout.ADDRESS, capacity);
-		this.cfArr = cf != null ? arena.allocate(ValueLayout.ADDRESS, capacity) : null;
+		this.bufs = RawMultiGet.Buffers.allocate(capacity, cf != null);
 	}
 
 	/// Creates a batch reading from `db`'s default column family, with room for up to `capacity`
@@ -84,9 +69,6 @@ public final class TransactionDBReadBatch implements AutoCloseable {
 	/// @param capacity maximum number of keys any single [#get] call may pass; must be positive
 	/// @return a new [TransactionDBReadBatch]; caller must close it
 	public static TransactionDBReadBatch create(TransactionDB db, ColumnFamilyHandle cf, int capacity) {
-		if (capacity <= 0) {
-			throw new IllegalArgumentException("capacity must be positive: " + capacity);
-		}
 		return new TransactionDBReadBatch(db, cf, capacity);
 	}
 
@@ -94,7 +76,7 @@ public final class TransactionDBReadBatch implements AutoCloseable {
 	///
 	/// @return this batch's capacity
 	public int capacity() {
-		return capacity;
+		return bufs.capacity();
 	}
 
 	/// [#get(ReadOptions, List)] with default [ReadOptions].
@@ -117,18 +99,18 @@ public final class TransactionDBReadBatch implements AutoCloseable {
 	/// @return one entry per key, in the same order, `null` where not found
 	public List<byte[]> get(ReadOptions readOptions, List<byte[]> keys) {
 		int n = keys.size();
-		RawMultiGet.checkCapacity(n, capacity);
+		RawMultiGet.checkCapacity(n, bufs.capacity());
 		if (n == 0) {
 			return List.of();
 		}
 		try (Arena callArena = Arena.ofConfined()) {
 			for (int i = 0; i < n; i++) {
 				byte[] key = keys.get(i);
-				RawMultiGet.writeKeySlot(keysArr, keySizesArr, i, RocksDB.toNative(callArena, key), key.length);
+				RawMultiGet.writeKeySlot(bufs.keysArr, bufs.keySizesArr, i, RocksDB.toNative(callArena, key), key.length);
 			}
-			RocksDB.requireNoNullEntries(keysArr, n, "TransactionDBReadBatch keys array");
+			RocksDB.requireNoNullEntries(bufs.keysArr, n, "TransactionDBReadBatch keys array");
 			invoke(readOptions, n);
-			return RawMultiGet.collectBytes(valuesListArr, valuesListSizesArr, errsArr, n);
+			return RawMultiGet.collectBytes(bufs.valuesListArr, bufs.valuesListSizesArr, bufs.errsArr, n);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("TransactionDBReadBatch.get failed", t);
 		}
@@ -160,18 +142,18 @@ public final class TransactionDBReadBatch implements AutoCloseable {
 		if (values.size() != n) {
 			throw new IllegalArgumentException("keys and values must be the same size: " + n + " vs " + values.size());
 		}
-		RawMultiGet.checkCapacity(n, capacity);
+		RawMultiGet.checkCapacity(n, bufs.capacity());
 		if (n == 0) {
 			return List.of();
 		}
 		try {
 			for (int i = 0; i < n; i++) {
 				ByteBuffer key = keys.get(i);
-				RawMultiGet.writeKeySlot(keysArr, keySizesArr, i, MemorySegment.ofBuffer(key), key.remaining());
+				RawMultiGet.writeKeySlot(bufs.keysArr, bufs.keySizesArr, i, MemorySegment.ofBuffer(key), key.remaining());
 			}
-			RocksDB.requireNoNullEntries(keysArr, n, "TransactionDBReadBatch keys array");
+			RocksDB.requireNoNullEntries(bufs.keysArr, n, "TransactionDBReadBatch keys array");
 			invoke(readOptions, n);
-			return RawMultiGet.collectBuffers(valuesListArr, valuesListSizesArr, errsArr, n, values);
+			return RawMultiGet.collectBuffers(bufs.valuesListArr, bufs.valuesListSizesArr, bufs.errsArr, n, values);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("TransactionDBReadBatch.get failed", t);
 		}
@@ -202,18 +184,18 @@ public final class TransactionDBReadBatch implements AutoCloseable {
 	/// @return one entry per key, in the same order, `null` where not found
 	public <R> List<R> get(ReadOptions readOptions, List<MemorySegment> keys, Mapper<R> fn) {
 		int n = keys.size();
-		RawMultiGet.checkCapacity(n, capacity);
+		RawMultiGet.checkCapacity(n, bufs.capacity());
 		if (n == 0) {
 			return List.of();
 		}
 		try {
 			for (int i = 0; i < n; i++) {
 				MemorySegment key = keys.get(i);
-				RawMultiGet.writeKeySlot(keysArr, keySizesArr, i, key, key.byteSize());
+				RawMultiGet.writeKeySlot(bufs.keysArr, bufs.keySizesArr, i, key, key.byteSize());
 			}
-			RocksDB.requireNoNullEntries(keysArr, n, "TransactionDBReadBatch keys array");
+			RocksDB.requireNoNullEntries(bufs.keysArr, n, "TransactionDBReadBatch keys array");
 			invoke(readOptions, n);
-			return RawMultiGet.collect(valuesListArr, valuesListSizesArr, errsArr, n, fn);
+			return RawMultiGet.collect(bufs.valuesListArr, bufs.valuesListSizesArr, bufs.errsArr, n, fn);
 		} catch (Throwable t) {
 			throw RocksDB.wrapInvokeFailure("TransactionDBReadBatch.get failed", t);
 		}
@@ -227,22 +209,19 @@ public final class TransactionDBReadBatch implements AutoCloseable {
 	private void invoke(ReadOptions readOptions, int n) throws Throwable {
 		if (cf == null) {
 			MH_MULTI_GET.invokeExact(db.ptr(), readOptions.ptr(), (long) n,
-					keysArr, keySizesArr, valuesListArr, valuesListSizesArr, errsArr);
+					bufs.keysArr, bufs.keySizesArr, bufs.valuesListArr, bufs.valuesListSizesArr, bufs.errsArr);
 		} else {
 			MemorySegment cfPtr = cf.ptr();
 			for (int i = 0; i < n; i++) {
-				cfArr.setAtIndex(ValueLayout.ADDRESS, i, cfPtr);
+				bufs.cfArr.setAtIndex(ValueLayout.ADDRESS, i, cfPtr);
 			}
-			MH_MULTI_GET_CF.invokeExact(db.ptr(), readOptions.ptr(), cfArr, (long) n,
-					keysArr, keySizesArr, valuesListArr, valuesListSizesArr, errsArr);
+			MH_MULTI_GET_CF.invokeExact(db.ptr(), readOptions.ptr(), bufs.cfArr, (long) n,
+					bufs.keysArr, bufs.keySizesArr, bufs.valuesListArr, bufs.valuesListSizesArr, bufs.errsArr);
 		}
 	}
 
 	@Override
 	public void close() {
-		if (!closed) {
-			closed = true;
-			arena.close();
-		}
+		bufs.close();
 	}
 }
