@@ -1343,6 +1343,18 @@ public final class Options extends NativeObject {
 		return this;
 	}
 
+	/// Attaches a [CompactionFilter] that decides, per key-value pair, whether compaction keeps,
+	/// drops, or rewrites it.
+	///
+	/// Transfers ownership: `compactionFilter`'s `close()` becomes a no-op afterward.
+	///
+	/// @param compactionFilter the compaction filter to attach; ownership is transferred
+	/// @return `this` for chaining
+	public Options setCompactionFilter(CompactionFilter compactionFilter) {
+		compactionFilter.applyTo(ptr());
+		return this;
+	}
+
 	/// Attaches an [EventNotifier] that receives RocksDB's internal lifecycle events (flushes,
 	/// compactions, external file ingestion, background errors, write stalls, memtable seals).
 	///
