@@ -1,7 +1,6 @@
 package io.github.dfa1.rocksdbffm.ldb;
 
-import io.github.dfa1.rocksdbffm.NativeToolSupport;
-import io.github.dfa1.rocksdbffm.ToolResult;
+import io.github.dfa1.rocksdbffm.NativeTool;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -22,9 +21,9 @@ import java.util.List;
 ///
 /// A non-zero exit code from `ldb` (e.g. an inconsistent database) is a
 /// legitimate answer from the tool, not a failure of this library, so it is
-/// reported via [ToolResult#exitCode()] rather than thrown. Only a failure to
-/// launch or wait for the subprocess itself throws
-/// [io.github.dfa1.rocksdbffm.ToolLaunchException].
+/// reported via [NativeTool.Result#exitCode()] rather than thrown. Only a
+/// failure to launch or wait for the subprocess itself throws
+/// [java.io.UncheckedIOException].
 public final class LdbTool {
 
 	private LdbTool() {
@@ -35,7 +34,7 @@ public final class LdbTool {
 	///
 	/// @param dbPath path to the RocksDB database directory
 	/// @return the captured result; a non-zero exit code means the database is inconsistent
-	public static ToolResult checkConsistency(Path dbPath) {
+	public static NativeTool.Result checkConsistency(Path dbPath) {
 		return run(dbPath, "checkconsistency");
 	}
 
@@ -44,8 +43,8 @@ public final class LdbTool {
 	///
 	/// @param dbPath path to the RocksDB database directory
 	/// @param verbose whether to pass `--verbose` for more detailed output
-	/// @return the captured result, with the MANIFEST dump in [ToolResult#stdout()]
-	public static ToolResult manifestDump(Path dbPath, boolean verbose) {
+	/// @return the captured result, with the MANIFEST dump in [NativeTool.Result#stdout()]
+	public static NativeTool.Result manifestDump(Path dbPath, boolean verbose) {
 		return verbose ? run(dbPath, "manifest_dump", "--verbose") : run(dbPath, "manifest_dump");
 	}
 
@@ -55,7 +54,7 @@ public final class LdbTool {
 	/// @param dbPath path to the RocksDB database directory
 	/// @param verbose whether to pass `--verbose` for more detailed output
 	/// @return the captured result
-	public static ToolResult repair(Path dbPath, boolean verbose) {
+	public static NativeTool.Result repair(Path dbPath, boolean verbose) {
 		return verbose ? run(dbPath, "repair", "--verbose") : run(dbPath, "repair");
 	}
 
@@ -65,11 +64,11 @@ public final class LdbTool {
 	/// @param dbPath path to the RocksDB database directory, passed as `ldb`'s `--db` flag
 	/// @param args    the subcommand and any flags, e.g. `"list_column_families"`
 	/// @return the captured exit code, standard output, and standard error
-	/// @throws io.github.dfa1.rocksdbffm.ToolLaunchException if the `ldb` subprocess could not be started or waited for
-	public static ToolResult run(Path dbPath, String... args) {
+	/// @throws java.io.UncheckedIOException if the `ldb` subprocess could not be started or waited for
+	public static NativeTool.Result run(Path dbPath, String... args) {
 		List<String> fullArgs = new ArrayList<>(args.length + 1);
 		fullArgs.add("--db=" + dbPath);
 		fullArgs.addAll(Arrays.asList(args));
-		return NativeToolSupport.run(NativeToolSupport.extractToolDirectory(), "ldb", fullArgs);
+		return NativeTool.run(NativeTool.extractToolDirectory(), "ldb", fullArgs);
 	}
 }

@@ -716,13 +716,13 @@ long totalHits = openDbOptions.stream()
 
 `ldb` (offline database inspection/admin) and `sst_dump` (single SST file inspection) are RocksDB's
 own command-line tools — not part of `rocksdb/c.h`, so nothing else in this library wraps them.
-`rocksdbffm-ldb` and `rocksdbffm-sst-dump` run the bundled binaries as subprocesses, either
+`rocksdbffm-tool-ldb` and `rocksdbffm-tool-sstdump` run the bundled binaries as subprocesses, either
 programmatically or as a `java -jar`/`java -cp` CLI. Add the module plus a native artifact for your
 platform, same as `rocksdbffm-core`:
 
 ```kotlin
-implementation("io.github.dfa1:rocksdbffm-ldb")
-implementation("io.github.dfa1:rocksdbffm-sst-dump")
+implementation("io.github.dfa1:rocksdbffm-tool-ldb")
+implementation("io.github.dfa1:rocksdbffm-tool-sstdump")
 runtimeOnly("io.github.dfa1:rocksdbffm-native-linux-x86_64")
 ```
 
@@ -730,11 +730,12 @@ Both tools need the target database or SST file to not be open elsewhere — clo
 handle first:
 
 ```java
+import io.github.dfa1.rocksdbffm.NativeTool;
 import io.github.dfa1.rocksdbffm.ldb.LdbTool;
 import io.github.dfa1.rocksdbffm.sstdump.SstDumpTool;
 import io.github.dfa1.rocksdbffm.sstdump.SstDumpCommand;
 
-ToolResult result = LdbTool.checkConsistency(dbPath);
+NativeTool.Result result = LdbTool.checkConsistency(dbPath);
 if (!result.isSuccess()) {
 	System.out.println(result.stdout()); // ldb's own diagnostic output
 }
@@ -750,24 +751,25 @@ SstDumpTool.request(sstFilePath)
 		.run();
 ```
 
-A non-zero `ToolResult.exitCode()` is a normal answer from the tool (e.g. "this database is
+A non-zero `NativeTool.Result.exitCode()` is a normal answer from the tool (e.g. "this database is
 inconsistent"), not a failure of this library, so it's reported as a value rather than thrown. Only
-a failure to launch or wait for the subprocess itself throws `ToolLaunchException`.
+a failure to launch or wait for the subprocess itself throws `UncheckedIOException`.
 
 For direct command-line use without writing Java, both jars declare a `Main-Class` and forward
 arguments verbatim to the underlying tool:
 
 ```console
-$ java -cp rocksdbffm-ldb.jar:rocksdbffm-core.jar:rocksdbffm-native-linux-x86_64.jar \
+$ java -cp rocksdbffm-tool-ldb.jar:rocksdbffm-core.jar:rocksdbffm-native-linux-x86_64.jar \
     io.github.dfa1.rocksdbffm.ldb.Main checkconsistency --db=/path/to/db
 ```
 
-A bare `java -jar rocksdbffm-ldb.jar` won't find the native dependency on its own — `-jar` ignores
+A bare `java -jar rocksdbffm-tool-ldb.jar` won't find the native dependency on its own — `-jar` ignores
 `-cp`, so the native artifact jar needs to be on the classpath some other way (`-cp` as above, or a
 manifest `Class-Path` entry if you copy the dependency jars alongside).
 
-Not bundled for `windows-*` classifiers yet — `NativeToolSupport.extractToolDirectory()` throws
-`UnsupportedOperationException` there.
+On `windows-*` classifiers, `ldb.exe`/`sst_dump.exe` are statically linked (a RocksDB CMake
+constraint — see `docs/adr/0008-ldb-sst-dump-dynamic-linking.md`), so noticeably larger than the
+macOS/Linux binaries but otherwise work the same way, no extra setup required.
 
 ## Profile a single operation
 

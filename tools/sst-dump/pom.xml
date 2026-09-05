@@ -9,7 +9,7 @@
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>rocksdbffm-sst-dump</artifactId>
+	<artifactId>rocksdbffm-tool-sstdump</artifactId>
 	<name>RocksDB FFM sst_dump Tool</name>
 	<packaging>jar</packaging>
 
@@ -21,7 +21,7 @@
 		</dependency>
 
 		<!-- native: test scope only, matching core/pom.xml — the published
-		     rocksdbffm-sst-dump jar ships no native binaries; a consumer adds
+		     rocksdbffm-tool-sstdump jar ships no native binaries; a consumer adds
 		     the one rocksdbffm-native-<their-platform> dependency themselves,
 		     exactly as they already must for rocksdbffm-core. -->
 		<dependency>

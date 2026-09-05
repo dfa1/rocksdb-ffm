@@ -1,7 +1,6 @@
 package io.github.dfa1.rocksdbffm.sstdump;
 
-import io.github.dfa1.rocksdbffm.NativeToolSupport;
-import io.github.dfa1.rocksdbffm.ToolResult;
+import io.github.dfa1.rocksdbffm.NativeTool;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -20,17 +19,17 @@ import java.util.List;
 ///
 /// A non-zero exit code (e.g. a corrupted SST file under `check`/`verify`) is
 /// a legitimate answer from the tool, not a failure of this library, so it is
-/// reported via [ToolResult#exitCode()] rather than thrown. Only a failure to
-/// launch or wait for the subprocess itself throws
-/// [io.github.dfa1.rocksdbffm.ToolLaunchException].
+/// reported via [NativeTool.Result#exitCode()] rather than thrown. Only a
+/// failure to launch or wait for the subprocess itself throws
+/// [java.io.UncheckedIOException].
 public final class SstDumpTool {
 
 	private SstDumpTool() {
 		// no instances
 	}
 
-	/// Starts a request against the given SST file or directory of SST files,
-	/// defaulting to [SstDumpCommand#CHECK].
+	/// Starts a request against the given SST file or directory of SST files.
+	/// [Request#command(SstDumpCommand)] must be called before [Request#run()].
 	///
 	/// @param target path to an SST file, or a directory containing SST files
 	/// @return a new request, further configurable before calling [Request#run()]
@@ -42,7 +41,7 @@ public final class SstDumpTool {
 	///
 	/// @param target path to an SST file, or a directory containing SST files
 	/// @return the captured result
-	public static ToolResult identify(Path target) {
+	public static NativeTool.Result identify(Path target) {
 		return request(target).command(SstDumpCommand.IDENTIFY).run();
 	}
 
@@ -51,7 +50,7 @@ public final class SstDumpTool {
 	public static final class Request {
 
 		private final Path target;
-		private SstDumpCommand command = SstDumpCommand.CHECK;
+		private SstDumpCommand command;
 		private String from;
 		private String to;
 		private String prefix;
@@ -148,8 +147,12 @@ public final class SstDumpTool {
 		/// Runs `sst_dump` with the configured command and flags.
 		///
 		/// @return the captured exit code, standard output, and standard error
-		/// @throws io.github.dfa1.rocksdbffm.ToolLaunchException if the `sst_dump` subprocess could not be started or waited for
-		public ToolResult run() {
+		/// @throws IllegalStateException if [#command(SstDumpCommand)] was never called
+		/// @throws java.io.UncheckedIOException if the `sst_dump` subprocess could not be started or waited for
+		public NativeTool.Result run() {
+			if (command == null) {
+				throw new IllegalStateException("command must be set via Request#command(SstDumpCommand) before run()");
+			}
 			List<String> args = new ArrayList<>();
 			args.add("--file=" + target);
 			args.add("--command=" + command.flag());
@@ -175,7 +178,7 @@ public final class SstDumpTool {
 				args.add("--read_num=" + readNum);
 			}
 			args.addAll(extraArgs);
-			return NativeToolSupport.run(NativeToolSupport.extractToolDirectory(), "sst_dump", args);
+			return NativeTool.run(NativeTool.extractToolDirectory(), "sst_dump", args);
 		}
 	}
 }
