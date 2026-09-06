@@ -166,12 +166,19 @@ public final class CompactionFilterFactory extends NativeObject {
 		try {
 			State s = REGISTRY.get(state);
 			CompactionFilter filter = s.fn().createCompactionFilter(new CompactionFilterContext(contextPtr));
-			if (filter == null) {
+			if (filter == null) { // NOSONAR: java:S2583 — reachable; see CreateFilterFn's contract and
+				// CompactionFilterFactoryTest#create_returningNull_runsTheCompactionWithNoFilter
 				return MemorySegment.NULL;
 			}
-			MemorySegment filterPtr = filter.ptr();
-			filter.transferOwnership();
-			return filterPtr;
+			try {
+				MemorySegment filterPtr = filter.ptr();
+				filter.transferOwnership();
+				return filterPtr;
+			} catch (Throwable t) {
+				// ownership never transferred to RocksDB — close it ourselves rather than leak it.
+				filter.close();
+				throw t;
+			}
 		} catch (Throwable t) {
 			// must not throw across the upcall boundary — an escaping AssertionError here
 			// (assertions are on by default under Surefire) would abort the JVM, not just this

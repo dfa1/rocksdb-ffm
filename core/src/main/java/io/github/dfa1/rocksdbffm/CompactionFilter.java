@@ -8,6 +8,7 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
 /// A compaction filter, attached to a database or column family via
@@ -273,6 +274,27 @@ public final class CompactionFilter extends NativeObject {
 		///
 		/// @param newValue the replacement value
 		record ChangeValue(byte[] newValue) implements FilterDecision {
+
+			@Override
+			public boolean equals(Object o) {
+				if (this == o) {
+					return true;
+				}
+				if (!(o instanceof ChangeValue other)) {
+					return false;
+				}
+				return Arrays.equals(newValue, other.newValue);
+			}
+
+			@Override
+			public int hashCode() {
+				return Arrays.hashCode(newValue);
+			}
+
+			@Override
+			public String toString() {
+				return "ChangeValue[newValue=" + Arrays.toString(newValue) + "]";
+			}
 		}
 	}
 

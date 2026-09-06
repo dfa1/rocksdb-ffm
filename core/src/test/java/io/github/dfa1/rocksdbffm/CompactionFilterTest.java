@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -227,5 +228,23 @@ class CompactionFilterTest {
 			// Then
 			assertThat(seenValue.get()).isEqualTo("expected-value");
 		}
+	}
+
+	@Test
+	void changeValue_equalsAndHashCode_satisfyContract() {
+		// Given / When / Then
+		EqualsVerifier.forClass(CompactionFilter.FilterDecision.ChangeValue.class).verify();
+	}
+
+	@Test
+	void changeValue_toString_printsArrayContent() {
+		// Given
+		var changeValue = CompactionFilter.FilterDecision.changeValue(bytes("a"));
+
+		// When
+		var result = changeValue.toString();
+
+		// Then
+		assertThat(result).isEqualTo("ChangeValue[newValue=[97]]");
 	}
 }

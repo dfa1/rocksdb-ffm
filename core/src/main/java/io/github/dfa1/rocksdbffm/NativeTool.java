@@ -198,7 +198,9 @@ public final class NativeTool {
 				Files.write(file, contents[i]);
 				if ("ldb".equals(names[i]) || "sst_dump".equals(names[i])
 						|| "ldb.exe".equals(names[i]) || "sst_dump.exe".equals(names[i])) {
-					file.toFile().setExecutable(true);
+					if (!file.toFile().setExecutable(true)) {
+						throw new UncheckedIOException(new IOException("Failed to mark " + file + " executable"));
+					}
 				}
 			}
 			if (!windows) {
