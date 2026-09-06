@@ -187,7 +187,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.6.0</version>
+					<version>3.6.0-M2-SNAPSHOT</version>
 					<configuration>
 						<!-- @{argLine} expands to the JaCoCo agent arguments set by jacoco:prepare-agent
 						     when the coverage profile is active; empty otherwise. -->
