@@ -419,7 +419,9 @@ cmake -S "$ROCKSDB_DIR" -B "$BUILD_DIR" -G "$CMAKE_GENERATOR" \
     "${ZSTD_LZ4_CMAKE_ARGS[@]}" \
     -DWITH_SNAPPY=OFF -DWITH_ZLIB=OFF -DWITH_LIBURING=OFF \
     -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -DWITH_BENCHMARK_TOOLS=OFF -DWITH_CORE_TOOLS=ON -DWITH_TRACE_TOOLS=OFF \
-    -DFAIL_ON_WARNINGS=OFF
+    -DFAIL_ON_WARNINGS=OFF \
+    -DCMAKE_C_FLAGS=-Wno-nullability-completeness \
+    -DCMAKE_CXX_FLAGS=-Wno-nullability-completeness
 
 cmake --build "$BUILD_DIR" --target rocksdb-shared --target ldb --target sst_dump -j"$JOBS"
 

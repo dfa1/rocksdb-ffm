@@ -129,7 +129,14 @@ cd "$ROCKSDB_DIR"
 # zig cc/c++ treats some warnings as errors that RocksDB's own build does not
 # expect (e.g. -Wunused-parameter in util/compression.cc). Suppress them for
 # all builds so the Makefile does not abort on RocksDB's own code.
-EXTRA_FLAGS="-Wno-error"
+#
+# -Wno-nullability-completeness: zig bundles its own libc++, whose headers
+# are annotated with Objective-C-style nullability attributes; clang then
+# warns on every RocksDB (and libc++-internal) declaration that doesn't
+# repeat them. Irrelevant to a C++/RocksDB build and overwhelming: ~9600 of
+# ~9610 total warnings in one release build were this single class, drowning
+# out anything that might actually matter.
+EXTRA_FLAGS="-Wno-error -Wno-nullability-completeness"
 
 # Cross-compilation: existing .o files and make_config.mk are for the host
 # architecture. Remove them so RocksDB's build_detect_platform regenerates
