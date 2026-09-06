@@ -120,6 +120,24 @@ class SstDumpToolTest {
 	}
 
 	@Test
+	void request_withOutputHex_printsHexEncodedKeysAndValues(@TempDir Path dir) {
+		// Given
+		Path sstPath = writeSstFile(dir);
+
+		// When
+		NativeTool.Result result = SstDumpTool.request(sstPath)
+				.command(SstDumpCommand.SCAN)
+				.outputHex()
+				.run();
+
+		// Then
+		assertThat(result.isSuccess())
+				.as("exitCode=%d stdout=%s stderr=%s", result.exitCode(), result.stdout(), result.stderr())
+				.isTrue();
+		assertThat(result.stdout()).doesNotContain("aaa");
+	}
+
+	@Test
 	void request_withFromToVerifyChecksumAndExtraArgs_isSuccessful(@TempDir Path dir) {
 		// Given
 		Path sstPath = writeSstFile(dir);
