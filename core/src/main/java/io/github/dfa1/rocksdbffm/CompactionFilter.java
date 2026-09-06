@@ -259,18 +259,19 @@ public final class CompactionFilter extends NativeObject {
 			return new ChangeValue(newValue);
 		}
 
-		/// @see FilterDecision#keep()
+		/// Preserves the key-value pair unchanged, returned by [FilterDecision#keep()].
 		record Keep() implements FilterDecision {
 			private static final Keep INSTANCE = new Keep();
 		}
 
-		/// @see FilterDecision#remove()
+		/// Drops the key-value pair, returned by [FilterDecision#remove()].
 		record Remove() implements FilterDecision {
 			private static final Remove INSTANCE = new Remove();
 		}
 
+		/// Replaces the value, returned by [FilterDecision#changeValue(byte[])].
+		///
 		/// @param newValue the replacement value
-		/// @see FilterDecision#changeValue(byte[])
 		record ChangeValue(byte[] newValue) implements FilterDecision {
 		}
 	}
