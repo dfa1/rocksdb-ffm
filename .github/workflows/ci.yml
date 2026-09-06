@@ -13,7 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest, ubuntu-24.04-arm, windows-latest]
+        # TEMPORARY: windows-only while bisecting dfa1/rocksdb-ffm#163; restore full matrix after.
+        os: [windows-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -28,6 +29,22 @@ jobs:
           java-version: '25'
           distribution: 'zulu'
           cache: 'maven' # Caches ~/.m2/repository
+
+      # TEMPORARY: bisect round 5 (#163). Builds surefire from source at a candidate
+      # commit and installs it as 3.6.0-M2-SNAPSHOT (the version every intermediate
+      # commit in the M1..GA range carries). Remove once diagnosed.
+      - name: Checkout maven-surefire at bisect commit
+        uses: actions/checkout@v7
+        with:
+          repository: apache/maven-surefire
+          ref: e759c64c2513c6b46d928e534ce8bdbcd0f163fc
+          path: maven-surefire-src
+          fetch-depth: 0
+
+      - name: Build and install maven-surefire from source
+        working-directory: maven-surefire-src
+        shell: bash
+        run: mvn --batch-mode -Dmaven.test.skip=true -DskipITs=true -Dcheckstyle.skip=true -Dspotbugs.skip=true -Drat.skip=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Dgpg.skip=true install
 
       - name: Install Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
@@ -51,3 +68,15 @@ jobs:
 
       - name: Build and test
         run: mvn --batch-mode verify -Pall-natives
+
+      - name: Upload crash artifacts
+        if: always() && matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-crash-artifacts
+          path: |
+            **/hs_err_pid*.log
+            **/target/surefire-reports/*.dump*
+            **/target/surefire-reports/*.dumpstream
+          if-no-files-found: warn
+          retention-days: 3
