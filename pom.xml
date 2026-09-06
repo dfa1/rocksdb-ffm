@@ -62,17 +62,22 @@
 		     benchmarks/ is JMH benchmark harness code with no tests by design. -->
 		<sonar.exclusions>rocksdb/**</sonar.exclusions>
 		<sonar.coverage.exclusions>rocksdb/**,benchmarks/**</sonar.coverage.exclusions>
-		<!-- tools/ldb and tools/sst-dump's own per-module reports (jacoco/jacoco.xml) would
-		     always show core classes like NativeTool at 0%: core is exercised only through
-		     LdbTool/SstDumpTool from those modules, and jacoco:report only analyzes the
-		     current module's own class/source directories. Their jacoco-aggregate/jacoco.xml
-		     (via each module's report-aggregate execution, same pattern as integration-tests)
-		     pulls in core's classes/sources through the compile-scope core dependency and
-		     credits it with what these modules' tests actually exercise. -->
+		<!-- tools/ldb and tools/sst-dump's own per-module reports (jacoco/jacoco.xml) cover
+		     their own classes (LdbTool/SstDumpTool/Main) but would always show core classes
+		     like NativeTool at 0%: core is exercised only through LdbTool/SstDumpTool from
+		     those modules, and jacoco:report only analyzes the current module's own
+		     class/source directories. Their jacoco-aggregate/jacoco.xml (via each module's
+		     report-aggregate execution, same pattern as integration-tests) pulls in core's
+		     classes/sources through the compile-scope core dependency instead — but only
+		     core's, not this module's own (report-aggregate only aggregates dependency
+		     modules found in the reactor, not the current module itself) — so both the plain
+		     report and the aggregate are needed side by side, covering disjoint classes. -->
 		<sonar.coverage.jacoco.xmlReportPaths>
 			${maven.multiModuleProjectDirectory}/core/target/site/jacoco/jacoco.xml,
 			${maven.multiModuleProjectDirectory}/integration-tests/target/site/jacoco-aggregate/jacoco.xml,
+			${maven.multiModuleProjectDirectory}/tools/ldb/target/site/jacoco/jacoco.xml,
 			${maven.multiModuleProjectDirectory}/tools/ldb/target/site/jacoco-aggregate/jacoco.xml,
+			${maven.multiModuleProjectDirectory}/tools/sst-dump/target/site/jacoco/jacoco.xml,
 			${maven.multiModuleProjectDirectory}/tools/sst-dump/target/site/jacoco-aggregate/jacoco.xml
 		</sonar.coverage.jacoco.xmlReportPaths>
 		<!-- Default for the @{argLine} placeholder in the surefire config below. jacoco:prepare-agent
