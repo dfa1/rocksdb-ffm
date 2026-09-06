@@ -65,6 +65,80 @@ class SstDumpToolTest {
 		assertThat(result.stdout()).contains("aaa").contains("bbb");
 	}
 
+	@Test
+	void request_withPrefix_restrictsScanToMatchingKeys(@TempDir Path dir) {
+		// Given
+		Path sstPath = writeSstFile(dir);
+
+		// When
+		NativeTool.Result result = SstDumpTool.request(sstPath)
+				.command(SstDumpCommand.SCAN)
+				.prefix("aa")
+				.run();
+
+		// Then
+		assertThat(result.isSuccess())
+				.as("exitCode=%d stdout=%s stderr=%s", result.exitCode(), result.stdout(), result.stderr())
+				.isTrue();
+		assertThat(result.stdout()).contains("aaa").doesNotContain("bbb");
+	}
+
+	@Test
+	void request_withReadNum_capsTheNumberOfEntriesScanned(@TempDir Path dir) {
+		// Given
+		Path sstPath = writeSstFile(dir);
+
+		// When
+		NativeTool.Result result = SstDumpTool.request(sstPath)
+				.command(SstDumpCommand.SCAN)
+				.readNum(1)
+				.run();
+
+		// Then
+		assertThat(result.isSuccess())
+				.as("exitCode=%d stdout=%s stderr=%s", result.exitCode(), result.stdout(), result.stderr())
+				.isTrue();
+		assertThat(result.stdout()).contains("aaa").doesNotContain("bbb");
+	}
+
+	@Test
+	void request_withShowProperties_printsTablePropertiesSection(@TempDir Path dir) {
+		// Given
+		Path sstPath = writeSstFile(dir);
+
+		// When
+		NativeTool.Result result = SstDumpTool.request(sstPath)
+				.command(SstDumpCommand.SCAN)
+				.showProperties()
+				.run();
+
+		// Then
+		assertThat(result.isSuccess())
+				.as("exitCode=%d stdout=%s stderr=%s", result.exitCode(), result.stdout(), result.stderr())
+				.isTrue();
+		assertThat(result.stdout()).contains("Table Properties");
+	}
+
+	@Test
+	void request_withFromToVerifyChecksumAndExtraArgs_isSuccessful(@TempDir Path dir) {
+		// Given
+		Path sstPath = writeSstFile(dir);
+
+		// When
+		NativeTool.Result result = SstDumpTool.request(sstPath)
+				.command(SstDumpCommand.SCAN)
+				.from("aaa")
+				.to("ccc")
+				.verifyChecksum()
+				.extraArgs("--output_hex")
+				.run();
+
+		// Then
+		assertThat(result.isSuccess())
+				.as("exitCode=%d stdout=%s stderr=%s", result.exitCode(), result.stdout(), result.stderr())
+				.isTrue();
+	}
+
 	private static Path writeSstFile(Path dir) {
 		Path sstPath = dir.resolve("data.sst");
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
