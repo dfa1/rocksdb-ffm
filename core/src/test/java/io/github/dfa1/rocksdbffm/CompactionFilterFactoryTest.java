@@ -123,6 +123,20 @@ class CompactionFilterFactoryTest {
 	}
 
 	@Test
+	void create_neverAttached_closeDestroysItDirectly() {
+		// Given — never passed to Options.setCompactionFilterFactory, so ownership is never
+		// transferred and close() actually runs tryClose() instead of being a no-op
+		CompactionFilterFactory.CreateFilterFn fn = context -> null;
+		var factory = CompactionFilterFactory.create("unattached-factory", fn);
+
+		// When
+		factory.close();
+
+		// Then
+		assertThatThrownBy(factory::ptr).isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
 	void setCompactionFilterFactory_transferredFactory_ptrThrows() {
 		// Given
 		CompactionFilterFactory.CreateFilterFn fn = context -> null;
