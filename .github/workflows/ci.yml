@@ -13,7 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest, ubuntu-24.04-arm, windows-latest]
+        # TEMPORARY: windows-only while investigating dfa1/rocksdb-ffm#163; restore full matrix after.
+        os: [windows-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -51,3 +52,17 @@ jobs:
 
       - name: Build and test
         run: mvn --batch-mode verify -Pall-natives
+
+      # TEMPORARY: capture JVM crash artifacts to root-cause the surefire 3.5.6 -> 3.6.0
+      # Windows fork crash (dfa1/rocksdb-ffm#163). Remove once diagnosed.
+      - name: Upload crash artifacts
+        if: always() && matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-crash-artifacts
+          path: |
+            **/hs_err_pid*.log
+            **/target/surefire-reports/*.dump*
+            **/target/surefire-reports/*.dumpstream
+          if-no-files-found: warn
+          retention-days: 3
