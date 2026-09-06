@@ -12,9 +12,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /// Covers [NativeTool] paths that [io.github.dfa1.rocksdbffm.ldb.LdbToolTest]/
 /// [io.github.dfa1.rocksdbffm.sstdump.SstDumpToolTest] don't exercise: `runInherited`, and the
-/// launch-failure/interrupted-while-waiting branches of both `run` and `runInherited`. Lives here
-/// (rather than in `core`) because it needs the real extracted `ldb` binary this module bundles at
-/// test scope.
+/// launch-failure branch of both `run` and `runInherited`. Lives here (rather than in `core`)
+/// because it needs the real extracted `ldb` binary this module bundles at test scope.
 class NativeToolTest {
 
 	@Test
@@ -53,28 +52,12 @@ class NativeToolTest {
 				.isInstanceOf(UncheckedIOException.class);
 	}
 
-	// run()'s own InterruptedException branch (as opposed to runInherited()'s, tested below) isn't
-	// covered here: run() reads the subprocess's entire stdout/stderr before calling waitFor(), and
-	// `ldb --help` is fast enough that the process has usually already exited by then — waitFor()
-	// short-circuits on an already-terminated process without necessarily consulting the interrupt
-	// flag first, making a pre-set interrupt unreliable to observe there. runInherited() calls
-	// waitFor() immediately after start() instead, leaving no such race.
-
-	@Test
-	void runInherited_interruptedWhileWaitingForTheSubprocess_wrapsAsUncheckedIOException() {
-		// Given
-		Path toolDirectory = NativeTool.extractToolDirectory();
-		Thread.currentThread().interrupt();
-
-		try {
-			// When / Then
-			assertThatThrownBy(() -> NativeTool.runInherited(toolDirectory, "ldb", List.of("--help")))
-					.isInstanceOf(UncheckedIOException.class);
-			assertThat(Thread.currentThread().isInterrupted())
-					.as("the interrupt flag must be restored, not swallowed")
-					.isTrue();
-		} finally {
-			Thread.interrupted(); // clear it so it doesn't leak into later tests
-		}
-	}
+	// Neither run()'s nor runInherited()'s InterruptedException branch is covered here: both
+	// require the calling thread's interrupt flag to still be observed by Process.waitFor() at the
+	// moment it's called, which races against how fast the real ldb subprocess actually exits — an
+	// already-terminated process lets waitFor() short-circuit without necessarily consulting the
+	// interrupt flag first. This was tried (pre-setting the flag before calling runInherited(), the
+	// version with the least code running before waitFor()) and passed consistently on macOS but
+	// failed on the CI's Linux runner, confirming the race is real and environment-dependent, not
+	// just theoretical — not worth a flaky test for a few lines of a defensive catch block.
 }
