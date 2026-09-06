@@ -23,6 +23,13 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          java-version: '25'
+          distribution: 'zulu'
+          cache: 'maven' # Caches ~/.m2/repository
+
       # TEMPORARY: git-bisecting the surefire 3.6.0-M1 -> 3.6.0 Windows fork crash (#163).
       # Builds surefire from source at a candidate commit and installs it as 3.6.0-M2-SNAPSHOT
       # (the version every intermediate commit in that range carries) so our pom.xml can pick
@@ -33,17 +40,11 @@ jobs:
           repository: apache/maven-surefire
           ref: 37f0725
           path: maven-surefire-src
+          fetch-depth: 0
 
       - name: Build and install maven-surefire from source
         working-directory: maven-surefire-src
         run: mvn --batch-mode -Dmaven.test.skip=true -DskipITs=true -Dcheckstyle.skip=true -Dspotbugs.skip=true -Drat.skip=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Dgpg.skip=true install
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@v6
-        with:
-          java-version: '25'
-          distribution: 'zulu'
-          cache: 'maven' # Caches ~/.m2/repository
 
       - name: Install Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
