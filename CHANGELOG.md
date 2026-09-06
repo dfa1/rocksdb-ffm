@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.12] — 2026-09-05
+## [0.13] — 2026-09-06
 
 `ldb`/`sst_dump` CLI tool wrappers (Windows included), `CompactionFilter`/`CompactionFilterFactory`,
 `PlainTableOptions`, memtable/write-path/background-job `Options` tuning, and a `ByteBuffer` doc fix.
@@ -42,6 +42,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `RocksIterator.key/value(ByteBuffer)` and `RocksDBReadOperations.get(ByteBuffer, ByteBuffer)`;
   this differs from `rocksdbjni`'s auto-flipping equivalents and was silently returning stale
   buffer contents for a caller that assumed the same
+- `CompactionFilter.FilterDecision`'s `Keep`/`Remove`/`ChangeValue` records had `@see`-only
+  Javadoc (no main description) — only caught by the release build's Javadoc check, which regular
+  CI never runs; see the `[0.12]` entry below
+
+## [0.12] — 2026-09-05 [YANKED]
+
+Tagged but never published to Maven Central: the release build failed on the `CompactionFilter`
+Javadoc issue above, which regular CI has no way to catch (that check only runs under the
+`release` Maven profile). Fixed and re-released as [0.13](#013--2026-09-06).
 
 ## [0.11] — 2026-09-03
 
@@ -430,7 +439,8 @@ Initial release. An FFM-based RocksDB binding built from scratch against `rocksd
 - All tests migrated to the `// Given / // When / // Then` + AssertJ convention. ([c8cfae5](https://github.com/dfa1/rocksdbffm/commit/c8cfae5))
 - Error handling centralized on `RocksDB.errHolder`/`checkError`; per-class `ThreadLocal` error pointers removed in favor of a shared `Arena`-based pattern. ([736c926](https://github.com/dfa1/rocksdbffm/commit/736c926))
 
-[Unreleased]: https://github.com/dfa1/rocksdbffm/compare/v0.12...HEAD
+[Unreleased]: https://github.com/dfa1/rocksdbffm/compare/v0.13...HEAD
+[0.13]: https://github.com/dfa1/rocksdbffm/compare/v0.12...v0.13
 [0.12]: https://github.com/dfa1/rocksdbffm/compare/v0.11...v0.12
 [0.11]: https://github.com/dfa1/rocksdbffm/compare/v0.10...v0.11
 [0.10]: https://github.com/dfa1/rocksdbffm/compare/v0.9...v0.10
