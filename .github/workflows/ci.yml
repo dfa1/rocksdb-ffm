@@ -44,6 +44,7 @@ jobs:
 
       - name: Build and install maven-surefire from source
         working-directory: maven-surefire-src
+        shell: bash
         run: mvn --batch-mode -Dmaven.test.skip=true -DskipITs=true -Dcheckstyle.skip=true -Dspotbugs.skip=true -Drat.skip=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Dgpg.skip=true install
 
       - name: Install Zig
