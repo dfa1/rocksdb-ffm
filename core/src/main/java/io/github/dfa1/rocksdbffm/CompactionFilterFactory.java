@@ -174,10 +174,11 @@ public final class CompactionFilterFactory extends NativeObject {
 				MemorySegment filterPtr = filter.ptr();
 				filter.transferOwnership();
 				return filterPtr;
-			} catch (Throwable t) {
-				// ownership never transferred to RocksDB — close it ourselves rather than leak it.
+			} finally {
+				// No-op if transferOwnership() above already ran (close() on an
+				// ownership-transferred NativeObject does nothing); actually frees filter if
+				// we're bailing out via exception before reaching that line, instead of leaking it.
 				filter.close();
-				throw t;
 			}
 		} catch (Throwable t) {
 			// must not throw across the upcall boundary — an escaping AssertionError here
