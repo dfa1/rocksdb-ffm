@@ -24,8 +24,16 @@ public final class Main {
 	///
 	/// @param args arguments to forward verbatim to `sst_dump`
 	public static void main(String[] args) {
+		System.exit(run(args));
+	}
+
+	/// Package-private test seam: does the actual work of [#main(String[])] but returns the
+	/// exit code instead of calling `System.exit`, so a test can call it in-process.
+	///
+	/// @param args arguments to forward verbatim to `sst_dump`
+	/// @return the subprocess exit code
+	static int run(String[] args) {
 		Path toolDirectory = NativeTool.extractToolDirectory();
-		int exitCode = NativeTool.runInherited(toolDirectory, "sst_dump", Arrays.asList(args));
-		System.exit(exitCode);
+		return NativeTool.runInherited(toolDirectory, "sst_dump", Arrays.asList(args));
 	}
 }

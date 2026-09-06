@@ -174,7 +174,10 @@ public final class NativeTool {
 		}
 	}
 
-	private static byte[] readResource(String classifier, String name) {
+	// Package-private (rather than private) so a test can exercise the missing-resource branch
+	// directly — extractToolDirectory() only ever calls this with names from its own fixed
+	// per-platform resource list, which is never actually missing on a real build.
+	static byte[] readResource(String classifier, String name) {
 		String resource = "/native/" + classifier + "/" + name;
 		try (InputStream in = NativeTool.class.getResourceAsStream(resource)) {
 			if (in == null) {

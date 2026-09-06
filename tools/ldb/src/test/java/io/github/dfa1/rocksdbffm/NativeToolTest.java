@@ -52,6 +52,13 @@ class NativeToolTest {
 				.isInstanceOf(UncheckedIOException.class);
 	}
 
+	@Test
+	void readResource_missingResource_throwsUnsatisfiedLinkError() {
+		// Given / When / Then
+		assertThatThrownBy(() -> NativeTool.readResource("bogus-classifier", "bogus-name"))
+				.isInstanceOf(UnsatisfiedLinkError.class);
+	}
+
 	// Neither run()'s nor runInherited()'s InterruptedException branch is covered here: both
 	// require the calling thread's interrupt flag to still be observed by Process.waitFor() at the
 	// moment it's called, which races against how fast the real ldb subprocess actually exits — an
