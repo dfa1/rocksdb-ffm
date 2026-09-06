@@ -104,6 +104,27 @@ class CompactionFilterFactoryTest {
 	}
 
 	@Test
+	void createCompactionFilter_seesTheFullCompactionContextFlag(@TempDir Path dir) {
+		// Given
+		var seenFull = new AtomicReference<Boolean>();
+		CompactionFilterFactory.CreateFilterFn capturingFactory = context -> {
+			seenFull.set(context.isFullCompaction());
+			return CompactionFilter.create("keep-all", (level, key, existingValue) -> CompactionFilter.FilterDecision.keep());
+		};
+		try (var factory = CompactionFilterFactory.create("capturing-full-factory", capturingFactory);
+		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilterFactory(factory);
+		     var db = RocksDB.openReadWrite(opts, dir)) {
+			db.put(bytes("a"), bytes("1"));
+
+			// When — compactRange() with no bounds rewrites every file in the column family
+			db.compactRange();
+
+			// Then
+			assertThat(seenFull.get()).isTrue();
+		}
+	}
+
+	@Test
 	void createCompactionFilter_thatThrows_runsTheCompactionWithNoFilterRatherThanCrash(@TempDir Path dir) {
 		// Given
 		CompactionFilterFactory.CreateFilterFn throwingFactory = context -> {

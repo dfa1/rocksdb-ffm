@@ -45,6 +45,25 @@ class LdbToolTest {
 	}
 
 	@Test
+	void repair_freshDatabase_isSuccessful(@TempDir Path dir) {
+		// Given — must not be open elsewhere when repair runs
+		try (var db = RocksDB.openReadWrite(dir)) {
+			db.put("k".getBytes(), "v".getBytes());
+		}
+
+		// When
+		NativeTool.Result result = LdbTool.repair(dir, true);
+
+		// Then
+		assertThat(result.isSuccess())
+				.as("exitCode=%d stdout=%s stderr=%s", result.exitCode(), result.stdout(), result.stderr())
+				.isTrue();
+		try (var db = RocksDB.openReadWrite(dir)) {
+			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
 	void run_listColumnFamilies_includesDefault(@TempDir Path dir) {
 		// Given
 		try (var db = RocksDB.openReadWrite(dir)) {
