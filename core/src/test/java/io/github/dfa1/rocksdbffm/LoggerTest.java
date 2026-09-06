@@ -52,7 +52,14 @@ class LoggerTest {
 
 	@Test
 	void callbackLogger_throwingCallback_doesNotCrashJvm(@TempDir Path dir) {
-		// Given — a callback that violates its "must not throw" contract
+		// Given — a callback that violates its "must not throw" contract. At LogLevel.INFO,
+		// RocksDB's own startup logging (options dump, manifest, ...) re-triggers it dozens of
+		// times per run, each dispatch dutifully logging the exception it caught — genuinely
+		// useful in production, just not something this test's own output needs repeated at
+		// full stack-trace length, so Logger's own diagnostic logging is muted for the duration.
+		java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(Logger.class.getName());
+		java.util.logging.Level originalLevel = julLogger.getLevel();
+		julLogger.setLevel(java.util.logging.Level.OFF);
 		try (var logger = Logger.newCallbackLogger(LogLevel.INFO, (level, msg) -> {
 			throw new RuntimeException("boom from user callback");
 		});
@@ -66,6 +73,8 @@ class LoggerTest {
 			// Then — reaching this line means the exception was swallowed inside the
 			// upcall dispatch rather than escaping into native code and aborting the JVM
 			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
+		} finally {
+			julLogger.setLevel(originalLevel);
 		}
 	}
 
