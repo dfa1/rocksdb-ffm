@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: apache/maven-surefire
-          ref: 37f0725
+          ref: 37f0725d4d372df3f8791159c8e08b9c75b9ef9e
           path: maven-surefire-src
           fetch-depth: 0
 
