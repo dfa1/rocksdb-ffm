@@ -86,4 +86,39 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<!-- Overrides (not merges with) the root coverage profile: report-aggregate
+			     (not plain report) pulls core's classes/sources into the report via the
+			     compile-scope core dependency above, crediting NativeTool with what
+			     LdbToolTest exercises — core's own module never calls NativeTool itself
+			     (only LdbTool/SstDumpTool do), so its plain per-module report always
+			     showed 0% there. Same pattern integration-tests already uses. -->
+			<id>coverage</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>prepare-agent</id>
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>report-aggregate</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>report-aggregate</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

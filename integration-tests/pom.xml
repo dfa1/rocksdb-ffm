@@ -108,9 +108,11 @@
 
 	<profiles>
 		<profile>
-			<!-- Overrides (not merges with) the root coverage profile: this module has no
-			     unit tests, only failsafe-driven integration tests, so it needs
-			     prepare-agent-integration + report-aggregate instead of prepare-agent + report.
+			<!-- Adds to (a same-id child profile merges executions with the root profile of
+			     the same id, it does not replace them — the root's own prepare-agent/report
+			     executions still run here too, harmlessly, alongside these) the root coverage
+			     profile: this module has no unit tests, only failsafe-driven integration
+			     tests, so it additionally needs prepare-agent-integration + report-aggregate.
 			     report-aggregate pulls in core's classes/sources (declared as a reactor
 			     dependency above) plus both core's own jacoco.exec and this module's
 			     jacoco-it.exec, crediting core's classes with what integration tests exercise
