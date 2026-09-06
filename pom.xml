@@ -280,6 +280,24 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- Bound here (not only under the "release" profile) so a plain
+			     `mvn verify` surfaces a Javadoc regression on every local build
+			     and in normal CI — not just the next time someone cuts a
+			     release, months after the offending PR merged (see the 0.12
+			     CHANGELOG entry). failOnError/failOnWarnings are set on this
+			     plugin's pluginManagement configuration above. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -296,18 +314,6 @@
 								<id>attach-sources</id>
 								<goals>
 									<goal>jar-no-fork</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>attach-javadocs</id>
-								<goals>
-									<goal>jar</goal>
 								</goals>
 							</execution>
 						</executions>

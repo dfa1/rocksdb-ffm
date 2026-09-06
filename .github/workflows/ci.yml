@@ -51,26 +51,3 @@ jobs:
 
       - name: Build and test
         run: mvn --batch-mode verify -Pall-natives
-
-  javadoc:
-    # The maven-javadoc-plugin's attach-javadocs execution (failOnError=true,
-    # failOnWarnings=true — see CLAUDE.md) is only bound under the "release"
-    # profile, which the build-and-test job above never activates. Without
-    # this job, a Javadoc regression only surfaces the next time someone
-    # actually cuts a release, months after the offending PR merged (see the
-    # 0.12 CHANGELOG entry). core has no compile-scope dependency on any
-    # other reactor module (native artifacts are test-scope only), so this
-    # runs standalone with no native/Zig build required.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@v6
-        with:
-          java-version: '25'
-          distribution: 'zulu'
-          cache: 'maven'
-
-      - name: Check Javadoc (same check the release build enforces)
-        run: mvn --batch-mode -Prelease compile javadoc:jar -pl core
