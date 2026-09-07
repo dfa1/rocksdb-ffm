@@ -31,7 +31,7 @@ jobs:
       - name: Write reproducer
         shell: bash
         run: |
-          cat > ConcurrentLoggerUpcallRepro.java <<'JAVA'
+          cat > BeginThreadExLoggerRepro.java <<'JAVA'
           import java.lang.foreign.Arena;
           import java.lang.foreign.FunctionDescriptor;
           import java.lang.foreign.Linker;
@@ -48,33 +48,37 @@ jobs:
           import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
           /**
-           * Reproducer variant testing real concurrency: from inside {@code qsort}'s comparator -- itself a nested
-           * upcall running on an already-attached foreign thread -- spawn a brand new foreign thread (another
-           * {@code CreateThread}) that also logs via {@code System.Logger}, and let it run concurrently rather than
-           * waiting for it. This approximates RocksDB's real background thread pool, where several threads the JVM did
-           * not create can be attaching and calling upcalls (and, on exception, logging) at the same time -- a
-           * structural difference from every earlier attempt, which only ever used one foreign thread at a time.
+           * Reproducer variant using {@code _beginthreadex} instead of raw {@code CreateThread}. Four earlier attempts
+           * (single-thread {@code StackWalker.walk()} two ways, {@code System.Logger}'s internal {@code StackWalker}
+           * use, and 105 concurrent {@code CreateThread}-spawned foreign threads all logging at once) did not
+           * crash/hang the JVM.
            *
-           * <p>Three earlier single-foreign-thread attempts (direct {@code StackWalker.walk()}, a reflective call
-           * mirroring Surefire's {@code StackWalkerStrategy} exactly, and {@code System.Logger.log()}'s own internal
-           * {@code StackWalker} use matching this project's real catch-all) all completed without crashing/hanging.
+           * <p>{@code CreateThread} is a raw Win32 API call that skips C-runtime per-thread initialization. RocksDB's
+           * {@code ThreadPoolImpl} is portable C++17 code using {@code std::thread}, and on Windows MSVC's {@code
+           * std::thread} does not call {@code CreateThread} directly -- it goes through the CRT's {@code
+           * _beginthreadex} (declared in {@code <process.h>}), which does extra per-thread CRT setup (TLS, {@code
+           * errno} storage, C++ exception-handling state, etc.) that raw {@code CreateThread} never runs. A thread
+           * spawned that way may look structurally different to the JVM's thread-attach machinery than one spawned
+           * directly -- untested until now. Otherwise identical to the concurrent-helper-threads variant: qsort's
+           * comparator spawns a new thread every 4th call, each one racing to log through {@code System.Logger}.
            *
-           * <p>Run on Windows with: {@code java --enable-native-access=ALL-UNNAMED ConcurrentLoggerUpcallRepro.java}
+           * <p>Run on Windows with: {@code java --enable-native-access=ALL-UNNAMED BeginThreadExLoggerRepro.java}
            */
-          public class ConcurrentLoggerUpcallRepro {
+          public class BeginThreadExLoggerRepro {
 
           	private static final Linker LINKER = Linker.nativeLinker();
           	private static final Arena ARENA = Arena.global();
-          	private static final System.Logger LOG = System.getLogger(ConcurrentLoggerUpcallRepro.class.getName());
+          	private static final System.Logger LOG = System.getLogger(BeginThreadExLoggerRepro.class.getName());
 
-          	// DWORD WINAPI ThreadProc(LPVOID lpParameter)
+          	// unsigned __stdcall ThreadProc(void *lpParameter)
           	private static final FunctionDescriptor THREAD_PROC_DESC = FunctionDescriptor.of(JAVA_INT, ADDRESS);
 
           	// int (*compar)(const void *a, const void *b)
           	private static final FunctionDescriptor COMPARATOR_DESC = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS);
 
-          	// HANDLE CreateThread(LPSECURITY_ATTRIBUTES, SIZE_T, LPTHREAD_START_ROUTINE, LPVOID, DWORD, LPDWORD)
-          	private static final MethodHandle MH_CREATE_THREAD;
+          	// uintptr_t _beginthreadex(void *security, unsigned stack_size,
+          	//     unsigned (__stdcall *start_address)(void *), void *arglist, unsigned initflag, unsigned *thrdaddr)
+          	private static final MethodHandle MH_BEGINTHREADEX;
 
           	// DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
           	private static final MethodHandle MH_WAIT_FOR_SINGLE_OBJECT;
@@ -91,9 +95,7 @@ jobs:
           	private static final int HELPER_INNER_ITERATIONS = 5;
 
           	// Handles of every helper thread spawned from inside the comparator, drained (waited on) from main()
-          	// after the sorting thread itself finishes. Off-heap HANDLE values are just pointer-sized ints, but a
-          	// Java-heap queue is far simpler to append/drain safely from concurrently-running foreign threads than
-          	// hand-rolling a native array with an atomic index.
+          	// after the sorting thread itself finishes.
           	private static final ConcurrentLinkedQueue<MemorySegment> HELPER_HANDLES = new ConcurrentLinkedQueue<>();
 
           	private static volatile boolean sorterFinished;
@@ -105,9 +107,10 @@ jobs:
           		}
           		SymbolLookup kernel32 = SymbolLookup.libraryLookup("kernel32.dll", ARENA);
           		SymbolLookup msvcrt = SymbolLookup.libraryLookup("msvcrt.dll", ARENA);
-          		MH_CREATE_THREAD = LINKER.downcallHandle(
-          				kernel32.find("CreateThread").orElseThrow(),
-          				FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_LONG, ADDRESS, ADDRESS, JAVA_INT, ADDRESS));
+          		SymbolLookup ucrtbase = SymbolLookup.libraryLookup("ucrtbase.dll", ARENA);
+          		MH_BEGINTHREADEX = LINKER.downcallHandle(
+          				msvcrt.find("_beginthreadex").or(() -> ucrtbase.find("_beginthreadex")).orElseThrow(),
+          				FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, JAVA_INT, ADDRESS));
           		MH_WAIT_FOR_SINGLE_OBJECT = LINKER.downcallHandle(
           				kernel32.find("WaitForSingleObject").orElseThrow(),
           				FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT));
@@ -116,7 +119,7 @@ jobs:
           				FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG, JAVA_LONG, ADDRESS));
           		try {
           			HELPER_ENTRY = LINKER.upcallStub(
-          					MethodHandles.lookup().findStatic(ConcurrentLoggerUpcallRepro.class, "helperMain",
+          					MethodHandles.lookup().findStatic(BeginThreadExLoggerRepro.class, "helperMain",
           							MethodType.methodType(int.class, MemorySegment.class)),
           					THREAD_PROC_DESC, ARENA);
           		} catch (ReflectiveOperationException e) {
@@ -129,14 +132,13 @@ jobs:
           		System.out.println("PID = " + ProcessHandle.current().pid());
 
           		MemorySegment threadEntry = LINKER.upcallStub(
-          				MethodHandles.lookup().findStatic(ConcurrentLoggerUpcallRepro.class, "threadMain",
+          				MethodHandles.lookup().findStatic(BeginThreadExLoggerRepro.class, "threadMain",
           						MethodType.methodType(int.class, MemorySegment.class)),
           				THREAD_PROC_DESC, ARENA);
 
-          		MemorySegment sorter = (MemorySegment) MH_CREATE_THREAD.invokeExact(
-          				MemorySegment.NULL, 0L, threadEntry, MemorySegment.NULL, 0, MemorySegment.NULL);
+          		MemorySegment sorter = spawnThread(threadEntry);
           		if (MemorySegment.NULL.equals(sorter)) {
-          			throw new IllegalStateException("CreateThread (sorter) failed");
+          			throw new IllegalStateException("_beginthreadex (sorter) failed");
           		}
 
           		System.out.println("main: waiting for the sorter thread...");
@@ -158,6 +160,11 @@ jobs:
           		System.out.println(sorterFinished
           				? "PASS: sorter + " + drained + " concurrent helper threads all completed normally"
           				: "FAIL: sorter thread never reported completion");
+          	}
+
+          	private static MemorySegment spawnThread(MemorySegment entry) throws Throwable {
+          		return (MemorySegment) MH_BEGINTHREADEX.invokeExact(
+          				MemorySegment.NULL, 0, entry, MemorySegment.NULL, 0, MemorySegment.NULL);
           	}
 
           	private static boolean waitBounded(MemorySegment handle, long deadline, String label) throws Throwable {
@@ -185,7 +192,7 @@ jobs:
 
           		try {
           			MemorySegment comparator = LINKER.upcallStub(
-          					MethodHandles.lookup().findStatic(ConcurrentLoggerUpcallRepro.class, "compare",
+          					MethodHandles.lookup().findStatic(BeginThreadExLoggerRepro.class, "compare",
           							MethodType.methodType(int.class, MemorySegment.class, MemorySegment.class)),
           					COMPARATOR_DESC, ARENA);
           			MH_QSORT.invokeExact(array, (long) ARRAY_SIZE, JAVA_INT.byteSize(), comparator);
@@ -202,9 +209,8 @@ jobs:
           	/**
           	 * {@code int (*compar)(const void *a, const void *b)} -- a nested upcall invoked by {@code qsort},
           	 * repeatedly, from the sorter thread. Every {@link #SPAWN_EVERY_N_COMPARES}th call spawns a brand new
-          	 * foreign thread (fire-and-forget -- not waited on here) that logs concurrently with the sorter thread's
-          	 * own logging below, so several JVM-attached foreign threads are exercising {@code System.Logger}'s
-          	 * internal {@code StackWalker} use at the same time.
+          	 * {@code _beginthreadex} thread (fire-and-forget) that logs concurrently with the sorter thread's own
+          	 * logging below.
           	 */
           	private static int compare(MemorySegment a, MemorySegment b) {
           		int x = a.reinterpret(JAVA_INT.byteSize()).get(JAVA_INT, 0);
@@ -213,8 +219,7 @@ jobs:
           		int call = compareCalls++;
           		if (call % SPAWN_EVERY_N_COMPARES == 0) {
           			try {
-          				MemorySegment helper = (MemorySegment) MH_CREATE_THREAD.invokeExact(
-          						MemorySegment.NULL, 0L, HELPER_ENTRY, MemorySegment.NULL, 0, MemorySegment.NULL);
+          				MemorySegment helper = spawnThread(HELPER_ENTRY);
           				if (!MemorySegment.NULL.equals(helper)) {
           					HELPER_HANDLES.add(helper);
           				}
@@ -250,7 +255,7 @@ jobs:
       - name: Run reproducer (bounded -- must not let a hang wedge the runner)
         shell: bash
         timeout-minutes: 5
-        run: java --enable-native-access=ALL-UNNAMED ConcurrentLoggerUpcallRepro.java
+        run: java --enable-native-access=ALL-UNNAMED BeginThreadExLoggerRepro.java
 
       - name: Capture crash artifacts on failure
         if: failure()
