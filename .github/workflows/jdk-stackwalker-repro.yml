@@ -63,10 +63,16 @@ jobs:
         # installed to ~/.m2, per this project's own rule) by the previous step, and each mvn
         # invocation starts a new reactor with no memory of the last one. -am redoes that
         # resolution; the actual native compile is a no-op since nothing changed.
+        #
+        # -Dtest applies reactor-wide with -am, including every other native/* module the reactor
+        # enumerates (not just the host's own) -- none of them have a class matching this filter,
+        # which trips surefire's default failIfNoSpecifiedTests before core's tests ever run.
+        # failIfNoSpecifiedTests=false lets those modules report "no tests to run" instead.
         timeout-minutes: 15
         run: >-
           ./mvnw --batch-mode test -pl core -am
           "-Dtest=CompactionFilterTest,CompactionFilterFactoryTest,EventNotifierTest"
+          -Dsurefire.failIfNoSpecifiedTests=false
 
       - name: Capture crash/report artifacts
         if: always()
