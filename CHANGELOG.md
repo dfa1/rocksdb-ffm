@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `benchmarks`/`integration-tests`: set `skipPublishing` alongside `maven.deploy.skip` — the
+  release profile's `central-publishing-maven-plugin` ignores `maven.deploy.skip` and was
+  publishing both modules to Maven Central on every release (#169)
+
 ## [0.13] — 2026-09-06
 
 `ldb`/`sst_dump` CLI tool wrappers (Windows included), `CompactionFilter`/`CompactionFilterFactory`,
