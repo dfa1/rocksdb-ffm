@@ -3,15 +3,18 @@ name: JDK StackWalker upcall repro (throwaway)
 # Standalone diagnostic for a suspected JDK 25 bug: java.lang.StackWalker
 # crashing/hanging the JVM when invoked from a thread the JVM did not
 # create, attached via a foreign-function upcall. Not part of the project's
-# normal CI -- manual trigger only, and self-contained (the reproducer
-# source is inlined below, not read from the working tree). See
-# apache/maven-surefire#3459.
+# normal CI -- self-contained (the reproducer source is inlined below, not
+# read from the working tree). See apache/maven-surefire#3459.
 #
-# Delete this workflow file once it has run and its output has been
-# captured for the JDK bug report.
+# Triggers on push to this branch only -- workflow_dispatch requires the
+# workflow file to be on the default branch first, which this deliberately
+# avoids. Delete this workflow file (and the branch) once it has run and
+# its output has been captured for the JDK bug report.
 
 on:
-  workflow_dispatch: {}
+  push:
+    branches:
+      - jdk-stackwalker-repro
 
 jobs:
   repro:
