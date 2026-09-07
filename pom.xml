@@ -194,8 +194,8 @@
 						<argLine>@{argLine} --enable-native-access=ALL-UNNAMED</argLine>
 						<reuseForks>false</reuseForks>
 						<!-- TEMPORARILY REVERTED on this throwaway branch only, to capture a real crash for
-						     apache/maven-surefire#3459 -- see commit 13cef55 (stackTraceMaxFrames=0) on main
-						     for the real fix, which stays in place there. -->
+						     apache/maven-surefire issue 3459. See commit 13cef55 (stackTraceMaxFrames=0) on
+						     main for the real fix, which stays in place there. -->
 					</configuration>
 				</plugin>
 				<plugin>
