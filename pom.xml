@@ -196,6 +196,10 @@
 						<!-- TEMPORARILY REVERTED on this throwaway branch only, to capture a real crash for
 						     apache/maven-surefire issue 3459. See commit 13cef55 (stackTraceMaxFrames=0) on
 						     main for the real fix, which stays in place there. -->
+						<!-- Set here (not via -D on the command line) so a reactor build's -Dtest filter
+						     doesn't fail on other modules (e.g. native/*) with no matching test class,
+						     avoiding a cross-shell command-line quoting mess on Windows/PowerShell too. -->
+						<failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
 					</configuration>
 				</plugin>
 				<plugin>

@@ -66,13 +66,14 @@ jobs:
         #
         # -Dtest applies reactor-wide with -am, including every other native/* module the reactor
         # enumerates (not just the host's own) -- none of them have a class matching this filter,
-        # which trips surefire's default failIfNoSpecifiedTests before core's tests ever run.
-        # failIfNoSpecifiedTests=false lets those modules report "no tests to run" instead.
+        # which would trip surefire's default failIfNoSpecifiedTests before core's tests ever run.
+        # pom.xml sets failIfNoSpecifiedTests=false directly (not via -D here) so those modules
+        # report "no tests to run" instead -- a -D property on this command line got mangled across
+        # PowerShell/mvnw.cmd on a previous attempt, splitting it into two unparseable tokens.
         timeout-minutes: 15
         run: >-
           ./mvnw --batch-mode test -pl core -am
           "-Dtest=CompactionFilterTest,CompactionFilterFactoryTest,EventNotifierTest"
-          -Dsurefire.failIfNoSpecifiedTests=false
 
       - name: Capture crash/report artifacts
         if: always()
