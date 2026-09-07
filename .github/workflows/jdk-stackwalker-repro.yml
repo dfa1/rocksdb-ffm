@@ -31,7 +31,7 @@ jobs:
       - name: Write reproducer
         shell: bash
         run: |
-          cat > QsortUpcallRepro.java <<'JAVA'
+          cat > LoggerUpcallRepro.java <<'JAVA'
           import java.lang.foreign.Arena;
           import java.lang.foreign.FunctionDescriptor;
           import java.lang.foreign.Linker;
@@ -40,46 +40,37 @@ jobs:
           import java.lang.invoke.MethodHandle;
           import java.lang.invoke.MethodHandles;
           import java.lang.invoke.MethodType;
-          import java.lang.reflect.Method;
-          import java.util.Collections;
-          import java.util.Random;
-          import java.util.function.Function;
-          import java.util.stream.Stream;
 
           import static java.lang.foreign.ValueLayout.ADDRESS;
           import static java.lang.foreign.ValueLayout.JAVA_INT;
           import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
           /**
-           * Minimal, RocksDB/surefire-free reproducer for the JDK 25 StackWalker crash on Windows described in
-           * https://github.com/apache/maven-surefire/issues/3459.
+           * Targeted reproducer: does {@code System.getLogger(name).log(Level.ERROR, msg, throwable)} -- exactly what
+           * this project's own upcall dispatch methods do in their mandatory "must not throw across the upcall
+           * boundary" catch-all (see {@code CompactionFilter.filterDispatch}, {@code
+           * CompactionFilterFactory.createFilterDispatch}, {@code EventNotifierBridge}'s dispatch methods) -- crash the
+           * JVM when called from a thread the JVM did not create, attached via a foreign-function upcall.
            *
-           * <p>Spawns a native thread via kernel32's {@code CreateThread} (a thread the JVM did NOT create) whose entry
-           * point is itself a Java upcall stub. From that attached-but-foreign thread, it repeatedly calls the C
-           * runtime's {@code qsort} with a comparator that is a second, nested upcall stub -- mirroring RocksDB's
-           * "background thread repeatedly invokes a Java callback" shape, using only DLLs already present on every
-           * Windows box (kernel32.dll, msvcrt.dll). No custom native library or C compiler needed.
+           * <p>{@code jdk.internal.logger.SimpleConsoleLogger} (the default backend for {@code System.getLogger(...)}
+           * unless {@code java.util.logging} is separately configured) calls {@code
+           * StackWalker.getInstance(RETAIN_CLASS_REFERENCE).walk(...)} on every {@code log(...)} call, unconditionally,
+           * to infer the caller for the printed line -- see {@code SimpleConsoleLogger.getCallerInfo()} /
+           * {@code CallerFinder}. Two earlier attempts calling {@code StackWalker} directly (with the default option
+           * set, and via reflection mirroring Surefire's own call shape) did not reproduce the bug; this one uses
+           * {@code RETAIN_CLASS_REFERENCE} and the real predicate-driven frame walk JDK logging actually performs,
+           * exactly matching this project's real, non-mutated, non-PIT code path.
            *
-           * <p>Each comparator invocation captures the current stack two ways: the classic {@code
-           * Thread.currentThread().getStackTrace()} (works on every surefire version) and a reflective call through
-           * {@code StackWalker.getInstance(Set, int)}/{@code .walk(Function)} -- deliberately mirroring, frame-for-frame,
-           * how Surefire 3.6.0's {@code StackWalkerStrategy} actually invokes it (via {@code java.lang.reflect.Method},
-           * for Java 8 source compatibility, not a direct call) rather than calling {@code StackWalker} directly, since a
-           * first attempt calling it directly did not reproduce the bug -- the extra reflection frames may be what
-           * triggers HotSpot's stack-walking edge case on an attached-foreign-thread stack.
-           *
-           * <p>Run on Windows with: {@code java --enable-native-access=ALL-UNNAMED QsortUpcallRepro.java}
+           * <p>Run on Windows with: {@code java --enable-native-access=ALL-UNNAMED LoggerUpcallRepro.java}
            */
-          public class QsortUpcallRepro {
+          public class LoggerUpcallRepro {
 
           	private static final Linker LINKER = Linker.nativeLinker();
           	private static final Arena ARENA = Arena.global();
+          	private static final System.Logger LOG = System.getLogger(LoggerUpcallRepro.class.getName());
 
           	// DWORD WINAPI ThreadProc(LPVOID lpParameter)
           	private static final FunctionDescriptor THREAD_PROC_DESC = FunctionDescriptor.of(JAVA_INT, ADDRESS);
-
-          	// int (*compar)(const void *a, const void *b)
-          	private static final FunctionDescriptor COMPARATOR_DESC = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS);
 
           	// HANDLE CreateThread(LPSECURITY_ATTRIBUTES, SIZE_T, LPTHREAD_START_ROUTINE, LPVOID, DWORD, LPDWORD)
           	private static final MethodHandle MH_CREATE_THREAD;
@@ -87,23 +78,10 @@ jobs:
           	// DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
           	private static final MethodHandle MH_WAIT_FOR_SINGLE_OBJECT;
 
-          	// void qsort(void *base, size_t num, size_t size, int (*compar)(const void*, const void*))
-          	private static final MethodHandle MH_QSORT;
-
-          	// Reflective handles onto StackWalker, mirroring Surefire's StackWalkerStrategy exactly (it reaches
-          	// StackWalker through reflection for Java 8 source compatibility, not a direct call).
-          	private static final Method SW_GET_INSTANCE; // StackWalker.getInstance(Set, int) -> StackWalker
-          	private static final Method SW_WALK; // StackWalker.walk(Function) -> Object
-          	private static final Method SF_GET_CLASS_NAME; // StackWalker.StackFrame.getClassName() -> String
-          	private static final Method SF_GET_METHOD_NAME; // StackWalker.StackFrame.getMethodName() -> String
-
           	private static final int WAIT_TIMEOUT = 0x102;
-          	private static final int WAIT_MS = 60_000;
-          	private static final int ARRAY_SIZE = 64;
-          	private static final int ITERATIONS = 5_000;
+          	private static final int WAIT_MS = 30_000;
+          	private static final int ITERATIONS = 200;
 
-          	// Set to false only after threadMain runs every qsort iteration to completion without the JVM
-          	// crashing/hanging first.
           	private static volatile boolean crashedOrHung = true;
 
           	static {
@@ -111,26 +89,12 @@ jobs:
           			throw new IllegalStateException("this reproducer only exercises the Windows-only bug; run it on Windows");
           		}
           		SymbolLookup kernel32 = SymbolLookup.libraryLookup("kernel32.dll", ARENA);
-          		SymbolLookup msvcrt = SymbolLookup.libraryLookup("msvcrt.dll", ARENA);
           		MH_CREATE_THREAD = LINKER.downcallHandle(
           				kernel32.find("CreateThread").orElseThrow(),
           				FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_LONG, ADDRESS, ADDRESS, JAVA_INT, ADDRESS));
           		MH_WAIT_FOR_SINGLE_OBJECT = LINKER.downcallHandle(
           				kernel32.find("WaitForSingleObject").orElseThrow(),
           				FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT));
-          		MH_QSORT = LINKER.downcallHandle(
-          				msvcrt.find("qsort").orElseThrow(),
-          				FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG, JAVA_LONG, ADDRESS));
-          		try {
-          			Class<?> stackWalkerClass = Class.forName("java.lang.StackWalker");
-          			Class<?> stackFrameClass = Class.forName("java.lang.StackWalker$StackFrame");
-          			SW_GET_INSTANCE = stackWalkerClass.getMethod("getInstance", java.util.Set.class, int.class);
-          			SW_WALK = stackWalkerClass.getMethod("walk", Function.class);
-          			SF_GET_CLASS_NAME = stackFrameClass.getMethod("getClassName");
-          			SF_GET_METHOD_NAME = stackFrameClass.getMethod("getMethodName");
-          		} catch (ReflectiveOperationException e) {
-          			throw new ExceptionInInitializerError(e);
-          		}
           	}
 
           	public static void main(String[] args) throws Throwable {
@@ -138,7 +102,7 @@ jobs:
 
           		MethodHandles.Lookup lookup = MethodHandles.lookup();
           		MemorySegment threadEntry = LINKER.upcallStub(
-          				lookup.findStatic(QsortUpcallRepro.class, "threadMain", MethodType.methodType(int.class, MemorySegment.class)),
+          				lookup.findStatic(LoggerUpcallRepro.class, "threadMain", MethodType.methodType(int.class, MemorySegment.class)),
           				THREAD_PROC_DESC, ARENA);
 
           		MemorySegment thread = (MemorySegment) MH_CREATE_THREAD.invokeExact(
@@ -148,39 +112,36 @@ jobs:
           		}
 
           		System.out.println("main: waiting up to " + WAIT_MS + "ms for the foreign thread to finish "
-          				+ ITERATIONS + " qsort iterations...");
+          				+ ITERATIONS + " LOG.log iterations...");
           		int result = (int) MH_WAIT_FOR_SINGLE_OBJECT.invokeExact(thread, WAIT_MS);
           		if (result == WAIT_TIMEOUT) {
           			System.out.println("HANG: WaitForSingleObject timed out -- the foreign thread never returned"
-          					+ " from qsort/StackWalker. This matches the indefinite-hang shape of the surefire bug.");
+          					+ " from LOG.log(). This matches the indefinite-hang shape of the surefire bug.");
           			System.exit(2);
           		}
 
           		System.out.println(crashedOrHung
           				? "FAIL: process reached the end of main() without threadMain ever reporting completion"
-          				: "PASS: all " + ITERATIONS + " qsort+StackWalker iterations completed normally on the foreign thread");
+          				: "PASS: all " + ITERATIONS + " LOG.log iterations completed normally on the foreign thread");
           	}
 
-          	/** Entry point for the OS thread {@code CreateThread} spawns -- the JVM has never seen this thread before. */
+          	/**
+          	 * Entry point for the OS thread {@code CreateThread} spawns -- the JVM has never seen this thread
+          	 * before. Mirrors this project's own upcall dispatch catch-all: an upcall runs, something throws, the
+          	 * catch block logs it via {@code System.Logger}, all on RocksDB's (here, simulated) background thread.
+          	 */
           	private static int threadMain(MemorySegment lpParameter) {
           		System.out.println("threadMain: running on a JVM-attached (not JVM-created) thread");
-          		MemorySegment array = ARENA.allocate(JAVA_INT, ARRAY_SIZE);
-          		Random random = new Random(42);
-
           		try {
-          			MethodHandles.Lookup lookup = MethodHandles.lookup();
-          			MemorySegment comparator = LINKER.upcallStub(
-          					lookup.findStatic(QsortUpcallRepro.class, "compare",
-          							MethodType.methodType(int.class, MemorySegment.class, MemorySegment.class)),
-          					COMPARATOR_DESC, ARENA);
-
-          			for (int iter = 0; iter < ITERATIONS; iter++) {
-          				for (int i = 0; i < ARRAY_SIZE; i++) {
-          					array.setAtIndex(JAVA_INT, i, random.nextInt());
+          			for (int i = 0; i < ITERATIONS; i++) {
+          				try {
+          					throw new RuntimeException("boom");
+          				} catch (Throwable t) {
+          					// exactly CompactionFilter.filterDispatch's catch-all shape
+          					LOG.log(System.Logger.Level.ERROR, "filter callback failed", t);
           				}
-          				MH_QSORT.invokeExact(array, (long) ARRAY_SIZE, JAVA_INT.byteSize(), comparator);
-          				if (iter % 500 == 0) {
-          					System.out.println("threadMain: completed iteration " + iter + "/" + ITERATIONS);
+          				if (i % 20 == 0) {
+          					System.out.println("threadMain: completed iteration " + i + "/" + ITERATIONS);
           				}
           			}
           		} catch (Throwable t) {
@@ -192,58 +153,13 @@ jobs:
           		crashedOrHung = false;
           		return 0;
           	}
-
-          	/**
-          	 * {@code int (*compar)(const void *a, const void *b)} -- invoked by {@code qsort}, repeatedly, from the
-          	 * foreign thread {@link #threadMain(MemorySegment)} runs on.
-          	 */
-          	private static int compare(MemorySegment a, MemorySegment b) {
-          		int x = a.reinterpret(JAVA_INT.byteSize()).get(JAVA_INT, 0);
-          		int y = b.reinterpret(JAVA_INT.byteSize()).get(JAVA_INT, 0);
-
-          		// Baseline: the pre-3.6.0 mechanism, expected to always succeed.
-          		int classicFrames = Thread.currentThread().getStackTrace().length;
-
-          		// Suspect: reflective StackWalker.getInstance/.walk, mirroring StackWalkerStrategy.walk exactly.
-          		walkViaReflection();
-
-          		return Integer.compare(x, y);
-          	}
-
-          	/**
-          	 * Mirrors {@code StackWalkerStrategy.walk(int, Predicate)} from apache/maven-surefire#3374 as closely as
-          	 * possible: {@code StackWalker.getInstance(Collections.emptySet(), maxFrames)}, then {@code .walk(...)}
-          	 * with a {@link Function} that maps each frame via reflective {@code getClassName()}/{@code
-          	 * getMethodName()} calls -- both invoked through {@link Method#invoke}, never directly.
-          	 */
-          	@SuppressWarnings("unchecked")
-          	private static void walkViaReflection() {
-          		try {
-          			Object stackWalker = SW_GET_INSTANCE.invoke(null, Collections.emptySet(), 20);
-          			Function<Stream<Object>, Long> walkFunction =
-          					stream -> stream.map(QsortUpcallRepro::frameToString).count();
-          			SW_WALK.invoke(stackWalker, walkFunction);
-          		} catch (ReflectiveOperationException e) {
-          			throw new IllegalStateException("reflective StackWalker invocation failed", e);
-          		}
-          	}
-
-          	private static String frameToString(Object frame) {
-          		try {
-          			String className = (String) SF_GET_CLASS_NAME.invoke(frame);
-          			String methodName = (String) SF_GET_METHOD_NAME.invoke(frame);
-          			return className + "#" + methodName;
-          		} catch (ReflectiveOperationException e) {
-          			throw new IllegalStateException(e);
-          		}
-          	}
           }
           JAVA
 
       - name: Run reproducer (bounded -- must not let a hang wedge the runner)
         shell: bash
         timeout-minutes: 5
-        run: java --enable-native-access=ALL-UNNAMED QsortUpcallRepro.java
+        run: java --enable-native-access=ALL-UNNAMED LoggerUpcallRepro.java
 
       - name: Capture crash artifacts on failure
         if: failure()
