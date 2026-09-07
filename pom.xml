@@ -193,11 +193,9 @@
 						     when the coverage profile is active; empty otherwise. -->
 						<argLine>@{argLine} --enable-native-access=ALL-UNNAMED</argLine>
 						<reuseForks>false</reuseForks>
-						<!-- 3.6.0's StackWalker-based stack capture (surefire #3374) crashes the forked JVM on
-						     Windows for tests whose native callback fires from a background thread attached via
-						     an FFM upcall (see apache/maven-surefire#3459). maxFrames <= 0 short-circuits
-						     StackTraceProvider.getStack() before StackWalker is ever invoked. -->
-						<stackTraceMaxFrames>0</stackTraceMaxFrames>
+						<!-- TEMPORARILY REVERTED on this throwaway branch only, to capture a real crash for
+						     apache/maven-surefire#3459 -- see commit 13cef55 (stackTraceMaxFrames=0) on main
+						     for the real fix, which stays in place there. -->
 					</configuration>
 				</plugin>
 				<plugin>

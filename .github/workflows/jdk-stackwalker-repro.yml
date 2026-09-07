@@ -1,15 +1,21 @@
 name: JDK StackWalker upcall repro (throwaway)
 
-# Standalone diagnostic for a suspected JDK 25 bug: java.lang.StackWalker
-# crashing/hanging the JVM when invoked from a thread the JVM did not
-# create, attached via a foreign-function upcall. Not part of the project's
-# normal CI -- self-contained (the reproducer source is inlined below, not
-# read from the working tree). See apache/maven-surefire#3459.
+# Captures a REAL crash/hang for apache/maven-surefire#3459 by running this project's own
+# CompactionFilterTest / CompactionFilterFactoryTest / EventNotifierTest suite under real
+# surefire 3.6.0 on windows-latest -- pom.xml's stackTraceMaxFrames=0 workaround is reverted on
+# this branch only (see the diff against main) so the original crash can actually happen.
 #
-# Triggers on push to this branch only -- workflow_dispatch requires the
-# workflow file to be on the default branch first, which this deliberately
-# avoids. Delete this workflow file (and the branch) once it has run and
-# its output has been captured for the JDK bug report.
+# Five synthetic minimal reproducers (direct StackWalker, a reflective call mirroring Surefire's
+# exact invocation shape, System.Logger's own internal StackWalker use, 105 concurrent
+# CreateThread-spawned foreign threads, and _beginthreadex instead of CreateThread) all failed to
+# reproduce the crash -- whatever the real trigger is, it depends on something in RocksDB's
+# actual native thread pool this project's synthetic analogs didn't capture. This project itself,
+# with real steps to reproduce, is the JDK bug report's reproducer instead.
+#
+# Triggers on push to this branch only -- workflow_dispatch requires the workflow file to be on
+# the default branch first, which this deliberately avoids. Delete this workflow file (and the
+# branch, and revert the pom.xml change) once it has run and its output has been captured for the
+# JDK bug report.
 
 on:
   push:
@@ -18,251 +24,58 @@ on:
 
 jobs:
   repro:
-    name: run on windows-latest
+    name: real crash on windows-latest
     runs-on: windows-latest
     permissions: {}
     steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
       - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: "25"
+          cache: maven
 
-      - name: Write reproducer
+      - name: Install Zig
+        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
+        with:
+          version: 0.16.0
+
+      - name: Cache RocksDB native builds
+        uses: actions/cache@v6
+        with:
+          path: |
+            native/windows-x86_64/src/main/resources/native
+          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt', 'rocksdb/Makefile', 'scripts/build-rocksdb.sh', 'scripts/build-rocksdb-windows.sh') }}-windows-latest-${{ runner.arch }}
+
+      - name: Build (compile + native lib, not bounded -- a cold native build can take a while)
+        run: ./mvnw --batch-mode test-compile -pl core -am
+
+      - name: Print effective surefire config (confirm the workaround really is reverted)
         shell: bash
-        run: |
-          cat > BeginThreadExLoggerRepro.java <<'JAVA'
-          import java.lang.foreign.Arena;
-          import java.lang.foreign.FunctionDescriptor;
-          import java.lang.foreign.Linker;
-          import java.lang.foreign.MemorySegment;
-          import java.lang.foreign.SymbolLookup;
-          import java.lang.invoke.MethodHandle;
-          import java.lang.invoke.MethodHandles;
-          import java.lang.invoke.MethodType;
-          import java.util.Random;
-          import java.util.concurrent.ConcurrentLinkedQueue;
+        run: grep -A3 stackTraceMaxFrames pom.xml || echo "stackTraceMaxFrames not present -- workaround is reverted, good"
 
-          import static java.lang.foreign.ValueLayout.ADDRESS;
-          import static java.lang.foreign.ValueLayout.JAVA_INT;
-          import static java.lang.foreign.ValueLayout.JAVA_LONG;
+      - name: Run the known-crashing test classes (bounded -- must not let a hang wedge the runner)
+        # -am so this fresh mvn process can resolve the native module's jar: it was compiled (not
+        # installed to ~/.m2, per this project's own rule) by the previous step, and each mvn
+        # invocation starts a new reactor with no memory of the last one. -am redoes that
+        # resolution; the actual native compile is a no-op since nothing changed.
+        timeout-minutes: 15
+        run: >-
+          ./mvnw --batch-mode test -pl core -am
+          "-Dtest=CompactionFilterTest,CompactionFilterFactoryTest,EventNotifierTest"
 
-          /**
-           * Reproducer variant using {@code _beginthreadex} instead of raw {@code CreateThread}. Four earlier attempts
-           * (single-thread {@code StackWalker.walk()} two ways, {@code System.Logger}'s internal {@code StackWalker}
-           * use, and 105 concurrent {@code CreateThread}-spawned foreign threads all logging at once) did not
-           * crash/hang the JVM.
-           *
-           * <p>{@code CreateThread} is a raw Win32 API call that skips C-runtime per-thread initialization. RocksDB's
-           * {@code ThreadPoolImpl} is portable C++17 code using {@code std::thread}, and on Windows MSVC's {@code
-           * std::thread} does not call {@code CreateThread} directly -- it goes through the CRT's {@code
-           * _beginthreadex} (declared in {@code <process.h>}), which does extra per-thread CRT setup (TLS, {@code
-           * errno} storage, C++ exception-handling state, etc.) that raw {@code CreateThread} never runs. A thread
-           * spawned that way may look structurally different to the JVM's thread-attach machinery than one spawned
-           * directly -- untested until now. Otherwise identical to the concurrent-helper-threads variant: qsort's
-           * comparator spawns a new thread every 4th call, each one racing to log through {@code System.Logger}.
-           *
-           * <p>Run on Windows with: {@code java --enable-native-access=ALL-UNNAMED BeginThreadExLoggerRepro.java}
-           */
-          public class BeginThreadExLoggerRepro {
-
-          	private static final Linker LINKER = Linker.nativeLinker();
-          	private static final Arena ARENA = Arena.global();
-          	private static final System.Logger LOG = System.getLogger(BeginThreadExLoggerRepro.class.getName());
-
-          	// unsigned __stdcall ThreadProc(void *lpParameter)
-          	private static final FunctionDescriptor THREAD_PROC_DESC = FunctionDescriptor.of(JAVA_INT, ADDRESS);
-
-          	// int (*compar)(const void *a, const void *b)
-          	private static final FunctionDescriptor COMPARATOR_DESC = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS);
-
-          	// uintptr_t _beginthreadex(void *security, unsigned stack_size,
-          	//     unsigned (__stdcall *start_address)(void *), void *arglist, unsigned initflag, unsigned *thrdaddr)
-          	private static final MethodHandle MH_BEGINTHREADEX;
-
-          	// DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
-          	private static final MethodHandle MH_WAIT_FOR_SINGLE_OBJECT;
-
-          	// void qsort(void *base, size_t num, size_t size, int (*compar)(const void*, const void*))
-          	private static final MethodHandle MH_QSORT;
-
-          	private static final MemorySegment HELPER_ENTRY;
-
-          	private static final int WAIT_TIMEOUT = 0x102;
-          	private static final long TOTAL_BUDGET_MS = 60_000;
-          	private static final int ARRAY_SIZE = 64;
-          	private static final int SPAWN_EVERY_N_COMPARES = 4;
-          	private static final int HELPER_INNER_ITERATIONS = 5;
-
-          	// Handles of every helper thread spawned from inside the comparator, drained (waited on) from main()
-          	// after the sorting thread itself finishes.
-          	private static final ConcurrentLinkedQueue<MemorySegment> HELPER_HANDLES = new ConcurrentLinkedQueue<>();
-
-          	private static volatile boolean sorterFinished;
-          	private static volatile int compareCalls;
-
-          	static {
-          		if (!System.getProperty("os.name", "").toLowerCase().contains("win")) {
-          			throw new IllegalStateException("this reproducer only exercises the Windows-only bug; run it on Windows");
-          		}
-          		SymbolLookup kernel32 = SymbolLookup.libraryLookup("kernel32.dll", ARENA);
-          		SymbolLookup msvcrt = SymbolLookup.libraryLookup("msvcrt.dll", ARENA);
-          		SymbolLookup ucrtbase = SymbolLookup.libraryLookup("ucrtbase.dll", ARENA);
-          		MH_BEGINTHREADEX = LINKER.downcallHandle(
-          				msvcrt.find("_beginthreadex").or(() -> ucrtbase.find("_beginthreadex")).orElseThrow(),
-          				FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, JAVA_INT, ADDRESS));
-          		MH_WAIT_FOR_SINGLE_OBJECT = LINKER.downcallHandle(
-          				kernel32.find("WaitForSingleObject").orElseThrow(),
-          				FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT));
-          		MH_QSORT = LINKER.downcallHandle(
-          				msvcrt.find("qsort").orElseThrow(),
-          				FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG, JAVA_LONG, ADDRESS));
-          		try {
-          			HELPER_ENTRY = LINKER.upcallStub(
-          					MethodHandles.lookup().findStatic(BeginThreadExLoggerRepro.class, "helperMain",
-          							MethodType.methodType(int.class, MemorySegment.class)),
-          					THREAD_PROC_DESC, ARENA);
-          		} catch (ReflectiveOperationException e) {
-          			throw new ExceptionInInitializerError(e);
-          		}
-          	}
-
-          	public static void main(String[] args) throws Throwable {
-          		long deadline = System.nanoTime() + TOTAL_BUDGET_MS * 1_000_000L;
-          		System.out.println("PID = " + ProcessHandle.current().pid());
-
-          		MemorySegment threadEntry = LINKER.upcallStub(
-          				MethodHandles.lookup().findStatic(BeginThreadExLoggerRepro.class, "threadMain",
-          						MethodType.methodType(int.class, MemorySegment.class)),
-          				THREAD_PROC_DESC, ARENA);
-
-          		MemorySegment sorter = spawnThread(threadEntry);
-          		if (MemorySegment.NULL.equals(sorter)) {
-          			throw new IllegalStateException("_beginthreadex (sorter) failed");
-          		}
-
-          		System.out.println("main: waiting for the sorter thread...");
-          		if (!waitBounded(sorter, deadline, "sorter")) {
-          			System.exit(2);
-          		}
-          		System.out.println("main: sorter finished (" + compareCalls + " comparisons, "
-          				+ HELPER_HANDLES.size() + " helper threads spawned); draining helpers...");
-
-          		int drained = 0;
-          		MemorySegment helper;
-          		while ((helper = HELPER_HANDLES.poll()) != null) {
-          			if (!waitBounded(helper, deadline, "helper #" + drained)) {
-          				System.exit(2);
-          			}
-          			drained++;
-          		}
-
-          		System.out.println(sorterFinished
-          				? "PASS: sorter + " + drained + " concurrent helper threads all completed normally"
-          				: "FAIL: sorter thread never reported completion");
-          	}
-
-          	private static MemorySegment spawnThread(MemorySegment entry) throws Throwable {
-          		return (MemorySegment) MH_BEGINTHREADEX.invokeExact(
-          				MemorySegment.NULL, 0, entry, MemorySegment.NULL, 0, MemorySegment.NULL);
-          	}
-
-          	private static boolean waitBounded(MemorySegment handle, long deadline, String label) throws Throwable {
-          		long remainingMs = (deadline - System.nanoTime()) / 1_000_000L;
-          		if (remainingMs <= 0) {
-          			System.out.println("HANG: overall budget exhausted before waiting on " + label);
-          			return false;
-          		}
-          		int result = (int) MH_WAIT_FOR_SINGLE_OBJECT.invokeExact(handle, (int) remainingMs);
-          		if (result == WAIT_TIMEOUT) {
-          			System.out.println("HANG: WaitForSingleObject timed out waiting on " + label);
-          			return false;
-          		}
-          		return true;
-          	}
-
-          	/** Entry point for the sorter thread -- the JVM has never seen this thread before this call. */
-          	private static int threadMain(MemorySegment lpParameter) {
-          		System.out.println("threadMain: running on a JVM-attached (not JVM-created) thread");
-          		MemorySegment array = ARENA.allocate(JAVA_INT, ARRAY_SIZE);
-          		Random random = new Random(42);
-          		for (int i = 0; i < ARRAY_SIZE; i++) {
-          			array.setAtIndex(JAVA_INT, i, random.nextInt());
-          		}
-
-          		try {
-          			MemorySegment comparator = LINKER.upcallStub(
-          					MethodHandles.lookup().findStatic(BeginThreadExLoggerRepro.class, "compare",
-          							MethodType.methodType(int.class, MemorySegment.class, MemorySegment.class)),
-          					COMPARATOR_DESC, ARENA);
-          			MH_QSORT.invokeExact(array, (long) ARRAY_SIZE, JAVA_INT.byteSize(), comparator);
-          		} catch (Throwable t) {
-          			t.printStackTrace();
-          			return 1;
-          		}
-
-          		System.out.println("threadMain: qsort returned normally after " + compareCalls + " comparisons");
-          		sorterFinished = true;
-          		return 0;
-          	}
-
-          	/**
-          	 * {@code int (*compar)(const void *a, const void *b)} -- a nested upcall invoked by {@code qsort},
-          	 * repeatedly, from the sorter thread. Every {@link #SPAWN_EVERY_N_COMPARES}th call spawns a brand new
-          	 * {@code _beginthreadex} thread (fire-and-forget) that logs concurrently with the sorter thread's own
-          	 * logging below.
-          	 */
-          	private static int compare(MemorySegment a, MemorySegment b) {
-          		int x = a.reinterpret(JAVA_INT.byteSize()).get(JAVA_INT, 0);
-          		int y = b.reinterpret(JAVA_INT.byteSize()).get(JAVA_INT, 0);
-
-          		int call = compareCalls++;
-          		if (call % SPAWN_EVERY_N_COMPARES == 0) {
-          			try {
-          				MemorySegment helper = spawnThread(HELPER_ENTRY);
-          				if (!MemorySegment.NULL.equals(helper)) {
-          					HELPER_HANDLES.add(helper);
-          				}
-          			} catch (Throwable t) {
-          				t.printStackTrace();
-          			}
-          		}
-
-          		try {
-          			throw new RuntimeException("boom from compare");
-          		} catch (Throwable t) {
-          			// exactly CompactionFilter.filterDispatch's catch-all shape
-          			LOG.log(System.Logger.Level.ERROR, "filter callback failed", t);
-          		}
-
-          		return Integer.compare(x, y);
-          	}
-
-          	/** Entry point for a helper thread spawned from inside {@link #compare(MemorySegment, MemorySegment)}. */
-          	private static int helperMain(MemorySegment lpParameter) {
-          		for (int i = 0; i < HELPER_INNER_ITERATIONS; i++) {
-          			try {
-          				throw new RuntimeException("boom from helper");
-          			} catch (Throwable t) {
-          				LOG.log(System.Logger.Level.ERROR, "helper callback failed", t);
-          			}
-          		}
-          		return 0;
-          	}
-          }
-          JAVA
-
-      - name: Run reproducer (bounded -- must not let a hang wedge the runner)
-        shell: bash
-        timeout-minutes: 5
-        run: java --enable-native-access=ALL-UNNAMED BeginThreadExLoggerRepro.java
-
-      - name: Capture crash artifacts on failure
-        if: failure()
+      - name: Capture crash/report artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: jdk-crash-artifacts
+          name: real-crash-artifacts
           path: |
             hs_err_pid*.log
             replay_pid*.log
-          if-no-files-found: ignore
+            core/hs_err_pid*.log
+            core/target/surefire-reports/**
+          if-no-files-found: warn
