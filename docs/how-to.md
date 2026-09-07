@@ -36,6 +36,7 @@ Every snippet omits imports; all types live in `io.github.dfa1.rocksdbffm`.
 - [Route RocksDB logs into your logger](#route-rocksdb-logs-into-your-logger)
 - [Observe flushes and compactions](#observe-flushes-and-compactions)
 - [Compact manually](#compact-manually)
+- [Split SST files on a key prefix](#split-sst-files-on-a-key-prefix)
 - [Load a custom native library](#load-a-custom-native-library)
 - [Build the native library from source](#build-the-native-library-from-source)
 - [Run the benchmarks](#run-the-benchmarks)
@@ -880,6 +881,48 @@ try (var waitOptions = WaitForCompactOptions.create()
 ```
 
 `db.disableFileDeletions()` / `enableFileDeletions()` bracket an external copy of the live files.
+
+## Split SST files on a key prefix
+
+`SstPartitionerFactory` forces a new output SST file whenever a key's prefix changes, instead of
+letting compaction pack unrelated prefixes into the same file — useful when you delete or ingest
+data one prefix at a time and want that operation to touch as few files as possible.
+
+```java
+try (var partitioner = SstPartitionerFactory.newFixedPrefix(4);
+     var options = Options.newOptions()
+		     .setCreateIfMissing(true)
+		     .setSstPartitionerFactory(partitioner);
+     var db = RocksDB.openReadWrite(options, dbPath)) {
+	// ... writes ...
+	db.compactRange();
+}
+```
+
+It's set on `Options` like any other table-level knob — no column family involved, and it applies
+to the default column family the same way it would to any other.
+
+Two things about *when* it takes effect are easy to miss:
+
+- **Partitioning only happens during compaction, never during a memtable flush**, and it never
+  splits a compaction's output at level 0 either — so writing keys and immediately flushing will
+  never show split files; you need a compaction that outputs to L1 or below (automatic, or a
+  manual `compactRange()`).
+- **Reopening a database with a newly-attached factory does not retroactively repartition existing
+  files.** Only a compaction that actually runs under the new factory does. If the keyspace is
+  already fully compacted, a plain `compactRange()` finds nothing to merge and is a no-op — force
+  it with `setBottommostLevelCompaction(true)`:
+
+  ```java
+  try (var compactOptions = CompactOptions.newCompactOptions()
+		     .setBottommostLevelCompaction(true)) {
+  	db.compactRange(compactOptions, null, null);
+  }
+  ```
+
+Only the built-in fixed-prefix shape is wrapped — there is no callback-based custom partitioner
+(`rocksdb_sst_partitioner_factory_t` has no callback constructor in `c.h`, unlike
+`CompactionFilterFactory`; see [c-api-gaps.md](c-api-gaps.md)).
 
 ## Build the native library from source
 
