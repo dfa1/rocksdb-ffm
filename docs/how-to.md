@@ -578,6 +578,38 @@ excludes specific operation types — e.g. skip `Get`s to capture only the write
 no pluggable capture sink, so tracing always writes to a file; `Replayer` reissues that file's
 operations against any target database, reading and decoding it internally.
 
+### Trace file I/O or block cache accesses instead
+
+`startTrace` captures database-level operations (`Get`/`Put`/...). Two independent trace streams
+capture lower-level activity instead, useful when diagnosing I/O amplification or a cold block
+cache rather than replaying application traffic:
+
+```java
+try (var db = RocksDB.openReadWrite(dbPath);
+     var traceOptions = TraceOptions.newTraceOptions()) {
+	// Every file read/write/open/close/etc.
+	db.startIoTrace(traceOptions, ioTracePath);
+	// ... workload runs ...
+	db.endIoTrace();
+}
+
+try (var db = RocksDB.openReadWrite(dbPath);
+     var traceOptions = BlockCacheTraceOptions.newBlockCacheTraceOptions().setSamplingFrequency(1);
+     var writerOptions = BlockCacheTraceWriterOptions.newBlockCacheTraceWriterOptions()) {
+	// Every block cache hit/miss, with block type and calling code path.
+	db.startBlockCacheTrace(traceOptions, writerOptions, blockCacheTracePath);
+	// ... workload runs ...
+	db.endBlockCacheTrace();
+}
+```
+
+`startBlockCacheTrace` also has a `TraceOptions` overload (matching `rocksdb_start_block_cache_trace`,
+which reuses the same options type as `startTrace`/`startIoTrace`); reach for the
+`BlockCacheTraceOptions`/`BlockCacheTraceWriterOptions` overload above
+(`rocksdb_start_block_cache_trace_with_options`) when sampling and rollover size need to be tuned
+independently. Neither the C API nor this library decodes these trace files — they're consumed by
+RocksDB's own `block_cache_trace_analyzer` tool, not `Replayer`.
+
 ## Serve reads from a secondary instance
 
 A secondary opens the *same* directory as a running primary, read-only, and catches up on demand.
