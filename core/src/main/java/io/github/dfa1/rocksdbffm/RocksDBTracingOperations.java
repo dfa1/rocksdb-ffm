@@ -33,7 +33,7 @@ public interface RocksDBTracingOperations {
 	/// @param traceOptions options controlling sampling rate, filter, and rollover size
 	/// @param tracePath    file to write the trace to; must not already exist
 	default void startTrace(TraceOptions traceOptions, Path tracePath) {
-		RocksDB.startTrace(this, traceOptions, tracePath);
+		TracingSupport.startTrace(this, traceOptions, tracePath);
 	}
 
 	/// [#startTrace(TraceOptions, Path)] with an explicit [Env]/[EnvOptions] pair, e.g. to
@@ -46,12 +46,12 @@ public interface RocksDBTracingOperations {
 	/// @param traceOptions options controlling sampling rate, filter, and rollover size
 	/// @param tracePath    file to write the trace to; must not already exist
 	default void startTrace(Env env, EnvOptions envOptions, TraceOptions traceOptions, Path tracePath) {
-		RocksDB.startTrace(this, env, envOptions, traceOptions, tracePath);
+		TracingSupport.startTrace(this, env, envOptions, traceOptions, tracePath);
 	}
 
 	/// Stops a trace started with [#startTrace].
 	default void endTrace() {
-		RocksDB.endTrace(this);
+		TracingSupport.endTrace(this);
 	}
 
 	/// Starts capturing every file I/O operation (as opposed to [#startTrace], which captures
@@ -61,7 +61,7 @@ public interface RocksDBTracingOperations {
 	/// @param traceOptions options controlling sampling rate, filter, and rollover size
 	/// @param tracePath    file to write the trace to; must not already exist
 	default void startIoTrace(TraceOptions traceOptions, Path tracePath) {
-		RocksDB.startIoTrace(this, traceOptions, tracePath);
+		TracingSupport.startIoTrace(this, traceOptions, tracePath);
 	}
 
 	/// [#startIoTrace(TraceOptions, Path)] with an explicit [Env]/[EnvOptions] pair. Both remain
@@ -73,12 +73,12 @@ public interface RocksDBTracingOperations {
 	/// @param traceOptions options controlling sampling rate, filter, and rollover size
 	/// @param tracePath    file to write the trace to; must not already exist
 	default void startIoTrace(Env env, EnvOptions envOptions, TraceOptions traceOptions, Path tracePath) {
-		RocksDB.startIoTrace(this, env, envOptions, traceOptions, tracePath);
+		TracingSupport.startIoTrace(this, env, envOptions, traceOptions, tracePath);
 	}
 
 	/// Stops a trace started with [#startIoTrace].
 	default void endIoTrace() {
-		RocksDB.endIoTrace(this);
+		TracingSupport.endIoTrace(this);
 	}
 
 	/// Starts capturing every block cache access (hit/miss, block type, caller, key) to a trace
@@ -88,7 +88,7 @@ public interface RocksDBTracingOperations {
 	/// @param traceOptions options controlling sampling rate, filter, and rollover size
 	/// @param tracePath    file to write the trace to; must not already exist
 	default void startBlockCacheTrace(TraceOptions traceOptions, Path tracePath) {
-		RocksDB.startBlockCacheTrace(this, traceOptions, tracePath);
+		TracingSupport.startBlockCacheTrace(this, traceOptions, tracePath);
 	}
 
 	/// [#startBlockCacheTrace(TraceOptions, Path)] with an explicit [Env]/[EnvOptions] pair. Both
@@ -100,7 +100,7 @@ public interface RocksDBTracingOperations {
 	/// @param traceOptions options controlling sampling rate, filter, and rollover size
 	/// @param tracePath    file to write the trace to; must not already exist
 	default void startBlockCacheTrace(Env env, EnvOptions envOptions, TraceOptions traceOptions, Path tracePath) {
-		RocksDB.startBlockCacheTrace(this, env, envOptions, traceOptions, tracePath);
+		TracingSupport.startBlockCacheTrace(this, env, envOptions, traceOptions, tracePath);
 	}
 
 	/// [#startBlockCacheTrace(TraceOptions, Path)] using [BlockCacheTraceOptions] (sampling only)
@@ -113,7 +113,7 @@ public interface RocksDBTracingOperations {
 	/// @param tracePath     file to write the trace to; must not already exist
 	default void startBlockCacheTrace(BlockCacheTraceOptions traceOptions,
 			BlockCacheTraceWriterOptions writerOptions, Path tracePath) {
-		RocksDB.startBlockCacheTrace(this, traceOptions, writerOptions, tracePath);
+		TracingSupport.startBlockCacheTrace(this, traceOptions, writerOptions, tracePath);
 	}
 
 	/// [#startBlockCacheTrace(BlockCacheTraceOptions, BlockCacheTraceWriterOptions, Path)] with an
@@ -127,11 +127,11 @@ public interface RocksDBTracingOperations {
 	/// @param tracePath     file to write the trace to; must not already exist
 	default void startBlockCacheTrace(Env env, EnvOptions envOptions, BlockCacheTraceOptions traceOptions,
 			BlockCacheTraceWriterOptions writerOptions, Path tracePath) {
-		RocksDB.startBlockCacheTrace(this, env, envOptions, traceOptions, writerOptions, tracePath);
+		TracingSupport.startBlockCacheTrace(this, env, envOptions, traceOptions, writerOptions, tracePath);
 	}
 
 	/// Stops a trace started with either `startBlockCacheTrace` overload.
 	default void endBlockCacheTrace() {
-		RocksDB.endBlockCacheTrace(this);
+		TracingSupport.endBlockCacheTrace(this);
 	}
 }
