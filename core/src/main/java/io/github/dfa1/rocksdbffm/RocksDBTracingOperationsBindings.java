@@ -12,7 +12,9 @@ import java.nio.file.Path;
 /// `interface`-nested holder: interface fields are implicitly `public static final`, so a
 /// `private static final MethodHandle` (required by CLAUDE.md) cannot live directly on
 /// `RocksDBTracingOperations` -- this package-private top-level class is the closest equivalent.
-final class TracingSupport {
+/// Named after the interface it backs, `<InterfaceName>Bindings`, so the pairing stays obvious
+/// as more capability interfaces (`RocksDBReadOperations`, ...) get the same treatment.
+final class RocksDBTracingOperationsBindings {
 
 	/// `void rocksdb_start_trace(rocksdb_t* db, rocksdb_env_t* env, const rocksdb_envoptions_t* env_options, const rocksdb_trace_options_t* options, const char* trace_path, char** errptr);`
 	private static final MethodHandle MH_START_TRACE;
@@ -78,7 +80,7 @@ final class TracingSupport {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
-	private TracingSupport() {
+	private RocksDBTracingOperationsBindings() {
 	}
 
 	/// [#startTrace(RocksDBTracingOperations, Env, EnvOptions, TraceOptions, Path)] using a
