@@ -3,6 +3,8 @@ package io.github.dfa1.rocksdbffm;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -112,5 +114,122 @@ class TracingTest {
 			// built and passed correctly
 			assertThat(replayer.getHeaderTimestamp()).isNotNull();
 		}
+	}
+
+	@Test
+	void startIoTrace_and_endIoTrace_writeANonEmptyTraceFile(@TempDir Path dir) throws IOException {
+		// Given
+		var tracePath = dir.resolve("io-trace.log");
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"));
+		     var traceOptions = TraceOptions.newTraceOptions()) {
+
+			// When
+			db.startIoTrace(traceOptions, tracePath);
+			db.put("k".getBytes(), "v".getBytes());
+			db.endIoTrace();
+		}
+
+		// Then
+		assertThat(Files.size(tracePath)).isPositive();
+	}
+
+	@Test
+	void startIoTrace_withExplicitEnvAndEnvOptions_writesANonEmptyTraceFile(@TempDir Path dir) throws IOException {
+		// Given
+		var tracePath = dir.resolve("io-trace.log");
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"));
+		     var env = Env.defaultEnv();
+		     var envOptions = EnvOptions.newEnvOptions();
+		     var traceOptions = TraceOptions.newTraceOptions()) {
+
+			// When
+			db.startIoTrace(env, envOptions, traceOptions, tracePath);
+			db.put("k".getBytes(), "v".getBytes());
+			db.endIoTrace();
+		}
+
+		// Then
+		assertThat(Files.size(tracePath)).isPositive();
+	}
+
+	@Test
+	void startBlockCacheTrace_withTraceOptions_writesANonEmptyTraceFile(@TempDir Path dir) throws IOException {
+		// Given
+		var tracePath = dir.resolve("block-cache-trace.log");
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"));
+		     var traceOptions = TraceOptions.newTraceOptions()) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			db.startBlockCacheTrace(traceOptions, tracePath);
+			db.get("k".getBytes());
+			db.endBlockCacheTrace();
+		}
+
+		// Then
+		assertThat(Files.size(tracePath)).isPositive();
+	}
+
+	@Test
+	void startBlockCacheTrace_withExplicitEnvAndEnvOptions_writesANonEmptyTraceFile(@TempDir Path dir)
+			throws IOException {
+		// Given
+		var tracePath = dir.resolve("block-cache-trace.log");
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"));
+		     var env = Env.defaultEnv();
+		     var envOptions = EnvOptions.newEnvOptions();
+		     var traceOptions = TraceOptions.newTraceOptions()) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			db.startBlockCacheTrace(env, envOptions, traceOptions, tracePath);
+			db.get("k".getBytes());
+			db.endBlockCacheTrace();
+		}
+
+		// Then
+		assertThat(Files.size(tracePath)).isPositive();
+	}
+
+	@Test
+	void startBlockCacheTrace_withBlockCacheTraceOptions_writesANonEmptyTraceFile(@TempDir Path dir)
+			throws IOException {
+		// Given
+		var tracePath = dir.resolve("block-cache-trace.log");
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"));
+		     var traceOptions = BlockCacheTraceOptions.newBlockCacheTraceOptions();
+		     var writerOptions = BlockCacheTraceWriterOptions.newBlockCacheTraceWriterOptions()) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			db.startBlockCacheTrace(traceOptions, writerOptions, tracePath);
+			db.get("k".getBytes());
+			db.endBlockCacheTrace();
+		}
+
+		// Then
+		assertThat(Files.size(tracePath)).isPositive();
+	}
+
+	@Test
+	void startBlockCacheTrace_withBlockCacheTraceOptionsAndExplicitEnv_writesANonEmptyTraceFile(@TempDir Path dir)
+			throws IOException {
+		// Given
+		var tracePath = dir.resolve("block-cache-trace.log");
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"));
+		     var env = Env.defaultEnv();
+		     var envOptions = EnvOptions.newEnvOptions();
+		     var traceOptions = BlockCacheTraceOptions.newBlockCacheTraceOptions();
+		     var writerOptions = BlockCacheTraceWriterOptions.newBlockCacheTraceWriterOptions()) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			db.startBlockCacheTrace(env, envOptions, traceOptions, writerOptions, tracePath);
+			db.get("k".getBytes());
+			db.endBlockCacheTrace();
+		}
+
+		// Then
+		assertThat(Files.size(tracePath)).isPositive();
 	}
 }
