@@ -143,6 +143,26 @@ freed, not after. This removes the ordering hazard by construction rather than b
 own release code never has to ask "is my pointer still good?" because the design guarantees it
 always is by the time that code runs.
 
+That guarantee has its own narrow TOCTOU window ([issues/143](https://github.com/dfa1/rocksdbffm/issues/143)):
+a child's native "create" call can succeed an instant before the parent closes, so its constructor's
+`registerChild` call can arrive *after* the parent's one-shot sweep already ran and iterated whatever
+was registered at that instant. Checking "is this object still open" and then adding are two separate
+operations no matter how the check is implemented, so a plain check-then-add is racy regardless — but
+`NativeObjectWithChildren` closes the window without a lock at all: `registerChild` adds the child
+first, unconditionally, then rechecks. `ConcurrentHashMap` guarantees that an add completing before
+another thread's later traversal of the same set is visible to it, so if the parent's sweep genuinely
+hasn't started yet, the eventual sweep is still guaranteed to see the child. If the recheck instead
+finds the parent already closed, `registerChild` removes what it just added and, only if that removal
+still finds it there (i.e. the sweep's weakly-consistent iterator missed it), abandons the child via
+`transferOwnership()` instead — no release call against a pointer the parent may have already freed,
+at the cost of a real (but crash-free) native resource leak in that narrow window. If the removal
+instead finds the child already gone, the sweep won the race and closed it properly itself. Either
+way, `NativeObject#close()`/`transferOwnership()` both just idempotently null the same pointer
+reference, so a "sweep closes it" and "registerChild abandons it" racing for the same instance can
+never double-free — whichever runs second is a no-op. No lock, no cost added to any native call site
+at all — a stronger result than the "lock around every native call site" trade the second paragraph
+of this section declines for the unrelated, broader close()-vs-any-method race.
+
 ## Only valid operations
 
 Each way of opening a database gets its own Java type, exposing only the operations that are
