@@ -7,7 +7,7 @@ import java.lang.invoke.MethodHandle;
 /// this library's native wrappers — every `*Options` class, plus a handful of other classes with
 /// the same shape ([StatisticsHistogramData], [SstFileManager], [Env], [Cache], [Replayer],
 /// [ColumnFamilyHandle], [Snapshot]). A call site passes its own `ptr()` alongside the
-/// `MethodHandle`, the same way [RocksDB#wrapInvokeFailure(String, Throwable)] and friends are
+/// `MethodHandle`, the same way [NativeCalls#wrapInvokeFailure(String, Throwable)] and friends are
 /// already shared static FFM plumbing rather than instance state.
 ///
 /// This is a documented, scoped exception to CLAUDE.md's "never pass a MethodHandle as a method
@@ -35,7 +35,7 @@ final class NativeFields {
 		try {
 			return (int) mh.invokeExact(ptr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("native int getter failed", t);
+			throw NativeCalls.wrapInvokeFailure("native int getter failed", t);
 		}
 	}
 
@@ -48,7 +48,7 @@ final class NativeFields {
 		try {
 			mh.invokeExact(ptr, value);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("native int setter failed", t);
+			throw NativeCalls.wrapInvokeFailure("native int setter failed", t);
 		}
 	}
 
@@ -61,7 +61,7 @@ final class NativeFields {
 		try {
 			return (long) mh.invokeExact(ptr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("native long getter failed", t);
+			throw NativeCalls.wrapInvokeFailure("native long getter failed", t);
 		}
 	}
 
@@ -74,7 +74,7 @@ final class NativeFields {
 		try {
 			mh.invokeExact(ptr, value);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("native long setter failed", t);
+			throw NativeCalls.wrapInvokeFailure("native long setter failed", t);
 		}
 	}
 
@@ -87,7 +87,7 @@ final class NativeFields {
 		try {
 			return (double) mh.invokeExact(ptr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("native double getter failed", t);
+			throw NativeCalls.wrapInvokeFailure("native double getter failed", t);
 		}
 	}
 
@@ -100,35 +100,35 @@ final class NativeFields {
 		try {
 			mh.invokeExact(ptr, value);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("native double setter failed", t);
+			throw NativeCalls.wrapInvokeFailure("native double setter failed", t);
 		}
 	}
 
 	/// Invokes a no-arg, `unsigned char`-returning getter `MethodHandle` against `ptr`,
-	/// converting the native `0`/`1` byte to a Java `boolean` (see [RocksDB#fromByte(byte)]).
+	/// converting the native `0`/`1` byte to a Java `boolean` (see [NativeCalls#fromByte(byte)]).
 	///
 	/// @param mh  the `(ADDRESS)JAVA_BYTE` getter handle to invoke
 	/// @param ptr the native pointer to invoke it against
 	/// @return the decoded `boolean` value
 	static boolean getBoolean(MethodHandle mh, MemorySegment ptr) {
 		try {
-			return RocksDB.fromByte((byte) mh.invokeExact(ptr));
+			return NativeCalls.fromByte((byte) mh.invokeExact(ptr));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("native boolean getter failed", t);
+			throw NativeCalls.wrapInvokeFailure("native boolean getter failed", t);
 		}
 	}
 
 	/// Invokes a single-`unsigned char`-argument, `void` setter `MethodHandle` against `ptr`,
-	/// converting the Java `boolean` to the native `0`/`1` byte (see [RocksDB#toByte(boolean)]).
+	/// converting the Java `boolean` to the native `0`/`1` byte (see [NativeCalls#toByte(boolean)]).
 	///
 	/// @param mh    the `(ADDRESS, JAVA_BYTE)void` setter handle to invoke
 	/// @param ptr   the native pointer to invoke it against
 	/// @param value the `boolean` value to set
 	static void setBoolean(MethodHandle mh, MemorySegment ptr, boolean value) {
 		try {
-			mh.invokeExact(ptr, RocksDB.toByte(value));
+			mh.invokeExact(ptr, NativeCalls.toByte(value));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("native boolean setter failed", t);
+			throw NativeCalls.wrapInvokeFailure("native boolean setter failed", t);
 		}
 	}
 

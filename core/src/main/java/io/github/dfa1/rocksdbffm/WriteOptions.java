@@ -116,7 +116,7 @@ public final class WriteOptions extends NativeObject {
 		try {
 			return new WriteOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("writeoptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("writeoptions create failed", t);
 		}
 	}
 
@@ -143,7 +143,7 @@ public final class WriteOptions extends NativeObject {
 	/// @param disableWal `true` to skip the WAL
 	/// @return this instance for chaining
 	public WriteOptions setDisableWal(boolean disableWal) {
-		NativeFields.setInt(MH_DISABLE_WAL, ptr(), RocksDB.toByte(disableWal));
+		NativeFields.setInt(MH_DISABLE_WAL, ptr(), NativeCalls.toByte(disableWal));
 		return this;
 	}
 

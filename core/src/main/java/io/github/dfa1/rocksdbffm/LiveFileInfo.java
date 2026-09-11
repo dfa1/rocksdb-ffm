@@ -98,9 +98,9 @@ public final class LiveFileInfo {
 	public String columnFamilyName() {
 		try {
 			MemorySegment p = (MemorySegment) MH_CF_NAME.invokeExact(owner.ptr(), index);
-			return RocksDB.toBorrowedJavaString(p);
+			return NativeCalls.toBorrowedJavaString(p);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("columnFamilyName failed", t);
+			throw NativeCalls.wrapInvokeFailure("columnFamilyName failed", t);
 		}
 	}
 
@@ -110,9 +110,9 @@ public final class LiveFileInfo {
 	public String name() {
 		try {
 			MemorySegment p = (MemorySegment) MH_NAME.invokeExact(owner.ptr(), index);
-			return RocksDB.toBorrowedJavaString(p);
+			return NativeCalls.toBorrowedJavaString(p);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("name failed", t);
+			throw NativeCalls.wrapInvokeFailure("name failed", t);
 		}
 	}
 
@@ -122,9 +122,9 @@ public final class LiveFileInfo {
 	public Path directory() {
 		try {
 			MemorySegment p = (MemorySegment) MH_DIRECTORY.invokeExact(owner.ptr(), index);
-			return Path.of(RocksDB.toBorrowedJavaString(p));
+			return Path.of(NativeCalls.toBorrowedJavaString(p));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("directory failed", t);
+			throw NativeCalls.wrapInvokeFailure("directory failed", t);
 		}
 	}
 
@@ -135,7 +135,7 @@ public final class LiveFileInfo {
 		try {
 			return (int) MH_LEVEL.invokeExact(owner.ptr(), index);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("level failed", t);
+			throw NativeCalls.wrapInvokeFailure("level failed", t);
 		}
 	}
 
@@ -146,7 +146,7 @@ public final class LiveFileInfo {
 		try {
 			return MemorySize.ofBytes((long) MH_SIZE.invokeExact(owner.ptr(), index));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("size failed", t);
+			throw NativeCalls.wrapInvokeFailure("size failed", t);
 		}
 	}
 
@@ -157,9 +157,9 @@ public final class LiveFileInfo {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeOut = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment p = (MemorySegment) MH_SMALLESTKEY.invokeExact(owner.ptr(), index, sizeOut);
-			return RocksDB.toByteArray(p, sizeOut.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toByteArray(p, sizeOut.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("smallestKey failed", t);
+			throw NativeCalls.wrapInvokeFailure("smallestKey failed", t);
 		}
 	}
 
@@ -170,9 +170,9 @@ public final class LiveFileInfo {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeOut = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment p = (MemorySegment) MH_LARGESTKEY.invokeExact(owner.ptr(), index, sizeOut);
-			return RocksDB.toByteArray(p, sizeOut.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toByteArray(p, sizeOut.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("largestKey failed", t);
+			throw NativeCalls.wrapInvokeFailure("largestKey failed", t);
 		}
 	}
 
@@ -183,7 +183,7 @@ public final class LiveFileInfo {
 		try {
 			return SequenceNumber.of((long) MH_SMALLEST_SEQNO.invokeExact(owner.ptr(), index));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("smallestSequenceNumber failed", t);
+			throw NativeCalls.wrapInvokeFailure("smallestSequenceNumber failed", t);
 		}
 	}
 
@@ -194,7 +194,7 @@ public final class LiveFileInfo {
 		try {
 			return SequenceNumber.of((long) MH_LARGEST_SEQNO.invokeExact(owner.ptr(), index));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("largestSequenceNumber failed", t);
+			throw NativeCalls.wrapInvokeFailure("largestSequenceNumber failed", t);
 		}
 	}
 
@@ -205,7 +205,7 @@ public final class LiveFileInfo {
 		try {
 			return (long) MH_ENTRIES.invokeExact(owner.ptr(), index);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("numberOfEntries failed", t);
+			throw NativeCalls.wrapInvokeFailure("numberOfEntries failed", t);
 		}
 	}
 
@@ -216,7 +216,7 @@ public final class LiveFileInfo {
 		try {
 			return (long) MH_DELETIONS.invokeExact(owner.ptr(), index);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("numberOfDeletions failed", t);
+			throw NativeCalls.wrapInvokeFailure("numberOfDeletions failed", t);
 		}
 	}
 }

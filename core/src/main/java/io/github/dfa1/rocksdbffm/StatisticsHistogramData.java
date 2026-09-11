@@ -67,7 +67,7 @@ public final class StatisticsHistogramData extends NativeObject {
 		try {
 			return new StatisticsHistogramData((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("histogram data create failed", t);
+			throw NativeCalls.wrapInvokeFailure("histogram data create failed", t);
 		}
 	}
 

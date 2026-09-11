@@ -138,7 +138,7 @@ public final class UniversalCompactionOptions extends NativeObject {
 		try {
 			return new UniversalCompactionOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("universal_compaction_options create failed", t);
+			throw NativeCalls.wrapInvokeFailure("universal_compaction_options create failed", t);
 		}
 	}
 

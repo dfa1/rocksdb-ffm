@@ -171,7 +171,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return new TransactionDBOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("transactiondb options create failed", t);
+			throw NativeCalls.wrapInvokeFailure("transactiondb options create failed", t);
 		}
 	}
 
@@ -234,7 +234,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_TRANSACTION_LOCK_TIMEOUT.invokeExact(ptr(), toMillisOrNoTimeout(transactionLockTimeout));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setTransactionLockTimeout failed", t);
+			throw NativeCalls.wrapInvokeFailure("setTransactionLockTimeout failed", t);
 		}
 		return this;
 	}
@@ -246,7 +246,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return millisToDurationOrNull((long) MH_GET_TRANSACTION_LOCK_TIMEOUT.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getTransactionLockTimeout failed", t);
+			throw NativeCalls.wrapInvokeFailure("getTransactionLockTimeout failed", t);
 		}
 	}
 
@@ -261,7 +261,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			MH_SET_DEFAULT_LOCK_TIMEOUT.invokeExact(ptr(), toMillisOrNoTimeout(defaultLockTimeout));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setDefaultLockTimeout failed", t);
+			throw NativeCalls.wrapInvokeFailure("setDefaultLockTimeout failed", t);
 		}
 		return this;
 	}
@@ -273,7 +273,7 @@ public final class TransactionDBOptions extends NativeObject {
 		try {
 			return millisToDurationOrNull((long) MH_GET_DEFAULT_LOCK_TIMEOUT.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getDefaultLockTimeout failed", t);
+			throw NativeCalls.wrapInvokeFailure("getDefaultLockTimeout failed", t);
 		}
 	}
 

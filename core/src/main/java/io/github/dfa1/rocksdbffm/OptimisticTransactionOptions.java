@@ -47,7 +47,7 @@ public final class OptimisticTransactionOptions extends NativeObject {
 		try {
 			return new OptimisticTransactionOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("optimistic transaction options create failed", t);
+			throw NativeCalls.wrapInvokeFailure("optimistic transaction options create failed", t);
 		}
 	}
 

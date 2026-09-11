@@ -46,7 +46,7 @@ public final class RestoreOptions extends NativeObject {
 		try {
 			return new RestoreOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("RestoreOptions.create failed", t);
+			throw NativeCalls.wrapInvokeFailure("RestoreOptions.create failed", t);
 		}
 	}
 
@@ -56,7 +56,7 @@ public final class RestoreOptions extends NativeObject {
 	/// @param keepLogFiles `true` to preserve WAL files in the restore target
 	/// @return `this` for chaining
 	public RestoreOptions setKeepLogFiles(boolean keepLogFiles) {
-		NativeFields.setInt(MH_SET_KEEP_LOG_FILES, ptr(), RocksDB.toByte(keepLogFiles));
+		NativeFields.setInt(MH_SET_KEEP_LOG_FILES, ptr(), NativeCalls.toByte(keepLogFiles));
 		return this;
 	}
 

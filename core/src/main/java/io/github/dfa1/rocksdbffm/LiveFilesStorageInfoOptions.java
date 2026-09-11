@@ -75,7 +75,7 @@ public final class LiveFilesStorageInfoOptions extends NativeObject {
 		try {
 			return new LiveFilesStorageInfoOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("LiveFilesStorageInfoOptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("LiveFilesStorageInfoOptions create failed", t);
 		}
 	}
 

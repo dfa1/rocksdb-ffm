@@ -84,7 +84,7 @@ public final class SizeApproximationOptions extends NativeObject {
 		try {
 			return new SizeApproximationOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("SizeApproximationOptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("SizeApproximationOptions create failed", t);
 		}
 	}
 

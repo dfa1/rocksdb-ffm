@@ -93,9 +93,9 @@ public final class FlushJobInfo {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment namePtr = (MemorySegment) MH_CF_NAME.invokeExact(ptr, sizeHolder);
-			return RocksDB.toJavaString(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toJavaString(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.columnFamilyName failed", t);
+			throw NativeCalls.wrapInvokeFailure("FlushJobInfo.columnFamilyName failed", t);
 		}
 	}
 
@@ -106,9 +106,9 @@ public final class FlushJobInfo {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment pathPtr = (MemorySegment) MH_FILE_PATH.invokeExact(ptr, sizeHolder);
-			return Path.of(RocksDB.toJavaString(pathPtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0)));
+			return Path.of(NativeCalls.toJavaString(pathPtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0)));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("FlushJobInfo.filePath failed", t);
+			throw NativeCalls.wrapInvokeFailure("FlushJobInfo.filePath failed", t);
 		}
 	}
 

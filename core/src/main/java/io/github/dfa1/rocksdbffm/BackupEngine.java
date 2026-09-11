@@ -172,13 +172,13 @@ public final class BackupEngine extends NativeObject {
 	/// @return a new [BackupEngine] instance
 	public static BackupEngine open(Options options, Path backupPath) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(backupPath.toString());
 			MemorySegment ptr = (MemorySegment) MH_OPEN.invokeExact(options.ptr(), pathSeg, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 			return new BackupEngine(ptr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("BackupEngine.open failed", t);
+			throw NativeCalls.wrapInvokeFailure("BackupEngine.open failed", t);
 		}
 	}
 
@@ -192,12 +192,12 @@ public final class BackupEngine extends NativeObject {
 	/// @return a new [BackupEngine] instance
 	public static BackupEngine open(BackupEngineOptions options, Env env) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment ptr = (MemorySegment) MH_OPEN_OPTS.invokeExact(options.ptr(), env.ptr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 			return new BackupEngine(ptr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("BackupEngine.open failed", t);
+			throw NativeCalls.wrapInvokeFailure("BackupEngine.open failed", t);
 		}
 	}
 
@@ -227,11 +227,11 @@ public final class BackupEngine extends NativeObject {
 
 	private void createBackup(MemorySegment dbPtr, boolean flush) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
-			MH_CREATE_NEW_BACKUP_FLUSH.invokeExact(ptr(), dbPtr, RocksDB.toByte(flush), err);
-			RocksDB.checkError(err);
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MH_CREATE_NEW_BACKUP_FLUSH.invokeExact(ptr(), dbPtr, NativeCalls.toByte(flush), err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("createNewBackup failed", t);
+			throw NativeCalls.wrapInvokeFailure("createNewBackup failed", t);
 		}
 	}
 
@@ -244,11 +244,11 @@ public final class BackupEngine extends NativeObject {
 	/// @param numBackupsToKeep number of recent backups to retain
 	public void purgeOldBackups(int numBackupsToKeep) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_PURGE_OLD_BACKUPS.invokeExact(ptr(), numBackupsToKeep, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("purgeOldBackups failed", t);
+			throw NativeCalls.wrapInvokeFailure("purgeOldBackups failed", t);
 		}
 	}
 
@@ -258,11 +258,11 @@ public final class BackupEngine extends NativeObject {
 	/// @throws RocksDBException if the backup is corrupt or not found
 	public void verifyBackup(BackupId backupId) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_VERIFY_BACKUP.invokeExact(ptr(), backupId.toNativeInt(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("verifyBackup failed", t);
+			throw NativeCalls.wrapInvokeFailure("verifyBackup failed", t);
 		}
 	}
 
@@ -288,13 +288,13 @@ public final class BackupEngine extends NativeObject {
 	/// @param restoreOptions options controlling the restore behavior
 	public void restoreDbFromLatestBackup(Path dbDir, Path walDir, RestoreOptions restoreOptions) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment dbDirSeg = arena.allocateFrom(dbDir.toString());
 			MemorySegment walDirSeg = arena.allocateFrom(walDir.toString());
 			MH_RESTORE_FROM_LATEST.invokeExact(ptr(), dbDirSeg, walDirSeg, restoreOptions.ptr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("restoreDbFromLatestBackup failed", t);
+			throw NativeCalls.wrapInvokeFailure("restoreDbFromLatestBackup failed", t);
 		}
 	}
 
@@ -315,14 +315,14 @@ public final class BackupEngine extends NativeObject {
 	/// @param restoreOptions options controlling the restore behavior
 	public void restoreDbFromBackup(BackupId backupId, Path dbDir, Path walDir, RestoreOptions restoreOptions) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment dbDirSeg = arena.allocateFrom(dbDir.toString());
 			MemorySegment walDirSeg = arena.allocateFrom(walDir.toString());
 			MH_RESTORE_FROM_BACKUP.invokeExact(ptr(), dbDirSeg, walDirSeg,
 					restoreOptions.ptr(), backupId.toNativeInt(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("restoreDbFromBackup failed", t);
+			throw NativeCalls.wrapInvokeFailure("restoreDbFromBackup failed", t);
 		}
 	}
 
@@ -341,7 +341,7 @@ public final class BackupEngine extends NativeObject {
 		try {
 			infoPtr = (MemorySegment) MH_GET_BACKUP_INFO.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBackupInfo failed", t);
+			throw NativeCalls.wrapInvokeFailure("getBackupInfo failed", t);
 		}
 		try {
 			int count = (int) MH_INFO_COUNT.invokeExact(infoPtr);
@@ -355,7 +355,7 @@ public final class BackupEngine extends NativeObject {
 			}
 			return Collections.unmodifiableList(result);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getBackupInfo failed", t);
+			throw NativeCalls.wrapInvokeFailure("getBackupInfo failed", t);
 		} finally {
 			try {
 				MH_INFO_DESTROY.invokeExact(infoPtr);

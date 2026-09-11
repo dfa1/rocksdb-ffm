@@ -40,9 +40,9 @@ public final class WriteStallInfo {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment namePtr = (MemorySegment) MH_CF_NAME.invokeExact(ptr, sizeHolder);
-			return RocksDB.toJavaString(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toJavaString(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("WriteStallInfo.columnFamilyName failed", t);
+			throw NativeCalls.wrapInvokeFailure("WriteStallInfo.columnFamilyName failed", t);
 		}
 	}
 
@@ -55,7 +55,7 @@ public final class WriteStallInfo {
 			return WriteStallCondition.fromValue(condPtr.reinterpret(ValueLayout.JAVA_INT.byteSize())
 					.get(ValueLayout.JAVA_INT, 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("WriteStallInfo.current failed", t);
+			throw NativeCalls.wrapInvokeFailure("WriteStallInfo.current failed", t);
 		}
 	}
 
@@ -68,7 +68,7 @@ public final class WriteStallInfo {
 			return WriteStallCondition.fromValue(condPtr.reinterpret(ValueLayout.JAVA_INT.byteSize())
 					.get(ValueLayout.JAVA_INT, 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("WriteStallInfo.previous failed", t);
+			throw NativeCalls.wrapInvokeFailure("WriteStallInfo.previous failed", t);
 		}
 	}
 }

@@ -87,7 +87,7 @@ public final class CompactOptions extends NativeObject {
 		try {
 			result = (MemorySegment) MH_CREATE.invokeExact();
 		} catch (Throwable e) {
-			throw RocksDB.wrapInvokeFailure(e.getMessage(), e);
+			throw NativeCalls.wrapInvokeFailure(e.getMessage(), e);
 		}
 		return new CompactOptions(result);
 	}
@@ -128,7 +128,7 @@ public final class CompactOptions extends NativeObject {
 		try {
 			MH_SET_BOTTOMMOST.invokeExact(ptr(), value ? BOTTOMMOST_FORCE : BOTTOMMOST_SKIP);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBottommostLevelCompaction failed", t);
+			throw NativeCalls.wrapInvokeFailure("setBottommostLevelCompaction failed", t);
 		}
 		return this;
 	}
@@ -140,7 +140,7 @@ public final class CompactOptions extends NativeObject {
 		try {
 			return (byte) MH_GET_BOTTOMMOST.invokeExact(ptr()) == BOTTOMMOST_FORCE;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isBottommostLevelCompaction failed", t);
+			throw NativeCalls.wrapInvokeFailure("isBottommostLevelCompaction failed", t);
 		}
 	}
 

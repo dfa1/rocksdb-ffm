@@ -68,12 +68,12 @@ public final class Checkpoint extends NativeObject {
 	/// @return a new [Checkpoint] bound to `db`; caller must close it
 	public static Checkpoint newCheckpoint(RocksDBReadOperations db) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			var ptr = (MemorySegment) MH_CREATE.invokeExact(db.dbPtr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 			return new Checkpoint(ptr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("newCheckpoint failed", t);
+			throw NativeCalls.wrapInvokeFailure("newCheckpoint failed", t);
 		}
 	}
 
@@ -90,12 +90,12 @@ public final class Checkpoint extends NativeObject {
 	///                        `MemorySize.ofBytes(Long.MAX_VALUE)` to never flush (use WAL as-is).
 	public void exportTo(Path checkpointDir, MemorySize logSizeForFlush) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			var dirSeg = arena.allocateFrom(checkpointDir.toString());
 			MH_EXPORT.invokeExact(ptr(), dirSeg, logSizeForFlush.toBytes(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("Native call failed", t);
+			throw NativeCalls.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 

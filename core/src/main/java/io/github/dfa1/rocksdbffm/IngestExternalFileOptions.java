@@ -7,7 +7,7 @@ import java.lang.invoke.MethodHandle;
 
 /// FFM wrapper for `rocksdb_ingestexternalfileoptions_t`.
 ///
-/// Controls the behavior of [RocksDB#ingestExternalFile].
+/// Controls the behavior of [RocksDBWriteOperations#ingestExternalFile(java.util.List, IngestExternalFileOptions)].
 ///
 /// ```
 /// try (var opts = IngestExternalFileOptions.newIngestExternalFileOptions().setMoveFiles(true)) {
@@ -71,7 +71,7 @@ public final class IngestExternalFileOptions extends NativeObject {
 		try {
 			return new IngestExternalFileOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ingestexternalfileoptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("ingestexternalfileoptions create failed", t);
 		}
 	}
 

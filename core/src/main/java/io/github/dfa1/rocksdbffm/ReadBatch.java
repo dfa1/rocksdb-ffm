@@ -117,7 +117,7 @@ public final class ReadBatch implements AutoCloseable {
 	/// @throws IllegalArgumentException if `keys.size()` exceeds [#capacity()]
 	/// @return one entry per key, in the same order, `null` where not found
 	public List<byte[]> get(List<byte[]> keys) {
-		return get(RocksDB.DEFAULT_READ_OPTIONS, keys);
+		return get(NativeCalls.DEFAULT_READ_OPTIONS, keys);
 	}
 
 	/// Reads `keys` in one batched native call, reusing this batch's preallocated bookkeeping
@@ -142,14 +142,14 @@ public final class ReadBatch implements AutoCloseable {
 			MemorySegment cfPtr = cf != null ? cf.ptr() : (MemorySegment) MH_GET_DEFAULT_CF.invokeExact(db.dbPtr());
 			for (int i = 0; i < n; i++) {
 				byte[] key = keys.get(i);
-				writeKeySlot(i, RocksDB.toNative(callArena, key), key.length);
+				writeKeySlot(i, NativeCalls.toNative(callArena, key), key.length);
 			}
 			RocksDB.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
 			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collectBytes(n);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ReadBatch.get failed", t);
+			throw NativeCalls.wrapInvokeFailure("ReadBatch.get failed", t);
 		}
 	}
 
@@ -161,7 +161,7 @@ public final class ReadBatch implements AutoCloseable {
 	///                                  `keys.size()` exceeds [#capacity()]
 	/// @return one [CopyResult] per key, in the same order
 	public List<CopyResult> get(List<ByteBuffer> keys, List<ByteBuffer> values) {
-		return get(RocksDB.DEFAULT_READ_OPTIONS, keys, values);
+		return get(NativeCalls.DEFAULT_READ_OPTIONS, keys, values);
 	}
 
 	/// Reads `keys` into the corresponding pre-sized buffer in `values` (same index, same
@@ -197,7 +197,7 @@ public final class ReadBatch implements AutoCloseable {
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collectBuffers(n, values);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ReadBatch.get failed", t);
+			throw NativeCalls.wrapInvokeFailure("ReadBatch.get failed", t);
 		}
 	}
 
@@ -232,7 +232,7 @@ public final class ReadBatch implements AutoCloseable {
 	/// @throws NullPointerException if `fn` returns `null` for any found key
 	/// @return one entry per key, in the same order, `null` where not found
 	public <R> List<R> get(List<MemorySegment> keys, Mapper<R> fn) {
-		return get(RocksDB.DEFAULT_READ_OPTIONS, keys, fn);
+		return get(NativeCalls.DEFAULT_READ_OPTIONS, keys, fn);
 	}
 
 	/// Reads `keys` in one batched native call, reusing this batch's preallocated arrays
@@ -266,7 +266,7 @@ public final class ReadBatch implements AutoCloseable {
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collect(n, fn);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ReadBatch.get failed", t);
+			throw NativeCalls.wrapInvokeFailure("ReadBatch.get failed", t);
 		}
 	}
 
@@ -284,7 +284,7 @@ public final class ReadBatch implements AutoCloseable {
 		for (int i = 0; i < n; i++) {
 			MemorySegment errSlot = errsArr.asSlice((long) i * ValueLayout.ADDRESS.byteSize(), ValueLayout.ADDRESS);
 			try {
-				RocksDB.checkError(errSlot);
+				NativeCalls.checkError(errSlot);
 			} catch (RocksDBException e) {
 				if (firstError == null) {
 					firstError = e;

@@ -25,7 +25,7 @@ import java.util.OptionalLong;
 /// }
 /// ```
 public final class TransactionDB extends NativeObjectWithBaseDb
-		implements RocksDBMonitoringOperations, RocksDBTracingOperations {
+		implements RocksDBCompactionOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
 
 	// -----------------------------------------------------------------------
 	// Method handles
@@ -178,8 +178,8 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 
 	TransactionDB(MemorySegment ptr, MemorySegment baseDb) {
 		super(ptr, baseDb);
-		this.writeOpts = RocksDB.DEFAULT_WRITE_OPTIONS;
-		this.readOpts = RocksDB.DEFAULT_READ_OPTIONS;
+		this.writeOpts = NativeCalls.DEFAULT_WRITE_OPTIONS;
+		this.readOpts = NativeCalls.DEFAULT_READ_OPTIONS;
 	}
 
 	/// Returns the base `rocksdb_t*` pointer. Overridden only to widen visibility to `public`,
@@ -203,11 +203,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param flushOptions options controlling flush behavior
 	public void flush(FlushOptions flushOptions) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_FLUSH.invokeExact(ptr(), flushOptions.ptr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("flush failed", t);
+			throw NativeCalls.wrapInvokeFailure("flush failed", t);
 		}
 	}
 
@@ -216,11 +216,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param sync if `true`, performs an `fsync` after writing
 	public void flushWal(boolean sync) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
-			MH_FLUSH_WAL.invokeExact(ptr(), RocksDB.toByte(sync), err);
-			RocksDB.checkError(err);
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MH_FLUSH_WAL.invokeExact(ptr(), NativeCalls.toByte(sync), err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("flushWal failed", t);
+			throw NativeCalls.wrapInvokeFailure("flushWal failed", t);
 		}
 	}
 
@@ -237,7 +237,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 			MemorySegment snapPtr = (MemorySegment) MH_CREATE_SNAPSHOT.invokeExact(ptr());
 			return new Snapshot(this, ptr(), snapPtr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getSnapshot failed", t);
+			throw NativeCalls.wrapInvokeFailure("getSnapshot failed", t);
 		}
 	}
 
@@ -267,7 +267,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 					ptr(), writeOptions.ptr(), txnOptions.ptr(), MemorySegment.NULL);
 			return new Transaction(txnPtr, txnOptions.getSetSnapshot());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("beginTransaction failed", t);
+			throw NativeCalls.wrapInvokeFailure("beginTransaction failed", t);
 		}
 	}
 
@@ -290,13 +290,13 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value        the value to associate with the key
 	public void put(WriteOptions writeOptions, byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment k = RocksDB.toNative(arena, key);
-			MemorySegment v = RocksDB.toNative(arena, value);
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MemorySegment k = NativeCalls.toNative(arena, key);
+			MemorySegment v = NativeCalls.toNative(arena, value);
 			MH_PUT.invokeExact(ptr(), writeOptions.ptr(), k, (long) key.length, v, (long) value.length, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure("put failed", t);
 		}
 	}
 
@@ -315,14 +315,14 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value        direct [java.nio.ByteBuffer] containing the value
 	public void put(WriteOptions writeOptions, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_PUT.invokeExact(ptr(), writeOptions.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(),
 					MemorySegment.ofBuffer(value), (long) value.remaining(),
 					err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure("put failed", t);
 		}
 	}
 
@@ -341,11 +341,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value        native segment containing the value
 	public void put(WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_PUT.invokeExact(ptr(), writeOptions.ptr(), key, key.byteSize(), value, value.byteSize(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure("put failed", t);
 		}
 	}
 
@@ -355,7 +355,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value the merge operand
 	public void merge(byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
-			merge(arena, writeOpts, RocksDB.toNative(arena, key), RocksDB.toNative(arena, value));
+			merge(arena, writeOpts, NativeCalls.toNative(arena, key), NativeCalls.toNative(arena, value));
 		}
 	}
 
@@ -366,7 +366,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value        the merge operand
 	public void merge(WriteOptions writeOptions, byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
-			merge(arena, writeOptions, RocksDB.toNative(arena, key), RocksDB.toNative(arena, value));
+			merge(arena, writeOptions, NativeCalls.toNative(arena, key), NativeCalls.toNative(arena, value));
 		}
 	}
 
@@ -415,11 +415,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// Merge core using the caller's arena — every tier above builds its segments then delegates here.
 	private void merge(Arena arena, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
 		try {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_MERGE.invokeExact(ptr(), writeOptions.ptr(), key, key.byteSize(), value, value.byteSize(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("merge failed", t);
+			throw NativeCalls.wrapInvokeFailure("merge failed", t);
 		}
 	}
 
@@ -431,11 +431,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @return value bytes, or `null` if not found
 	public byte[] get(ReadOptions readOptions, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
 					ptr(), readOptions.ptr(),
-					RocksDB.toNative(arena, key), (long) key.length, err);
-			RocksDB.checkError(err);
+					NativeCalls.toNative(arena, key), (long) key.length, err);
+			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return null;
 			}
@@ -443,7 +443,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("Native call failed", t);
+			throw NativeCalls.wrapInvokeFailure("Native call failed", t);
 		}
 	}
 
@@ -454,11 +454,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @return value bytes, or `null` if not found
 	public byte[] get(byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
 					ptr(), readOpts.ptr(),
-					RocksDB.toNative(arena, key), (long) key.length, err);
-			RocksDB.checkError(err);
+					NativeCalls.toNative(arena, key), (long) key.length, err);
+			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return null;
 			}
@@ -466,7 +466,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("get failed", t);
+			throw NativeCalls.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -479,11 +479,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// small, or [CopyResult.NotFound] if the key is absent
 	public CopyResult get(java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
 					ptr(), readOpts.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;
 			}
@@ -491,7 +491,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("get failed", t);
+			throw NativeCalls.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -504,10 +504,10 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// small, or [CopyResult.NotFound] if the key is absent
 	public CopyResult get(MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
 					ptr(), readOpts.ptr(), key, key.byteSize(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;
 			}
@@ -515,7 +515,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("get failed", t);
+			throw NativeCalls.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -534,14 +534,14 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @return the result of `fn`, or `null` if `key` is absent
 	public <R> R get(MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin;
 			try {
 				pin = (MemorySegment) MH_GET_PINNED.invokeExact(ptr(), readOpts.ptr(), key, key.byteSize(), err);
 			} catch (Throwable t) {
-				throw RocksDB.wrapInvokeFailure("get_pinned failed", t);
+				throw NativeCalls.wrapInvokeFailure("get_pinned failed", t);
 			}
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return null;
 			}
@@ -563,9 +563,9 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment propSeg = arena.allocateFrom(property.propertyName());
 			MemorySegment result = (MemorySegment) MH_PROPERTY_VALUE.invokeExact(ptr(), propSeg);
-			return RocksDB.toOptionalString(result);
+			return NativeCalls.toOptionalString(result);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getProperty failed", t);
+			throw NativeCalls.wrapInvokeFailure("getProperty failed", t);
 		}
 	}
 
@@ -583,7 +583,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 			}
 			return OptionalLong.of(out.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getLongProperty failed", t);
+			throw NativeCalls.wrapInvokeFailure("getLongProperty failed", t);
 		}
 	}
 
@@ -600,12 +600,12 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param key          the key to remove
 	public void delete(WriteOptions writeOptions, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
-			MemorySegment k = RocksDB.toNative(arena, key);
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MemorySegment k = NativeCalls.toNative(arena, key);
 			MH_DELETE.invokeExact(ptr(), writeOptions.ptr(), k, (long) key.length, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure("delete failed", t);
 		}
 	}
 
@@ -622,12 +622,12 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param key          direct [java.nio.ByteBuffer] containing the key to remove
 	public void delete(WriteOptions writeOptions, java.nio.ByteBuffer key) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE.invokeExact(ptr(), writeOptions.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure("delete failed", t);
 		}
 	}
 
@@ -644,11 +644,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param key          native segment containing the key to remove
 	public void delete(WriteOptions writeOptions, MemorySegment key) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE.invokeExact(ptr(), writeOptions.ptr(), key, key.byteSize(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure("delete failed", t);
 		}
 	}
 
@@ -666,7 +666,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	public ColumnFamilyHandle createColumnFamily(ColumnFamilyDescriptor descriptor) {
 		List<Options> tempOptions = new ArrayList<>(1);
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			Options cfOpts = descriptor.options();
 			if (cfOpts == null) {
 				cfOpts = Options.newOptions();
@@ -676,10 +676,10 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 					new String(descriptor.name(), StandardCharsets.UTF_8));
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
 					ptr(), cfOpts.ptr(), nameSeg, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 			return ColumnFamilyHandle.wrap(handle);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("createColumnFamily failed", t);
+			throw NativeCalls.wrapInvokeFailure("createColumnFamily failed", t);
 		} finally {
 			for (Options o : tempOptions) {
 				o.close();
@@ -691,7 +691,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	///
 	/// @param handle handle of the column family to drop
 	public void dropColumnFamily(ColumnFamilyHandle handle) {
-		RocksDB.dropCf(dbPtr(), handle);
+		RocksDBWriteOperationsBindings.dropCf(dbPtr(), handle);
 	}
 
 	// -----------------------------------------------------------------------
@@ -715,13 +715,13 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value        the value to associate with the key
 	public void put(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_PUT_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
-					RocksDB.toNative(arena, key), (long) key.length,
-					RocksDB.toNative(arena, value), (long) value.length, err);
-			RocksDB.checkError(err);
+					NativeCalls.toNative(arena, key), (long) key.length,
+					NativeCalls.toNative(arena, value), (long) value.length, err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure("put failed", t);
 		}
 	}
 
@@ -742,13 +742,13 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value        direct [java.nio.ByteBuffer] containing the value
 	public void put(ColumnFamilyHandle cf, WriteOptions writeOptions, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_PUT_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(),
 					MemorySegment.ofBuffer(value), (long) value.remaining(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure("put failed", t);
 		}
 	}
 
@@ -769,12 +769,12 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value        native segment containing the value
 	public void put(ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_PUT_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
 					key, key.byteSize(), value, value.byteSize(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure("put failed", t);
 		}
 	}
 
@@ -789,7 +789,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value the merge operand
 	public void merge(ColumnFamilyHandle cf, byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
-			merge(arena, cf, writeOpts, RocksDB.toNative(arena, key), RocksDB.toNative(arena, value));
+			merge(arena, cf, writeOpts, NativeCalls.toNative(arena, key), NativeCalls.toNative(arena, value));
 		}
 	}
 
@@ -801,7 +801,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value        the merge operand
 	public void merge(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] key, byte[] value) {
 		try (Arena arena = Arena.ofConfined()) {
-			merge(arena, cf, writeOptions, RocksDB.toNative(arena, key), RocksDB.toNative(arena, value));
+			merge(arena, cf, writeOptions, NativeCalls.toNative(arena, key), NativeCalls.toNative(arena, value));
 		}
 	}
 
@@ -854,12 +854,12 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// Merge-into-cf core using the caller's arena — every tier above delegates here.
 	private void merge(Arena arena, ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
 		try {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_MERGE_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
 					key, key.byteSize(), value, value.byteSize(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("merge failed", t);
+			throw NativeCalls.wrapInvokeFailure("merge failed", t);
 		}
 	}
 
@@ -884,11 +884,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @return value bytes, or `null` if not found
 	public byte[] get(ColumnFamilyHandle cf, ReadOptions readOptions, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
 					ptr(), readOptions.ptr(), cf.ptr(),
-					RocksDB.toNative(arena, key), (long) key.length, err);
-			RocksDB.checkError(err);
+					NativeCalls.toNative(arena, key), (long) key.length, err);
+			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return null;
 			}
@@ -896,7 +896,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("get failed", t);
+			throw NativeCalls.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -910,11 +910,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// small, or [CopyResult.NotFound] if the key is absent
 	public CopyResult get(ColumnFamilyHandle cf, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
 					ptr(), readOpts.ptr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;
 			}
@@ -922,7 +922,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("get failed", t);
+			throw NativeCalls.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -936,10 +936,10 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// small, or [CopyResult.NotFound] if the key is absent
 	public CopyResult get(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
 					ptr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;
 			}
@@ -947,7 +947,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("get failed", t);
+			throw NativeCalls.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -962,14 +962,14 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @return the result of `fn`, or `null` if `key` is absent
 	public <R> R get(ColumnFamilyHandle cf, MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin;
 			try {
 				pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(ptr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
 			} catch (Throwable t) {
-				throw RocksDB.wrapInvokeFailure("get_pinned failed", t);
+				throw NativeCalls.wrapInvokeFailure("get_pinned failed", t);
 			}
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return null;
 			}
@@ -998,12 +998,12 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param key          the key to remove
 	public void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] key) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
-					RocksDB.toNative(arena, key), (long) key.length, err);
-			RocksDB.checkError(err);
+					NativeCalls.toNative(arena, key), (long) key.length, err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure("delete failed", t);
 		}
 	}
 
@@ -1022,12 +1022,12 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param key          direct [java.nio.ByteBuffer] containing the key to remove
 	public void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, java.nio.ByteBuffer key) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure("delete failed", t);
 		}
 	}
 
@@ -1046,11 +1046,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param key          native segment containing the key to remove
 	public void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(), key, key.byteSize(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure("delete failed", t);
 		}
 	}
 
@@ -1068,7 +1068,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 					ptr(), readOpts.ptr(), cf.ptr());
 			return RocksIterator.create(this, iterPtr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("newIterator failed", t);
+			throw NativeCalls.wrapInvokeFailure("newIterator failed", t);
 		}
 	}
 
@@ -1083,7 +1083,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 					ptr(), readOptions.ptr(), cf.ptr());
 			return RocksIterator.create(this, iterPtr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("newIterator failed", t);
+			throw NativeCalls.wrapInvokeFailure("newIterator failed", t);
 		}
 	}
 
@@ -1097,11 +1097,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param flushOptions options controlling flush behavior
 	public void flush(ColumnFamilyHandle cf, FlushOptions flushOptions) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_FLUSH_CF.invokeExact(ptr(), flushOptions.ptr(), cf.ptr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("flush failed", t);
+			throw NativeCalls.wrapInvokeFailure("flush failed", t);
 		}
 	}
 
@@ -1115,7 +1115,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param property the property to query
 	/// @return the property value, or empty if not supported
 	public Optional<String> getProperty(ColumnFamilyHandle cf, Property property) {
-		return RocksDB.getPropertyCf(dbPtr(), cf, property);
+		return RocksDBReadOperationsBindings.getPropertyCf(dbPtr(), cf, property);
 	}
 
 	/// Returns the value of a numeric property for `cf`, or [OptionalLong#empty()] if not supported.
@@ -1124,7 +1124,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param property the property to query
 	/// @return the numeric property value, or empty if not supported
 	public OptionalLong getLongProperty(ColumnFamilyHandle cf, Property property) {
-		return RocksDB.getLongPropertyCf(dbPtr(), cf, property);
+		return RocksDBReadOperationsBindings.getLongPropertyCf(dbPtr(), cf, property);
 	}
 
 	// -----------------------------------------------------------------------

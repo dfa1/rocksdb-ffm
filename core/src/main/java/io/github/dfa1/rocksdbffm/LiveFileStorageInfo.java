@@ -87,9 +87,9 @@ public final class LiveFileStorageInfo {
 	public String relativeFilename() {
 		try {
 			MemorySegment p = (MemorySegment) MH_RELATIVE_FILENAME.invokeExact(owner.ptr(), (long) index);
-			return RocksDB.toBorrowedJavaString(p);
+			return NativeCalls.toBorrowedJavaString(p);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("relativeFilename failed", t);
+			throw NativeCalls.wrapInvokeFailure("relativeFilename failed", t);
 		}
 	}
 
@@ -99,9 +99,9 @@ public final class LiveFileStorageInfo {
 	public Path directory() {
 		try {
 			MemorySegment p = (MemorySegment) MH_DIRECTORY.invokeExact(owner.ptr(), (long) index);
-			return Path.of(RocksDB.toBorrowedJavaString(p));
+			return Path.of(NativeCalls.toBorrowedJavaString(p));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("directory failed", t);
+			throw NativeCalls.wrapInvokeFailure("directory failed", t);
 		}
 	}
 
@@ -113,7 +113,7 @@ public final class LiveFileStorageInfo {
 		try {
 			return (long) MH_FILE_NUMBER.invokeExact(owner.ptr(), (long) index);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("fileNumber failed", t);
+			throw NativeCalls.wrapInvokeFailure("fileNumber failed", t);
 		}
 	}
 
@@ -124,7 +124,7 @@ public final class LiveFileStorageInfo {
 		try {
 			return FileType.fromValue((int) MH_FILE_TYPE.invokeExact(owner.ptr(), (long) index));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("fileType failed", t);
+			throw NativeCalls.wrapInvokeFailure("fileType failed", t);
 		}
 	}
 
@@ -135,7 +135,7 @@ public final class LiveFileStorageInfo {
 		try {
 			return MemorySize.ofBytes((long) MH_SIZE.invokeExact(owner.ptr(), (long) index));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("size failed", t);
+			throw NativeCalls.wrapInvokeFailure("size failed", t);
 		}
 	}
 
@@ -146,7 +146,7 @@ public final class LiveFileStorageInfo {
 		try {
 			return Temperature.fromValue((int) MH_TEMPERATURE.invokeExact(owner.ptr(), (long) index));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("temperature failed", t);
+			throw NativeCalls.wrapInvokeFailure("temperature failed", t);
 		}
 	}
 
@@ -158,10 +158,10 @@ public final class LiveFileStorageInfo {
 	public Optional<String> fileChecksum() {
 		try {
 			MemorySegment p = (MemorySegment) MH_FILE_CHECKSUM.invokeExact(owner.ptr(), (long) index);
-			String checksum = RocksDB.toBorrowedJavaString(p);
+			String checksum = NativeCalls.toBorrowedJavaString(p);
 			return checksum.isEmpty() ? Optional.empty() : Optional.of(checksum);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("fileChecksum failed", t);
+			throw NativeCalls.wrapInvokeFailure("fileChecksum failed", t);
 		}
 	}
 
@@ -172,9 +172,9 @@ public final class LiveFileStorageInfo {
 	public String fileChecksumFuncName() {
 		try {
 			MemorySegment p = (MemorySegment) MH_FILE_CHECKSUM_FUNC_NAME.invokeExact(owner.ptr(), (long) index);
-			return RocksDB.toBorrowedJavaString(p);
+			return NativeCalls.toBorrowedJavaString(p);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("fileChecksumFuncName failed", t);
+			throw NativeCalls.wrapInvokeFailure("fileChecksumFuncName failed", t);
 		}
 	}
 
@@ -187,9 +187,9 @@ public final class LiveFileStorageInfo {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeOut = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment p = (MemorySegment) MH_REPLACEMENT_CONTENTS.invokeExact(owner.ptr(), (long) index, sizeOut);
-			return RocksDB.toByteArray(p, sizeOut.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toByteArray(p, sizeOut.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("replacementContents failed", t);
+			throw NativeCalls.wrapInvokeFailure("replacementContents failed", t);
 		}
 	}
 
@@ -200,9 +200,9 @@ public final class LiveFileStorageInfo {
 	/// @return `true` if the on-disk file may be trimmed to `size()`
 	public boolean trimToSize() {
 		try {
-			return RocksDB.fromByte((byte) MH_TRIM_TO_SIZE.invokeExact(owner.ptr(), (long) index));
+			return NativeCalls.fromByte((byte) MH_TRIM_TO_SIZE.invokeExact(owner.ptr(), (long) index));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("trimToSize failed", t);
+			throw NativeCalls.wrapInvokeFailure("trimToSize failed", t);
 		}
 	}
 }

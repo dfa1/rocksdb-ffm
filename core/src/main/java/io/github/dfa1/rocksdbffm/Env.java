@@ -72,7 +72,7 @@ public final class Env extends NativeObject {
 		try {
 			return new Env((MemorySegment) MH_CREATE_DEFAULT.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("Env.defaultEnv failed", t);
+			throw NativeCalls.wrapInvokeFailure("Env.defaultEnv failed", t);
 		}
 	}
 
@@ -83,7 +83,7 @@ public final class Env extends NativeObject {
 		try {
 			return new Env((MemorySegment) MH_CREATE_MEM.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("Env.memEnv failed", t);
+			throw NativeCalls.wrapInvokeFailure("Env.memEnv failed", t);
 		}
 	}
 

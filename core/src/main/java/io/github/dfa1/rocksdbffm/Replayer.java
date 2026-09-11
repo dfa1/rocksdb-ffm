@@ -95,7 +95,7 @@ public final class Replayer extends NativeObject {
 	public static Replayer create(RocksDBWriteOperations db, List<ColumnFamilyHandle> cfs, Env env,
 			EnvOptions envOptions, Path tracePath) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment cfArr = arena.allocate(ValueLayout.ADDRESS, cfs.size());
 			for (int i = 0; i < cfs.size(); i++) {
 				cfArr.setAtIndex(ValueLayout.ADDRESS, i, cfs.get(i).ptr());
@@ -103,10 +103,10 @@ public final class Replayer extends NativeObject {
 			MemorySegment pathSeg = arena.allocateFrom(tracePath.toString());
 			MemorySegment ptr = (MemorySegment) MH_CREATE.invokeExact(
 					db.dbPtr(), cfArr, (long) cfs.size(), env.ptr(), envOptions.ptr(), pathSeg, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 			return new Replayer(ptr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("Replayer.create failed", t);
+			throw NativeCalls.wrapInvokeFailure("Replayer.create failed", t);
 		}
 	}
 
@@ -114,11 +114,11 @@ public final class Replayer extends NativeObject {
 	/// [#replay(ReplayOptions)].
 	public void prepare() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_PREPARE.invokeExact(ptr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("prepare failed", t);
+			throw NativeCalls.wrapInvokeFailure("prepare failed", t);
 		}
 	}
 
@@ -137,11 +137,11 @@ public final class Replayer extends NativeObject {
 	/// @param options concurrency and timing controls for playback
 	public void replay(ReplayOptions options) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_REPLAY.invokeExact(ptr(), options.ptr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("replay failed", t);
+			throw NativeCalls.wrapInvokeFailure("replay failed", t);
 		}
 	}
 

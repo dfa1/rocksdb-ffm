@@ -95,7 +95,7 @@ public sealed interface MergeOperator {
 			try {
 				MH_SET_UINT64ADD_MERGE_OPERATOR.invokeExact(optionsPtr);
 			} catch (Throwable t) {
-				throw RocksDB.wrapInvokeFailure("MergeOperator.uint64Add failed", t);
+				throw NativeCalls.wrapInvokeFailure("MergeOperator.uint64Add failed", t);
 			}
 		}
 	}
@@ -221,7 +221,7 @@ public sealed interface MergeOperator {
 				return new Custom(ptr);
 			} catch (Throwable t) {
 				REGISTRY.unregister(statePtr);
-				throw RocksDB.wrapInvokeFailure("MergeOperator.custom failed", t);
+				throw NativeCalls.wrapInvokeFailure("MergeOperator.custom failed", t);
 			}
 		}
 
@@ -230,7 +230,7 @@ public sealed interface MergeOperator {
 				MH_SET_MERGE_OPERATOR.invokeExact(optionsPtr, ptr());
 				transferOwnership();
 			} catch (Throwable t) {
-				throw RocksDB.wrapInvokeFailure("MergeOperator.custom applyTo failed", t);
+				throw NativeCalls.wrapInvokeFailure("MergeOperator.custom applyTo failed", t);
 			}
 		}
 

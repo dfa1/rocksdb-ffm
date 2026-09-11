@@ -11,7 +11,7 @@ import java.util.OptionalLong;
 /// opening or creating column families for themselves.
 ///
 /// Every method here is a direct, zero-logic forward into the matching package-private
-/// `RocksDB` helper — implementors only need to supply the native pointer.
+/// [RocksDBReadOperationsBindings] helper — implementors only need to supply the native pointer.
 ///
 /// Not implemented by [TransactionDB]: its direct (non-transactional) operations bind their
 /// own `MethodHandle`s instead of sharing these helpers (`rocksdb_transactiondb_put` etc. are
@@ -41,7 +41,7 @@ public interface RocksDBReadOperations {
 	/// @param key key bytes to look up
 	/// @return value bytes, or `null` if the key does not exist
 	default byte[] get(byte[] key) {
-		return RocksDB.getBytes(this, RocksDB.DEFAULT_READ_OPTIONS, key);
+		return RocksDBReadOperationsBindings.getBytes(this, NativeCalls.DEFAULT_READ_OPTIONS, key);
 	}
 
 	/// Get with explicit [ReadOptions], e.g. for snapshot-pinned reads. Returns `null` if not found.
@@ -50,7 +50,7 @@ public interface RocksDBReadOperations {
 	/// @param key         key bytes to look up
 	/// @return value bytes, or `null` if the key does not exist
 	default byte[] get(ReadOptions readOptions, byte[] key) {
-		return RocksDB.getBytes(this, readOptions, key);
+		return RocksDBReadOperationsBindings.getBytes(this, readOptions, key);
 	}
 
 	/// Single-copy get via `rocksdb_get_into_buffer` + direct output [ByteBuffer].
@@ -65,7 +65,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ByteBuffer key, ByteBuffer value) {
-		return RocksDB.getIntoBuffer(this, RocksDB.DEFAULT_READ_OPTIONS,
+		return RocksDBReadOperationsBindings.getIntoBuffer(this, NativeCalls.DEFAULT_READ_OPTIONS,
 				MemorySegment.ofBuffer(key), value);
 	}
 
@@ -77,7 +77,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ReadOptions readOptions, ByteBuffer key, ByteBuffer value) {
-		return RocksDB.getIntoBuffer(this, readOptions,
+		return RocksDBReadOperationsBindings.getIntoBuffer(this, readOptions,
 				MemorySegment.ofBuffer(key), value);
 	}
 
@@ -89,7 +89,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(MemorySegment key, MemorySegment value) {
-		return RocksDB.getIntoSegment(this, RocksDB.DEFAULT_READ_OPTIONS, key, value);
+		return RocksDBReadOperationsBindings.getIntoSegment(this, NativeCalls.DEFAULT_READ_OPTIONS, key, value);
 	}
 
 	/// [#get(MemorySegment, MemorySegment)] with explicit [ReadOptions].
@@ -100,7 +100,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ReadOptions readOptions, MemorySegment key, MemorySegment value) {
-		return RocksDB.getIntoSegment(this, readOptions, key, value);
+		return RocksDBReadOperationsBindings.getIntoSegment(this, readOptions, key, value);
 	}
 
 	/// Scoped zero-copy get: reads `key` via a `rocksdb_pinnable_handle_t` and passes a
@@ -117,7 +117,7 @@ public interface RocksDBReadOperations {
 	/// @throws NullPointerException if `fn` returns `null`
 	/// @return the result of `fn`, or `null` if `key` is absent
 	default <R> R get(MemorySegment key, Mapper<R> fn) {
-		return RocksDB.withPinned(this, RocksDB.DEFAULT_READ_OPTIONS, key, fn);
+		return RocksDBReadOperationsBindings.withPinned(this, NativeCalls.DEFAULT_READ_OPTIONS, key, fn);
 	}
 
 	/// [#get(MemorySegment, Mapper)] with explicit [ReadOptions].
@@ -129,7 +129,7 @@ public interface RocksDBReadOperations {
 	/// @throws NullPointerException if `fn` returns `null`
 	/// @return the result of `fn`, or `null` if `key` is absent
 	default <R> R get(ReadOptions readOptions, MemorySegment key, Mapper<R> fn) {
-		return RocksDB.withPinned(this, readOptions, key, fn);
+		return RocksDBReadOperationsBindings.withPinned(this, readOptions, key, fn);
 	}
 
 	/// Returns the value for `key` in `cf`, or `null` if not found.
@@ -138,7 +138,7 @@ public interface RocksDBReadOperations {
 	/// @param key key bytes to look up
 	/// @return value bytes, or `null` if the key does not exist
 	default byte[] get(ColumnFamilyHandle cf, byte[] key) {
-		return RocksDB.getCfBytes(this, RocksDB.DEFAULT_READ_OPTIONS, cf, key);
+		return RocksDBReadOperationsBindings.getCfBytes(this, NativeCalls.DEFAULT_READ_OPTIONS, cf, key);
 	}
 
 	/// Get from `cf` with explicit [ReadOptions]. Returns `null` if not found.
@@ -148,7 +148,7 @@ public interface RocksDBReadOperations {
 	/// @param key         key bytes to look up
 	/// @return value bytes, or `null` if the key does not exist
 	default byte[] get(ColumnFamilyHandle cf, ReadOptions readOptions, byte[] key) {
-		return RocksDB.getCfBytes(this, readOptions, cf, key);
+		return RocksDBReadOperationsBindings.getCfBytes(this, readOptions, cf, key);
 	}
 
 	/// Single-copy get from `cf` via `rocksdb_get_into_buffer_cf` + direct output [ByteBuffer].
@@ -164,7 +164,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
-		return RocksDB.getCfIntoBuffer(this, RocksDB.DEFAULT_READ_OPTIONS, cf,
+		return RocksDBReadOperationsBindings.getCfIntoBuffer(this, NativeCalls.DEFAULT_READ_OPTIONS, cf,
 				MemorySegment.ofBuffer(key), value);
 	}
 
@@ -177,7 +177,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ColumnFamilyHandle cf, ReadOptions readOptions, ByteBuffer key, ByteBuffer value) {
-		return RocksDB.getCfIntoBuffer(this, readOptions, cf,
+		return RocksDBReadOperationsBindings.getCfIntoBuffer(this, readOptions, cf,
 				MemorySegment.ofBuffer(key), value);
 	}
 
@@ -190,7 +190,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
-		return RocksDB.getCfIntoSegment(this, RocksDB.DEFAULT_READ_OPTIONS, cf, key, value);
+		return RocksDBReadOperationsBindings.getCfIntoSegment(this, NativeCalls.DEFAULT_READ_OPTIONS, cf, key, value);
 	}
 
 	/// [#get(ColumnFamilyHandle, MemorySegment, MemorySegment)] with explicit [ReadOptions].
@@ -202,7 +202,7 @@ public interface RocksDBReadOperations {
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	default CopyResult get(ColumnFamilyHandle cf, ReadOptions readOptions, MemorySegment key, MemorySegment value) {
-		return RocksDB.getCfIntoSegment(this, readOptions, cf, key, value);
+		return RocksDBReadOperationsBindings.getCfIntoSegment(this, readOptions, cf, key, value);
 	}
 
 	/// Scoped zero-copy get from `cf`. See [#get(MemorySegment, Mapper)] for
@@ -215,7 +215,7 @@ public interface RocksDBReadOperations {
 	/// @throws NullPointerException if `fn` returns `null`
 	/// @return the result of `fn`, or `null` if `key` is absent
 	default <R> R get(ColumnFamilyHandle cf, MemorySegment key, Mapper<R> fn) {
-		return RocksDB.withPinnedCf(this, RocksDB.DEFAULT_READ_OPTIONS, cf, key, fn);
+		return RocksDBReadOperationsBindings.withPinnedCf(this, NativeCalls.DEFAULT_READ_OPTIONS, cf, key, fn);
 	}
 
 	/// [#get(ColumnFamilyHandle, MemorySegment, Mapper)] with explicit [ReadOptions].
@@ -228,7 +228,7 @@ public interface RocksDBReadOperations {
 	/// @throws NullPointerException if `fn` returns `null`
 	/// @return the result of `fn`, or `null` if `key` is absent
 	default <R> R get(ColumnFamilyHandle cf, ReadOptions readOptions, MemorySegment key, Mapper<R> fn) {
-		return RocksDB.withPinnedCf(this, readOptions, cf, key, fn);
+		return RocksDBReadOperationsBindings.withPinnedCf(this, readOptions, cf, key, fn);
 	}
 
 	// -----------------------------------------------------------------------
@@ -241,7 +241,7 @@ public interface RocksDBReadOperations {
 	/// @param key the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(byte[] key) {
-		return RocksDB.keyMayExistBytes(this, RocksDB.DEFAULT_READ_OPTIONS, key);
+		return RocksDBReadOperationsBindings.keyMayExistBytes(this, NativeCalls.DEFAULT_READ_OPTIONS, key);
 	}
 
 	/// [#keyMayExist(byte\[\])] with explicit [ReadOptions].
@@ -250,7 +250,7 @@ public interface RocksDBReadOperations {
 	/// @param key         the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ReadOptions readOptions, byte[] key) {
-		return RocksDB.keyMayExistBytes(this, readOptions, key);
+		return RocksDBReadOperationsBindings.keyMayExistBytes(this, readOptions, key);
 	}
 
 	/// Zero-copy for direct [ByteBuffer]s.
@@ -258,7 +258,7 @@ public interface RocksDBReadOperations {
 	/// @param key direct [ByteBuffer] containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ByteBuffer key) {
-		return RocksDB.keyMayExistSegment(this, RocksDB.DEFAULT_READ_OPTIONS, MemorySegment.ofBuffer(key));
+		return RocksDBReadOperationsBindings.keyMayExistSegment(this, NativeCalls.DEFAULT_READ_OPTIONS, MemorySegment.ofBuffer(key));
 	}
 
 	/// Zero-copy for [MemorySegment]s.
@@ -266,7 +266,7 @@ public interface RocksDBReadOperations {
 	/// @param key native segment containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(MemorySegment key) {
-		return RocksDB.keyMayExistSegment(this, RocksDB.DEFAULT_READ_OPTIONS, key);
+		return RocksDBReadOperationsBindings.keyMayExistSegment(this, NativeCalls.DEFAULT_READ_OPTIONS, key);
 	}
 
 	/// Returns `false` if the key definitely does not exist in `cf`; `true` means it _may_ exist.
@@ -275,7 +275,7 @@ public interface RocksDBReadOperations {
 	/// @param key the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ColumnFamilyHandle cf, byte[] key) {
-		return RocksDB.keyMayExistCfBytes(this, RocksDB.DEFAULT_READ_OPTIONS, cf, key);
+		return RocksDBReadOperationsBindings.keyMayExistCfBytes(this, NativeCalls.DEFAULT_READ_OPTIONS, cf, key);
 	}
 
 	/// [#keyMayExist(ColumnFamilyHandle, byte\[\])] with explicit [ReadOptions].
@@ -285,7 +285,7 @@ public interface RocksDBReadOperations {
 	/// @param key         the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ColumnFamilyHandle cf, ReadOptions readOptions, byte[] key) {
-		return RocksDB.keyMayExistCfBytes(this, readOptions, cf, key);
+		return RocksDBReadOperationsBindings.keyMayExistCfBytes(this, readOptions, cf, key);
 	}
 
 	/// Zero-copy keyMayExist in `cf` for direct [ByteBuffer]s.
@@ -294,7 +294,7 @@ public interface RocksDBReadOperations {
 	/// @param key direct [ByteBuffer] containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ColumnFamilyHandle cf, ByteBuffer key) {
-		return RocksDB.keyMayExistCfSegment(this, RocksDB.DEFAULT_READ_OPTIONS, cf,
+		return RocksDBReadOperationsBindings.keyMayExistCfSegment(this, NativeCalls.DEFAULT_READ_OPTIONS, cf,
 				MemorySegment.ofBuffer(key));
 	}
 
@@ -304,7 +304,7 @@ public interface RocksDBReadOperations {
 	/// @param key native segment containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
 	default boolean keyMayExist(ColumnFamilyHandle cf, MemorySegment key) {
-		return RocksDB.keyMayExistCfSegment(this, RocksDB.DEFAULT_READ_OPTIONS, cf, key);
+		return RocksDBReadOperationsBindings.keyMayExistCfSegment(this, NativeCalls.DEFAULT_READ_OPTIONS, cf, key);
 	}
 
 	// -----------------------------------------------------------------------
@@ -315,7 +315,7 @@ public interface RocksDBReadOperations {
 	///
 	/// @return a new [RocksIterator]; caller must close it
 	default RocksIterator newIterator() {
-		return RocksIterator.create(this, RocksDB.DEFAULT_READ_OPTIONS);
+		return RocksIterator.create(this, NativeCalls.DEFAULT_READ_OPTIONS);
 	}
 
 	/// Returns a new iterator using the supplied [ReadOptions].
@@ -331,7 +331,7 @@ public interface RocksDBReadOperations {
 	/// @param cf target column family
 	/// @return a new [RocksIterator]; caller must close it
 	default RocksIterator newIterator(ColumnFamilyHandle cf) {
-		return RocksDB.createIteratorCf(this, RocksDB.DEFAULT_READ_OPTIONS, cf);
+		return RocksDBReadOperationsBindings.createIteratorCf(this, NativeCalls.DEFAULT_READ_OPTIONS, cf);
 	}
 
 	/// Returns a new iterator scoped to `cf` using the supplied [ReadOptions].
@@ -340,7 +340,7 @@ public interface RocksDBReadOperations {
 	/// @param readOptions read options, e.g. containing a snapshot
 	/// @return a new [RocksIterator]; caller must close it
 	default RocksIterator newIterator(ColumnFamilyHandle cf, ReadOptions readOptions) {
-		return RocksDB.createIteratorCf(this, readOptions, cf);
+		return RocksDBReadOperationsBindings.createIteratorCf(this, readOptions, cf);
 	}
 
 	// -----------------------------------------------------------------------
@@ -354,7 +354,7 @@ public interface RocksDBReadOperations {
 		// Every implementor extends NativeObjectWithChildren (see #dbPtr()); passed through so
 		// the returned Snapshot registers itself and is released automatically if this DB
 		// closes first, rather than dangling.
-		return RocksDB.createSnapshot((NativeObjectWithChildren) this, dbPtr());
+		return RocksDBReadOperationsBindings.createSnapshot((NativeObjectWithChildren) this, dbPtr());
 	}
 
 	// -----------------------------------------------------------------------
@@ -366,7 +366,7 @@ public interface RocksDBReadOperations {
 	/// @param property the property to query
 	/// @return the property value, or [Optional#empty()] if not supported
 	default Optional<String> getProperty(Property property) {
-		return RocksDB.getProperty(this, property);
+		return RocksDBReadOperationsBindings.getProperty(this, property);
 	}
 
 	/// Returns the value of a numeric DB property, or [OptionalLong#empty()] if not supported.
@@ -374,7 +374,7 @@ public interface RocksDBReadOperations {
 	/// @param property the property to query
 	/// @return the numeric property value, or [OptionalLong#empty()] if not supported
 	default OptionalLong getLongProperty(Property property) {
-		return RocksDB.getLongProperty(this, property);
+		return RocksDBReadOperationsBindings.getLongProperty(this, property);
 	}
 
 	/// Returns the value of a property scoped to `cf`, or [Optional#empty()] if not supported.
@@ -383,7 +383,7 @@ public interface RocksDBReadOperations {
 	/// @param property the property to query
 	/// @return the property value, or [Optional#empty()] if not supported
 	default Optional<String> getProperty(ColumnFamilyHandle cf, Property property) {
-		return RocksDB.getPropertyCf(dbPtr(), cf, property);
+		return RocksDBReadOperationsBindings.getPropertyCf(dbPtr(), cf, property);
 	}
 
 	/// Returns the value of a numeric property scoped to `cf`, or [OptionalLong#empty()] if not supported.
@@ -392,6 +392,6 @@ public interface RocksDBReadOperations {
 	/// @param property the property to query
 	/// @return the numeric property value, or [OptionalLong#empty()] if not supported
 	default OptionalLong getLongProperty(ColumnFamilyHandle cf, Property property) {
-		return RocksDB.getLongPropertyCf(dbPtr(), cf, property);
+		return RocksDBReadOperationsBindings.getLongPropertyCf(dbPtr(), cf, property);
 	}
 }

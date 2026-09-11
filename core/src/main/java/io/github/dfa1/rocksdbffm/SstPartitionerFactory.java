@@ -51,7 +51,7 @@ public final class SstPartitionerFactory extends NativeObject {
 		try {
 			return new SstPartitionerFactory((MemorySegment) MH_CREATE_FIXED_PREFIX.invokeExact(prefixLen));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("SstPartitionerFactory.newFixedPrefix failed", t);
+			throw NativeCalls.wrapInvokeFailure("SstPartitionerFactory.newFixedPrefix failed", t);
 		}
 	}
 

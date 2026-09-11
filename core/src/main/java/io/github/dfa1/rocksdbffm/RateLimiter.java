@@ -109,7 +109,7 @@ public final class RateLimiter extends NativeObject {
 					rateBytesPerSec.toBytes(), refillPeriod.toNanos() / 1_000L, fairness);
 			return new RateLimiter(ptr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("RateLimiter create failed", t);
+			throw NativeCalls.wrapInvokeFailure("RateLimiter create failed", t);
 		}
 	}
 
@@ -135,7 +135,7 @@ public final class RateLimiter extends NativeObject {
 					rateBytesPerSec.toBytes(), refillPeriod.toNanos() / 1_000L, fairness);
 			return new RateLimiter(ptr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("RateLimiter createAutoTuned failed", t);
+			throw NativeCalls.wrapInvokeFailure("RateLimiter createAutoTuned failed", t);
 		}
 	}
 
@@ -170,10 +170,10 @@ public final class RateLimiter extends NativeObject {
 		try {
 			MemorySegment ptr = (MemorySegment) MH_CREATE_WITH_MODE.invokeExact(
 					rateBytesPerSec.toBytes(), refillPeriod.toNanos() / 1_000L, fairness,
-					mode.value, RocksDB.toByte(autoTuned));
+					mode.value, NativeCalls.toByte(autoTuned));
 			return new RateLimiter(ptr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("RateLimiter createWithMode failed", t);
+			throw NativeCalls.wrapInvokeFailure("RateLimiter createWithMode failed", t);
 		}
 	}
 

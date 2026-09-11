@@ -94,22 +94,22 @@ final class RocksDBTracingOperationsBindings {
 	static void startTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,
 			TraceOptions traceOptions, Path tracePath) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(tracePath.toString());
 			MH_START_TRACE.invokeExact(db.dbPtr(), env.ptr(), envOptions.ptr(), traceOptions.ptr(), pathSeg, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("startTrace failed", t);
+			throw NativeCalls.wrapInvokeFailure("startTrace failed", t);
 		}
 	}
 
 	static void endTrace(RocksDBTracingOperations db) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_END_TRACE.invokeExact(db.dbPtr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("endTrace failed", t);
+			throw NativeCalls.wrapInvokeFailure("endTrace failed", t);
 		}
 	}
 
@@ -124,22 +124,22 @@ final class RocksDBTracingOperationsBindings {
 	static void startIoTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,
 			TraceOptions traceOptions, Path tracePath) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(tracePath.toString());
 			MH_START_IO_TRACE.invokeExact(db.dbPtr(), env.ptr(), envOptions.ptr(), traceOptions.ptr(), pathSeg, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("startIoTrace failed", t);
+			throw NativeCalls.wrapInvokeFailure("startIoTrace failed", t);
 		}
 	}
 
 	static void endIoTrace(RocksDBTracingOperations db) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_END_IO_TRACE.invokeExact(db.dbPtr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("endIoTrace failed", t);
+			throw NativeCalls.wrapInvokeFailure("endIoTrace failed", t);
 		}
 	}
 
@@ -154,13 +154,13 @@ final class RocksDBTracingOperationsBindings {
 	static void startBlockCacheTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,
 			TraceOptions traceOptions, Path tracePath) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(tracePath.toString());
 			MH_START_BLOCK_CACHE_TRACE.invokeExact(db.dbPtr(), env.ptr(), envOptions.ptr(), traceOptions.ptr(),
 					pathSeg, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("startBlockCacheTrace failed", t);
+			throw NativeCalls.wrapInvokeFailure("startBlockCacheTrace failed", t);
 		}
 	}
 
@@ -177,23 +177,23 @@ final class RocksDBTracingOperationsBindings {
 	static void startBlockCacheTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,
 			BlockCacheTraceOptions traceOptions, BlockCacheTraceWriterOptions writerOptions, Path tracePath) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(tracePath.toString());
 			MH_START_BLOCK_CACHE_TRACE_WITH_OPTIONS.invokeExact(db.dbPtr(), env.ptr(), envOptions.ptr(),
 					traceOptions.ptr(), writerOptions.ptr(), pathSeg, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("startBlockCacheTrace failed", t);
+			throw NativeCalls.wrapInvokeFailure("startBlockCacheTrace failed", t);
 		}
 	}
 
 	static void endBlockCacheTrace(RocksDBTracingOperations db) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_END_BLOCK_CACHE_TRACE.invokeExact(db.dbPtr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("endBlockCacheTrace failed", t);
+			throw NativeCalls.wrapInvokeFailure("endBlockCacheTrace failed", t);
 		}
 	}
 }

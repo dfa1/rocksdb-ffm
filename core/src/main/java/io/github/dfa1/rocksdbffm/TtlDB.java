@@ -17,7 +17,8 @@ import java.time.Duration;
 /// }
 /// ```
 public final class TtlDB extends NativeObjectWithChildren
-		implements RocksDBReadOperations, RocksDBWriteOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
+		implements RocksDBReadOperations, RocksDBWriteOperations, RocksDBCompactionOperations, RocksDBMonitoringOperations,
+		RocksDBTracingOperations {
 
 	private final Duration ttl;
 
@@ -45,6 +46,6 @@ public final class TtlDB extends NativeObjectWithChildren
 
 	@Override
 	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		RocksDB.closeDb(ptr);
+		NativeCalls.closeDb(ptr);
 	}
 }

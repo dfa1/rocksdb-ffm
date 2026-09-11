@@ -120,7 +120,7 @@ public final class CompactionFilterFactory extends NativeObject {
 			return new CompactionFilterFactory(ptr);
 		} catch (Throwable t) {
 			REGISTRY.unregister(statePtr);
-			throw RocksDB.wrapInvokeFailure("CompactionFilterFactory.create failed", t);
+			throw NativeCalls.wrapInvokeFailure("CompactionFilterFactory.create failed", t);
 		}
 	}
 
@@ -129,7 +129,7 @@ public final class CompactionFilterFactory extends NativeObject {
 			MH_SET_COMPACTION_FILTER_FACTORY.invokeExact(optionsPtr, ptr());
 			transferOwnership();
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionFilterFactory.applyTo failed", t);
+			throw NativeCalls.wrapInvokeFailure("CompactionFilterFactory.applyTo failed", t);
 		}
 	}
 

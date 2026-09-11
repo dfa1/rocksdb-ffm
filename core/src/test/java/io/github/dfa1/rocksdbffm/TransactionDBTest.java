@@ -1162,6 +1162,53 @@ class TransactionDBTest {
 	}
 
 	// -----------------------------------------------------------------------
+	// RocksDBCompactionOperations — see issues/131: TransactionDB previously had no compaction
+	// control at all, even though nothing in the C API stopped it.
+	// -----------------------------------------------------------------------
+
+	@Test
+	void compactRange_doesNotThrow(@TempDir Path dir) {
+		// Given
+		seed(dir, "k", "v");
+
+		try (var db = openDb(dir)) {
+			// When
+			ThrowingCallable callable = db::compactRange;
+
+			// Then
+			assertThatCode(callable).doesNotThrowAnyException();
+		}
+	}
+
+	@Test
+	void disableAndEnableManualCompaction_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var db = openDb(dir)) {
+			db.disableManualCompaction();
+
+			// When
+			ThrowingCallable callable = db::enableManualCompaction;
+
+			// Then
+			assertThatCode(callable).doesNotThrowAnyException();
+		}
+	}
+
+	@Test
+	void disableAndEnableFileDeletions_doesNotThrow(@TempDir Path dir) {
+		// Given
+		try (var db = openDb(dir)) {
+			db.disableFileDeletions();
+
+			// When
+			ThrowingCallable callable = db::enableFileDeletions;
+
+			// Then
+			assertThatCode(callable).doesNotThrowAnyException();
+		}
+	}
+
+	// -----------------------------------------------------------------------
 	// Helpers
 	// -----------------------------------------------------------------------
 

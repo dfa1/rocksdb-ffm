@@ -90,7 +90,7 @@ public final class TraceOptions extends NativeObject {
 		try {
 			return new TraceOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("TraceOptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("TraceOptions create failed", t);
 		}
 	}
 

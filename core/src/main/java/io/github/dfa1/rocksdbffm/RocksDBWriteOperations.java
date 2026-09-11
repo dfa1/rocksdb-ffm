@@ -18,10 +18,18 @@ import java.util.List;
 /// at all.
 ///
 /// Every method here is a direct, zero-logic forward into the matching package-private
-/// `RocksDB` helper — implementors only need to supply the native pointer.
+/// [RocksDBWriteOperationsBindings] helper — implementors only need to supply the native pointer.
 ///
 /// Not implemented by [TransactionDB] — see [RocksDBReadOperations] for why.
 /// [OptimisticTransactionDB] implements it directly.
+///
+/// Compaction control ([RocksDBCompactionOperations#compactRange()]/`suggestCompactRange`/
+/// `waitForCompact`/file-deletion and manual-compaction toggles) lives on the separate
+/// [RocksDBCompactionOperations] interface instead of
+/// here — every current implementor of this interface implements that one too, but factoring it
+/// out lets [TransactionDB] implement compaction control as well, something it couldn't do while
+/// these methods lived only on this write-only interface it doesn't implement. See
+/// [#131](https://github.com/dfa1/rocksdbffm/issues/131).
 public interface RocksDBWriteOperations {
 
 	/// Returns the native `rocksdb_t*` pointer to operate on. Redeclared from
@@ -41,7 +49,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   the key to store
 	/// @param value the value to associate with the key
 	default void put(byte[] key, byte[] value) {
-		RocksDB.putBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
+		RocksDBWriteOperationsBindings.putBytes(this, NativeCalls.DEFAULT_WRITE_OPTIONS, key, value);
 	}
 
 	/// [#put(byte\[\], byte\[\])] with explicit [WriteOptions].
@@ -50,7 +58,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          the key to store
 	/// @param value        the value to associate with the key
 	default void put(WriteOptions writeOptions, byte[] key, byte[] value) {
-		RocksDB.putBytes(this, writeOptions, key, value);
+		RocksDBWriteOperationsBindings.putBytes(this, writeOptions, key, value);
 	}
 
 	/// Stores `value` under `key` using the caller's [Arena] for native allocation.
@@ -59,7 +67,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   the key to store
 	/// @param value the value to associate with the key
 	default void put(Arena arena, byte[] key, byte[] value) {
-		RocksDB.putBytes(arena, this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
+		RocksDBWriteOperationsBindings.putBytes(arena, this, NativeCalls.DEFAULT_WRITE_OPTIONS, key, value);
 	}
 
 	/// [#put(Arena, byte\[\], byte\[\])] with explicit [WriteOptions].
@@ -69,7 +77,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          the key to store
 	/// @param value        the value to associate with the key
 	default void put(Arena arena, WriteOptions writeOptions, byte[] key, byte[] value) {
-		RocksDB.putBytes(arena, this, writeOptions, key, value);
+		RocksDBWriteOperationsBindings.putBytes(arena, this, writeOptions, key, value);
 	}
 
 	/// Zero-copy put: wraps the direct buffers' native memory without heap→native copy.
@@ -77,7 +85,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   direct [ByteBuffer] containing the key
 	/// @param value direct [ByteBuffer] containing the value
 	default void put(ByteBuffer key, ByteBuffer value) {
-		RocksDB.putSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS,
+		RocksDBWriteOperationsBindings.putSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS,
 				MemorySegment.ofBuffer(key),
 				MemorySegment.ofBuffer(value));
 	}
@@ -88,7 +96,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          direct [ByteBuffer] containing the key
 	/// @param value        direct [ByteBuffer] containing the value
 	default void put(WriteOptions writeOptions, ByteBuffer key, ByteBuffer value) {
-		RocksDB.putSegment(this, writeOptions,
+		RocksDBWriteOperationsBindings.putSegment(this, writeOptions,
 				MemorySegment.ofBuffer(key),
 				MemorySegment.ofBuffer(value));
 	}
@@ -98,7 +106,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   native segment containing the key
 	/// @param value native segment containing the value
 	default void put(MemorySegment key, MemorySegment value) {
-		RocksDB.putSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
+		RocksDBWriteOperationsBindings.putSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS, key, value);
 	}
 
 	/// [#put(MemorySegment, MemorySegment)] with explicit [WriteOptions].
@@ -107,7 +115,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          native segment containing the key
 	/// @param value        native segment containing the value
 	default void put(WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
-		RocksDB.putSegment(this, writeOptions, key, value);
+		RocksDBWriteOperationsBindings.putSegment(this, writeOptions, key, value);
 	}
 
 	/// Zero-copy put using the caller's [Arena].
@@ -116,7 +124,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   native segment containing the key
 	/// @param value native segment containing the value
 	default void put(Arena arena, MemorySegment key, MemorySegment value) {
-		RocksDB.putSegment(arena, this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
+		RocksDBWriteOperationsBindings.putSegment(arena, this, NativeCalls.DEFAULT_WRITE_OPTIONS, key, value);
 	}
 
 	/// [#put(Arena, MemorySegment, MemorySegment)] with explicit [WriteOptions].
@@ -126,7 +134,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          native segment containing the key
 	/// @param value        native segment containing the value
 	default void put(Arena arena, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
-		RocksDB.putSegment(arena, this, writeOptions, key, value);
+		RocksDBWriteOperationsBindings.putSegment(arena, this, writeOptions, key, value);
 	}
 
 	/// Stores `value` under `key` in `cf`. Slow path: copies key/value into native memory.
@@ -135,7 +143,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   the key to store
 	/// @param value the value to associate with the key
 	default void put(ColumnFamilyHandle cf, byte[] key, byte[] value) {
-		RocksDB.putCfBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, key, value);
+		RocksDBWriteOperationsBindings.putCfBytes(this, NativeCalls.DEFAULT_WRITE_OPTIONS, cf, key, value);
 	}
 
 	/// [#put(ColumnFamilyHandle, byte\[\], byte\[\])] with explicit [WriteOptions].
@@ -145,7 +153,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          the key to store
 	/// @param value        the value to associate with the key
 	default void put(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] key, byte[] value) {
-		RocksDB.putCfBytes(this, writeOptions, cf, key, value);
+		RocksDBWriteOperationsBindings.putCfBytes(this, writeOptions, cf, key, value);
 	}
 
 	/// Zero-copy put into `cf`: wraps the direct buffers' native memory without heap→native copy.
@@ -154,7 +162,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   direct [ByteBuffer] containing the key
 	/// @param value direct [ByteBuffer] containing the value
 	default void put(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
-		RocksDB.putCfSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf,
+		RocksDBWriteOperationsBindings.putCfSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS, cf,
 				MemorySegment.ofBuffer(key),
 				MemorySegment.ofBuffer(value));
 	}
@@ -166,7 +174,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          direct [ByteBuffer] containing the key
 	/// @param value        direct [ByteBuffer] containing the value
 	default void put(ColumnFamilyHandle cf, WriteOptions writeOptions, ByteBuffer key, ByteBuffer value) {
-		RocksDB.putCfSegment(this, writeOptions, cf,
+		RocksDBWriteOperationsBindings.putCfSegment(this, writeOptions, cf,
 				MemorySegment.ofBuffer(key),
 				MemorySegment.ofBuffer(value));
 	}
@@ -177,7 +185,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   native segment containing the key
 	/// @param value native segment containing the value
 	default void put(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
-		RocksDB.putCfSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, key, value);
+		RocksDBWriteOperationsBindings.putCfSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS, cf, key, value);
 	}
 
 	/// [#put(ColumnFamilyHandle, MemorySegment, MemorySegment)] with explicit [WriteOptions].
@@ -187,7 +195,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          native segment containing the key
 	/// @param value        native segment containing the value
 	default void put(ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
-		RocksDB.putCfSegment(this, writeOptions, cf, key, value);
+		RocksDBWriteOperationsBindings.putCfSegment(this, writeOptions, cf, key, value);
 	}
 
 	// -----------------------------------------------------------------------
@@ -200,7 +208,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   the key to merge into
 	/// @param value the merge operand
 	default void merge(byte[] key, byte[] value) {
-		RocksDB.mergeBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
+		RocksDBWriteOperationsBindings.mergeBytes(this, NativeCalls.DEFAULT_WRITE_OPTIONS, key, value);
 	}
 
 	/// [#merge(byte\[\], byte\[\])] with explicit [WriteOptions].
@@ -209,7 +217,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          the key to merge into
 	/// @param value        the merge operand
 	default void merge(WriteOptions writeOptions, byte[] key, byte[] value) {
-		RocksDB.mergeBytes(this, writeOptions, key, value);
+		RocksDBWriteOperationsBindings.mergeBytes(this, writeOptions, key, value);
 	}
 
 	/// Merges `value` into `key` using the caller's [Arena] for native allocation.
@@ -218,7 +226,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   the key to merge into
 	/// @param value the merge operand
 	default void merge(Arena arena, byte[] key, byte[] value) {
-		RocksDB.mergeBytes(arena, this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
+		RocksDBWriteOperationsBindings.mergeBytes(arena, this, NativeCalls.DEFAULT_WRITE_OPTIONS, key, value);
 	}
 
 	/// [#merge(Arena, byte\[\], byte\[\])] with explicit [WriteOptions].
@@ -228,7 +236,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          the key to merge into
 	/// @param value        the merge operand
 	default void merge(Arena arena, WriteOptions writeOptions, byte[] key, byte[] value) {
-		RocksDB.mergeBytes(arena, this, writeOptions, key, value);
+		RocksDBWriteOperationsBindings.mergeBytes(arena, this, writeOptions, key, value);
 	}
 
 	/// Zero-copy merge: wraps the direct buffers' native memory without heap→native copy.
@@ -236,7 +244,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   direct [ByteBuffer] containing the key
 	/// @param value direct [ByteBuffer] containing the merge operand
 	default void merge(ByteBuffer key, ByteBuffer value) {
-		RocksDB.mergeSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS,
+		RocksDBWriteOperationsBindings.mergeSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS,
 				MemorySegment.ofBuffer(key),
 				MemorySegment.ofBuffer(value));
 	}
@@ -247,7 +255,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          direct [ByteBuffer] containing the key
 	/// @param value        direct [ByteBuffer] containing the merge operand
 	default void merge(WriteOptions writeOptions, ByteBuffer key, ByteBuffer value) {
-		RocksDB.mergeSegment(this, writeOptions,
+		RocksDBWriteOperationsBindings.mergeSegment(this, writeOptions,
 				MemorySegment.ofBuffer(key),
 				MemorySegment.ofBuffer(value));
 	}
@@ -257,7 +265,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   native segment containing the key
 	/// @param value native segment containing the merge operand
 	default void merge(MemorySegment key, MemorySegment value) {
-		RocksDB.mergeSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
+		RocksDBWriteOperationsBindings.mergeSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS, key, value);
 	}
 
 	/// [#merge(MemorySegment, MemorySegment)] with explicit [WriteOptions].
@@ -266,7 +274,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          native segment containing the key
 	/// @param value        native segment containing the merge operand
 	default void merge(WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
-		RocksDB.mergeSegment(this, writeOptions, key, value);
+		RocksDBWriteOperationsBindings.mergeSegment(this, writeOptions, key, value);
 	}
 
 	/// Zero-copy merge using the caller's [Arena].
@@ -275,7 +283,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   native segment containing the key
 	/// @param value native segment containing the merge operand
 	default void merge(Arena arena, MemorySegment key, MemorySegment value) {
-		RocksDB.mergeSegment(arena, this, RocksDB.DEFAULT_WRITE_OPTIONS, key, value);
+		RocksDBWriteOperationsBindings.mergeSegment(arena, this, NativeCalls.DEFAULT_WRITE_OPTIONS, key, value);
 	}
 
 	/// [#merge(Arena, MemorySegment, MemorySegment)] with explicit [WriteOptions].
@@ -285,7 +293,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          native segment containing the key
 	/// @param value        native segment containing the merge operand
 	default void merge(Arena arena, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
-		RocksDB.mergeSegment(arena, this, writeOptions, key, value);
+		RocksDBWriteOperationsBindings.mergeSegment(arena, this, writeOptions, key, value);
 	}
 
 	/// Merges `value` into `key` in `cf`. Slow path: copies key/value into native memory.
@@ -294,7 +302,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   the key to merge into
 	/// @param value the merge operand
 	default void merge(ColumnFamilyHandle cf, byte[] key, byte[] value) {
-		RocksDB.mergeCfBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, key, value);
+		RocksDBWriteOperationsBindings.mergeCfBytes(this, NativeCalls.DEFAULT_WRITE_OPTIONS, cf, key, value);
 	}
 
 	/// [#merge(ColumnFamilyHandle, byte\[\], byte\[\])] with explicit [WriteOptions].
@@ -304,7 +312,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          the key to merge into
 	/// @param value        the merge operand
 	default void merge(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] key, byte[] value) {
-		RocksDB.mergeCfBytes(this, writeOptions, cf, key, value);
+		RocksDBWriteOperationsBindings.mergeCfBytes(this, writeOptions, cf, key, value);
 	}
 
 	/// Zero-copy merge into `cf`: wraps the direct buffers' native memory without heap→native copy.
@@ -313,7 +321,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   direct [ByteBuffer] containing the key
 	/// @param value direct [ByteBuffer] containing the merge operand
 	default void merge(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
-		RocksDB.mergeCfSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf,
+		RocksDBWriteOperationsBindings.mergeCfSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS, cf,
 				MemorySegment.ofBuffer(key),
 				MemorySegment.ofBuffer(value));
 	}
@@ -325,7 +333,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          direct [ByteBuffer] containing the key
 	/// @param value        direct [ByteBuffer] containing the merge operand
 	default void merge(ColumnFamilyHandle cf, WriteOptions writeOptions, ByteBuffer key, ByteBuffer value) {
-		RocksDB.mergeCfSegment(this, writeOptions, cf,
+		RocksDBWriteOperationsBindings.mergeCfSegment(this, writeOptions, cf,
 				MemorySegment.ofBuffer(key),
 				MemorySegment.ofBuffer(value));
 	}
@@ -336,7 +344,7 @@ public interface RocksDBWriteOperations {
 	/// @param key   native segment containing the key
 	/// @param value native segment containing the merge operand
 	default void merge(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
-		RocksDB.mergeCfSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, key, value);
+		RocksDBWriteOperationsBindings.mergeCfSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS, cf, key, value);
 	}
 
 	/// [#merge(ColumnFamilyHandle, MemorySegment, MemorySegment)] with explicit [WriteOptions].
@@ -346,7 +354,7 @@ public interface RocksDBWriteOperations {
 	/// @param key          native segment containing the key
 	/// @param value        native segment containing the merge operand
 	default void merge(ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key, MemorySegment value) {
-		RocksDB.mergeCfSegment(this, writeOptions, cf, key, value);
+		RocksDBWriteOperationsBindings.mergeCfSegment(this, writeOptions, cf, key, value);
 	}
 
 	// -----------------------------------------------------------------------
@@ -357,7 +365,7 @@ public interface RocksDBWriteOperations {
 	///
 	/// @param key the key to remove
 	default void delete(byte[] key) {
-		RocksDB.deleteBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, key);
+		RocksDBWriteOperationsBindings.deleteBytes(this, NativeCalls.DEFAULT_WRITE_OPTIONS, key);
 	}
 
 	/// [#delete(byte\[\])] with explicit [WriteOptions].
@@ -365,14 +373,14 @@ public interface RocksDBWriteOperations {
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
 	/// @param key          the key to remove
 	default void delete(WriteOptions writeOptions, byte[] key) {
-		RocksDB.deleteBytes(this, writeOptions, key);
+		RocksDBWriteOperationsBindings.deleteBytes(this, writeOptions, key);
 	}
 
 	/// Zero-copy for direct [ByteBuffer]s.
 	///
 	/// @param key direct [ByteBuffer] containing the key to remove
 	default void delete(ByteBuffer key) {
-		RocksDB.deleteSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, MemorySegment.ofBuffer(key));
+		RocksDBWriteOperationsBindings.deleteSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS, MemorySegment.ofBuffer(key));
 	}
 
 	/// [#delete(ByteBuffer)] with explicit [WriteOptions].
@@ -380,14 +388,14 @@ public interface RocksDBWriteOperations {
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
 	/// @param key          direct [ByteBuffer] containing the key to remove
 	default void delete(WriteOptions writeOptions, ByteBuffer key) {
-		RocksDB.deleteSegment(this, writeOptions, MemorySegment.ofBuffer(key));
+		RocksDBWriteOperationsBindings.deleteSegment(this, writeOptions, MemorySegment.ofBuffer(key));
 	}
 
 	/// Zero-copy native-first path.
 	///
 	/// @param key native segment containing the key to remove
 	default void delete(MemorySegment key) {
-		RocksDB.deleteSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, key);
+		RocksDBWriteOperationsBindings.deleteSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS, key);
 	}
 
 	/// [#delete(MemorySegment)] with explicit [WriteOptions].
@@ -395,7 +403,7 @@ public interface RocksDBWriteOperations {
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
 	/// @param key          native segment containing the key to remove
 	default void delete(WriteOptions writeOptions, MemorySegment key) {
-		RocksDB.deleteSegment(this, writeOptions, key);
+		RocksDBWriteOperationsBindings.deleteSegment(this, writeOptions, key);
 	}
 
 	/// Removes `key` from `cf`. Slow path: copies the key into native memory.
@@ -403,7 +411,7 @@ public interface RocksDBWriteOperations {
 	/// @param cf  target column family
 	/// @param key the key to remove
 	default void delete(ColumnFamilyHandle cf, byte[] key) {
-		RocksDB.deleteCfBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, key);
+		RocksDBWriteOperationsBindings.deleteCfBytes(this, NativeCalls.DEFAULT_WRITE_OPTIONS, cf, key);
 	}
 
 	/// [#delete(ColumnFamilyHandle, byte\[\])] with explicit [WriteOptions].
@@ -412,7 +420,7 @@ public interface RocksDBWriteOperations {
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
 	/// @param key          the key to remove
 	default void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] key) {
-		RocksDB.deleteCfBytes(this, writeOptions, cf, key);
+		RocksDBWriteOperationsBindings.deleteCfBytes(this, writeOptions, cf, key);
 	}
 
 	/// Zero-copy delete from `cf` for direct [ByteBuffer]s.
@@ -420,7 +428,7 @@ public interface RocksDBWriteOperations {
 	/// @param cf  target column family
 	/// @param key direct [ByteBuffer] containing the key to remove
 	default void delete(ColumnFamilyHandle cf, ByteBuffer key) {
-		RocksDB.deleteCfSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf,
+		RocksDBWriteOperationsBindings.deleteCfSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS, cf,
 				MemorySegment.ofBuffer(key));
 	}
 
@@ -430,7 +438,7 @@ public interface RocksDBWriteOperations {
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
 	/// @param key          direct [ByteBuffer] containing the key to remove
 	default void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, ByteBuffer key) {
-		RocksDB.deleteCfSegment(this, writeOptions, cf,
+		RocksDBWriteOperationsBindings.deleteCfSegment(this, writeOptions, cf,
 				MemorySegment.ofBuffer(key));
 	}
 
@@ -439,7 +447,7 @@ public interface RocksDBWriteOperations {
 	/// @param cf  target column family
 	/// @param key native segment containing the key to remove
 	default void delete(ColumnFamilyHandle cf, MemorySegment key) {
-		RocksDB.deleteCfSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, key);
+		RocksDBWriteOperationsBindings.deleteCfSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS, cf, key);
 	}
 
 	/// [#delete(ColumnFamilyHandle, MemorySegment)] with explicit [WriteOptions].
@@ -448,7 +456,7 @@ public interface RocksDBWriteOperations {
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
 	/// @param key          native segment containing the key to remove
 	default void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, MemorySegment key) {
-		RocksDB.deleteCfSegment(this, writeOptions, cf, key);
+		RocksDBWriteOperationsBindings.deleteCfSegment(this, writeOptions, cf, key);
 	}
 
 	// -----------------------------------------------------------------------
@@ -461,7 +469,7 @@ public interface RocksDBWriteOperations {
 	/// @param startKey inclusive lower bound
 	/// @param endKey   exclusive upper bound
 	default void deleteRange(byte[] startKey, byte[] endKey) {
-		RocksDB.deleteRangeCfBytes(this, RocksDB.DEFAULT_WRITE_OPTIONS, startKey, endKey);
+		RocksDBWriteOperationsBindings.deleteRangeCfBytes(this, NativeCalls.DEFAULT_WRITE_OPTIONS, startKey, endKey);
 	}
 
 	/// [#deleteRange(byte\[\], byte\[\])] with explicit [WriteOptions].
@@ -470,7 +478,7 @@ public interface RocksDBWriteOperations {
 	/// @param startKey     inclusive lower bound
 	/// @param endKey       exclusive upper bound
 	default void deleteRange(WriteOptions writeOptions, byte[] startKey, byte[] endKey) {
-		RocksDB.deleteRangeCfBytes(this, writeOptions, startKey, endKey);
+		RocksDBWriteOperationsBindings.deleteRangeCfBytes(this, writeOptions, startKey, endKey);
 	}
 
 	/// Zero-copy for direct [ByteBuffer]s.
@@ -478,7 +486,7 @@ public interface RocksDBWriteOperations {
 	/// @param startKey direct [ByteBuffer] with inclusive lower bound
 	/// @param endKey   direct [ByteBuffer] with exclusive upper bound
 	default void deleteRange(ByteBuffer startKey, ByteBuffer endKey) {
-		RocksDB.deleteRangeCfBuffer(this, RocksDB.DEFAULT_WRITE_OPTIONS, startKey, endKey);
+		RocksDBWriteOperationsBindings.deleteRangeCfBuffer(this, NativeCalls.DEFAULT_WRITE_OPTIONS, startKey, endKey);
 	}
 
 	/// [#deleteRange(ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
@@ -487,7 +495,7 @@ public interface RocksDBWriteOperations {
 	/// @param startKey     direct [ByteBuffer] with inclusive lower bound
 	/// @param endKey       direct [ByteBuffer] with exclusive upper bound
 	default void deleteRange(WriteOptions writeOptions, ByteBuffer startKey, ByteBuffer endKey) {
-		RocksDB.deleteRangeCfBuffer(this, writeOptions, startKey, endKey);
+		RocksDBWriteOperationsBindings.deleteRangeCfBuffer(this, writeOptions, startKey, endKey);
 	}
 
 	/// Zero-copy native-first path.
@@ -495,7 +503,7 @@ public interface RocksDBWriteOperations {
 	/// @param startKey native segment with inclusive lower bound
 	/// @param endKey   native segment with exclusive upper bound
 	default void deleteRange(MemorySegment startKey, MemorySegment endKey) {
-		RocksDB.deleteRangeCfSegment(this, RocksDB.DEFAULT_WRITE_OPTIONS, startKey, endKey);
+		RocksDBWriteOperationsBindings.deleteRangeCfSegment(this, NativeCalls.DEFAULT_WRITE_OPTIONS, startKey, endKey);
 	}
 
 	/// [#deleteRange(MemorySegment, MemorySegment)] with explicit [WriteOptions].
@@ -504,7 +512,7 @@ public interface RocksDBWriteOperations {
 	/// @param startKey     native segment with inclusive lower bound
 	/// @param endKey       native segment with exclusive upper bound
 	default void deleteRange(WriteOptions writeOptions, MemorySegment startKey, MemorySegment endKey) {
-		RocksDB.deleteRangeCfSegment(this, writeOptions, startKey, endKey);
+		RocksDBWriteOperationsBindings.deleteRangeCfSegment(this, writeOptions, startKey, endKey);
 	}
 
 	/// Deletes all keys in the half-open range [`startKey`, `endKey`) from `cf`. Slow path.
@@ -513,7 +521,7 @@ public interface RocksDBWriteOperations {
 	/// @param startKey inclusive lower bound
 	/// @param endKey   exclusive upper bound
 	default void deleteRange(ColumnFamilyHandle cf, byte[] startKey, byte[] endKey) {
-		RocksDB.deleteRangeCfBytesExplicit(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, startKey, endKey);
+		RocksDBWriteOperationsBindings.deleteRangeCfBytesExplicit(this, NativeCalls.DEFAULT_WRITE_OPTIONS, cf, startKey, endKey);
 	}
 
 	/// [#deleteRange(ColumnFamilyHandle, byte\[\], byte\[\])] with explicit [WriteOptions].
@@ -523,7 +531,7 @@ public interface RocksDBWriteOperations {
 	/// @param startKey     inclusive lower bound
 	/// @param endKey       exclusive upper bound
 	default void deleteRange(ColumnFamilyHandle cf, WriteOptions writeOptions, byte[] startKey, byte[] endKey) {
-		RocksDB.deleteRangeCfBytesExplicit(this, writeOptions, cf, startKey, endKey);
+		RocksDBWriteOperationsBindings.deleteRangeCfBytesExplicit(this, writeOptions, cf, startKey, endKey);
 	}
 
 	/// Zero-copy deleteRange from `cf` for direct [ByteBuffer]s.
@@ -532,7 +540,7 @@ public interface RocksDBWriteOperations {
 	/// @param startKey direct [ByteBuffer] with inclusive lower bound
 	/// @param endKey   direct [ByteBuffer] with exclusive upper bound
 	default void deleteRange(ColumnFamilyHandle cf, ByteBuffer startKey, ByteBuffer endKey) {
-		RocksDB.deleteRangeCfBufferExplicit(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, startKey, endKey);
+		RocksDBWriteOperationsBindings.deleteRangeCfBufferExplicit(this, NativeCalls.DEFAULT_WRITE_OPTIONS, cf, startKey, endKey);
 	}
 
 	/// [#deleteRange(ColumnFamilyHandle, ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
@@ -542,7 +550,7 @@ public interface RocksDBWriteOperations {
 	/// @param startKey     direct [ByteBuffer] with inclusive lower bound
 	/// @param endKey       direct [ByteBuffer] with exclusive upper bound
 	default void deleteRange(ColumnFamilyHandle cf, WriteOptions writeOptions, ByteBuffer startKey, ByteBuffer endKey) {
-		RocksDB.deleteRangeCfBufferExplicit(this, writeOptions, cf, startKey, endKey);
+		RocksDBWriteOperationsBindings.deleteRangeCfBufferExplicit(this, writeOptions, cf, startKey, endKey);
 	}
 
 	/// Zero-copy deleteRange from `cf` for [MemorySegment]s.
@@ -551,7 +559,7 @@ public interface RocksDBWriteOperations {
 	/// @param startKey native segment with inclusive lower bound
 	/// @param endKey   native segment with exclusive upper bound
 	default void deleteRange(ColumnFamilyHandle cf, MemorySegment startKey, MemorySegment endKey) {
-		RocksDB.deleteRangeCfSegmentExplicit(this, RocksDB.DEFAULT_WRITE_OPTIONS, cf, startKey, endKey);
+		RocksDBWriteOperationsBindings.deleteRangeCfSegmentExplicit(this, NativeCalls.DEFAULT_WRITE_OPTIONS, cf, startKey, endKey);
 	}
 
 	/// [#deleteRange(ColumnFamilyHandle, MemorySegment, MemorySegment)] with explicit [WriteOptions].
@@ -562,7 +570,7 @@ public interface RocksDBWriteOperations {
 	/// @param endKey       native segment with exclusive upper bound
 	default void deleteRange(ColumnFamilyHandle cf, WriteOptions writeOptions,
 	                          MemorySegment startKey, MemorySegment endKey) {
-		RocksDB.deleteRangeCfSegmentExplicit(this, writeOptions, cf, startKey, endKey);
+		RocksDBWriteOperationsBindings.deleteRangeCfSegmentExplicit(this, writeOptions, cf, startKey, endKey);
 	}
 
 	// -----------------------------------------------------------------------
@@ -573,7 +581,7 @@ public interface RocksDBWriteOperations {
 	///
 	/// @param batch the write batch to apply
 	default void write(WriteBatch batch) {
-		RocksDB.writeBatch(this, RocksDB.DEFAULT_WRITE_OPTIONS, batch);
+		RocksDBWriteOperationsBindings.writeBatch(this, NativeCalls.DEFAULT_WRITE_OPTIONS, batch);
 	}
 
 	/// [#write(WriteBatch)] with explicit [WriteOptions].
@@ -581,7 +589,7 @@ public interface RocksDBWriteOperations {
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
 	/// @param batch        the write batch to apply
 	default void write(WriteOptions writeOptions, WriteBatch batch) {
-		RocksDB.writeBatch(this, writeOptions, batch);
+		RocksDBWriteOperationsBindings.writeBatch(this, writeOptions, batch);
 	}
 
 	/// Applies all mutations in `batch` atomically, using the caller's [Arena] for native allocation.
@@ -589,7 +597,7 @@ public interface RocksDBWriteOperations {
 	/// @param arena arena used for temporary native allocations
 	/// @param batch the write batch to apply
 	default void write(Arena arena, WriteBatch batch) {
-		RocksDB.writeBatch(arena, this, RocksDB.DEFAULT_WRITE_OPTIONS, batch);
+		RocksDBWriteOperationsBindings.writeBatch(arena, this, NativeCalls.DEFAULT_WRITE_OPTIONS, batch);
 	}
 
 	/// [#write(Arena, WriteBatch)] with explicit [WriteOptions].
@@ -598,7 +606,7 @@ public interface RocksDBWriteOperations {
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
 	/// @param batch        the write batch to apply
 	default void write(Arena arena, WriteOptions writeOptions, WriteBatch batch) {
-		RocksDB.writeBatch(arena, this, writeOptions, batch);
+		RocksDBWriteOperationsBindings.writeBatch(arena, this, writeOptions, batch);
 	}
 
 	// -----------------------------------------------------------------------
@@ -609,28 +617,7 @@ public interface RocksDBWriteOperations {
 	///
 	/// @param wait if `true`, blocks until all running jobs have finished
 	default void cancelAllBackgroundWork(boolean wait) {
-		RocksDB.cancelAllBackgroundWork(this, wait);
-	}
-
-	/// Prevents new manual compactions from starting.
-	/// In-progress manual compactions are not affected.
-	/// Call [#enableManualCompaction()] to reverse.
-	default void disableManualCompaction() {
-		RocksDB.disableManualCompaction(this);
-	}
-
-	/// Re-enables manual compactions after [#disableManualCompaction()].
-	default void enableManualCompaction() {
-		RocksDB.enableManualCompaction(this);
-	}
-
-	/// Blocks until all current compactions finish, subject to the given [WaitForCompactOptions].
-	///
-	/// @param options  options controlling wait behavior (e.g. abort-on-pause)
-	/// @throws RocksDBException on I/O error or if [WaitForCompactOptions#isAbortOnPause()] is
-	///                          `true` and background work is paused
-	default void waitForCompact(WaitForCompactOptions options) {
-		RocksDB.waitForCompact(this, options);
+		RocksDBWriteOperationsBindings.cancelAllBackgroundWork(this, wait);
 	}
 
 	// -----------------------------------------------------------------------
@@ -641,7 +628,7 @@ public interface RocksDBWriteOperations {
 	///
 	/// @return current sequence number
 	default SequenceNumber getLatestSequenceNumber() {
-		return RocksDB.getLatestSequenceNumber(this);
+		return RocksDBWriteOperationsBindings.getLatestSequenceNumber(this);
 	}
 
 	/// Returns a [WalIterator] positioned at the first [WriteBatch] with a sequence number
@@ -652,7 +639,7 @@ public interface RocksDBWriteOperations {
 	/// @param sequenceNumber starting sequence number (inclusive)
 	/// @return a new [WalIterator]; caller must close it
 	default WalIterator getUpdatesSince(SequenceNumber sequenceNumber) {
-		return RocksDB.getUpdatesSince(this, sequenceNumber);
+		return RocksDBWriteOperationsBindings.getUpdatesSince(this, sequenceNumber);
 	}
 
 	// -----------------------------------------------------------------------
@@ -663,14 +650,14 @@ public interface RocksDBWriteOperations {
 	///
 	/// @param flushOptions options controlling flush behavior
 	default void flush(FlushOptions flushOptions) {
-		RocksDB.flush(this, flushOptions);
+		RocksDBWriteOperationsBindings.flush(this, flushOptions);
 	}
 
 	/// Flushes the WAL to disk.
 	///
 	/// @param sync if `true`, performs an `fsync` after writing
 	default void flushWal(boolean sync) {
-		RocksDB.flushWal(this, sync);
+		RocksDBWriteOperationsBindings.flushWal(this, sync);
 	}
 
 	/// Flushes the memtable for `cf` to SST files.
@@ -678,72 +665,7 @@ public interface RocksDBWriteOperations {
 	/// @param cf           target column family
 	/// @param flushOptions options controlling flush behavior
 	default void flush(ColumnFamilyHandle cf, FlushOptions flushOptions) {
-		RocksDB.flushCf(this, flushOptions, cf);
-	}
-
-	// -----------------------------------------------------------------------
-	// Compaction
-	// -----------------------------------------------------------------------
-
-	/// Manually triggers compaction over the entire key space.
-	default void compactRange() {
-		RocksDB.compactRangeBytes(this, null, null);
-	}
-
-	/// Manually triggers compaction over `[startKey, endKey]`.
-	/// Pass `null` for either bound to indicate the beginning/end of the key space.
-	///
-	/// @param startKey inclusive lower bound, or `null` for the start of the key space
-	/// @param endKey   inclusive upper bound, or `null` for the end of the key space
-	default void compactRange(byte[] startKey, byte[] endKey) {
-		RocksDB.compactRangeBytes(this, startKey, endKey);
-	}
-
-	/// [ByteBuffer] overload of [#compactRange(byte\[\], byte\[\])].
-	///
-	/// @param startKey direct [ByteBuffer] with inclusive lower bound
-	/// @param endKey   direct [ByteBuffer] with inclusive upper bound
-	default void compactRange(ByteBuffer startKey, ByteBuffer endKey) {
-		RocksDB.compactRangeBuffer(this, startKey, endKey);
-	}
-
-	/// [MemorySegment] overload of [#compactRange(byte\[\], byte\[\])].
-	///
-	/// @param startKey native segment with inclusive lower bound
-	/// @param endKey   native segment with inclusive upper bound
-	default void compactRange(MemorySegment startKey, MemorySegment endKey) {
-		RocksDB.compactRangeSegment(this, startKey, endKey);
-	}
-
-	/// Compaction with explicit options.
-	///
-	/// @param opts     compaction options
-	/// @param startKey inclusive lower bound, or `null` for the start of the key space
-	/// @param endKey   inclusive upper bound, or `null` for the end of the key space
-	default void compactRange(CompactOptions opts, byte[] startKey, byte[] endKey) {
-		RocksDB.compactRangeOptBytes(this, opts, startKey, endKey);
-	}
-
-	/// Hints that `[startKey, endKey]` may benefit from compaction, but does not block.
-	///
-	/// @param startKey inclusive lower bound
-	/// @param endKey   inclusive upper bound
-	default void suggestCompactRange(byte[] startKey, byte[] endKey) {
-		RocksDB.suggestCompactRangeBytes(this, startKey, endKey);
-	}
-
-	// -----------------------------------------------------------------------
-	// File deletions
-	// -----------------------------------------------------------------------
-
-	/// Prevents new SST files from being deleted. Must be paired with [#enableFileDeletions()].
-	default void disableFileDeletions() {
-		RocksDB.disableFileDeletions(this);
-	}
-
-	/// Re-enables SST file deletions after [#disableFileDeletions()].
-	default void enableFileDeletions() {
-		RocksDB.enableFileDeletions(this);
+		RocksDBWriteOperationsBindings.flushCf(this, flushOptions, cf);
 	}
 
 	// -----------------------------------------------------------------------
@@ -755,14 +677,14 @@ public interface RocksDBWriteOperations {
 	/// @param files   list of SST file paths to ingest
 	/// @param options ingest options controlling move vs copy, error handling, etc.
 	default void ingestExternalFile(List<Path> files, IngestExternalFileOptions options) {
-		RocksDB.ingestExternalFile(this, files, options);
+		RocksDBWriteOperationsBindings.ingestExternalFile(this, files, options);
 	}
 
 	/// Ingests `files` using default [IngestExternalFileOptions].
 	///
 	/// @param files list of SST file paths to ingest
 	default void ingestExternalFile(List<Path> files) {
-		RocksDB.ingestExternalFileWithDefaults(this, files);
+		RocksDBWriteOperationsBindings.ingestExternalFileWithDefaults(this, files);
 	}
 
 	/// Convenience overload for ingesting a single file with explicit options.
@@ -790,7 +712,7 @@ public interface RocksDBWriteOperations {
 	/// @param descriptor name and options for the new column family
 	/// @return handle to the newly created column family; caller must close it
 	default ColumnFamilyHandle createColumnFamily(ColumnFamilyDescriptor descriptor) {
-		return RocksDB.createCf(this, descriptor);
+		return RocksDBWriteOperationsBindings.createCf(this, descriptor);
 	}
 
 	/// Drops the column family identified by `handle`.
@@ -798,6 +720,6 @@ public interface RocksDBWriteOperations {
 	///
 	/// @param handle handle of the column family to drop
 	default void dropColumnFamily(ColumnFamilyHandle handle) {
-		RocksDB.dropCf(dbPtr(), handle);
+		RocksDBWriteOperationsBindings.dropCf(dbPtr(), handle);
 	}
 }

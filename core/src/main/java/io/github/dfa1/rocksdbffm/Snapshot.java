@@ -89,7 +89,7 @@ public final class Snapshot extends NativeObject {
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
 		if (owningDb == null) {
-			RocksDB.free(ptr);
+			NativeCalls.free(ptr);
 			return;
 		}
 		// Unregister first: if this runs because owningDb's own close() is sweeping its

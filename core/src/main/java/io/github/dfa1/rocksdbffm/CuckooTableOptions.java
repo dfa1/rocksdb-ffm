@@ -98,7 +98,7 @@ public final class CuckooTableOptions extends NativeObject {
 		try {
 			return new CuckooTableOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CuckooTableOptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("CuckooTableOptions create failed", t);
 		}
 	}
 

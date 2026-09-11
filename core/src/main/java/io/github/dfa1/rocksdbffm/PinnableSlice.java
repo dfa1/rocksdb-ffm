@@ -62,7 +62,7 @@ final class PinnableSlice extends NativeObject {
 	/// @return the value's bytes, copied into a new array
 	byte[] toByteArray(MemorySegment vallenOut) {
 		MemorySegment data = value(vallenOut);
-		return RocksDB.toByteArray(data, vallenOut.get(ValueLayout.JAVA_LONG, 0));
+		return NativeCalls.toByteArray(data, vallenOut.get(ValueLayout.JAVA_LONG, 0));
 	}
 
 	/// Copies this slice's value into `dest`, or reports insufficient capacity without
@@ -136,7 +136,7 @@ final class PinnableSlice extends NativeObject {
 		try {
 			return (MemorySegment) MH_VALUE.invokeExact(ptr(), vallenOut);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("pinnableslice value failed", t);
+			throw NativeCalls.wrapInvokeFailure("pinnableslice value failed", t);
 		}
 	}
 

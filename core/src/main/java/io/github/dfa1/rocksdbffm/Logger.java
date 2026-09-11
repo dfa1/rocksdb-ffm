@@ -107,7 +107,7 @@ public final class Logger extends NativeObject {
 			MemorySegment ptr = (MemorySegment) MH_CREATE_STDERR.invokeExact(level.value, prefixSeg);
 			return new Logger(ptr, STDERR_CALLBACK_ID);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("Logger.newStderrLogger failed", t);
+			throw NativeCalls.wrapInvokeFailure("Logger.newStderrLogger failed", t);
 		}
 	}
 
@@ -129,7 +129,7 @@ public final class Logger extends NativeObject {
 			return new Logger(ptr, privPtr.address());
 		} catch (Throwable t) {
 			REGISTRY.unregister(privPtr);
-			throw RocksDB.wrapInvokeFailure("Logger.newCallbackLogger failed", t);
+			throw NativeCalls.wrapInvokeFailure("Logger.newCallbackLogger failed", t);
 		}
 	}
 
@@ -163,7 +163,7 @@ public final class Logger extends NativeObject {
 				// time with it -- normalize away the trailing newline before decoding, so
 				// logging frameworks are happy
 				long trimmedLen = bounded.get(ValueLayout.JAVA_BYTE, len - 1) == '\n' ? len - 1 : len;
-				message = new String(RocksDB.toByteArray(bounded, trimmedLen), StandardCharsets.UTF_8);
+				message = new String(NativeCalls.toByteArray(bounded, trimmedLen), StandardCharsets.UTF_8);
 			}
 			cb.log(level, message);
 		} catch (Throwable throwable) {

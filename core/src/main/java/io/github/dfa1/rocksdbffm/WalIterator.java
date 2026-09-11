@@ -75,9 +75,9 @@ public final class WalIterator extends NativeObject {
 	/// @return `true` if the iterator is valid
 	public boolean isValid() {
 		try {
-			return RocksDB.fromByte((byte) MH_VALID.invokeExact(ptr()));
+			return NativeCalls.fromByte((byte) MH_VALID.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("wal_iter_valid failed", t);
+			throw NativeCalls.wrapInvokeFailure("wal_iter_valid failed", t);
 		}
 	}
 
@@ -87,7 +87,7 @@ public final class WalIterator extends NativeObject {
 			MH_NEXT.invokeExact(ptr());
 			batchFetchedAtCurrentPosition = false;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("wal_iter_next failed", t);
+			throw NativeCalls.wrapInvokeFailure("wal_iter_next failed", t);
 		}
 	}
 
@@ -97,11 +97,11 @@ public final class WalIterator extends NativeObject {
 	/// @throws RocksDBException if an error occurred
 	public void checkStatus() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_STATUS.invokeExact(ptr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("wal_iter_status failed", t);
+			throw NativeCalls.wrapInvokeFailure("wal_iter_status failed", t);
 		}
 	}
 
@@ -131,7 +131,7 @@ public final class WalIterator extends NativeObject {
 			batchFetchedAtCurrentPosition = true;
 			return new WalBatchResult(SequenceNumber.of(seq), WriteBatch.wrap(batchPtr));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("wal_iter_get_batch failed", t);
+			throw NativeCalls.wrapInvokeFailure("wal_iter_get_batch failed", t);
 		}
 	}
 

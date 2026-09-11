@@ -65,13 +65,13 @@ public final class LiveFilesStorageInfo extends NativeObject implements Iterable
 	/// @return a new [LiveFilesStorageInfo] snapshot; caller must close it
 	static LiveFilesStorageInfo fetch(MemorySegment dbPtr, MemorySegment optionsPtr) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment listPtr = (MemorySegment) MH_GET.invokeExact(dbPtr, optionsPtr, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 			long count = (long) MH_COUNT.invokeExact(listPtr);
 			return new LiveFilesStorageInfo(listPtr, (int) count);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getLiveFilesStorageInfo failed", t);
+			throw NativeCalls.wrapInvokeFailure("getLiveFilesStorageInfo failed", t);
 		}
 	}
 

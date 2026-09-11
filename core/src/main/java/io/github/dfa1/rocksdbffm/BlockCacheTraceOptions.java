@@ -48,7 +48,7 @@ public final class BlockCacheTraceOptions extends NativeObject {
 		try {
 			return new BlockCacheTraceOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("BlockCacheTraceOptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("BlockCacheTraceOptions create failed", t);
 		}
 	}
 

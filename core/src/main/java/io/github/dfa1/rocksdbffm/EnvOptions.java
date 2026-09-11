@@ -165,7 +165,7 @@ public final class EnvOptions extends NativeObject {
 		try {
 			return new EnvOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("envoptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("envoptions create failed", t);
 		}
 	}
 
@@ -370,7 +370,7 @@ public final class EnvOptions extends NativeObject {
 		try {
 			MH_SET_RATE_LIMITER.invokeExact(ptr(), rateLimiter.ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setRateLimiter failed", t);
+			throw NativeCalls.wrapInvokeFailure("setRateLimiter failed", t);
 		}
 		return this;
 	}

@@ -138,9 +138,9 @@ public final class CompactionJobInfo {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment namePtr = (MemorySegment) MH_CF_NAME.invokeExact(ptr, sizeHolder);
-			return RocksDB.toJavaString(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toJavaString(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.columnFamilyName failed", t);
+			throw NativeCalls.wrapInvokeFailure("CompactionJobInfo.columnFamilyName failed", t);
 		}
 	}
 
@@ -149,11 +149,11 @@ public final class CompactionJobInfo {
 	/// @throws RocksDBException describing why the compaction failed, if it did
 	public void checkStatus() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_STATUS.invokeExact(ptr, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionJobInfo.checkStatus failed", t);
+			throw NativeCalls.wrapInvokeFailure("CompactionJobInfo.checkStatus failed", t);
 		}
 	}
 
