@@ -42,6 +42,18 @@ public abstract class NativeObject implements AutoCloseable {
 		return p;
 	}
 
+	/// Returns whether this object is closed or its ownership was transferred away — i.e.
+	/// whether [#ptr()] would throw — without throwing. Package-private: used only by
+	/// [NativeObjectWithChildren#registerChild(NativeObject)] to detect "parent already closed"
+	/// as a plain check rather than via exception-driven control flow. Reads the same
+	/// [AtomicReference] [#close()] atomically nulls, so this observes a close a moment before
+	/// [#tryClose(MemorySegment)] itself even starts running.
+	///
+	/// @return `true` if [#ptr()] would currently throw
+	final boolean isClosed() {
+		return MemorySegment.NULL.equals(owningPointer.get());
+	}
+
 	@Override
 	public final void close() {
 		MemorySegment ptr = owningPointer.getAndSet(MemorySegment.NULL);
@@ -63,6 +75,14 @@ public abstract class NativeObject implements AutoCloseable {
 	/// - RocksDB C API source (db/c.cc) — look at what rocksdb_block_based_options_destroy does: if it calls delete options->rep.filter_policy, ownership was transferred.
 	/// - RocksDB documentation — the C API docs sometimes state it explicitly.
 	/// - The Java JNI bindings (RocksDB official Java library) — they've already solved this; look at how BlockBasedTableConfig handles filter policy lifecycle.
+	///
+	/// Also (re)used by [NativeObjectWithChildren#registerChild(NativeObject)] for a second,
+	/// unrelated reason: to abandon a child registered too late (its owning parent already
+	/// started closing) without invoking its normal [#tryClose(MemorySegment)] — that release
+	/// call would itself be a use-after-free against a pointer the parent may have already
+	/// freed. There is no ownership transfer in that case, just the same net effect this method
+	/// already provides: the pointer is dropped and further use throws [IllegalStateException]
+	/// instead of double-freeing or touching freed memory.
 	void transferOwnership() {
 		owningPointer.set(MemorySegment.NULL);
 	}
