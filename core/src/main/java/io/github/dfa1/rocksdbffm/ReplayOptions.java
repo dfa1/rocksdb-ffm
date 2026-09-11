@@ -64,7 +64,7 @@ public final class ReplayOptions extends NativeObject {
 		try {
 			return new ReplayOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ReplayOptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("ReplayOptions create failed", t);
 		}
 	}
 

@@ -164,7 +164,7 @@ public final class CompactionFilter extends NativeObject {
 			return new CompactionFilter(ptr);
 		} catch (Throwable t) {
 			REGISTRY.unregister(statePtr);
-			throw RocksDB.wrapInvokeFailure("CompactionFilter.create failed", t);
+			throw NativeCalls.wrapInvokeFailure("CompactionFilter.create failed", t);
 		}
 	}
 
@@ -185,7 +185,7 @@ public final class CompactionFilter extends NativeObject {
 		try {
 			MH_SET_IGNORE_SNAPSHOTS.invokeExact(ptr(), (byte) (ignoreSnapshots ? 1 : 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionFilter.setIgnoreSnapshots failed", t);
+			throw NativeCalls.wrapInvokeFailure("CompactionFilter.setIgnoreSnapshots failed", t);
 		}
 		return this;
 	}
@@ -195,7 +195,7 @@ public final class CompactionFilter extends NativeObject {
 			MH_SET_COMPACTION_FILTER.invokeExact(optionsPtr, ptr());
 			transferOwnership();
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("CompactionFilter.applyTo failed", t);
+			throw NativeCalls.wrapInvokeFailure("CompactionFilter.applyTo failed", t);
 		}
 	}
 

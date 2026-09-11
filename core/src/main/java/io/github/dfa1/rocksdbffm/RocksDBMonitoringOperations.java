@@ -57,7 +57,7 @@ public interface RocksDBMonitoringOperations {
 	/// @param ranges key ranges to estimate; one entry per range
 	/// @return estimated size in bytes for each range, in the same order as `ranges`
 	default long[] getApproximateSizes(List<Range> ranges) {
-		return RocksDB.approximateSizes(dbPtr(), ranges);
+		return RocksDBMonitoringOperationsBindings.approximateSizes(dbPtr(), ranges);
 	}
 
 	/// [#getApproximateSizes(List)] with explicit [SizeApproximationOptions] controlling what
@@ -67,7 +67,7 @@ public interface RocksDBMonitoringOperations {
 	/// @param ranges  key ranges to estimate; one entry per range
 	/// @return estimated size in bytes for each range, in the same order as `ranges`
 	default long[] getApproximateSizes(SizeApproximationOptions options, List<Range> ranges) {
-		return RocksDB.approximateSizesWithOptions(dbPtr(), options, ranges);
+		return RocksDBMonitoringOperationsBindings.approximateSizesWithOptions(dbPtr(), options, ranges);
 	}
 
 	/// [#getApproximateSizes(List)] scoped to a specific column family instead of the default one.
@@ -76,7 +76,7 @@ public interface RocksDBMonitoringOperations {
 	/// @param ranges key ranges to estimate; one entry per range
 	/// @return estimated size in bytes for each range, in the same order as `ranges`
 	default long[] getApproximateSizes(ColumnFamilyHandle cf, List<Range> ranges) {
-		return RocksDB.approximateSizesCf(dbPtr(), cf, ranges);
+		return RocksDBMonitoringOperationsBindings.approximateSizesCf(dbPtr(), cf, ranges);
 	}
 
 	/// [#getApproximateSizes(ColumnFamilyHandle, List)] with explicit [SizeApproximationOptions].
@@ -86,6 +86,6 @@ public interface RocksDBMonitoringOperations {
 	/// @param ranges  key ranges to estimate; one entry per range
 	/// @return estimated size in bytes for each range, in the same order as `ranges`
 	default long[] getApproximateSizes(ColumnFamilyHandle cf, SizeApproximationOptions options, List<Range> ranges) {
-		return RocksDB.approximateSizesCfWithOptions(dbPtr(), cf, options, ranges);
+		return RocksDBMonitoringOperationsBindings.approximateSizesCfWithOptions(dbPtr(), cf, options, ranges);
 	}
 }

@@ -181,7 +181,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MemorySegment dirSeg = arena.allocateFrom(backupDir.toString());
 			return new BackupEngineOptions((MemorySegment) MH_CREATE.invokeExact(dirSeg));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("BackupEngineOptions.create failed", t);
+			throw NativeCalls.wrapInvokeFailure("BackupEngineOptions.create failed", t);
 		}
 	}
 
@@ -195,7 +195,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_BACKUP_DIR.invokeExact(ptr(), dirSeg);
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBackupDir failed", t);
+			throw NativeCalls.wrapInvokeFailure("setBackupDir failed", t);
 		}
 	}
 
@@ -211,7 +211,7 @@ public final class BackupEngineOptions extends NativeObject {
 			MH_SET_ENV.invokeExact(ptr(), env.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setEnv failed", t);
+			throw NativeCalls.wrapInvokeFailure("setEnv failed", t);
 		}
 	}
 

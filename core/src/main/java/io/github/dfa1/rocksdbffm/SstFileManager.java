@@ -117,7 +117,7 @@ public final class SstFileManager extends NativeObject {
 			MemorySegment ptr = (MemorySegment) MH_CREATE.invokeExact(env.ptr());
 			return new SstFileManager(ptr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("SstFileManager create failed", t);
+			throw NativeCalls.wrapInvokeFailure("SstFileManager create failed", t);
 		}
 	}
 

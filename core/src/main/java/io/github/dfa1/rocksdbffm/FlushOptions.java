@@ -51,7 +51,7 @@ public final class FlushOptions extends NativeObject {
 		try {
 			return new FlushOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("flushoptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("flushoptions create failed", t);
 		}
 	}
 

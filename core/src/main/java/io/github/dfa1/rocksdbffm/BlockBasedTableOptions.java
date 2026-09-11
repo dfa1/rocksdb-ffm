@@ -713,7 +713,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			return new BlockBasedTableOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable e) {
-			throw RocksDB.wrapInvokeFailure("new block based config", e);
+			throw NativeCalls.wrapInvokeFailure("new block based config", e);
 		}
 	}
 
@@ -739,7 +739,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_SET_FILTER_POLICY.invokeExact(ptr(), policy.ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setFilterPolicy failed", t);
+			throw NativeCalls.wrapInvokeFailure("setFilterPolicy failed", t);
 		}
 		// BlockBasedTableConfig will take care of the freeing the policy
 		policy.transferOwnership();
@@ -765,7 +765,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_SET_BLOCK_CACHE.invokeExact(ptr(), cache.ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBlockCache failed", t);
+			throw NativeCalls.wrapInvokeFailure("setBlockCache failed", t);
 		}
 		return this;
 	}
@@ -1250,7 +1250,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_SET_CHECKSUM.invokeExact(ptr(), (byte) checksumType.value);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setChecksumType failed", t);
+			throw NativeCalls.wrapInvokeFailure("setChecksumType failed", t);
 		}
 		return this;
 	}
@@ -1418,13 +1418,13 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @throws RocksDBException if no factory with `name` is registered in the loaded library
 	public BlockBasedTableOptions setUserDefinedIndexFactoryFromString(String name) {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			byte[] nameBytes = name.getBytes(StandardCharsets.UTF_8);
-			MemorySegment nameSeg = RocksDB.toNative(arena, nameBytes);
+			MemorySegment nameSeg = NativeCalls.toNative(arena, nameBytes);
 			MH_SET_UDI_FACTORY_FROM_STRING.invokeExact(ptr(), nameSeg, (long) nameBytes.length, err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setUserDefinedIndexFactoryFromString failed", t);
+			throw NativeCalls.wrapInvokeFailure("setUserDefinedIndexFactoryFromString failed", t);
 		}
 		return this;
 	}
@@ -1437,7 +1437,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 		try {
 			MH_CLEAR_UDI_FACTORY.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("clearUserDefinedIndexFactory failed", t);
+			throw NativeCalls.wrapInvokeFailure("clearUserDefinedIndexFactory failed", t);
 		}
 		return this;
 	}
@@ -1453,9 +1453,9 @@ public final class BlockBasedTableOptions extends NativeObject {
 				return Optional.empty();
 			}
 			long len = lenSeg.get(ValueLayout.JAVA_LONG, 0);
-			return Optional.of(new String(RocksDB.toByteArray(namePtr, len), StandardCharsets.UTF_8));
+			return Optional.of(new String(NativeCalls.toByteArray(namePtr, len), StandardCharsets.UTF_8));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getUserDefinedIndexFactoryName failed", t);
+			throw NativeCalls.wrapInvokeFailure("getUserDefinedIndexFactoryName failed", t);
 		}
 	}
 

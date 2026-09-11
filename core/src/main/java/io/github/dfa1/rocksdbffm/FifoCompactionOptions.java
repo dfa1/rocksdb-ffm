@@ -94,7 +94,7 @@ public final class FifoCompactionOptions extends NativeObject {
 		try {
 			return new FifoCompactionOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("fifo_compaction_options create failed", t);
+			throw NativeCalls.wrapInvokeFailure("fifo_compaction_options create failed", t);
 		}
 	}
 

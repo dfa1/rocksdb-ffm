@@ -53,7 +53,7 @@ public final class SliceTransform extends NativeObject {
 		try {
 			return new SliceTransform((MemorySegment) MH_CREATE_FIXED_PREFIX.invokeExact(prefixLen));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("SliceTransform.newFixedPrefix failed", t);
+			throw NativeCalls.wrapInvokeFailure("SliceTransform.newFixedPrefix failed", t);
 		}
 	}
 

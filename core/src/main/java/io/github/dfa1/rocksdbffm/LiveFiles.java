@@ -79,7 +79,7 @@ public final class LiveFiles extends NativeObject implements Iterable<LiveFileIn
 			int count = (int) MH_COUNT.invokeExact(listPtr);
 			return new LiveFiles(listPtr, count);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getLiveFiles failed", t);
+			throw NativeCalls.wrapInvokeFailure("getLiveFiles failed", t);
 		}
 	}
 

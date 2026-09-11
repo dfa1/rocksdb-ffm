@@ -121,7 +121,7 @@ public abstract class Cache extends NativeObject {
 		try {
 			MH_DISOWN_DATA.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("disownData failed", t);
+			throw NativeCalls.wrapInvokeFailure("disownData failed", t);
 		}
 	}
 

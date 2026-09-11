@@ -48,9 +48,9 @@ public final class ExternalFileIngestionInfo {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment namePtr = (MemorySegment) MH_CF_NAME.invokeExact(ptr, sizeHolder);
-			return RocksDB.toJavaString(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toJavaString(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ExternalFileIngestionInfo.columnFamilyName failed", t);
+			throw NativeCalls.wrapInvokeFailure("ExternalFileIngestionInfo.columnFamilyName failed", t);
 		}
 	}
 
@@ -61,9 +61,9 @@ public final class ExternalFileIngestionInfo {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment pathPtr = (MemorySegment) MH_EXTERNAL_FILE_PATH.invokeExact(ptr, sizeHolder);
-			return Path.of(RocksDB.toJavaString(pathPtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0)));
+			return Path.of(NativeCalls.toJavaString(pathPtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0)));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ExternalFileIngestionInfo.externalFilePath failed", t);
+			throw NativeCalls.wrapInvokeFailure("ExternalFileIngestionInfo.externalFilePath failed", t);
 		}
 	}
 
@@ -74,9 +74,9 @@ public final class ExternalFileIngestionInfo {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment pathPtr = (MemorySegment) MH_INTERNAL_FILE_PATH.invokeExact(ptr, sizeHolder);
-			return Path.of(RocksDB.toJavaString(pathPtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0)));
+			return Path.of(NativeCalls.toJavaString(pathPtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0)));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("ExternalFileIngestionInfo.internalFilePath failed", t);
+			throw NativeCalls.wrapInvokeFailure("ExternalFileIngestionInfo.internalFilePath failed", t);
 		}
 	}
 

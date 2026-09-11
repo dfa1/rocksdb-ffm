@@ -24,7 +24,8 @@ import java.lang.foreign.MemorySegment;
 /// Blob-specific statistics are available via [Property#BLOB_STATS],
 /// [Property#NUM_BLOB_FILES], [Property#TOTAL_BLOB_FILE_SIZE], etc.
 public final class BlobDB extends NativeObjectWithChildren
-		implements RocksDBReadOperations, RocksDBWriteOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
+		implements RocksDBReadOperations, RocksDBWriteOperations, RocksDBCompactionOperations, RocksDBMonitoringOperations,
+		RocksDBTracingOperations {
 
 	BlobDB(MemorySegment ptr) {
 		super(ptr);
@@ -41,6 +42,6 @@ public final class BlobDB extends NativeObjectWithChildren
 
 	@Override
 	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		RocksDB.closeDb(ptr);
+		NativeCalls.closeDb(ptr);
 	}
 }

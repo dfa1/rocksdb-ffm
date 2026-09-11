@@ -200,7 +200,7 @@ public final class TransactionOptions extends NativeObject {
 		try {
 			return new TransactionOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("transaction options create failed", t);
+			throw NativeCalls.wrapInvokeFailure("transaction options create failed", t);
 		}
 	}
 

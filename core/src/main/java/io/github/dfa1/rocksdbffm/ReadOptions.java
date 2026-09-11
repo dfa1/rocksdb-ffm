@@ -153,7 +153,7 @@ public final class ReadOptions extends NativeObject {
 		try {
 			return new ReadOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("readoptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("readoptions create failed", t);
 		}
 	}
 
@@ -169,7 +169,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_SNAPSHOT.invokeExact(ptr(), snapPtr);
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("readoptions setSnapshot failed", t);
+			throw NativeCalls.wrapInvokeFailure("readoptions setSnapshot failed", t);
 		}
 	}
 
@@ -346,12 +346,12 @@ public final class ReadOptions extends NativeObject {
 			if (lowerBound == null) {
 				MH_SET_ITERATE_LOWER_BOUND.invokeExact(ptr(), MemorySegment.NULL, 0L);
 			} else {
-				MemorySegment seg = RocksDB.toNative(boundsArena, lowerBound);
+				MemorySegment seg = NativeCalls.toNative(boundsArena, lowerBound);
 				MH_SET_ITERATE_LOWER_BOUND.invokeExact(ptr(), seg, (long) lowerBound.length);
 			}
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIterateLowerBound failed", t);
+			throw NativeCalls.wrapInvokeFailure("setIterateLowerBound failed", t);
 		}
 	}
 
@@ -367,7 +367,7 @@ public final class ReadOptions extends NativeObject {
 					MemorySegment.ofBuffer(lowerBound), (long) lowerBound.remaining());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIterateLowerBound failed", t);
+			throw NativeCalls.wrapInvokeFailure("setIterateLowerBound failed", t);
 		}
 	}
 
@@ -382,7 +382,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_ITERATE_LOWER_BOUND.invokeExact(ptr(), lowerBound, lowerBound.byteSize());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIterateLowerBound failed", t);
+			throw NativeCalls.wrapInvokeFailure("setIterateLowerBound failed", t);
 		}
 	}
 
@@ -400,12 +400,12 @@ public final class ReadOptions extends NativeObject {
 			if (upperBound == null) {
 				MH_SET_ITERATE_UPPER_BOUND.invokeExact(ptr(), MemorySegment.NULL, 0L);
 			} else {
-				MemorySegment seg = RocksDB.toNative(boundsArena, upperBound);
+				MemorySegment seg = NativeCalls.toNative(boundsArena, upperBound);
 				MH_SET_ITERATE_UPPER_BOUND.invokeExact(ptr(), seg, (long) upperBound.length);
 			}
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIterateUpperBound failed", t);
+			throw NativeCalls.wrapInvokeFailure("setIterateUpperBound failed", t);
 		}
 	}
 
@@ -421,7 +421,7 @@ public final class ReadOptions extends NativeObject {
 					MemorySegment.ofBuffer(upperBound), (long) upperBound.remaining());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIterateUpperBound failed", t);
+			throw NativeCalls.wrapInvokeFailure("setIterateUpperBound failed", t);
 		}
 	}
 
@@ -436,7 +436,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_ITERATE_UPPER_BOUND.invokeExact(ptr(), upperBound, upperBound.byteSize());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setIterateUpperBound failed", t);
+			throw NativeCalls.wrapInvokeFailure("setIterateUpperBound failed", t);
 		}
 	}
 
@@ -456,12 +456,12 @@ public final class ReadOptions extends NativeObject {
 				MH_CLEAR_REQUEST_ID.invokeExact(ptr());
 			} else {
 				byte[] bytes = requestId.getBytes(StandardCharsets.UTF_8);
-				MemorySegment seg = RocksDB.toNative(arena, bytes);
+				MemorySegment seg = NativeCalls.toNative(arena, bytes);
 				MH_SET_REQUEST_ID.invokeExact(ptr(), seg, (long) bytes.length);
 			}
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setRequestId failed", t);
+			throw NativeCalls.wrapInvokeFailure("setRequestId failed", t);
 		}
 	}
 
@@ -476,10 +476,10 @@ public final class ReadOptions extends NativeObject {
 				return Optional.empty();
 			}
 			long len = lenSeg.get(ValueLayout.JAVA_LONG, 0);
-			byte[] bytes = RocksDB.toByteArray(result, len);
+			byte[] bytes = NativeCalls.toByteArray(result, len);
 			return Optional.of(new String(bytes, StandardCharsets.UTF_8));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getRequestId failed", t);
+			throw NativeCalls.wrapInvokeFailure("getRequestId failed", t);
 		}
 	}
 

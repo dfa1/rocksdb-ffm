@@ -49,7 +49,7 @@ public final class BlockCacheTraceWriterOptions extends NativeObject {
 		try {
 			return new BlockCacheTraceWriterOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("BlockCacheTraceWriterOptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("BlockCacheTraceWriterOptions create failed", t);
 		}
 	}
 

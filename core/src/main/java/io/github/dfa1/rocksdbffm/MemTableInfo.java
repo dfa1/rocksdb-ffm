@@ -53,9 +53,9 @@ public final class MemTableInfo {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment namePtr = (MemorySegment) MH_CF_NAME.invokeExact(ptr, sizeHolder);
-			return RocksDB.toJavaString(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toJavaString(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("MemTableInfo.columnFamilyName failed", t);
+			throw NativeCalls.wrapInvokeFailure("MemTableInfo.columnFamilyName failed", t);
 		}
 	}
 
@@ -96,9 +96,9 @@ public final class MemTableInfo {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment udtPtr = (MemorySegment) MH_NEWEST_UDT.invokeExact(ptr, sizeHolder);
-			return RocksDB.toByteArray(udtPtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toByteArray(udtPtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("MemTableInfo.newestUserDefinedTimestamp failed", t);
+			throw NativeCalls.wrapInvokeFailure("MemTableInfo.newestUserDefinedTimestamp failed", t);
 		}
 	}
 }

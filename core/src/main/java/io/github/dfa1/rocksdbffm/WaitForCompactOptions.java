@@ -81,7 +81,7 @@ public final class WaitForCompactOptions extends NativeObject {
 		try {
 			return new WaitForCompactOptions((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("WaitForCompactOptions create failed", t);
+			throw NativeCalls.wrapInvokeFailure("WaitForCompactOptions create failed", t);
 		}
 	}
 

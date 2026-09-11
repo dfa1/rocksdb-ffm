@@ -32,7 +32,8 @@ import java.lang.invoke.MethodHandle;
 /// }
 /// ```
 public final class OptimisticTransactionDB extends NativeObjectWithBaseDb
-		implements RocksDBReadOperations, RocksDBWriteOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
+		implements RocksDBReadOperations, RocksDBWriteOperations, RocksDBCompactionOperations, RocksDBMonitoringOperations,
+		RocksDBTracingOperations {
 
 	// -----------------------------------------------------------------------
 	// Method handles unique to OptimisticTransactionDB
@@ -100,7 +101,7 @@ public final class OptimisticTransactionDB extends NativeObjectWithBaseDb
 					ptr(), writeOptions.ptr(), txnOptions.ptr(), MemorySegment.NULL);
 			return new Transaction(txnPtr, txnOptions.getSetSnapshot());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("beginTransaction failed", t);
+			throw NativeCalls.wrapInvokeFailure("beginTransaction failed", t);
 		}
 	}
 

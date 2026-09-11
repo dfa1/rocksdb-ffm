@@ -61,11 +61,11 @@ public final class SecondaryDB extends NativeObjectWithChildren
 	/// if the primary has not yet flushed a write.
 	public void tryCatchUpWithPrimary() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_CATCH_UP.invokeExact(ptr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("tryCatchUpWithPrimary failed", t);
+			throw NativeCalls.wrapInvokeFailure("tryCatchUpWithPrimary failed", t);
 		}
 	}
 
@@ -75,6 +75,6 @@ public final class SecondaryDB extends NativeObjectWithChildren
 
 	@Override
 	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		RocksDB.closeDb(ptr);
+		NativeCalls.closeDb(ptr);
 	}
 }

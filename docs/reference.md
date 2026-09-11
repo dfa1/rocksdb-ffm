@@ -96,7 +96,7 @@ Each type exposes only the operations that are valid for it — see
 | `TtlDB`                   |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
 | `BlobDB`                  |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
 | `SecondaryDB`             |  —    |  ✅  |   ✅    |    ✅    |  —    |   —     |   —    | ✅  |
-| `TransactionDB`           |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   —     |   —    | ✅  |
+| `TransactionDB`           |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   —    | ✅  |
 | `OptimisticTransactionDB` |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
 
 `SecondaryDB` adds `tryCatchUpWithPrimary()`. `TtlDB` adds `getTtl()`. `TransactionDB` and
@@ -397,6 +397,10 @@ Reopening requires listing every existing column family, `default` included — 
 | `WalBatchResult`  | Record: `sequenceNumber()`, `writeBatch()`; `AutoCloseable`             |
 
 ## Compaction and background jobs
+
+`RocksDBCompactionOperations` (all rows below except `cancelAllBackgroundWork`/`flush*`, which
+stay on `RocksDBWriteOperations`) is implemented by `ReadWriteDB`/`TtlDB`/`BlobDB`/
+`OptimisticTransactionDB` and, through its base-db pointer, `TransactionDB` too.
 
 | Method                                                        | Notes                                    |
 |:---------------------------------------------------------------|:-----------------------------------------|

@@ -607,7 +607,7 @@ public final class Options extends NativeObject {
 		try {
 			return new Options((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("options create failed", t);
+			throw NativeCalls.wrapInvokeFailure("options create failed", t);
 		}
 	}
 
@@ -635,7 +635,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_ENABLE_STATISTICS.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("enableStatistics failed", t);
+			throw NativeCalls.wrapInvokeFailure("enableStatistics failed", t);
 		}
 		return this;
 	}
@@ -665,9 +665,9 @@ public final class Options extends NativeObject {
 			if (MemorySegment.NULL.equals(strPtr)) {
 				return null;
 			}
-			return RocksDB.toJavaString(strPtr);
+			return NativeCalls.toJavaString(strPtr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getStatisticsString failed", t);
+			throw NativeCalls.wrapInvokeFailure("getStatisticsString failed", t);
 		}
 	}
 
@@ -679,7 +679,7 @@ public final class Options extends NativeObject {
 		try {
 			return (long) MH_STATISTICS_GET_TICKER_COUNT.invokeExact(ptr(), ticker.getValue());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getTickerCount failed", t);
+			throw NativeCalls.wrapInvokeFailure("getTickerCount failed", t);
 		}
 	}
 
@@ -691,7 +691,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_STATISTICS_GET_HISTOGRAM_DATA.invokeExact(ptr(), histogram.getValue(), data.ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getHistogramData failed", t);
+			throw NativeCalls.wrapInvokeFailure("getHistogramData failed", t);
 		}
 	}
 
@@ -773,7 +773,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_FIFO_COMPACTION_OPTIONS.invokeExact(ptr(), fifoOptions.ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setFifoCompactionOptions failed", t);
+			throw NativeCalls.wrapInvokeFailure("setFifoCompactionOptions failed", t);
 		}
 		return this;
 	}
@@ -788,7 +788,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_UNIVERSAL_COMPACTION_OPTIONS.invokeExact(ptr(), universalOptions.ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setUniversalCompactionOptions failed", t);
+			throw NativeCalls.wrapInvokeFailure("setUniversalCompactionOptions failed", t);
 		}
 		return this;
 	}
@@ -802,7 +802,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_BLOCK_BASED_TABLE_FACTORY.invokeExact(ptr(), tableConfig.ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setTableFormatConfig failed", t);
+			throw NativeCalls.wrapInvokeFailure("setTableFormatConfig failed", t);
 		}
 		return this;
 	}
@@ -817,7 +817,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_CUCKOO_TABLE_FACTORY.invokeExact(ptr(), tableConfig.ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setTableFormatConfig failed", t);
+			throw NativeCalls.wrapInvokeFailure("setTableFormatConfig failed", t);
 		}
 		return this;
 	}
@@ -839,10 +839,10 @@ public final class Options extends NativeObject {
 					tableConfig.getIndexSparseness(),
 					tableConfig.getHugePageTlbSize(),
 					(byte) tableConfig.getEncodingType().getValue(),
-					RocksDB.toByte(tableConfig.isFullScanMode()),
-					RocksDB.toByte(tableConfig.isStoreIndexInFile()));
+					NativeCalls.toByte(tableConfig.isFullScanMode()),
+					NativeCalls.toByte(tableConfig.isStoreIndexInFile()));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setTableFormatConfig failed", t);
+			throw NativeCalls.wrapInvokeFailure("setTableFormatConfig failed", t);
 		}
 		return this;
 	}
@@ -967,7 +967,7 @@ public final class Options extends NativeObject {
 	/// @param value `true` to disable automatic compaction
 	/// @return `this` for chaining
 	public Options setDisableAutoCompactions(boolean value) {
-		NativeFields.setInt(MH_SET_DISABLE_AUTO_COMPACTIONS, ptr(), RocksDB.toByte(value));
+		NativeFields.setInt(MH_SET_DISABLE_AUTO_COMPACTIONS, ptr(), NativeCalls.toByte(value));
 		return this;
 	}
 
@@ -1185,7 +1185,7 @@ public final class Options extends NativeObject {
 			MH_SET_BLOB_CACHE.invokeExact(ptr(), cache.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setBlobCache failed", t);
+			throw NativeCalls.wrapInvokeFailure("setBlobCache failed", t);
 		}
 	}
 
@@ -1220,7 +1220,7 @@ public final class Options extends NativeObject {
 			MH_SET_INFO_LOG.invokeExact(ptr(), logger.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setInfoLog failed", t);
+			throw NativeCalls.wrapInvokeFailure("setInfoLog failed", t);
 		}
 	}
 
@@ -1252,7 +1252,7 @@ public final class Options extends NativeObject {
 			MH_SET_ENV.invokeExact(ptr(), env.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setEnv failed", t);
+			throw NativeCalls.wrapInvokeFailure("setEnv failed", t);
 		}
 	}
 
@@ -1267,7 +1267,7 @@ public final class Options extends NativeObject {
 			MH_SET_SST_FILE_MANAGER.invokeExact(ptr(), sfm.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setSstFileManager failed", t);
+			throw NativeCalls.wrapInvokeFailure("setSstFileManager failed", t);
 		}
 	}
 
@@ -1283,7 +1283,7 @@ public final class Options extends NativeObject {
 			MH_SET_SST_PARTITIONER_FACTORY.invokeExact(ptr(), factory.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setSstPartitionerFactory failed", t);
+			throw NativeCalls.wrapInvokeFailure("setSstPartitionerFactory failed", t);
 		}
 	}
 
@@ -1305,7 +1305,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_PREFIX_EXTRACTOR.invokeExact(ptr(), transform.ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setPrefixExtractor failed", t);
+			throw NativeCalls.wrapInvokeFailure("setPrefixExtractor failed", t);
 		}
 		transform.transferOwnership();
 		return this;
@@ -1323,7 +1323,7 @@ public final class Options extends NativeObject {
 			MH_SET_RATELIMITER.invokeExact(ptr(), rateLimiter.ptr());
 			return this;
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setRateLimiter failed", t);
+			throw NativeCalls.wrapInvokeFailure("setRateLimiter failed", t);
 		}
 	}
 
@@ -1616,7 +1616,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_INCREASE_PARALLELISM.invokeExact(ptr(), totalThreads);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("increaseParallelism failed", t);
+			throw NativeCalls.wrapInvokeFailure("increaseParallelism failed", t);
 		}
 		return this;
 	}
@@ -1837,7 +1837,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_HASH_SKIP_LIST_REP.invokeExact(ptr(), bucketCount, height, branchingFactor);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setHashSkipListMemTableFactory failed", t);
+			throw NativeCalls.wrapInvokeFailure("setHashSkipListMemTableFactory failed", t);
 		}
 		return this;
 	}
@@ -1853,7 +1853,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_HASH_LINK_LIST_REP.invokeExact(ptr(), bucketCount);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setHashLinkListMemTableFactory failed", t);
+			throw NativeCalls.wrapInvokeFailure("setHashLinkListMemTableFactory failed", t);
 		}
 		return this;
 	}
@@ -1868,7 +1868,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_MEMTABLE_VECTOR_REP.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("setVectorMemTableFactory failed", t);
+			throw NativeCalls.wrapInvokeFailure("setVectorMemTableFactory failed", t);
 		}
 		return this;
 	}

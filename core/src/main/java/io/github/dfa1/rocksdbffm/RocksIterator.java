@@ -130,7 +130,7 @@ public final class RocksIterator extends NativeObject {
 			// Every implementor extends NativeObjectWithChildren (see RocksDBReadOperations#getSnapshot()).
 			return new RocksIterator((NativeObjectWithChildren) db, iterPtr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("iterator create failed", t);
+			throw NativeCalls.wrapInvokeFailure("iterator create failed", t);
 		}
 	}
 
@@ -155,7 +155,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			MH_SEEK_TO_FIRST.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("seekToFirst failed", t);
+			throw NativeCalls.wrapInvokeFailure("seekToFirst failed", t);
 		}
 	}
 
@@ -164,7 +164,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			MH_SEEK_TO_LAST.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("seekToLast failed", t);
+			throw NativeCalls.wrapInvokeFailure("seekToLast failed", t);
 		}
 	}
 
@@ -173,9 +173,9 @@ public final class RocksIterator extends NativeObject {
 	/// @param target the seek target key
 	public void seek(byte[] target) {
 		try (Arena arena = Arena.ofConfined()) {
-			MH_SEEK.invokeExact(ptr(), RocksDB.toNative(arena, target), (long) target.length);
+			MH_SEEK.invokeExact(ptr(), NativeCalls.toNative(arena, target), (long) target.length);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("seek failed", t);
+			throw NativeCalls.wrapInvokeFailure("seek failed", t);
 		}
 	}
 
@@ -186,7 +186,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			MH_SEEK.invokeExact(ptr(), MemorySegment.ofBuffer(target), (long) target.remaining());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("seek failed", t);
+			throw NativeCalls.wrapInvokeFailure("seek failed", t);
 		}
 	}
 
@@ -197,7 +197,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			MH_SEEK.invokeExact(ptr(), target, target.byteSize());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("seek failed", t);
+			throw NativeCalls.wrapInvokeFailure("seek failed", t);
 		}
 	}
 
@@ -206,9 +206,9 @@ public final class RocksIterator extends NativeObject {
 	/// @param target the seek target key
 	public void seekForPrev(byte[] target) {
 		try (Arena arena = Arena.ofConfined()) {
-			MH_SEEK_FOR_PREV.invokeExact(ptr(), RocksDB.toNative(arena, target), (long) target.length);
+			MH_SEEK_FOR_PREV.invokeExact(ptr(), NativeCalls.toNative(arena, target), (long) target.length);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("seekForPrev failed", t);
+			throw NativeCalls.wrapInvokeFailure("seekForPrev failed", t);
 		}
 	}
 
@@ -219,7 +219,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			MH_SEEK_FOR_PREV.invokeExact(ptr(), MemorySegment.ofBuffer(target), (long) target.remaining());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("seekForPrev failed", t);
+			throw NativeCalls.wrapInvokeFailure("seekForPrev failed", t);
 		}
 	}
 
@@ -230,7 +230,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			MH_SEEK_FOR_PREV.invokeExact(ptr(), target, target.byteSize());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("seekForPrev failed", t);
+			throw NativeCalls.wrapInvokeFailure("seekForPrev failed", t);
 		}
 	}
 
@@ -239,7 +239,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			MH_NEXT.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("next failed", t);
+			throw NativeCalls.wrapInvokeFailure("next failed", t);
 		}
 	}
 
@@ -248,7 +248,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			MH_PREV.invokeExact(ptr());
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("prev failed", t);
+			throw NativeCalls.wrapInvokeFailure("prev failed", t);
 		}
 	}
 
@@ -261,9 +261,9 @@ public final class RocksIterator extends NativeObject {
 	/// @return `true` if the iterator has a valid current position
 	public boolean isValid() {
 		try {
-			return RocksDB.fromByte((byte) MH_VALID.invokeExact(ptr()));
+			return NativeCalls.fromByte((byte) MH_VALID.invokeExact(ptr()));
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("isValid failed", t);
+			throw NativeCalls.wrapInvokeFailure("isValid failed", t);
 		}
 	}
 
@@ -272,11 +272,11 @@ public final class RocksIterator extends NativeObject {
 	/// Throws [RocksDBException] if an error occurred.
 	public void checkError() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_GET_ERROR.invokeExact(ptr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("getError failed", t);
+			throw NativeCalls.wrapInvokeFailure("getError failed", t);
 		}
 	}
 
@@ -288,12 +288,12 @@ public final class RocksIterator extends NativeObject {
 	/// @return empty if no error, otherwise the error message
 	public Optional<String> error() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_GET_ERROR.invokeExact(ptr(), err);
 			MemorySegment errPtr = err.get(ValueLayout.ADDRESS, 0);
-			return RocksDB.toOptionalString(errPtr);
+			return NativeCalls.toOptionalString(errPtr);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("error failed", t);
+			throw NativeCalls.wrapInvokeFailure("error failed", t);
 		}
 	}
 
@@ -302,11 +302,11 @@ public final class RocksIterator extends NativeObject {
 	/// `seek*` call is required to reposition it before further navigation.
 	public void refresh() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = RocksDB.errHolder(arena);
+			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_REFRESH.invokeExact(ptr(), err);
-			RocksDB.checkError(err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("refresh failed", t);
+			throw NativeCalls.wrapInvokeFailure("refresh failed", t);
 		}
 	}
 
@@ -415,7 +415,7 @@ public final class RocksIterator extends NativeObject {
 	/// @return current key as a newly allocated byte array
 	public byte[] key() {
 		MemorySegment raw = readKey();
-		return RocksDB.toByteArray(raw, lenSegment.get(ValueLayout.JAVA_LONG, 0));
+		return NativeCalls.toByteArray(raw, lenSegment.get(ValueLayout.JAVA_LONG, 0));
 	}
 
 	/// Returns a copy of the current value as a byte array.
@@ -425,7 +425,7 @@ public final class RocksIterator extends NativeObject {
 	/// @return current value as a newly allocated byte array
 	public byte[] value() {
 		MemorySegment raw = readValue();
-		return RocksDB.toByteArray(raw, lenSegment.get(ValueLayout.JAVA_LONG, 0));
+		return NativeCalls.toByteArray(raw, lenSegment.get(ValueLayout.JAVA_LONG, 0));
 	}
 
 	/// Invokes `MH_KEY`. Returns the raw, unsized key pointer — every caller reinterprets
@@ -438,7 +438,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			return (MemorySegment) MH_KEY.invokeExact(ptr(), lenSegment);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("key failed", t);
+			throw NativeCalls.wrapInvokeFailure("key failed", t);
 		}
 	}
 
@@ -452,7 +452,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			return (MemorySegment) MH_VALUE.invokeExact(ptr(), lenSegment);
 		} catch (Throwable t) {
-			throw RocksDB.wrapInvokeFailure("value failed", t);
+			throw NativeCalls.wrapInvokeFailure("value failed", t);
 		}
 	}
 

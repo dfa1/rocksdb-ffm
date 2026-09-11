@@ -145,7 +145,7 @@ final class EventNotifierBridge {
 			MH_OPTIONS_ADD_EVENTLISTENER.invokeExact(optionsPtr, listenerPtr);
 		} catch (Throwable t) {
 			REGISTRY.unregister(statePtr);
-			throw RocksDB.wrapInvokeFailure("EventNotifier attach failed", t);
+			throw NativeCalls.wrapInvokeFailure("EventNotifier attach failed", t);
 		}
 	}
 
@@ -193,7 +193,7 @@ final class EventNotifierBridge {
 	private static void backgroundErrorDispatch(MemorySegment state, int reason, MemorySegment statusPtr) {
 		dispatch(state, n -> {
 			try (Arena arena = Arena.ofConfined()) {
-				MemorySegment err = RocksDB.errHolder(arena);
+				MemorySegment err = NativeCalls.errHolder(arena);
 				try {
 					MH_STATUS_PTR_GET_ERROR.invokeExact(statusPtr, err);
 				} catch (Throwable t) {
@@ -201,7 +201,7 @@ final class EventNotifierBridge {
 				}
 				RocksDBException error = null;
 				try {
-					RocksDB.checkError(err);
+					NativeCalls.checkError(err);
 				} catch (RocksDBException e) {
 					error = e;
 				}
