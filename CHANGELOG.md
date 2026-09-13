@@ -7,8 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14] — 2026-09-13
+
+Block cache and I/O tracing, a `Snapshot`/`RocksIterator` close-race crash fix, and a Maven Central
+publishing scope fix.
+
+### Added
+
+- `RocksDBTracingOperations`: `startIoTrace`/`endIoTrace`, `startBlockCacheTrace`/
+  `endBlockCacheTrace` (`rocksdb_start_io_trace`, `rocksdb_start_block_cache_trace`), plus
+  `BlockCacheTraceOptions`/`BlockCacheTraceWriterOptions` for the with-options variant (#179)
+
 ### Fixed
 
+- Closed a TOCTOU race where a `Snapshot`/`RocksIterator` created an instant before its owning DB
+  closes could register after the DB's child-sweep already ran, crashing the JVM on first use
+  (#143)
+- `CompactionFilterFactory`: close a `CompactionFilter` left leaked when construction throws
+  before ownership transfers to RocksDB
+- `CompactionFilter.FilterDecision.ChangeValue`: `equals`/`hashCode`/`toString` now compare the
+  `byte[]` value's content, not its identity
 - `benchmarks`/`integration-tests`: set `skipPublishing` alongside `maven.deploy.skip` — the
   release profile's `central-publishing-maven-plugin` ignores `maven.deploy.skip` and was
   publishing both modules to Maven Central on every release (#169)
