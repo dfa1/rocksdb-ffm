@@ -958,17 +958,54 @@ Only the built-in fixed-prefix shape is wrapped — there is no callback-based c
 
 ## Build the native library from source
 
-Only needed when working on this repository:
+Only needed when working on this repository — consumers of the published artifacts don't need any
+of this; see the [Quickstart](../README.md#quickstart) instead.
+
+### Prerequisites
+
+| Tool                  | Version | Notes                                                                 |
+|:----------------------|:--------|:-----------------------------------------------------------------------|
+| JDK                   | 25+     | first LTS with stable `java.lang.foreign`                              |
+| Zig                   | 0.16.x  | on `PATH`; compiles the vendored RocksDB C/C++ sources via `zig cc`/`zig c++` |
+| Git                   | any     | needed for the `rocksdb` submodule                                     |
+| CMake + `make`/Ninja  | any     | Windows targets only                                                   |
+
+Maven itself is *not* required — the repo ships the Maven Wrapper (`./mvnw`/`./mvnw.cmd`), which
+downloads the pinned Maven version on first run. Never use a system `mvn`.
+
+**Installing Zig** — download a release archive from
+[ziglang.org/download](https://ziglang.org/download/) and put the extracted `zig` binary on
+`PATH`, or use a version manager (`asdf install zig 0.16.0`, `mise use zig@0.16.0`). Confirm with:
 
 ```bash
-git submodule update --init --recursive     # first time
-./mvnw generate-resources -Pnative-build    # builds librocksdb for this platform
+zig version   # must print 0.16.0 or newer
+```
+
+### Clone and build
+
+```bash
+git clone --recurse-submodules https://github.com/dfa1/rocksdb-ffm.git
+cd rocksdb-ffm
 ./mvnw test
 ```
 
-This needs a JDK 25+, [Zig](https://ziglang.org/) 0.15.x, and — for the Windows targets only —
-CMake plus `make` or Ninja. Use `./mvnw`, never a system `mvn`, and never `install` (it pollutes
-`~/.m2` with local artifacts).
+If you already cloned without `--recurse-submodules` (the build fails with `rocksdb/` empty or
+missing headers), fetch the submodule after the fact:
+
+```bash
+git submodule update --init --recursive
+```
+
+`./mvnw test` (same for `compile`/`package`) auto-detects your host OS/arch and cross-compiles
+RocksDB for just that one `native/*` classifier — no separate build step and no profile flag
+needed for a local, single-platform build. Add `-Pall-natives` only to build every classifier
+regardless of host (what CI and releases use):
+
+```bash
+./mvnw test -Pall-natives
+```
+
+**NEVER run `mvn install` or `./mvnw install`** — it pollutes `~/.m2` with local artifacts.
 
 ## Run the benchmarks
 

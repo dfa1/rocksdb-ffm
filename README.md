@@ -87,10 +87,15 @@ Docs follow the [Diátaxis](https://diataxis.fr/) framework.
 only — [CMake](https://cmake.org/) plus `make` or [Ninja](https://ninja-build.org/).
 
 ```bash
-git submodule update --init --recursive     # clone the rocksdb submodule (first time)
-./mvnw generate-resources -Pnative-build    # build the native library (first time or after clean)
+git clone --recurse-submodules https://github.com/dfa1/rocksdb-ffm.git
+cd rocksdb-ffm
 ./mvnw test
 ```
+
+Cloned without `--recurse-submodules`? Run `git submodule update --init --recursive` first — a
+plain `./mvnw test` already cross-compiles RocksDB for your host platform, no extra profile flag
+needed. Full first-build walkthrough and troubleshooting:
+[docs/how-to.md#build-the-native-library-from-source](docs/how-to.md#build-the-native-library-from-source).
 
 ## Releasing
 
