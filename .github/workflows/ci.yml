@@ -51,3 +51,25 @@ jobs:
 
       - name: Build and test
         run: mvn --batch-mode verify -Pall-natives
+
+      # Catches release-smoke API drift (e.g. #see .github/smoke) at PR time instead
+      # of at release time: release-smoke.yml only compiles/runs against a published
+      # Central version, so a source change that breaks it isn't caught until the
+      # next release. Compile-only against the local core/target/classes just built
+      # above, no `mvn install` and no execution.
+      - name: Compile smoke test against local build (not run)
+        shell: bash
+        run: |
+          # core/pom.xml can't drive dependency:build-classpath standalone here: its
+          # test scope declares the 5 native-* reactor siblings, which only resolve
+          # inside the full reactor session that already ran above, not a fresh `mvn`
+          # invocation. junit-jupiter is already on disk in ~/.m2 from that same run,
+          # so just glob it by the version pinned in the root pom instead.
+          JU_VERSION=$(grep -A1 '<artifactId>junit-jupiter</artifactId>' pom.xml \
+            | grep -oE '<version>[^<]+</version>' | head -1 | sed -E 's/<\/?version>//g')
+          SEP=":"; [ "$RUNNER_OS" = "Windows" ] && SEP=";"
+          CP="core/target/classes"
+          while IFS= read -r jar; do CP="$CP$SEP$jar"; done < <(find "$HOME/.m2/repository/org/junit" \
+            -path "*/$JU_VERSION/*.jar" ! -name '*-sources.jar')
+          mkdir -p "${RUNNER_TEMP}/smoke-classes"
+          javac -cp "$CP" -d "${RUNNER_TEMP}/smoke-classes" .github/smoke/src/test/java/SmokeTest.java

@@ -63,9 +63,11 @@ class SmokeTest {
 			db.put(key, value);
 
 			ByteBuffer out = ByteBuffer.allocateDirect(3);
-			int len = db.get(key.duplicate(), out);
+			var result = db.get(key.duplicate(), out);
+			assertTrue(result instanceof io.github.dfa1.rocksdbffm.CopyResult.Copied,
+					"ByteBuffer get() should copy the value on " + PLATFORM);
 			out.flip();
-			byte[] read = new byte[len];
+			byte[] read = new byte[out.remaining()];
 			out.get(read);
 			assertEquals("bbv", new String(read, StandardCharsets.UTF_8),
 					"ByteBuffer get() mismatch on " + PLATFORM);
@@ -82,9 +84,10 @@ class SmokeTest {
 			db.put(key, value);
 
 			MemorySegment out = arena.allocate(3);
-			long len = db.get(key, out);
-			assertEquals(3L, len, "MemorySegment get() length mismatch on " + PLATFORM);
-			assertEquals("msv", new String(toByteArray(out, len), StandardCharsets.UTF_8),
+			var result = db.get(key, out);
+			assertTrue(result instanceof io.github.dfa1.rocksdbffm.CopyResult.Copied,
+					"MemorySegment get() should copy the value on " + PLATFORM);
+			assertEquals("msv", new String(toByteArray(out, 3), StandardCharsets.UTF_8),
 					"MemorySegment get() content mismatch on " + PLATFORM);
 		}
 	}
