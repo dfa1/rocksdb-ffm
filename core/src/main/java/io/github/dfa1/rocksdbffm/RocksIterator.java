@@ -8,6 +8,8 @@ import java.lang.invoke.MethodHandle;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /// FFM wrapper for `rocksdb_iterator_t`.
 ///
@@ -358,6 +360,40 @@ public final class RocksIterator extends NativeObject {
 			Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
 			return result;
 		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Internal iteration — Stream
+	// -----------------------------------------------------------------------
+
+	/// Returns a [Stream] over the remaining entries from the current position, mapping each
+	/// key and value through `keyMapper`/`valueMapper`. Positions itself with [#seekToFirst()]
+	/// on first use — do not position this iterator manually before calling this method, and do
+	/// not call [#next()], [#seekToFirst()], or any other positioning method while consuming the
+	/// stream.
+	///
+	/// The returned stream takes ownership of this iterator: closing the stream — directly, or
+	/// via try-with-resources, since [Stream] is [AutoCloseable] — closes this iterator too, even
+	/// if the stream is abandoned early (e.g. `.findFirst()`, `.limit(n)`). As with any stream
+	/// backed by a native or I/O resource, a caller that never closes the returned stream leaks
+	/// the iterator; [#close()] on this iterator directly afterward is safe but redundant, since
+	/// it is idempotent.
+	///
+	/// Both mappers run under the same scoped, zero-copy lifetime as [#key(Mapper)] and
+	/// [#value(Mapper)]: nothing stops a mapper from returning the underlying
+	/// [java.lang.foreign.MemorySegment] view itself rather than a copy, but that view is only
+	/// valid for the duration of the mapper call — retaining it past the call is the same
+	/// use-after-scope bug [#key(Mapper)] already documents, just reached through the stream
+	/// instead of a direct call.
+	///
+	/// @param <K>         the type produced from mapping each key
+	/// @param <V>         the type produced from mapping each value
+	/// @param keyMapper   callback invoked with a zero-copy view of each key
+	/// @param valueMapper callback invoked with a zero-copy view of each value
+	/// @return a stream of the mapped key/value pairs, in iteration order
+	public <K, V> Stream<KeyValue<K, V>> stream(Mapper<K> keyMapper, Mapper<V> valueMapper) {
+		RocksIteratorSpliterator<K, V> spliterator = new RocksIteratorSpliterator<>(this, keyMapper, valueMapper);
+		return StreamSupport.stream(spliterator, false).onClose(this::close);
 	}
 
 	// -----------------------------------------------------------------------
