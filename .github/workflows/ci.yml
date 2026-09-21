@@ -67,9 +67,13 @@ jobs:
           # so just glob it by the version pinned in the root pom instead.
           JU_VERSION=$(grep -A1 '<artifactId>junit-jupiter</artifactId>' pom.xml \
             | grep -oE '<version>[^<]+</version>' | head -1 | sed -E 's/<\/?version>//g')
+          # Ask Maven for its actual local repo instead of assuming $HOME/.m2 —
+          # on windows-latest bash's $HOME doesn't reliably match it, which left
+          # this glob matching zero jars and every JUnit import unresolved.
+          M2_REPO=$(mvn -q -Dexpression=settings.localRepository help:evaluate -DforceStdout)
           SEP=":"; [ "$RUNNER_OS" = "Windows" ] && SEP=";"
           CP="core/target/classes"
-          while IFS= read -r jar; do CP="$CP$SEP$jar"; done < <(find "$HOME/.m2/repository/org/junit" \
+          while IFS= read -r jar; do CP="$CP$SEP$jar"; done < <(find "$M2_REPO/org/junit" \
             -path "*/$JU_VERSION/*.jar" ! -name '*-sources.jar')
           mkdir -p "${RUNNER_TEMP}/smoke-classes"
           javac -cp "$CP" -d "${RUNNER_TEMP}/smoke-classes" .github/smoke/src/test/java/SmokeTest.java
