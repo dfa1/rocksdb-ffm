@@ -781,6 +781,48 @@ class RocksIteratorTest {
 		}
 	}
 
+	// -----------------------------------------------------------------------
+	// newIteratorStream(Mapper, Mapper)
+	// -----------------------------------------------------------------------
+
+	@Test
+	void newIteratorStream_mapsAllEntriesInOrder(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir)) {
+			db.put("b".getBytes(), "2".getBytes());
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("c".getBytes(), "3".getBytes());
+
+			// When
+			List<KeyValue<String, String>> entries;
+			try (var stream = db.newIteratorStream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
+				entries = stream.toList();
+			}
+
+			// Then
+			assertThat(entries).containsExactly(
+					new KeyValue<>("a", "1"),
+					new KeyValue<>("b", "2"),
+					new KeyValue<>("c", "3"));
+		}
+	}
+
+	@Test
+	void newIteratorStream_onEmptyDb_producesEmptyStream(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir)) {
+
+			// When
+			List<KeyValue<String, String>> entries;
+			try (var stream = db.newIteratorStream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
+				entries = stream.toList();
+			}
+
+			// Then
+			assertThat(entries).isEmpty();
+		}
+	}
+
 	private static String toUtf8String(MemorySegment segment) {
 		return new String(segment.toArray(ValueLayout.JAVA_BYTE), StandardCharsets.UTF_8);
 	}
