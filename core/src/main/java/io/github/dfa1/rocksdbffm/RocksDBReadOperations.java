@@ -4,6 +4,7 @@ import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.stream.Stream;
 
 /// Shared read operations, including column-family-scoped overloads, for every wrapper
 /// around a plain `rocksdb_t*`: read-write, read-only, TTL, blob, secondary, and
@@ -341,6 +342,19 @@ public interface RocksDBReadOperations {
 	/// @return a new [RocksIterator]; caller must close it
 	default RocksIterator newIterator(ColumnFamilyHandle cf, ReadOptions readOptions) {
 		return RocksDBReadOperationsBindings.createIteratorCf(this, readOptions, cf);
+	}
+
+	/// Returns a [Stream] over every entry in the database, using the database's default read
+	/// options. Equivalent to `newIterator().stream(keyMapper, valueMapper)`; see
+	/// [RocksIterator#stream(Mapper, Mapper)] for the mapping, closing, and lifetime contract.
+	///
+	/// @param <K>         the type produced from mapping each key
+	/// @param <V>         the type produced from mapping each value
+	/// @param keyMapper   callback invoked with a zero-copy view of each key
+	/// @param valueMapper callback invoked with a zero-copy view of each value
+	/// @return a stream of the mapped key/value pairs, in iteration order
+	default <K, V> Stream<KeyValue<K, V>> newIteratorStream(Mapper<K> keyMapper, Mapper<V> valueMapper) {
+		return newIterator().stream(keyMapper, valueMapper);
 	}
 
 	// -----------------------------------------------------------------------
