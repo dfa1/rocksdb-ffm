@@ -86,6 +86,9 @@
 				</executions>
 				<configuration>
 					<flattenMode>bom</flattenMode>
+					<pomElements>
+						<properties>remove</properties>
+					</pomElements>
 				</configuration>
 			</plugin>
 		</plugins>
