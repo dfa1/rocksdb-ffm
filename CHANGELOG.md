@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Build requires Maven 4 (wrapper bumped to 4.0.0-rc-7); published artifacts are unchanged and
+  still consumable from Maven 3.9+.
+- BOM uses Maven 4 `<packaging>bom</packaging>` instead of `flatten-maven-plugin`.
+
 ## [0.14] — 2026-09-13
 
 Block cache and I/O tracing, a `Snapshot`/`RocksIterator` close-race crash fix, and a Maven Central

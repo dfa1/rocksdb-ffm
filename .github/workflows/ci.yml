@@ -50,7 +50,10 @@ jobs:
         run: ./scripts/build-rocksdb.sh "${RUNNER_TEMP}/rocksdbffm-osx-x86_64" osx-x86_64
 
       - name: Build and test
-        run: mvn --batch-mode verify -Pall-natives
+        # ./mvnw (not `mvn`): the BOM uses modelVersion 4.1.0, which the runner's
+        # bundled Maven 3 can't parse. bash so the same line works on windows-latest.
+        shell: bash
+        run: ./mvnw --batch-mode verify -Pall-natives
 
       # Catches release-smoke API drift (e.g. #see .github/smoke) at PR time instead
       # of at release time: release-smoke.yml only compiles/runs against a published
@@ -62,7 +65,7 @@ jobs:
         run: |
           # core/pom.xml can't drive dependency:build-classpath standalone here: its
           # test scope declares the 5 native-* reactor siblings, which only resolve
-          # inside the full reactor session that already ran above, not a fresh `mvn`
+          # inside the full reactor session that already ran above, not a fresh `./mvnw`
           # invocation. junit-jupiter is already on disk in ~/.m2 from that same run,
           # so just glob it by the version pinned in the root pom instead.
           JU_VERSION=$(grep -A1 '<artifactId>junit-jupiter</artifactId>' pom.xml \
@@ -70,7 +73,7 @@ jobs:
           # Ask Maven for its actual local repo instead of assuming $HOME/.m2 —
           # on windows-latest bash's $HOME doesn't reliably match it, which left
           # this glob matching zero jars and every JUnit import unresolved.
-          M2_REPO=$(mvn -q -Dexpression=settings.localRepository help:evaluate -DforceStdout)
+          M2_REPO=$(./mvnw -q -Dexpression=settings.localRepository help:evaluate -DforceStdout)
           SEP=":"; [ "$RUNNER_OS" = "Windows" ] && SEP=";"
           CP="core/target/classes"
           while IFS= read -r jar; do CP="$CP$SEP$jar"; done < <(find "$M2_REPO/org/junit" \

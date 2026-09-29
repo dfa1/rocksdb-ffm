@@ -16,3 +16,5 @@ native/*/src/main/resources/native/
 release.properties
 pom.xml.releaseBackup
 */pom.xml.releaseBackup
+pom.xml.tag
+pom.xml.next
