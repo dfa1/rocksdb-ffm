@@ -2,8 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 http://maven.apache.org/xsd/maven-4.1.0.xsd">
 	<modelVersion>4.1.0</modelVersion>
 
+	<!-- No <relativePath>: modelVersion 4.1.0 rejects it alongside groupId/artifactId,
+	     and maven-release-plugin needs the explicit coordinates to rewrite on release. -->
 	<parent>
-		<relativePath>../pom.xml</relativePath>
+		<groupId>io.github.dfa1</groupId>
+		<artifactId>rocksdbffm</artifactId>
+		<version>0.15-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>rocksdbffm-bom</artifactId>
