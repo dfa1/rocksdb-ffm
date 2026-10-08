@@ -699,9 +699,11 @@ class RocksIteratorTest {
 
 			// When
 			List<KeyValue<String, String>> entries;
-			try (RocksIterator it = db.newIterator();
-			     var stream = it.stream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
-				entries = stream.toList();
+			try (RocksIterator it = db.newIterator()) {
+				it.seekToFirst();
+				try (var stream = it.stream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
+					entries = stream.toList();
+				}
 			}
 
 			// Then
@@ -719,9 +721,11 @@ class RocksIteratorTest {
 
 			// When
 			List<KeyValue<String, String>> entries;
-			try (RocksIterator it = db.newIterator();
-			     var stream = it.stream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
-				entries = stream.toList();
+			try (RocksIterator it = db.newIterator()) {
+				it.seekToFirst();
+				try (var stream = it.stream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
+					entries = stream.toList();
+				}
 			}
 
 			// Then
@@ -730,40 +734,80 @@ class RocksIteratorTest {
 	}
 
 	@Test
-	void stream_closingStream_closesUnderlyingIterator(@TempDir Path dir) {
+	void stream_closingStream_doesNotCloseUnderlyingIterator(@TempDir Path dir) {
 		// Given
 		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("k".getBytes(), "v".getBytes());
-			RocksIterator it = db.newIterator();
+			try (RocksIterator it = db.newIterator()) {
+				it.seekToFirst();
 
-			// When
-			try (var stream = it.stream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
-				stream.toList();
+				// When
+				try (var stream = it.stream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
+					stream.toList();
+				}
+
+				// Then — the stream's close() did not propagate to the iterator, so it is still usable
+				assertThat(it.isValid()).isFalse();
 			}
-
-			// Then — the stream's close() propagated to the iterator, not just to itself
-			assertThatThrownBy(it::isValid).isInstanceOf(IllegalStateException.class);
 		}
 	}
 
 	@Test
-	void stream_earlyTermination_stillClosesIteratorOnStreamClose(@TempDir Path dir) {
+	void stream_earlyTermination_leavesIteratorOpenAndPositioned(@TempDir Path dir) {
 		// Given
 		try (var db = RocksDB.openReadWrite(dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
-			RocksIterator it = db.newIterator();
+			try (RocksIterator it = db.newIterator()) {
+				it.seekToFirst();
 
-			// When — abandon the stream after the first element instead of draining it
-			List<KeyValue<String, String>> firstEntry;
-			try (var stream = it.stream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
-				firstEntry = stream.limit(1).toList();
+				// When — abandon the stream after the first element instead of draining it
+				List<KeyValue<String, String>> firstEntry;
+				try (var stream = it.stream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
+					firstEntry = stream.limit(1).toList();
+				}
+
+				// Then — the iterator is still open and sitting right where the stream left it,
+				// so plain navigation can pick up where the stream stopped
+				assertThat(firstEntry).containsExactly(new KeyValue<>("a", "1"));
+				assertThat(it.isValid()).isTrue();
+				assertThat(new String(it.key())).isEqualTo("b");
 			}
+		}
+	}
 
-			// Then
-			assertThat(firstEntry).containsExactly(new KeyValue<>("a", "1"));
-			assertThatThrownBy(it::isValid).isInstanceOf(IllegalStateException.class);
+	@Test
+	void stream_afterSeek_canBeRestreamedFromANewPosition(@TempDir Path dir) {
+		// Given
+		try (var db = RocksDB.openReadWrite(dir)) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("b".getBytes(), "2".getBytes());
+			db.put("c".getBytes(), "3".getBytes());
+			try (RocksIterator it = db.newIterator()) {
+
+				// When — stream the whole range, then reseek and stream again on the same handle
+				it.seekToFirst();
+				List<KeyValue<String, String>> fullScan;
+				try (var stream = it.stream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
+					fullScan = stream.toList();
+				}
+
+				it.seek("b".getBytes());
+				List<KeyValue<String, String>> fromB;
+				try (var stream = it.stream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
+					fromB = stream.toList();
+				}
+
+				// Then
+				assertThat(fullScan).containsExactly(
+						new KeyValue<>("a", "1"),
+						new KeyValue<>("b", "2"),
+						new KeyValue<>("c", "3"));
+				assertThat(fromB).containsExactly(
+						new KeyValue<>("b", "2"),
+						new KeyValue<>("c", "3"));
+			}
 		}
 	}
 
@@ -774,52 +818,12 @@ class RocksIteratorTest {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When / Then
-			try (RocksIterator it = db.newIterator();
-			     var stream = it.stream(value -> null, RocksIteratorTest::toUtf8String)) {
-				assertThatThrownBy(stream::toList).isInstanceOf(NullPointerException.class);
+			try (RocksIterator it = db.newIterator()) {
+				it.seekToFirst();
+				try (var stream = it.stream(value -> null, RocksIteratorTest::toUtf8String)) {
+					assertThatThrownBy(stream::toList).isInstanceOf(NullPointerException.class);
+				}
 			}
-		}
-	}
-
-	// -----------------------------------------------------------------------
-	// newIteratorStream(Mapper, Mapper)
-	// -----------------------------------------------------------------------
-
-	@Test
-	void newIteratorStream_mapsAllEntriesInOrder(@TempDir Path dir) {
-		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
-			db.put("b".getBytes(), "2".getBytes());
-			db.put("a".getBytes(), "1".getBytes());
-			db.put("c".getBytes(), "3".getBytes());
-
-			// When
-			List<KeyValue<String, String>> entries;
-			try (var stream = db.newIteratorStream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
-				entries = stream.toList();
-			}
-
-			// Then
-			assertThat(entries).containsExactly(
-					new KeyValue<>("a", "1"),
-					new KeyValue<>("b", "2"),
-					new KeyValue<>("c", "3"));
-		}
-	}
-
-	@Test
-	void newIteratorStream_onEmptyDb_producesEmptyStream(@TempDir Path dir) {
-		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
-
-			// When
-			List<KeyValue<String, String>> entries;
-			try (var stream = db.newIteratorStream(RocksIteratorTest::toUtf8String, RocksIteratorTest::toUtf8String)) {
-				entries = stream.toList();
-			}
-
-			// Then
-			assertThat(entries).isEmpty();
 		}
 	}
 

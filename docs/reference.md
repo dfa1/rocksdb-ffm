@@ -339,9 +339,11 @@ keys and read-heavy point lookups (no efficient range scans, no block compressio
 | Zero copy  | `key(Mapper)`, `value(Mapper)` — view scoped to the callback                    |
 | One copy   | `key(ByteBuffer)`, `value(ByteBuffer)` → `CopyResult`                           |
 | Convenience| `key()`, `value()` → fresh `byte[]` per call                                    |
+| Stream     | `stream(Mapper, Mapper)` → `Stream<KeyValue<K, V>>` from the current position; same positioning contract as `next()`, does not close the iterator |
 
 `isValid()` turning false means "end of range **or** error" — always call `checkError()` after the
-loop.
+loop. `stream(Mapper, Mapper)` calls it automatically when the stream reaches the natural end of
+the range, but not if a short-circuiting operation (`limit`, `findFirst`, ...) stops it early.
 
 ## Snapshots
 

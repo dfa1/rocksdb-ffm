@@ -14,7 +14,6 @@ final class RocksIteratorSpliterator<K, V> implements Spliterator<KeyValue<K, V>
 	private final RocksIterator iterator;
 	private final Mapper<K> keyMapper;
 	private final Mapper<V> valueMapper;
-	private boolean started;
 
 	RocksIteratorSpliterator(RocksIterator iterator, Mapper<K> keyMapper, Mapper<V> valueMapper) {
 		this.iterator = iterator;
@@ -24,12 +23,11 @@ final class RocksIteratorSpliterator<K, V> implements Spliterator<KeyValue<K, V>
 
 	@Override
 	public boolean tryAdvance(Consumer<? super KeyValue<K, V>> action) {
-		if (!started) {
-			iterator.seekToFirst();
-			started = true;
-		}
-
 		if (!iterator.isValid()) {
+			// isValid() false means either end-of-range or a background error; checkError()
+			// distinguishes the two and throws for the latter, matching the manual
+			// seekToFirst()/isValid()/next() loop's own checkError()-after-the-loop convention.
+			iterator.checkError();
 			return false;
 		}
 

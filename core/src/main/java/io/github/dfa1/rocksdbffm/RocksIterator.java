@@ -367,17 +367,23 @@ public final class RocksIterator extends NativeObject {
 	// -----------------------------------------------------------------------
 
 	/// Returns a [Stream] over the remaining entries from the current position, mapping each
-	/// key and value through `keyMapper`/`valueMapper`. Positions itself with [#seekToFirst()]
-	/// on first use — do not position this iterator manually before calling this method, and do
-	/// not call [#next()], [#seekToFirst()], or any other positioning method while consuming the
-	/// stream.
+	/// key and value through `keyMapper`/`valueMapper`. This has the same positioning contract
+	/// as [#next()]: it never repositions the iterator on its own, so call [#seekToFirst()],
+	/// [#seekToLast()], or [#seek(byte[])] (or an overload) first, exactly as the manual
+	/// `for (it.seekToFirst(); it.isValid(); it.next())` loop requires. Do not call [#next()],
+	/// [#prev()], or any positioning method while consuming the stream.
 	///
-	/// The returned stream takes ownership of this iterator: closing the stream — directly, or
-	/// via try-with-resources, since [Stream] is [AutoCloseable] — closes this iterator too, even
-	/// if the stream is abandoned early (e.g. `.findFirst()`, `.limit(n)`). As with any stream
-	/// backed by a native or I/O resource, a caller that never closes the returned stream leaks
-	/// the iterator; [#close()] on this iterator directly afterward is safe but redundant, since
-	/// it is idempotent.
+	/// The returned stream does not take ownership of this iterator: closing the stream —
+	/// directly, or via try-with-resources, since [Stream] is [AutoCloseable] — never closes
+	/// this iterator. The iterator remains open and positioned wherever the stream stopped
+	/// (at the end of the range, or wherever a short-circuiting operation like `.limit(n)`
+	/// or `.findFirst()` left it), so it can be reseeked and streamed again, or closed by the
+	/// caller when truly done. Reaching the natural end of the range calls [#checkError()]
+	/// before signalling completion, so a background error during the scan surfaces as a
+	/// [RocksDBException] from the stream itself instead of silently looking like a shorter,
+	/// complete result; a stream abandoned early via a short-circuiting operation does not
+	/// reach that check, so call [#checkError()] directly in that case if an error needs to be
+	/// ruled out.
 	///
 	/// Both mappers run under the same scoped, zero-copy lifetime as [#key(Mapper)] and
 	/// [#value(Mapper)]: nothing stops a mapper from returning the underlying
@@ -393,7 +399,7 @@ public final class RocksIterator extends NativeObject {
 	/// @return a stream of the mapped key/value pairs, in iteration order
 	public <K, V> Stream<KeyValue<K, V>> stream(Mapper<K> keyMapper, Mapper<V> valueMapper) {
 		RocksIteratorSpliterator<K, V> spliterator = new RocksIteratorSpliterator<>(this, keyMapper, valueMapper);
-		return StreamSupport.stream(spliterator, false).onClose(this::close);
+		return StreamSupport.stream(spliterator, false);
 	}
 
 	// -----------------------------------------------------------------------

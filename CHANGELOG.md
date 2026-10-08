@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `RocksIterator.stream(Mapper, Mapper)`, a zero-copy `Stream<KeyValue<K, V>>` view over the
+  iterator's remaining entries, and `KeyValue<K, V>` to hold each mapped pair (#181). Same
+  positioning contract as `next()` (seek first, same as the manual loop) and the same ownership
+  as the iterator itself: closing the stream never closes the iterator, so it stays open and
+  reusable for a reseek and another `stream()` call. Reaching the natural end of the range calls
+  `checkError()` before signalling completion, so a background I/O error surfaces as a
+  `RocksDBException` instead of silently looking like a shorter, complete result.
+
 ## [0.14] — 2026-09-13
 
 Block cache and I/O tracing, a `Snapshot`/`RocksIterator` close-race crash fix, and a Maven Central
