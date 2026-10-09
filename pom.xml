@@ -66,7 +66,7 @@
 			at all (10.10.1.1 is the newest published), so the two versions cannot
 			be aligned. See the note above the benchmark table in README.md.
 		-->
-		<rocksdbjni.version>10.10.1.1</rocksdbjni.version>
+		<rocksdbjni.version>11.1.1</rocksdbjni.version>
 		<!-- rocksdb/ is a git submodule (upstream C++ checkout) — not our code.
 		     benchmarks/ is JMH benchmark harness code with no tests by design. -->
 		<sonar.exclusions>rocksdb/**</sonar.exclusions>
