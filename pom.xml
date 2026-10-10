@@ -68,9 +68,10 @@
 		-->
 		<rocksdbjni.version>10.10.1.1</rocksdbjni.version>
 		<!-- rocksdb/ is a git submodule (upstream C++ checkout) — not our code.
-		     benchmarks/ is JMH benchmark harness code with no tests by design. -->
-		<sonar.exclusions>rocksdb/**</sonar.exclusions>
-		<sonar.coverage.exclusions>rocksdb/**,benchmarks/**</sonar.coverage.exclusions>
+		     benchmarks/ is JMH benchmark harness code with no tests by design.
+		     .github/smoke/ is a standalone post-release smoke project, not part of the reactor. -->
+		<sonar.exclusions>rocksdb/**,.github/smoke/**</sonar.exclusions>
+		<sonar.coverage.exclusions>rocksdb/**,benchmarks/**,.github/smoke/**</sonar.coverage.exclusions>
 		<!-- tools/ldb and tools/sst-dump's own per-module reports (jacoco/jacoco.xml) cover
 		     their own classes (LdbTool/SstDumpTool/Main) but would always show core classes
 		     like NativeTool at 0%: core is exercised only through LdbTool/SstDumpTool from
