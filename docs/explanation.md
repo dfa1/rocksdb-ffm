@@ -26,7 +26,7 @@ Nothing here is needed to use the library — for that see the [tutorial](tutori
 The official Java binding, `rocksdbjni`, is a JNI wrapper: every mapped function needs hand-written
 C++ glue, compiled per platform, kept in sync with the C++ core. That glue is the bottleneck. New
 features land in the RocksDB C++ core well before they reach the Java API — at the time of writing,
-`rocksdbjni` has published no 11.x release at all, while the C API has been at 11.x for a while.
+`rocksdbjni`'s newest release is 11.1.1, while the vendored core is already at 11.8.1.
 
 With `java.lang.foreign`, a new function is a `MethodHandle` and a `FunctionDescriptor` in a Java
 file. There is no second language in the build, no per-platform glue to compile, and adding a

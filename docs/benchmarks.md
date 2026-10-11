@@ -12,8 +12,8 @@ call overhead rather than cache-miss variance. Both libraries use `PinnableSlice
 
 > **The two sides do not run the same RocksDB build, and cannot be made to.** The FFM column uses
 > the bundled native library built from the `rocksdb/` submodule (**v11.8.1**). The JNI column uses
-> `org.rocksdb:rocksdbjni` **10.10.1.1** — the newest release that exists, since `rocksdbjni` has
-> published no 11.x at all. Treat the deltas as indicative of *binding* overhead rather than a
+> `org.rocksdb:rocksdbjni` **11.1.1** — the newest release that exists, since `rocksdbjni` lags
+> behind the core. Treat the deltas as indicative of *binding* overhead rather than a
 > controlled like-for-like comparison: part of any difference may come from the engine rather than
 > the binding.
 
