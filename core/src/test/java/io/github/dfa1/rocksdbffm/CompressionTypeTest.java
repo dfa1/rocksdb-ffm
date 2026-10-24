@@ -61,7 +61,7 @@ class CompressionTypeTest {
 	}
 
 	@ParameterizedTest
-	@EnumSource(value = CompressionType.class, names = {"ZSTD", "LZ4", "SNAPPY"})
+	@EnumSource(value = CompressionType.class, names = {"ZSTD", "LZ4", "SNAPPY", "ZLIB"})
 	void openDb_withHermeticCompression_writesAndReadsBack(CompressionType type, @TempDir Path dir) {
 		try (Options opts = Options.newOptions()
 				.setCreateIfMissing(true)
@@ -76,7 +76,7 @@ class CompressionTypeTest {
 	// get/put succeeds either way. Comparing on-disk SST size against
 	// NO_COMPRESSION for deliberately repetitive data catches that failure mode.
 	@ParameterizedTest
-	@EnumSource(value = CompressionType.class, names = {"ZSTD", "LZ4", "SNAPPY"})
+	@EnumSource(value = CompressionType.class, names = {"ZSTD", "LZ4", "SNAPPY", "ZLIB"})
 	void openDb_withHermeticCompression_actuallyCompressesOnDisk(
 			CompressionType type, @TempDir Path noCompressionDir, @TempDir Path compressedDir) {
 		byte[] value = "a".repeat(64 * 1024).getBytes();
@@ -110,11 +110,11 @@ class CompressionTypeTest {
 		assertThat(compressedSize).isLessThan(uncompressedSize / 2);
 	}
 
-	// ZLIB, BZLIB2, and XPRESS are not linked into the bundled native library
+	// BZLIB2 and XPRESS are not linked into the bundled native library
 	// (see scripts/build-rocksdb.sh); setCompression/setBlobCompressionType reject them
 	// eagerly rather than letting RocksDB::Open fail later with an opaque native error.
 	@ParameterizedTest
-	@EnumSource(value = CompressionType.class, names = {"ZLIB", "BZLIB2", "XPRESS"})
+	@EnumSource(value = CompressionType.class, names = {"BZLIB2", "XPRESS"})
 	void setCompression_withUnsupportedType_throws(CompressionType type) {
 		try (Options opts = Options.newOptions()) {
 
@@ -125,7 +125,7 @@ class CompressionTypeTest {
 	}
 
 	@ParameterizedTest
-	@EnumSource(value = CompressionType.class, names = {"ZLIB", "BZLIB2", "XPRESS"})
+	@EnumSource(value = CompressionType.class, names = {"BZLIB2", "XPRESS"})
 	void setBlobCompressionType_withUnsupportedType_throws(CompressionType type) {
 		try (Options opts = Options.newOptions()) {
 

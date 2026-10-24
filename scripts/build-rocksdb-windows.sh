@@ -186,7 +186,7 @@ fi
 # behavior) if it is not on PATH -- e.g. a native Windows host without Git
 # Bash's bundled make.
 # ---------------------------------------------------------------------------
-ZSTD_LZ4_CMAKE_ARGS=(-DWITH_ZSTD=OFF -DWITH_LZ4=OFF -DWITH_SNAPPY=OFF)
+ZSTD_LZ4_CMAKE_ARGS=(-DWITH_ZSTD=OFF -DWITH_LZ4=OFF -DWITH_SNAPPY=OFF -DWITH_ZLIB=OFF)
 if command -v make >/dev/null 2>&1; then
     if [ "$IS_WINDOWS_HOST" = true ]; then
         ZSTD_LZ4_MAKE_CC="$ZIG_EXE cc -target $ZIG_TARGET"
@@ -351,10 +351,21 @@ EOF
         make libsnappy.a ALLOW_BUILD_PARAMETER_CHANGE=1 DEBUG_LEVEL=0 -j"$JOBS" \
             EXTRA_CXXFLAGS="-Werror -Wno-error -Wno-nullability-completeness" \
             PLATFORM_CMAKE_FLAGS="-G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE='-O3 -DNDEBUG -frtti' -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=$CMAKE_PROCESSOR -DCMAKE_C_COMPILER='$CC_COMPILER' -DCMAKE_CXX_COMPILER='$CXX_COMPILER' $SNAPPY_ARG1 -DCMAKE_AR='$AR_WRAPPER' -DCMAKE_RANLIB='$RANLIB_WRAPPER'"
+        # zlib: compiled directly, see build-rocksdb.sh (no -fPIC: clang
+        # rejects it for Windows targets).
+        ZLIB_VER="$(awk '/^ZLIB_VER /{print $3}' Makefile)"
+        make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_BASE=https://zlib.net/fossils
+        rm -rf "zlib-$ZLIB_VER" && tar xzf "zlib-$ZLIB_VER.tar.gz"
+        cd "zlib-$ZLIB_VER"
+        for src in adler32 compress crc32 deflate infback inffast inflate inftrees trees uncompr zutil; do
+            zig cc -target "$ZIG_TARGET" -O3 -c "$src.c" -o "$src.o"
+        done
+        zig ar rcs ../libz.a ./*.o
     )
     ZSTD_SRC_DIR="$(ls -d "$ROCKSDB_DIR"/zstd-*/ | head -1)"
     LZ4_SRC_DIR="$(ls -d "$ROCKSDB_DIR"/lz4-*/ | head -1)"
     SNAPPY_BUILD_DIR="$(ls -d "$ROCKSDB_DIR"/snappy-*/ | head -1)build"
+    ZLIB_SRC_DIR="$(ls -d "$ROCKSDB_DIR"/zlib-*/ | head -1)"
     # RocksDB tries find_package(Snappy CONFIG) before its FindSnappy module,
     # and config mode would happily pick up a host-installed SnappyConfig.cmake
     # (e.g. Homebrew's) built for the wrong target. Hand it a config for our
@@ -374,9 +385,10 @@ EOF
         -Dlz4_INCLUDE_DIRS="${LZ4_SRC_DIR}lib"
         -Dlz4_LIBRARIES="$ROCKSDB_DIR/liblz4.a"
         -DWITH_SNAPPY=ON -DSnappy_DIR="$SNAPPY_BUILD_DIR"
+        -DWITH_ZLIB=ON -DZLIB_INCLUDE_DIR="$ZLIB_SRC_DIR" -DZLIB_LIBRARY="$ROCKSDB_DIR/libz.a"
     )
 else
-    echo "[build-rocksdb-windows] 'make' not found on PATH; building without ZSTD/LZ4/Snappy." >&2
+    echo "[build-rocksdb-windows] 'make' not found on PATH; building without ZSTD/LZ4/Snappy/zlib." >&2
 fi
 
 # ---------------------------------------------------------------------------
@@ -395,8 +407,8 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Configure + build. ZSTD/LZ4/Snappy come from $ZSTD_LZ4_CMAKE_ARGS above;
-# Zlib/liburing stay disabled to keep the cross-compile otherwise hermetic
+# Configure + build. ZSTD/LZ4/Snappy/zlib come from $ZSTD_LZ4_CMAKE_ARGS
+# above; liburing stays disabled to keep the cross-compile otherwise hermetic
 # (same as build-rocksdb.sh). Tests/db_stress/benchmark/trace tools are
 # disabled; WITH_CORE_TOOLS stays ON to also build `ldb`/`sst_dump`
 # (tools/ldb.cc, tools/sst_dump.cc — RocksDB's own admin/inspection CLIs, no
@@ -442,7 +454,7 @@ cmake -S "$ROCKSDB_DIR" -B "$BUILD_DIR" -G "$CMAKE_GENERATOR" \
     -DROCKSDB_BUILD_SHARED=ON \
     -DUSE_RTTI=ON \
     "${ZSTD_LZ4_CMAKE_ARGS[@]}" \
-    -DWITH_ZLIB=OFF -DWITH_LIBURING=OFF \
+    -DWITH_LIBURING=OFF \
     -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -DWITH_BENCHMARK_TOOLS=OFF -DWITH_CORE_TOOLS=ON -DWITH_TRACE_TOOLS=OFF \
     -DFAIL_ON_WARNINGS=OFF \
     -DCMAKE_C_FLAGS=-Wno-nullability-completeness \

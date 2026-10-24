@@ -121,7 +121,6 @@ export AR="zig ar"
 export PORTABLE=1
 # TODO: to have hermetic zig build, disable external libs for now
 export ROCKSDB_DISABLE_BZ2=1
-export ROCKSDB_DISABLE_ZLIB=1
 export TARGET_OS=$TARGET_OS
 cd "$ROCKSDB_DIR"
 
@@ -200,7 +199,25 @@ make libsnappy.a DEBUG_LEVEL=0 -j"$JOBS" \
     EXTRA_CXXFLAGS="-Werror $EXTRA_FLAGS" \
     PLATFORM_CMAKE_FLAGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE='-O3 -DNDEBUG -frtti' -DCMAKE_SYSTEM_NAME=$TARGET_OS -DCMAKE_SYSTEM_PROCESSOR=${ZIG_TARGET%%-*} -DCMAKE_AR=$SNAPPY_TOOLS_DIR/ar -DCMAKE_RANLIB=$SNAPPY_TOOLS_DIR/ranlib"
 SNAPPY_SRC_DIR="$(ls -d snappy-*/ | head -1)"
-COMPRESSION_INCLUDES="-I$ROCKSDB_DIR/${ZSTD_SRC_DIR}lib -I$ROCKSDB_DIR/${LZ4_SRC_DIR}lib -I$ROCKSDB_DIR/${SNAPPY_SRC_DIR} -I$ROCKSDB_DIR/${SNAPPY_SRC_DIR}build"
+
+# zlib: compiled directly instead of via rocksdb/Makefile's libz.a recipe,
+# whose ./configure hardcodes Apple libtool as AR for macOS targets (breaks
+# cross from Linux) and doesn't support MinGW at all. Only the in-memory
+# deflate/inflate sources: RocksDB never uses zlib's gz* file API. zlib.net
+# drops superseded releases, so fetch the pinned tarball from its fossils
+# archive (checksum still verified by the Makefile).
+ZLIB_VER="$(awk '/^ZLIB_VER /{print $3}' Makefile)"
+make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_BASE=https://zlib.net/fossils
+rm -rf "zlib-$ZLIB_VER" && tar xzf "zlib-$ZLIB_VER.tar.gz"
+(
+    cd "zlib-$ZLIB_VER"
+    for src in adler32 compress crc32 deflate infback inffast inflate inftrees trees uncompr zutil; do
+        $CC -O3 -fPIC -c "$src.c" -o "$src.o"
+    done
+    zig ar rcs ../libz.a ./*.o
+)
+
+COMPRESSION_INCLUDES="-I$ROCKSDB_DIR/${ZSTD_SRC_DIR}lib -I$ROCKSDB_DIR/${LZ4_SRC_DIR}lib -I$ROCKSDB_DIR/${SNAPPY_SRC_DIR} -I$ROCKSDB_DIR/${SNAPPY_SRC_DIR}build -I$ROCKSDB_DIR/zlib-$ZLIB_VER"
 
 export CC="zig cc -target $ZIG_TARGET $COMPRESSION_INCLUDES -L$ROCKSDB_DIR"
 export CXX="zig c++ -target $ZIG_TARGET $COMPRESSION_INCLUDES -L$ROCKSDB_DIR"

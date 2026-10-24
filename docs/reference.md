@@ -492,7 +492,7 @@ return `null` to run that compaction with no filter at all.
 | `WriteStallCondition`               | `NORMAL`, `DELAYED`, `STOPPED`                                                                 |
 | `Property`, `TickerType`, `HistogramType`, `PerfMetric` | Large enumerations; see the Javadoc for the full lists                     |
 
-`ZLIB`, `BZLIB2`, and `XPRESS` aren't linked into the bundled `librocksdb` yet —
+`BZLIB2` and `XPRESS` aren't linked into the bundled `librocksdb` yet —
 `Options.setCompression`/`setBlobCompressionType` reject them eagerly with
 `UnsupportedOperationException` rather than deferring to a native failure at DB-open time.
 
