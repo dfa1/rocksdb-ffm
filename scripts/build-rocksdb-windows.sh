@@ -354,7 +354,7 @@ EOF
         # zlib: compiled directly, see build-rocksdb.sh (no -fPIC: clang
         # rejects it for Windows targets).
         ZLIB_VER="$(awk '/^ZLIB_VER /{print $3}' Makefile)"
-        make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_BASE=https://zlib.net/fossils
+        make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_BASE="https://github.com/madler/zlib/releases/download/v$ZLIB_VER"
         rm -rf "zlib-$ZLIB_VER" && tar xzf "zlib-$ZLIB_VER.tar.gz"
         cd "zlib-$ZLIB_VER"
         for src in adler32 compress crc32 deflate infback inffast inflate inftrees trees uncompr zutil; do

@@ -203,11 +203,12 @@ SNAPPY_SRC_DIR="$(ls -d snappy-*/ | head -1)"
 # zlib: compiled directly instead of via rocksdb/Makefile's libz.a recipe,
 # whose ./configure hardcodes Apple libtool as AR for macOS targets (breaks
 # cross from Linux) and doesn't support MinGW at all. Only the in-memory
-# deflate/inflate sources: RocksDB never uses zlib's gz* file API. zlib.net
-# drops superseded releases, so fetch the pinned tarball from its fossils
-# archive (checksum still verified by the Makefile).
+# deflate/inflate sources: RocksDB never uses zlib's gz* file API. The
+# Makefile's zlib.net URL 404s once a release is superseded, and zlib.net
+# serves CI runners an HTML page instead of the tarball, so fetch the
+# identical release asset from GitHub (checksum still verified by the Makefile).
 ZLIB_VER="$(awk '/^ZLIB_VER /{print $3}' Makefile)"
-make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_BASE=https://zlib.net/fossils
+make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_BASE="https://github.com/madler/zlib/releases/download/v$ZLIB_VER"
 rm -rf "zlib-$ZLIB_VER" && tar xzf "zlib-$ZLIB_VER.tar.gz"
 (
     cd "zlib-$ZLIB_VER"
