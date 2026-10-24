@@ -134,7 +134,8 @@ class SstDumpToolTest {
 		assertThat(result.isSuccess())
 				.as("exitCode=%d stdout=%s stderr=%s", result.exitCode(), result.stdout(), result.stderr())
 				.isTrue();
-		assertThat(result.stdout()).doesNotContain("aaa");
+		// quoted forms only: the "options.env is <address>" header line can contain "aaa" by chance
+		assertThat(result.stdout()).contains("'616161'").doesNotContain("'aaa'");
 	}
 
 	@Test
