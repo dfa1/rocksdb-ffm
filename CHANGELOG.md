@@ -7,12 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15] — 2026-10-24
+
+Snappy and zlib compression, `RocksIterator.stream`, and a cleaner published BOM.
+
 ### Added
 
 - `RocksIterator.stream(Mapper, Mapper)`: zero-copy `Stream<KeyValue<K, V>>` from the current
   position; never closes the iterator, calls `checkError()` at end of range (#181)
 - `CompressionType.SNAPPY`: Snappy is now built hermetically and linked into every native classifier (#115)
 - `CompressionType.ZLIB`: zlib is now built hermetically and linked into every native classifier (#116)
+
+### Fixed
+
+- `rocksdbffm-bom`: published POM no longer leaks build properties or a mangled `…/rocksdbffm-bom`
+  url/scm
 
 ## [0.14] — 2026-09-13
 
@@ -470,7 +479,8 @@ Initial release. An FFM-based RocksDB binding built from scratch against `rocksd
 - All tests migrated to the `// Given / // When / // Then` + AssertJ convention. ([c8cfae5](https://github.com/dfa1/rocksdb-ffm/commit/c8cfae5))
 - Error handling centralized on `RocksDB.errHolder`/`checkError`; per-class `ThreadLocal` error pointers removed in favor of a shared `Arena`-based pattern. ([736c926](https://github.com/dfa1/rocksdb-ffm/commit/736c926))
 
-[Unreleased]: https://github.com/dfa1/rocksdb-ffm/compare/v0.14...HEAD
+[Unreleased]: https://github.com/dfa1/rocksdb-ffm/compare/v0.15...HEAD
+[0.15]: https://github.com/dfa1/rocksdb-ffm/compare/v0.14...v0.15
 [0.14]: https://github.com/dfa1/rocksdb-ffm/compare/v0.13...v0.14
 [0.13]: https://github.com/dfa1/rocksdb-ffm/compare/v0.12...v0.13
 [0.12]: https://github.com/dfa1/rocksdb-ffm/compare/v0.11...v0.12
