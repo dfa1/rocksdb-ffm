@@ -4,7 +4,7 @@ package io.github.dfa1.rocksdbffm;
 ///
 /// Integer values match the `rocksdb_*_compression` constants in `rocksdb/c.h`.
 ///
-/// `SNAPPY`, `ZLIB`, `BZLIB2`, and `XPRESS` aren't linked into the bundled native library yet;
+/// `ZLIB`, `BZLIB2`, and `XPRESS` aren't linked into the bundled native library yet;
 /// [Options#setCompression(CompressionType)] and [Options#setBlobCompressionType(CompressionType)]
 /// throw [UnsupportedOperationException] for those values.
 ///
@@ -53,8 +53,8 @@ public enum CompressionType {
 	/// @return `true` if usable, `false` if setting it throws `UnsupportedOperationException`
 	boolean isSupported() {
 		return switch (this) {
-			case SNAPPY, ZLIB, BZLIB2, XPRESS -> false;
-			case NO_COMPRESSION, LZ4, LZ4HC, ZSTD -> true;
+			case ZLIB, BZLIB2, XPRESS -> false;
+			case NO_COMPRESSION, SNAPPY, LZ4, LZ4HC, ZSTD -> true;
 		};
 	}
 
