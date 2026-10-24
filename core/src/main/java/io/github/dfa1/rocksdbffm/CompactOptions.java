@@ -111,7 +111,7 @@ public final class CompactOptions extends NativeObject {
 
 	/// The native field is RocksDB's 4-valued `BottommostLevelCompaction` enum
 	/// (`kSkip`=0, `kIfHaveCompactionFilter`=1, `kForce`=2, `kForceOptimized`=3), not a plain
-	/// bool — this API only exposes the two ends callers actually need. `RocksDB.toByte`/
+	/// bool — this API only exposes the two ends callers actually need. `NativeCalls.toByte`/
 	/// `fromByte` (0/1) must not be used to read or write it: `true` written as `1` lands on
 	/// `kIfHaveCompactionFilter`, which silently skips bottommost recompaction whenever no
 	/// compaction filter is configured, instead of forcing it as documented.

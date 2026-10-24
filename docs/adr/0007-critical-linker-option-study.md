@@ -19,7 +19,7 @@ call runs.
 This project already uses it in exactly one place. `PinnableHandle.java` (the newer
 `rocksdb_get_pinned_v2`/`_cf_v2`-family wrapper) marks its `MH_GET_VALUE`/`MH_DESTROY` handles
 `critical(false)`, with the comment "pure in-memory pointer arithmetic — safe and worth marking
-critical(false) ... to skip transition overhead." `RocksDB.java` documents the opposite call directly
+critical(false) ... to skip transition overhead." `RocksDBReadOperationsBindings.java` documents the opposite call directly
 above it: `rocksdb_get_pinned_v2` itself is explicitly **not** marked critical, with the comment
 "`get_pinned_*_v2` can block on disk I/O (a Get), so it must NOT be marked critical: a critical
 downcall stalls GC for its entire duration." Two calls, one native symbol family, opposite verdicts —
@@ -79,7 +79,7 @@ drawing any conclusion from a RocksDB-shaped one.
   a shared call site cost" before ADR 0006 drew any conclusion about `TransactionDB`/`Transaction`.
 2. **Catalogue candidates against that ceiling**, not against intuition. Every `NativeObject`
   subclass's native calls, classified by reading the actual `db/c.cc` implementation (not assumed
-  from the C header) for blocking behavior — matching the rigor `RocksDB.java`'s existing
+  from the C header) for blocking behavior — matching the rigor `RocksDBReadOperationsBindings.java`'s existing
   `get_pinned_v2` comment already applies to one call:
    - **Likely safe, worth measuring:** simple option-struct `_destroy` calls (`WriteOptions`,
     `ReadOptions`, `FlushOptions`, `CompactOptions`, …) and cheap accessors (`RocksIterator#valid`,
@@ -107,7 +107,7 @@ drawing any conclusion from a RocksDB-shaped one.
 - Prevents repeating this session's exact mistake — chasing a specific class's number before knowing
   whether the mechanism can produce a measurable effect at all on calls this cheap.
 - Gives `CLAUDE.md`'s `critical`/trivial-downcall guidance (currently just the two inline comments in
-  `PinnableHandle.java`/`RocksDB.java`) a place to point to for the full reasoning, the way ADR 0004
+  `PinnableHandle.java`/`RocksDBReadOperationsBindings.java`) a place to point to for the full reasoning, the way ADR 0004
   and ADR 0006 already anchor their respective inline rules.
 
 ### Negative
@@ -129,7 +129,7 @@ drawing any conclusion from a RocksDB-shaped one.
 - **Safety and speed are separate axes and must not get conflated.** A call being measurably free to
   mark critical does not make it safe (it might still occasionally block), and a call being safe does
   not make marking it critical measurably worth doing (this experiment's own result). Every candidate
-  in step 2's "likely safe" bucket still needs the source-level check `RocksDB.java`'s existing
+  in step 2's "likely safe" bucket still needs the source-level check `RocksDBReadOperationsBindings.java`'s existing
   `get_pinned_v2` comment already demonstrates — never promote something to critical on measured
   speed alone.
 - **Cross-session, cross-process comparisons are not trustworthy at this effect size.** This
@@ -165,7 +165,7 @@ drawing any conclusion from a RocksDB-shaped one.
 
 - `PinnableHandle.java` — the one place `critical(false)` is already used, with its safety
   justification
-- `RocksDB.java`'s `MH_GET_PINNED_V2` comment — the existing counter-example, already documenting why
+- `RocksDBReadOperationsBindings.java`'s `MH_GET_PINNED_V2` comment — the existing counter-example, already documenting why
   a blocking call must not be marked critical
 - [ADR 0006](0006-method-handles-usage.md) — the methodology precedent this ADR follows: isolate the
   mechanism with a synthetic microbenchmark before drawing conclusions from a RocksDB-shaped one, and

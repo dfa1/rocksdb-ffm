@@ -110,8 +110,9 @@ handle. **Every** type in this library that owns native memory works that way; s
 [explanation.md#lifecycle-and-ownership](explanation.md#lifecycle-and-ownership).
 
 `get` returns `null` for a missing key — there is no `Optional` on the hot read path, and no
-exception for a normal miss. Errors that are *not* misses (corrupt DB, I/O failure, closed handle)
-throw `RocksDBException`, which is unchecked.
+exception for a normal miss. Errors that are *not* misses (corrupt DB, I/O failure) throw
+`RocksDBException`, which is unchecked; using a handle after closing it throws
+`IllegalStateException`.
 
 Keys and values are opaque bytes. `byte[]` is the convenience tier; there are faster `ByteBuffer`
 and `MemorySegment` tiers you will meet in step 6.

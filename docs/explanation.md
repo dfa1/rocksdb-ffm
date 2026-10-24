@@ -143,7 +143,7 @@ freed, not after. This removes the ordering hazard by construction rather than b
 own release code never has to ask "is my pointer still good?" because the design guarantees it
 always is by the time that code runs.
 
-That guarantee has its own narrow TOCTOU window ([issues/143](https://github.com/dfa1/rocksdbffm/issues/143)):
+That guarantee has its own narrow TOCTOU window ([issues/143](https://github.com/dfa1/rocksdb-ffm/issues/143)):
 a child's native "create" call can succeed an instant before the parent closes, so its constructor's
 `registerChild` call can arrive *after* the parent's one-shot sweep already ran and iterated whatever
 was registered at that instant. Checking "is this object still open" and then adding are two separate
@@ -402,7 +402,7 @@ through `bash` explicitly, which works uniformly on macOS, Linux, and Windows (v
 Two different kinds of gap, and the distinction decides who can fix them:
 
 - **Type A** — the C API exposes it, this library has no Java wrapper yet. Actionable here and now
-  (CompactionFilter, WriteBatchWithIndex, custom comparators, …).
+  (WriteBatchWithIndex, custom comparators, WAL filter, …).
 - **Type B** — the C API does not expose it at all. Needs an upstream PR to `facebook/rocksdb`
   (`c.h` + `c.cc` + `c_test.c`) before any Java work is possible (persistent cache, wide columns,
   SST file reader, …).

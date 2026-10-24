@@ -24,7 +24,6 @@ Javadoc of each class; this page is the map.
 - [Observability](#observability)
 - [Domain types](#domain-types)
 - [Enums](#enums)
-- [System properties](#system-properties)
 - [Feature status](#feature-status)
 - [C API gaps](c-api-gaps.md)
 
@@ -80,9 +79,6 @@ Column families are not a separate method name — every factory that supports t
 | `openTransaction(Options, TransactionDBOptions, Path)`                         | yes               | `TransactionDB`           |
 | `openOptimistic(Options, Path)`                                                | yes               | `OptimisticTransactionDB` |
 | `listColumnFamilies(Options, Path)`                                            | —                 | `List<byte[]>`            |
-
-`RocksDB` also exposes the FFM plumbing shared by every wrapper: `errHolder(Arena)`,
-`checkError(MemorySegment)`, `toNative(Arena, byte[])`, `free(MemorySegment)`.
 
 ## DB types
 
@@ -450,7 +446,7 @@ return `null` to run that compaction with no filter at all.
 
 | Area          | API                                                                                       |
 |:--------------|:-------------------------------------------------------------------------------------------|
-| Properties    | `getProperty(Property)` → `Optional<String>`, `getLongProperty(Property)` → `OptionalLong`; `Property` has 79 constants, each `Type.STRING` or `Type.NUMERIC` (`propertyName()`, `type()`) |
+| Properties    | `getProperty(Property)` → `Optional<String>`, `getLongProperty(Property)` → `OptionalLong`; `Property` has 80 constants, each `Type.STRING` or `Type.NUMERIC` (`propertyName()`, `type()`) |
 | Statistics    | `Options.enableStatistics()`, `setStatisticsLevel(StatsLevel)`, `getStatisticsString()`, `getTickerCount(TickerType)` (235 tickers), `getHistogramData(HistogramType, StatisticsHistogramData)` (65 histograms) |
 | Histogram data| `StatisticsHistogramData.newStatisticsHistogramData()`; `getMedian`, `getP95`, `getP99`, `getAverage`, `getStdDev`, `getMin`, `getMax`, `getCount`, `getSum` |
 | Perf context  | `PerfContext.setPerfLevel(PerfLevel)`, `newPerfContext()` (resets), `currentPerfContext()` (does not reset), `metric(PerfMetric)` (78 metrics), `report(boolean excludeZeroCounters)`, `reset()` — thread-local |
@@ -471,7 +467,7 @@ return `null` to run that compaction with no filter at all.
 | `Range`           | Half-open key range `[startKey, endKey)`. `of(byte[], byte[])`; used by `getApproximateSizes` |
 | `RocksDBException`| Unchecked; thrown for a genuine RocksDB-reported error (see [explanation.md#errors-are-always-loud](explanation.md#errors-are-always-loud)) |
 | `NativeObject`    | Base class of every native wrapper; `ptr()`, `close()` (idempotent), abstract `tryClose`      |
-| `NativeObjectWithChildren` | `NativeObject` subclass for wrappers that can produce children borrowing their pointer (every DB type producing `Snapshot`); `registerChild`/`unregisterChild`, closes children before `tryCloseResource` — see [explanation.md](explanation.md#lifecycle-and-ownership) |
+| `NativeObjectWithChildren` | `NativeObject` subclass for wrappers that can produce children borrowing their pointer (every DB type producing `Snapshot`/`RocksIterator`); `registerChild`/`unregisterChild`, closes children before `tryCloseResource` — see [explanation.md](explanation.md#lifecycle-and-ownership) |
 | `NativeObjectWithBaseDb` | `NativeObjectWithChildren` subclass for wrappers with a second owned pointer (`TransactionDB`/`OptimisticTransactionDB`'s `rocksdb_t*` "base DB"); guarded `dbPtr()`, hooks `tryCloseBaseDb`/`tryClosePrimary` — see [explanation.md](explanation.md#lifecycle-and-ownership) |
 
 `Path` is used for every filesystem argument; there is no `String` path overload anywhere.
@@ -544,8 +540,8 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Compaction style            |   ✅    | `Options.CompactionStyle` (`LEVEL`/`UNIVERSAL`/`FIFO`); `FifoCompactionOptions`, `UniversalCompactionOptions` |
 | Command-line tools         |   ✅    | `rocksdbffm-tool-ldb`/`rocksdbffm-tool-sstdump` — `LdbTool`/`SstDumpTool` wrap the bundled `ldb`/`sst_dump` binaries (not in `c.h`, no C API equivalent) as subprocesses; also directly `java -jar`-able |
 | MultiGet                   |  🚧    | `ReadBatch` — the sole entry point for batched reads (all three tiers), built on `rocksdb_batched_multi_get_cf` — the modern, PinnableSlice-based, single-CF-per-call variant only; reusable and preallocated (create once for up to N keys, no per-call bookkeeping-array allocation on reuse); no separate one-shot `multiGet()` method exists — a single-batch read is just `try (var batch = ReadBatch.create(db, keys.size())) { return batch.get(keys, fn); }`; legacy `rocksdb_multi_get`/`_cf`/`_with_ts` (no batching perf benefit per upstream) and `TransactionDB`/`Transaction` multi-get are not wrapped |
-| Merge                      |   ✅    | `merge()` write op on all 7 write-capable types (byte[]/ByteBuffer/MemorySegment, CF variants), see [#8](https://github.com/dfa1/rocksdbffm/issues/8); requires a `MergeOperator` configured via `Options.setMergeOperator`, else calls fail with `RocksDBException` |
-| MergeOperator               |   ✅    | `MergeOperator.uint64Add()` (built-in `rocksdb_options_set_uint64add_merge_operator`) and `MergeOperator.custom(String, FullMergeFn)` (`rocksdb_mergeoperator_create()` — `full_merge` implemented in Java, `partial_merge` always declines; `fn` receives zero-copy `MemorySegment` views of key/existing-value/operands instead of copied `byte[]`s, see [#94](https://github.com/dfa1/rocksdbffm/issues/94)) |
+| Merge                      |   ✅    | `merge()` write op on all 7 write-capable types (byte[]/ByteBuffer/MemorySegment, CF variants), see [#8](https://github.com/dfa1/rocksdb-ffm/issues/8); requires a `MergeOperator` configured via `Options.setMergeOperator`, else calls fail with `RocksDBException` |
+| MergeOperator               |   ✅    | `MergeOperator.uint64Add()` (built-in `rocksdb_options_set_uint64add_merge_operator`) and `MergeOperator.custom(String, FullMergeFn)` (`rocksdb_mergeoperator_create()` — `full_merge` implemented in Java, `partial_merge` always declines; `fn` receives zero-copy `MemorySegment` views of key/existing-value/operands instead of copied `byte[]`s, see [#94](https://github.com/dfa1/rocksdb-ffm/issues/94)) |
 | Tracing & Replay           |   ✅    | `RocksDBTracingOperations.startTrace`/`endTrace` (`rocksdb_start_trace`/`rocksdb_end_trace`) capture every op to a file, tuned via `TraceOptions` (rollover size, sampling frequency, per-op-type `TraceFilter` exclusion, write-order preservation) — its own interface, implemented by the same broad set of types as `RocksDBMonitoringOperations` (including read-only and secondary handles, since tracing captures reads too); `Replayer` (`rocksdb_new_default_replayer`) + `ReplayOptions` reissue a captured trace against a target database (any CF set, concurrency, speed multiplier) — no callback plumbing needed, since RocksDB decodes the trace file internally. No parity gap with `rocksdbjni`: it has capture only (via a JNI-only `DB::StartTrace` path with a pluggable `TraceWriter` sink, file-only here) and no replayer at all. The same interface also exposes `startIoTrace`/`endIoTrace` (`rocksdb_start_io_trace`/`rocksdb_end_io_trace`, file I/O instead of DB ops, reusing `TraceOptions`) and `startBlockCacheTrace`/`endBlockCacheTrace` (`rocksdb_start_block_cache_trace`/`_with_options`/`rocksdb_end_block_cache_trace`, block cache hit/miss/type/caller) — the latter has a `TraceOptions` overload and a `BlockCacheTraceOptions` (sampling only) + `BlockCacheTraceWriterOptions` (rollover size) overload, matching the two C API entry points |
 | CompactionFilter           |   ✅    | `CompactionFilter.create(String, FilterFn)` (`rocksdb_compactionfilter_create`) + `Options.setCompactionFilter`; `CompactionFilterFactory.create(String, CreateFilterFn)` (`rocksdb_compactionfilterfactory_create`) + `Options.setCompactionFilterFactory` for a fresh, thread-confined filter per compaction |
 | Custom comparators         |   ❌    | `rocksdb_comparator_create()` exists in the C API                                           |

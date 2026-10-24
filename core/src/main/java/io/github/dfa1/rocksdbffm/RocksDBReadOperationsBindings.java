@@ -43,7 +43,9 @@ final class RocksDBReadOperationsBindings {
 	private static final MethodHandle MH_PROPERTY_INT_CF;
 
 	static {
-		MH_GET_PINNED_V2 = NativeLibrary.lookup("rocksdb_get_pinned_v2",
+		// get_pinned_*_v2 can block on disk I/O (a Get), so it must NOT be marked
+		// critical: a critical downcall stalls GC for its entire duration.
+		MH_GET_PINNED_V2 =NativeLibrary.lookup("rocksdb_get_pinned_v2",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,

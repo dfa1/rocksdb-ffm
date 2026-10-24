@@ -155,8 +155,8 @@ public final class Logger extends NativeObject {
 			if (msg.equals(MemorySegment.NULL) || len <= 0) {
 				message = "";
 			} else {
-				// msg is not NUL-terminated, so RocksDB.toJavaString (getString-based) does not
-				// apply; it is also not owned by us, so RocksDB.toByteArray (borrowed,
+				// msg is not NUL-terminated, so NativeCalls.toJavaString (getString-based) does not
+				// apply; it is also not owned by us, so NativeCalls.toByteArray (borrowed,
 				// length-prefixed pointer) is the right fit.
 				MemorySegment bounded = msg.reinterpret(len);
 				// sometimes the callback is invoked with a message without \n but most of the
