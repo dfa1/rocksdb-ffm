@@ -360,7 +360,7 @@ EOF
         for src in adler32 compress crc32 deflate infback inffast inflate inftrees trees uncompr zutil; do
             zig cc -target "$ZIG_TARGET" -O3 -c "$src.c" -o "$src.o"
         done
-        zig ar rcs ../libz.a ./*.o
+        rm -f ../libz.a && zig ar rcs ../libz.a ./*.o
     )
     ZSTD_SRC_DIR="$(ls -d "$ROCKSDB_DIR"/zstd-*/ | head -1)"
     LZ4_SRC_DIR="$(ls -d "$ROCKSDB_DIR"/lz4-*/ | head -1)"
