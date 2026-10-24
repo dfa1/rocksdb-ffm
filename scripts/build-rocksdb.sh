@@ -141,7 +141,11 @@ EXTRA_FLAGS="-Wno-error -Wno-nullability-completeness"
 # architecture. Remove them so RocksDB's build_detect_platform regenerates
 # the config and Make recompiles everything with the cross target.
 rm -f make_config.mk
-make clean -j"$JOBS" 2>/dev/null || true
+# No -j: `clean` would run clean-ext-libraries-all (rm -rf snappy*/zstd*/...)
+# concurrently with clean-rocks' find over the whole tree, and BSD find aborts
+# on a directory vanishing mid-walk (fts_read), leaving stale objects from the
+# previous classifier behind -- the next cross link then fails on them.
+make clean 2>/dev/null || true
 
 # ---------------------------------------------------------------------------
 # ZSTD/LZ4: build hermetically instead of relying on host-installed libs.
