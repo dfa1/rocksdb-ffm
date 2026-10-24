@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RocksIterator.stream(Mapper, Mapper)`: zero-copy `Stream<KeyValue<K, V>>` from the current
   position; never closes the iterator, calls `checkError()` at end of range (#181)
 - `CompressionType.SNAPPY`: Snappy is now built hermetically and linked into every native classifier (#115)
+- `CompressionType.ZLIB`: zlib is now built hermetically and linked into every native classifier (#116)
 
 ## [0.14] — 2026-09-13
 
