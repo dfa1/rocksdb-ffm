@@ -120,7 +120,6 @@ export CXX="zig c++ -target $ZIG_TARGET"
 export AR="zig ar"
 export PORTABLE=1
 # TODO: to have hermetic zig build, disable external libs for now
-export ROCKSDB_DISABLE_SNAPPY=1
 export ROCKSDB_DISABLE_BZ2=1
 export ROCKSDB_DISABLE_ZLIB=1
 export TARGET_OS=$TARGET_OS
@@ -176,8 +175,31 @@ make libzstd.a liblz4.a DEBUG_LEVEL=0 -j"$JOBS"
 ZSTD_SRC_DIR="$(ls -d zstd-*/ | head -1)"
 LZ4_SRC_DIR="$(ls -d lz4-*/ | head -1)"
 
-export CC="zig cc -target $ZIG_TARGET -I$ROCKSDB_DIR/${ZSTD_SRC_DIR}lib -I$ROCKSDB_DIR/${LZ4_SRC_DIR}lib -L$ROCKSDB_DIR"
-export CXX="zig c++ -target $ZIG_TARGET -I$ROCKSDB_DIR/${ZSTD_SRC_DIR}lib -I$ROCKSDB_DIR/${LZ4_SRC_DIR}lib -L$ROCKSDB_DIR"
+# Snappy: same idea, but rocksdb/Makefile's libsnappy.a recipe drives
+# Snappy's own CMake build, which reads CC/CXX (args included) from the
+# environment but not AR -- it'd pick the host ar, same archive-format
+# problem as above, so point CMAKE_AR/CMAKE_RANLIB at zig wrappers.
+# CMAKE_SYSTEM_NAME/PROCESSOR put CMake in cross mode so it doesn't add
+# host-only flags (e.g. a macOS -isysroot on a Linux target). Snappy's
+# CMakeLists appends -Werror for clang unless CMAKE_CXX_FLAGS already
+# matches "-Werror"; the leading -Werror defeats that so the trailing
+# -Wno-error wins (zig's libc++ headers would otherwise fail the build).
+# It also forces -fno-rtti, but RocksDB (USE_RTTI=1 below) subclasses
+# snappy::Sink and needs its typeinfo: CMAKE_CXX_FLAGS_RELEASE is appended
+# after CMAKE_CXX_FLAGS, so -frtti there wins.
+SNAPPY_TOOLS_DIR="$(mktemp -d)"
+trap 'rm -rf "$SNAPPY_TOOLS_DIR"' EXIT
+printf '#!/usr/bin/env bash\nexec zig ar "$@"\n' > "$SNAPPY_TOOLS_DIR/ar"
+printf '#!/usr/bin/env bash\nexec zig ranlib "$@"\n' > "$SNAPPY_TOOLS_DIR/ranlib"
+chmod +x "$SNAPPY_TOOLS_DIR/ar" "$SNAPPY_TOOLS_DIR/ranlib"
+make libsnappy.a DEBUG_LEVEL=0 -j"$JOBS" \
+    EXTRA_CXXFLAGS="-Werror $EXTRA_FLAGS" \
+    PLATFORM_CMAKE_FLAGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE='-O3 -DNDEBUG -frtti' -DCMAKE_SYSTEM_NAME=$TARGET_OS -DCMAKE_SYSTEM_PROCESSOR=${ZIG_TARGET%%-*} -DCMAKE_AR=$SNAPPY_TOOLS_DIR/ar -DCMAKE_RANLIB=$SNAPPY_TOOLS_DIR/ranlib"
+SNAPPY_SRC_DIR="$(ls -d snappy-*/ | head -1)"
+COMPRESSION_INCLUDES="-I$ROCKSDB_DIR/${ZSTD_SRC_DIR}lib -I$ROCKSDB_DIR/${LZ4_SRC_DIR}lib -I$ROCKSDB_DIR/${SNAPPY_SRC_DIR} -I$ROCKSDB_DIR/${SNAPPY_SRC_DIR}build"
+
+export CC="zig cc -target $ZIG_TARGET $COMPRESSION_INCLUDES -L$ROCKSDB_DIR"
+export CXX="zig c++ -target $ZIG_TARGET $COMPRESSION_INCLUDES -L$ROCKSDB_DIR"
 
 # USE_RTTI=1: with DEBUG_LEVEL=0 (release) and USE_RTTI unset, the Makefile
 # adds -fno-rtti (see Makefile's DEBUG_LEVEL/USE_RTTI block). That's fine for
