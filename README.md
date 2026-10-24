@@ -13,7 +13,7 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=dfa1_rocksdb-ffm&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=dfa1_rocksdb-ffm)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=dfa1_rocksdb-ffm&metric=coverage)](https://sonarcloud.io/summary/new_code?id=dfa1_rocksdb-ffm)
 
-**rocksdbffm** is an experimental Java wrapper for [RocksDB](https://rocksdb.org/) built on the
+**rocksdbffm** is a pre-1.0 Java wrapper for [RocksDB](https://rocksdb.org/) built on the
 **Foreign Function & Memory (FFM) API**, targeting JDK 25+.
 
 It aims to be a more maintainable alternative to the JNI-based `rocksdbjni`: mappings are plain Java
