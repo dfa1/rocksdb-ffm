@@ -214,7 +214,7 @@ rm -rf "zlib-$ZLIB_VER" && tar xzf "zlib-$ZLIB_VER.tar.gz"
     for src in adler32 compress crc32 deflate infback inffast inflate inftrees trees uncompr zutil; do
         $CC -O3 -fPIC -c "$src.c" -o "$src.o"
     done
-    zig ar rcs ../libz.a ./*.o
+    rm -f ../libz.a && zig ar rcs ../libz.a ./*.o
 )
 
 COMPRESSION_INCLUDES="-I$ROCKSDB_DIR/${ZSTD_SRC_DIR}lib -I$ROCKSDB_DIR/${LZ4_SRC_DIR}lib -I$ROCKSDB_DIR/${SNAPPY_SRC_DIR} -I$ROCKSDB_DIR/${SNAPPY_SRC_DIR}build -I$ROCKSDB_DIR/zlib-$ZLIB_VER"
