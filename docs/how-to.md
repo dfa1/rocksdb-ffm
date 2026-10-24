@@ -37,7 +37,6 @@ Every snippet omits imports; all types live in `io.github.dfa1.rocksdbffm`.
 - [Observe flushes and compactions](#observe-flushes-and-compactions)
 - [Compact manually](#compact-manually)
 - [Split SST files on a key prefix](#split-sst-files-on-a-key-prefix)
-- [Load a custom native library](#load-a-custom-native-library)
 - [Build the native library from source](#build-the-native-library-from-source)
 - [Run the benchmarks](#run-the-benchmarks)
 
@@ -216,16 +215,14 @@ what the WAL iterator consumes.
 
 ## Scan a key range
 
-Seek to the start and stop when you pass the end yourself — there is no upper-bound option:
+Seek to the start and set an exclusive upper bound on `ReadOptions` — the iterator turns invalid
+once it reaches the bound, so the loop needs no comparison of its own:
 
 ```java
-byte[] end = "user:5".getBytes();
-try (var it = db.newIterator()) {
+try (var readOptions = ReadOptions.newReadOptions().setIterateUpperBound("user:5".getBytes());
+     var it = db.newIterator(readOptions)) {
 	for (it.seek("user:1".getBytes()); it.isValid(); it.next()) {
-		if (Arrays.compareUnsigned(it.key(), end) >= 0) {
-			break;
-		}
-		process(it.key(), it.value());
+		process(it.key(), it.value());   // user:1 … user:4
 	}
 	it.checkError();
 }
@@ -237,8 +234,9 @@ To walk backwards, use `seekForPrev` plus `prev`, or `seekToLast`:
 for (it.seekForPrev("user:9".getBytes()); it.isValid(); it.prev()) { /* ... */ }
 ```
 
-Comparison must be **unsigned** — RocksDB orders keys as raw bytes, and Java's signed `byte`
-comparison would place `0x80…0xFF` before `0x00`.
+`setIterateLowerBound` is the mirror image for reverse scans. If you compare keys against a bound
+yourself instead, compare **unsigned** (`Arrays.compareUnsigned`) — RocksDB orders keys as raw
+bytes, and Java's signed `byte` comparison would place `0x80…0xFF` before `0x00`.
 
 For the zero-copy variants (`key(Mapper)`, `value(Mapper)`) mind the lifetime rule: the view passed
 to the callback is only valid for the duration of that call.
@@ -342,21 +340,20 @@ static long decodeUint64(byte[] bytes) {
 
 For anything else, `MergeOperator.custom(name, fn)` wires a Java `FullMergeFn` through RocksDB's
 callback-based merge operator. `fn` may run on RocksDB's own background threads (flush,
-compaction), so it must be thread-safe and must not throw:
+compaction), so it must be thread-safe and must not throw. It receives zero-copy `MemorySegment`
+views (`existingValue` is `null` for a new key) that are only valid during the call:
 
 ```java
 MergeOperator.FullMergeFn keepMax = (key, existingValue, operands) -> {
-	byte[] max = existingValue;
-	for (byte[] operand : operands) {
-		if (max == null || Arrays.compare(operand, max) > 0) {
-			max = operand;
-		}
+	long max = existingValue == null ? Long.MIN_VALUE : parseLong(existingValue);
+	for (MemorySegment operand : operands) {
+		max = Math.max(max, parseLong(operand));
 	}
-	return max;
+	return Long.toString(max).getBytes();
 };
 
 try (var opts = Options.newOptions().setCreateIfMissing(true)
-            .setMergeOperator(MergeOperator.custom("string-max", keepMax));
+            .setMergeOperator(MergeOperator.custom("numeric-max", keepMax));
      var db = RocksDB.openReadWrite(opts, dbPath)) {
 
 	db.merge("high-score".getBytes(), "17".getBytes());
@@ -364,6 +361,12 @@ try (var opts = Options.newOptions().setCreateIfMissing(true)
 	db.merge("high-score".getBytes(), "9".getBytes());
 
 	byte[] best = db.get("high-score".getBytes());   // "42"
+}
+```
+
+```java
+static long parseLong(MemorySegment segment) {
+	return Long.parseLong(new String(segment.toArray(ValueLayout.JAVA_BYTE)));
 }
 ```
 
@@ -460,7 +463,8 @@ try (var copy = RocksDB.openReadOnly(checkpointDir)) {
 
 The single-argument `exportTo` always flushes the WAL first; `exportTo(dir, MemorySize)` flushes only
 when the WAL exceeds the given size (pass `MemorySize.ofBytes(Long.MAX_VALUE)` to never flush).
-`Checkpoint.newCheckpoint` has an overload for each DB type that supports it.
+`Checkpoint.newCheckpoint` accepts any `RocksDBReadOperations` implementor — every DB type except
+`TransactionDB`.
 
 ## Back up and restore
 

@@ -8,7 +8,7 @@ import java.lang.invoke.MethodHandle;
 import java.nio.ByteBuffer;
 
 /// FFM wrapper for `rocksdb_writebatch_t`.
-/// Accumulates put/delete operations and commits them atomically via RocksDB.write().
+/// Accumulates put/delete operations and commits them atomically via `write(WriteBatch)` on the DB.
 ///
 /// Note: `rocksdb_writebatch\put/delete` have no `errptr` — they are infallible at
 /// the C level. Only `rocksdb_write` (on the DB) can fail.

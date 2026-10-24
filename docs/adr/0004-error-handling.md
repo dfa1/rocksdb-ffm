@@ -150,4 +150,5 @@ boilerplate over a plain shared method, for real added complexity.
 ## References
 
 - [explanation.md#errors-are-always-loud](../explanation.md#errors-are-always-loud)
-- `RocksDBException.java`, `RocksDB.java` (`errHolder`/`checkError`/`toNative`/`wrapInvokeFailure`)
+- `RocksDBException.java`, `NativeCalls.java` (`errHolder`/`checkError`/`toNative`/`wrapInvokeFailure` —
+  moved there from `RocksDB.java` by #131, after this ADR was written)

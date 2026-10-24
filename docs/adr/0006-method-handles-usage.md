@@ -15,7 +15,8 @@ t) { wrapInvokeFailure }` shape, once per tier (byte[]/`ByteBuffer`/`MemorySegme
 CF-or-not. Six other DB types — `ReadWriteDB`, `TtlDB`, `BlobDB`, `ReadOnlyDB`, `SecondaryDB`,
 `OptimisticTransactionDB` — share one Java body per operation instead, via
 `RocksDBReadOperations`/`RocksDBWriteOperations` default methods forwarding to package-private
-statics on `RocksDB` (`putBytes`, `mergeSegment`, `deleteCfBytes`, …), each hardcoding one
+statics on `RocksDBReadOperationsBindings`/`RocksDBWriteOperationsBindings` (`putBytes`,
+`mergeSegment`, `deleteCfBytes`, …; on `RocksDB` itself when this ADR was written), each hardcoding one
 `static final MethodHandle` field. That works for those six because they all call the identical
 C symbol (`rocksdb_put`, `rocksdb_get_pinned`, …) on a plain `rocksdb_t*`. `TransactionDB`'s
 direct ops call a second symbol family (`rocksdb_transactiondb_put`, …); `Transaction`'s
@@ -44,7 +45,7 @@ consistent with what that original revert would have found.
 
 Separately, the same shape of duplication exists for a second, independent reason that
 *is* already fully understood: every `invokeExact` call is followed by its own
-`try`/`catch (Throwable t) { throw RocksDB.wrapInvokeFailure(...); }`, because `invokeExact`'s
+`try`/`catch (Throwable t) { throw NativeCalls.wrapInvokeFailure(...); }`, because `invokeExact`'s
 declared `throws Throwable` forces a `try`/`catch` at every syntactic call site. ADR 0004 already
 centralized the *classification* logic inside `wrapInvokeFailure` and explicitly rejected
 composing it into the `MethodHandle` itself via `MethodHandles.catchException`, on the grounds
@@ -304,13 +305,13 @@ Covered inline above as Options A–E; no additional alternatives were evaluated
 - `CLAUDE.md`, "Code" section — the `static final MethodHandle` / no-parameter-passing rule this
   ADR narrows
 - [ADR 0004](0004-error-handling.md) — centralized the classification logic
-  (`RocksDB.wrapInvokeFailure`) this ADR's Option C builds on, and already rejected composing it
+  (`NativeCalls.wrapInvokeFailure`, originally on `RocksDB`) this ADR's Option C builds on, and already rejected composing it
   *into* the `MethodHandle` itself, for a related but distinct reason
 - `benchmarks/src/test/java/io/github/dfa1/rocksdbffm/benchmark/MethodHandleParameterBenchmark.java`,
   `TryCatchWrapperBenchmark.java` — the two measurements this ADR is built on; run with
   `./scripts/benchmark.sh MethodHandleParameterBenchmark` / `TryCatchWrapperBenchmark`
 - `TransactionDB.java`, `Transaction.java` — the duplicated call sites in question
-- `RocksDBReadOperations.java`, `RocksDBWriteOperations.java`, `RocksDB.java` (`putBytes`,
-  `mergeSegment`, `deleteCfBytes`, …) — the shared-symbol-family sharing this ADR contrasts with
+- `RocksDBReadOperations.java`, `RocksDBWriteOperations.java`, and their `*Bindings.java`
+  siblings (`putBytes`, `mergeSegment`, `deleteCfBytes`, …) — the shared-symbol-family sharing this ADR contrasts with
 - `docs/benchmarks.md`, "Reading the numbers" — the ~2× JIT-inlining measurement Option B would
   have partially given back

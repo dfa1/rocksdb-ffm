@@ -12,7 +12,7 @@ import java.util.Objects;
 /// byte[]-tier `rocksdb_*get_pinned[_cf]` family (`rocksdb_get_pinned[_cf]`,
 /// `rocksdb_transaction_get_pinned[_cf]`, `rocksdb_transactiondb_get_pinned[_cf]`).
 ///
-/// Not the same native type as `rocksdb_pinnable_handle_t` (see `RocksDB.withPinned`),
+/// Not the same native type as `rocksdb_pinnable_handle_t` (see `RocksDBReadOperationsBindings.withPinned`),
 /// which is the newer, zero-copy `_v2` handle. `Transaction` and `TransactionDB` have no
 /// `_v2` equivalent in `rocksdb/include/rocksdb/c.h`, so they still go through this
 /// older API.
