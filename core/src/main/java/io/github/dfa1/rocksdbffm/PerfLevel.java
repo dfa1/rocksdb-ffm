@@ -16,9 +16,9 @@ public enum PerfLevel {
 
 	/// Not yet set — behaves like [#DISABLE].
 	UNINITIALIZED(0),
-	/// All instrumentation disabled. Default.
+	/// All instrumentation disabled.
 	DISABLE(1),
-	/// Counts only (no timing). Very low overhead.
+	/// Counts only (no timing). Very low overhead. RocksDB's default on every thread.
 	ENABLE_COUNT(2),
 	/// Counts + wall-clock timings, except for mutex waits.
 	ENABLE_TIME_EXCEPT_FOR_MUTEX(3),

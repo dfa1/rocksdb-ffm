@@ -34,8 +34,9 @@ import java.lang.invoke.MethodHandle;
 ///
 /// ## Overhead
 ///
-/// Leave the level at [PerfLevel#DISABLE] (the default) in production.
-/// Enable it only around the code under measurement.
+/// Every thread starts at [PerfLevel#ENABLE_COUNT] (RocksDB's default): counters only, no timing.
+/// The timing levels add clock reads to every operation; enable them only around the code under
+/// measurement.
 public final class PerfContext extends NativeObject {
 
 	/// `void rocksdb_set_perf_level(int);`
