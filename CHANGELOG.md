@@ -7,16 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.15] — 2026-10-24
+## [0.15] — 2026-10-25
 
 Snappy and zlib compression, `RocksIterator.stream`, and a cleaner published BOM.
 
 ### Added
 
 - `RocksIterator.stream(Mapper, Mapper)`: zero-copy `Stream<KeyValue<K, V>>` from the current
-  position; never closes the iterator, calls `checkError()` at end of range (#181)
-- `CompressionType.SNAPPY`: Snappy is now built hermetically and linked into every native classifier (#115)
-- `CompressionType.ZLIB`: zlib is now built hermetically and linked into every native classifier (#116)
+  position; never closes the iterator, calls `checkError()` at end of range ([#181](https://github.com/dfa1/rocksdb-ffm/issues/181))
+- `CompressionType.SNAPPY`: Snappy is now built hermetically and linked into every native classifier ([#115](https://github.com/dfa1/rocksdb-ffm/issues/115))
+- `CompressionType.ZLIB`: zlib is now built hermetically and linked into every native classifier ([#116](https://github.com/dfa1/rocksdb-ffm/issues/116))
 
 ### Fixed
 
@@ -32,20 +32,20 @@ publishing scope fix.
 
 - `RocksDBTracingOperations`: `startIoTrace`/`endIoTrace`, `startBlockCacheTrace`/
   `endBlockCacheTrace` (`rocksdb_start_io_trace`, `rocksdb_start_block_cache_trace`), plus
-  `BlockCacheTraceOptions`/`BlockCacheTraceWriterOptions` for the with-options variant (#179)
+  `BlockCacheTraceOptions`/`BlockCacheTraceWriterOptions` for the with-options variant ([#179](https://github.com/dfa1/rocksdb-ffm/issues/179))
 
 ### Fixed
 
 - Closed a TOCTOU race where a `Snapshot`/`RocksIterator` created an instant before its owning DB
   closes could register after the DB's child-sweep already ran, crashing the JVM on first use
-  (#143)
+  ([#143](https://github.com/dfa1/rocksdb-ffm/issues/143))
 - `CompactionFilterFactory`: close a `CompactionFilter` left leaked when construction throws
   before ownership transfers to RocksDB
 - `CompactionFilter.FilterDecision.ChangeValue`: `equals`/`hashCode`/`toString` now compare the
   `byte[]` value's content, not its identity
 - `benchmarks`/`integration-tests`: set `skipPublishing` alongside `maven.deploy.skip` — the
   release profile's `central-publishing-maven-plugin` ignores `maven.deploy.skip` and was
-  publishing both modules to Maven Central on every release (#169)
+  publishing both modules to Maven Central on every release ([#169](https://github.com/dfa1/rocksdb-ffm/issues/169))
 
 ## [0.13] — 2026-09-06
 
