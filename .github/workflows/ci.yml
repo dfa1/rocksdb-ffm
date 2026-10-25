@@ -45,10 +45,6 @@ jobs:
             native/windows-aarch64/src/main/resources/native
           key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt', 'rocksdb/Makefile', 'scripts/build-rocksdb.sh', 'scripts/build-rocksdb-windows.sh') }}-${{ matrix.os }}-${{ runner.arch }}
 
-      - name: Build macOS x86_64 native library
-        if: matrix.os == 'macos-latest'
-        run: ./scripts/build-rocksdb.sh "${RUNNER_TEMP}/rocksdbffm-osx-x86_64" osx-x86_64
-
       - name: Build and test
         run: mvn --batch-mode verify -Pall-natives
 
