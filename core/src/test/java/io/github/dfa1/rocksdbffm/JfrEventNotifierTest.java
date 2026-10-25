@@ -119,6 +119,7 @@ class JfrEventNotifierTest {
 				}
 			}
 		};
+		boolean cleared;
 		try (var recording = startRecording(WRITE_STALL)) {
 			try (var opts = Options.newOptions().setCreateIfMissing(true)
 					.setLevel0FileNumCompactionTrigger(2)
@@ -133,12 +134,12 @@ class JfrEventNotifierTest {
 
 				// When
 				db.flush(FlushOptions.newFlushOptions());
-				boolean cleared = normalAgain.await(5, TimeUnit.SECONDS);
-				assertThat(cleared).as("stall cleared within 5s").isTrue();
+				cleared = normalAgain.await(5, TimeUnit.SECONDS);
 			}
 			var events = stopAndRead(recording, dir);
 
 			// Then
+			assertThat(cleared).as("stall cleared within 5s").isTrue();
 			assertThat(named(events, WRITE_STALL)).singleElement().satisfies(e -> {
 				assertThat(e.getString("columnFamily")).isEqualTo("default");
 				assertThat(e.getString("condition")).isEqualTo("DELAYED");
@@ -150,6 +151,7 @@ class JfrEventNotifierTest {
 	@Test
 	void flushOverSpaceLimit_recordsBackgroundError(@TempDir Path dir) throws IOException {
 		// Given — a 1-byte SST space limit, so the first flush fails
+		Throwable thrown;
 		try (var recording = startRecording(BACKGROUND_ERROR)) {
 			try (var env = Env.defaultEnv();
 			     var sfm = SstFileManager.create(env).setMaxAllowedSpaceUsage(MemorySize.ofBytes(1));
@@ -159,12 +161,12 @@ class JfrEventNotifierTest {
 				db.put("k".getBytes(), "v".getBytes());
 
 				// When
-				Throwable thrown = catchThrowable(() -> db.flush(FlushOptions.newFlushOptions()));
-				assertThat(thrown).isInstanceOf(RocksDBException.class);
+				thrown = catchThrowable(() -> db.flush(FlushOptions.newFlushOptions()));
 			}
 			var events = stopAndRead(recording, dir);
 
 			// Then
+			assertThat(thrown).isInstanceOf(RocksDBException.class);
 			assertThat(named(events, BACKGROUND_ERROR)).singleElement().satisfies(e -> {
 				assertThat(e.getString("reason")).isEqualTo("FLUSH");
 				assertThat(e.getString("message")).isNotBlank();

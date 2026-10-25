@@ -34,8 +34,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /// | `rocksdbffm.BackgroundError`      | instant  |                                                    |
 /// | `rocksdbffm.ExternalFileIngested` | instant  |                                                    |
 ///
-/// With no recording running, each callback costs one `isEnabled()`/`shouldCommit()` check: no
-/// `*Info` field is read and nothing is retained. Nothing else in this library references
+/// With no recording running, a callback costs little more than an `isEnabled()`/`shouldCommit()`
+/// check, and nothing is retained beyond one pending flush per thread and column family (see
+/// [#onFlushBegin(FlushJobInfo)]). Nothing else in this library references
 /// `jdk.jfr`, so a runtime image without that module works as long as this class is never loaded.
 ///
 /// Use one instance per database: write stalls are tracked by column family name, which RocksDB's
@@ -44,14 +45,17 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class JfrEventNotifier implements EventNotifier {
 
 	private final SstFileManager sstFileManager;
-	private final Map<Job, FlushEvent> flushes = new ConcurrentHashMap<>();
+	private final Map<FlushSlot, PendingFlush> flushes = new ConcurrentHashMap<>();
 	private final Map<Job, CompactionEvent> compactions = new ConcurrentHashMap<>();
 	private final Map<String, WriteStallEvent> stalls = new ConcurrentHashMap<>();
 
 	private JfrEventNotifier(SstFileManager sstFileManager) {
 		this.sstFileManager = sstFileManager;
-		// load and register every event class now, not inside the first RocksDB callback that
-		// needs it, which would widen the stall-transition race described below
+	}
+
+	static {
+		// load every event class here, not inside the first RocksDB callback that needs it,
+		// which would widen the stall-transition race described in onStallConditionsChanged
 		new FlushEvent();
 		new CompactionEvent();
 		new WriteStallEvent();
@@ -81,13 +85,17 @@ public final class JfrEventNotifier implements EventNotifier {
 
 	/// Starts a `rocksdbffm.Flush` event if a recording has it enabled.
 	///
+	/// A failed flush never reaches [#onFlushCompleted(FlushJobInfo)], so the pending event is
+	/// keyed by thread and column family rather than by job: the next flush there replaces it
+	/// instead of it leaking.
+	///
 	/// @param info details of the flush about to run
 	@Override
 	public void onFlushBegin(FlushJobInfo info) {
 		var event = new FlushEvent();
 		if (event.isEnabled()) {
 			event.begin();
-			flushes.put(new Job(info.threadId(), info.jobId()), event);
+			flushes.put(new FlushSlot(info.threadId(), info.columnFamilyId()), new PendingFlush(info.jobId(), event));
 		}
 	}
 
@@ -99,10 +107,11 @@ public final class JfrEventNotifier implements EventNotifier {
 		if (flushes.isEmpty()) {
 			return;
 		}
-		FlushEvent event = flushes.remove(new Job(info.threadId(), info.jobId()));
-		if (event == null) {
-			return;
+		PendingFlush pending = flushes.remove(new FlushSlot(info.threadId(), info.columnFamilyId()));
+		if (pending == null || pending.jobId() != info.jobId()) {
+			return; // nothing started, or left over from a flush that failed
 		}
+		FlushEvent event = pending.event();
 		event.end();
 		if (event.shouldCommit()) {
 			event.columnFamily = info.columnFamilyName();
@@ -196,21 +205,23 @@ public final class JfrEventNotifier implements EventNotifier {
 	/// @param info the new and previous stall conditions
 	@Override
 	public void onStallConditionsChanged(WriteStallInfo info) {
-		if (stalls.isEmpty() && !new WriteStallEvent().isEnabled()) {
+		var next = new WriteStallEvent();
+		if (stalls.isEmpty() && !next.isEnabled()) {
 			return;
 		}
 		String columnFamily = info.columnFamilyName();
 		WriteStallCondition current = info.current();
 		String previous = info.previous().name();
 		// ponytail: RocksDB delivers one column family's transitions from different threads, so
-		// a stall shorter than that delivery skew can arrive close-before-open and is lost.
-		// Matching `previous` against the open condition at least never commits a bogus stall.
+		// transitions closer together than that delivery skew can arrive out of order: the stall
+		// is then dropped or, across several reordered steps, mis-timed. Matching `previous`
+		// against the open condition stops the common close-before-open case from turning into
+		// one long bogus stall. Needs a per-transition sequence number from RocksDB to fix fully.
 		stalls.compute(columnFamily, (cf, open) -> {
 			if (open != null && open.condition.equals(previous)) {
 				open.end();
 				open.commit();
 			}
-			var next = new WriteStallEvent();
 			if (current == WriteStallCondition.NORMAL || !next.isEnabled()) {
 				return null;
 			}
@@ -243,8 +254,16 @@ public final class JfrEventNotifier implements EventNotifier {
 		}
 	}
 
-	/// Flush/compaction job identity: `jobId` alone is only unique within one database.
+	/// Compaction job identity: `jobId` alone is only unique within one database.
 	private record Job(long threadId, int jobId) {
+	}
+
+	/// One flush runs at a time per thread and column family; an atomic flush shares one `jobId`
+	/// across column families, so the job id alone can't key it.
+	private record FlushSlot(long threadId, int columnFamilyId) {
+	}
+
+	private record PendingFlush(int jobId, FlushEvent event) {
 	}
 
 	@Category("RocksDB")
