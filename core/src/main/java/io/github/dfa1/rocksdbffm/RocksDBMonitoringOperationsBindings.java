@@ -22,6 +22,17 @@ final class RocksDBMonitoringOperationsBindings {
 	private static final MethodHandle MH_APPROXIMATE_SIZES_WITH_OPTIONS;
 	/// `void rocksdb_approximate_sizes_cf_with_options(rocksdb_t* db, rocksdb_column_family_handle_t* column_family, const rocksdb_size_approximation_options_t* options, int num_ranges, const char* const* range_start_key, const size_t* range_start_key_len, const char* const* range_limit_key, const size_t* range_limit_key_len, uint64_t* sizes, char** errptr);`
 	private static final MethodHandle MH_APPROXIMATE_SIZES_CF_WITH_OPTIONS;
+    /// `void rocksdb_verify_checksum(rocksdb_t* db, char** errptr);`
+    private static final MethodHandle MH_VERIFY_CHECKSUM;
+
+    /// `void rocksdb_verify_checksum_with_options(rocksdb_t* db, const rocksdb_readoptions_t* options, char** errptr);`
+    private static final MethodHandle MH_VERIFY_CHECKSUM_WITH_OPTIONS;
+
+    /// `void rocksdb_verify_file_checksums(rocksdb_t* db, char** errptr);`
+    private static final MethodHandle MH_VERIFY_FILE_CHECKSUMS;
+
+    /// `void rocksdb_verify_file_checksums_with_options(rocksdb_t* db, const rocksdb_readoptions_t* options, char** errptr);`
+    private static final MethodHandle MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS;
 
 	static {
 		MH_APPROXIMATE_SIZES = NativeLibrary.lookup("rocksdb_approximate_sizes",
@@ -71,6 +82,24 @@ final class RocksDBMonitoringOperationsBindings {
 						ValueLayout.ADDRESS,   // range_limit_key_len
 						ValueLayout.ADDRESS,   // sizes
 						ValueLayout.ADDRESS)); // errptr
+
+        MH_VERIFY_CHECKSUM = NativeLibrary.lookup(
+                "rocksdb_verify_checksum",
+                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+        MH_VERIFY_CHECKSUM_WITH_OPTIONS = NativeLibrary.lookup(
+                "rocksdb_verify_checksum_with_options",
+                FunctionDescriptor.ofVoid(
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+        MH_VERIFY_FILE_CHECKSUMS = NativeLibrary.lookup(
+                "rocksdb_verify_file_checksums",
+                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+        MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS = NativeLibrary.lookup(
+                "rocksdb_verify_file_checksums_with_options",
+                FunctionDescriptor.ofVoid(
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
 	private RocksDBMonitoringOperationsBindings() {
@@ -155,4 +184,43 @@ final class RocksDBMonitoringOperationsBindings {
 			throw NativeCalls.wrapInvokeFailure("getApproximateSizes failed", t);
 		}
 	}
+    static void verifyChecksum(MemorySegment db) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment err = NativeCalls.errHolder(arena);
+            MH_VERIFY_CHECKSUM.invokeExact(db, err);
+            NativeCalls.checkError(err);
+        } catch (Throwable t) {
+            throw NativeCalls.wrapInvokeFailure("verifyChecksum failed", t);
+        }
+    }
+
+    static void verifyChecksum(MemorySegment db, ReadOptions options) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment err = NativeCalls.errHolder(arena);
+            MH_VERIFY_CHECKSUM_WITH_OPTIONS.invokeExact(db, options.ptr(), err);
+            NativeCalls.checkError(err);
+        } catch (Throwable t) {
+            throw NativeCalls.wrapInvokeFailure("verifyChecksum failed", t);
+        }
+    }
+
+    static void verifyFileChecksums(MemorySegment db) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment err = NativeCalls.errHolder(arena);
+            MH_VERIFY_FILE_CHECKSUMS.invokeExact(db, err);
+            NativeCalls.checkError(err);
+        } catch (Throwable t) {
+            throw NativeCalls.wrapInvokeFailure("verifyFileChecksums failed", t);
+        }
+    }
+
+    static void verifyFileChecksums(MemorySegment db, ReadOptions options) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment err = NativeCalls.errHolder(arena);
+            MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS.invokeExact(db, options.ptr(), err);
+            NativeCalls.checkError(err);
+        } catch (Throwable t) {
+            throw NativeCalls.wrapInvokeFailure("verifyFileChecksums failed", t);
+        }
+    }
 }

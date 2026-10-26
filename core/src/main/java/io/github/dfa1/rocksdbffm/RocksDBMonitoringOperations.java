@@ -88,4 +88,34 @@ public interface RocksDBMonitoringOperations {
 	default long[] getApproximateSizes(ColumnFamilyHandle cf, SizeApproximationOptions options, List<Range> ranges) {
 		return RocksDBMonitoringOperationsBindings.approximateSizesCfWithOptions(dbPtr(), cf, options, ranges);
 	}
+
+    /// Verifies checksums for the database.
+    ///
+    /// @throws RocksDBException if checksum verification fails
+    default void verifyChecksum() {
+        RocksDBMonitoringOperationsBindings.verifyChecksum(dbPtr());
+    }
+
+    /// Verifies database checksums using the supplied read options.
+    ///
+    /// @param options read options controlling verification
+    /// @throws RocksDBException if checksum verification fails
+    default void verifyChecksum(ReadOptions options) {
+        RocksDBMonitoringOperationsBindings.verifyChecksum(dbPtr(), options);
+    }
+
+    /// Verifies checksums for database files.
+    ///
+    /// @throws RocksDBException if file checksum verification fails
+    default void verifyFileChecksums() {
+        RocksDBMonitoringOperationsBindings.verifyFileChecksums(dbPtr());
+    }
+
+    /// Verifies database-file checksums using the supplied read options.
+    ///
+    /// @param options read options controlling verification
+    /// @throws RocksDBException if file checksum verification fails
+    default void verifyFileChecksums(ReadOptions options) {
+        RocksDBMonitoringOperationsBindings.verifyFileChecksums(dbPtr(), options);
+    }
 }

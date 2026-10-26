@@ -114,6 +114,8 @@ public final class Options extends NativeObject {
 	/// `void rocksdb_options_set_sst_partitioner_factory(rocksdb_options_t*, rocksdb_sst_partitioner_factory_t*);`
 	private static final MethodHandle MH_SET_SST_PARTITIONER_FACTORY;
 	/// `void rocksdb_options_set_prefix_extractor(rocksdb_options_t*, rocksdb_slicetransform_t*);`
+    private static final MethodHandle MH_SET_FILE_CHECKSUM_GEN_FACTORY = NativeLibrary.lookup("rocksdb_options_set_file_checksum_gen_factory", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+    /// `void rocksdb_options_set_file_checksum_gen_factory(rocksdb_options_t*, rocksdb_file_checksum_gen_factory_t*);`
 	private static final MethodHandle MH_SET_PREFIX_EXTRACTOR;
 	/// `void rocksdb_options_set_metadata_write_temperature(rocksdb_options_t* opt, int v);`
 	private static final MethodHandle MH_SET_METADATA_WRITE_TEMPERATURE;
@@ -1286,6 +1288,21 @@ public final class Options extends NativeObject {
 			throw NativeCalls.wrapInvokeFailure("setSstPartitionerFactory failed", t);
 		}
 	}
+
+    /// Attaches a [FileChecksumGenFactory] to generate checksums for newly written SST files.
+    ///
+    /// The factory uses shared ownership: both objects may be closed independently.
+    ///
+    /// @param factory the file checksum generator factory to attach
+    /// @return `this` for chaining
+    public Options setFileChecksumGenFactory(FileChecksumGenFactory factory) {
+        try {
+            MH_SET_FILE_CHECKSUM_GEN_FACTORY.invokeExact(ptr(), factory.ptr());
+            return this;
+        } catch (Throwable t) {
+            throw NativeCalls.wrapInvokeFailure("setFileChecksumGenFactory failed", t);
+        }
+    }
 
 	/// Attaches a [SliceTransform] as the prefix extractor, enabling prefix-based Bloom filters
 	/// (attach one via [BlockBasedTableOptions#setFilterPolicy(FilterPolicy)]) and prefix
