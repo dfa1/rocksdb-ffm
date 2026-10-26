@@ -204,4 +204,32 @@ class LiveFileStorageInfoTest {
 		}
 		throw new AssertionError("no " + type + " entry found");
 	}
+
+
+    @Test
+    void getLiveFilesStorageInfo_withCrc32cFactory_includesFileChecksum(@TempDir Path dir) {
+        // Given
+        try (var factory = FileChecksumGenFactory.newCrc32cFactory();
+             var opts = Options.newOptions()
+                     .setCreateIfMissing(true)
+                     .setFileChecksumGenFactory(factory);
+             var db = RocksDB.openReadWrite(opts, dir);
+             var flushOptions = FlushOptions.newFlushOptions()) {
+            db.put("a".getBytes(), "1".getBytes());
+            db.flush(flushOptions);
+
+            // When
+            try (var storageOptions = LiveFilesStorageInfoOptions.create()
+                    .setIncludeChecksumInfo(true);
+                 var info = db.getLiveFilesStorageInfo(storageOptions)) {
+                LiveFileStorageInfo tableFile = findFirst(info, FileType.TABLE_FILE);
+
+                // Then
+                assertThat(tableFile.fileChecksum()).isPresent();
+                assertThat(tableFile.fileChecksum().orElseThrow()).isNotEmpty();
+                assertThat(tableFile.fileChecksumFuncName()).isNotEqualTo("Unknown");
+            }
+        }
+    }
+
 }
