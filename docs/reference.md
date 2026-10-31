@@ -452,6 +452,7 @@ return `null` to run that compaction with no filter at all.
 | Perf context  | `PerfContext.setPerfLevel(PerfLevel)`, `newPerfContext()` (resets), `currentPerfContext()` (does not reset), `metric(PerfMetric)` (78 metrics), `report(boolean excludeZeroCounters)`, `reset()` — thread-local |
 | Logging       | `Options.setInfoLog(Logger)`, `setInfoLogLevel(LogLevel)`                                  |
 | Event listeners| `Options.addEventListener(EventNotifier)` (callable repeatedly to register several); `EventNotifier` has 8 no-op default methods — `onFlushBegin`, `onFlushCompleted`, `onCompactionBegin`, `onCompactionCompleted`, `onExternalFileIngested`, `onBackgroundError`, `onStallConditionsChanged`, `onMemTableSealed`. Callbacks run on RocksDB background threads; the `*Info` arguments are zero-copy views valid only for the duration of the call — see [explanation.md#background-thread-callbacks](explanation.md#background-thread-callbacks) |
+| JFR events     | `Options.addEventListener(JfrEventNotifier.create())` (or `create(SstFileManager)` to add SST space fields): `rocksdbffm.Flush`/`Compaction`/`WriteStall` duration events, `MemTableSealed`/`BackgroundError`/`ExternalFileIngested` instant events, category `RocksDB`. One `isEnabled()` check per callback when no recording runs; use one instance per database |
 | Event payloads | `FlushJobInfo`, `CompactionJobInfo`, `ExternalFileIngestionInfo`, `MemTableInfo`, `WriteStallInfo` |
 | Approximate sizes | `getApproximateSizes(List<Range>[, ColumnFamilyHandle][, SizeApproximationOptions])` — estimates on-disk size in bytes per range without scanning; `Range.of(startKey, endKey)`; `SizeApproximationOptions` controls what counts (memtables/files/blob files) and the allowed error margin |
 
@@ -536,6 +537,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Logger                     |   ✅    | Stderr and callback loggers                                                                 |
 | Perf context               |   ✅    | `PerfContext`, `PerfLevel`, `PerfMetric`                                                    |
 | Event listeners            |   ✅    | `EventNotifier` via `Options.addEventListener`; 8 of the C API's 10 callbacks (the two subcompaction ones are deliberately not exposed) |
+| JFR events                 |   ✅    | `JfrEventNotifier`: flush/compaction/write-stall durations plus memtable-seal, background-error and ingestion events |
 | Background jobs            |   🚧    | `cancelAllBackgroundWork`, manual-compaction toggles, `waitForCompact`                       |
 | Compaction style            |   ✅    | `Options.CompactionStyle` (`LEVEL`/`UNIVERSAL`/`FIFO`); `FifoCompactionOptions`, `UniversalCompactionOptions` |
 | Command-line tools         |   ✅    | `rocksdbffm-tool-ldb`/`rocksdbffm-tool-sstdump` — `LdbTool`/`SstDumpTool` wrap the bundled `ldb`/`sst_dump` binaries (not in `c.h`, no C API equivalent) as subprocesses; also directly `java -jar`-able |
