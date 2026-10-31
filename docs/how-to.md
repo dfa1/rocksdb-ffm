@@ -126,8 +126,11 @@ same batch across smaller ones.
 
 Only worth it once you're actually batching: benchmarks show `ReadBatch` is noticeably *slower*
 than a single `get()` call for one key — the fixed per-call overhead (column family resolution,
-capacity check) isn't amortized over just one lookup — breaks even around 4 keys, and wins by
-roughly 10–20% from 8 keys upward. For one-off single-key lookups, use `get()` directly.
+capacity check) isn't amortized over just one lookup. With the zero-copy (`MemorySegment`) tier it
+breaks even around 4 keys and wins by roughly 12–20% from 8 keys upward; with `byte[]` keys it
+breaks even closer to 8 and only edges ahead (single-digit percent) — see
+[benchmarks.md](benchmarks.md#multiget-individual-gets-vs-readbatch). For one-off single-key
+lookups, use `get()` directly.
 
 ## Open a database read-only
 

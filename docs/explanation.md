@@ -293,7 +293,9 @@ API bloat for its own sake — the three answer different questions about who ow
   caller's buffer.
 - `MemorySegment` — the native-first tier. The caller supplies the arena, so the library allocates
   nothing and the JIT sees a plain memory access. Segments from a confined arena carry no GC
-  scope-check overhead, which is why this is the fastest read path in the benchmarks.
+  scope-check overhead, which is why it pulls ahead of `byte[]` as values grow (see
+  [benchmarks.md](benchmarks.md); on tiny memtable-hit values the three tiers are within a few
+  percent).
 
 Reads use `rocksdb_get_pinned` (a `PinnableSlice`) underneath, so the value is read straight out of
 the block cache without an intermediate copy on the native side. Iterators go further: `key(Mapper)`
