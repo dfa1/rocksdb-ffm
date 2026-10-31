@@ -107,6 +107,8 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_GET_INFO_LOG_LEVEL;
 	/// `void rocksdb_options_set_ratelimiter(rocksdb_options_t* opt, rocksdb_ratelimiter_t* limiter);`
 	private static final MethodHandle MH_SET_RATELIMITER;
+	/// `void rocksdb_options_set_write_buffer_manager(rocksdb_options_t* opt, rocksdb_write_buffer_manager_t* wbm);`
+	private static final MethodHandle MH_SET_WRITE_BUFFER_MANAGER;
 	/// `void rocksdb_options_set_env(rocksdb_options_t*, rocksdb_env_t*);`
 	private static final MethodHandle MH_SET_ENV;
 	/// `void rocksdb_options_set_sst_file_manager(rocksdb_options_t* opt, rocksdb_sst_file_manager_t* sfm);`
@@ -141,6 +143,10 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_WRITE_BUFFER_SIZE;
 	/// `size_t rocksdb_options_get_write_buffer_size(rocksdb_options_t*);`
 	private static final MethodHandle MH_GET_WRITE_BUFFER_SIZE;
+	/// `void rocksdb_options_set_enforce_write_buffer_manager_during_recovery(rocksdb_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY;
+	/// `unsigned char rocksdb_options_get_enforce_write_buffer_manager_during_recovery(rocksdb_options_t* opt);`
+	private static final MethodHandle MH_GET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY;
 	/// `void rocksdb_options_set_num_levels(rocksdb_options_t*, int);`
 	private static final MethodHandle MH_SET_NUM_LEVELS;
 	/// `int rocksdb_options_get_num_levels(rocksdb_options_t*);`
@@ -382,6 +388,9 @@ public final class Options extends NativeObject {
 		MH_SET_RATELIMITER = NativeLibrary.lookup("rocksdb_options_set_ratelimiter",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
+		MH_SET_WRITE_BUFFER_MANAGER = NativeLibrary.lookup("rocksdb_options_set_write_buffer_manager",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
 		MH_SET_ENV = NativeLibrary.lookup("rocksdb_options_set_env",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
@@ -429,6 +438,12 @@ public final class Options extends NativeObject {
 
 		MH_GET_WRITE_BUFFER_SIZE = NativeLibrary.lookup("rocksdb_options_get_write_buffer_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY = NativeLibrary.lookup("rocksdb_options_set_enforce_write_buffer_manager_during_recovery",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY = NativeLibrary.lookup("rocksdb_options_get_enforce_write_buffer_manager_during_recovery",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
 		MH_SET_NUM_LEVELS = NativeLibrary.lookup("rocksdb_options_set_num_levels",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
@@ -869,6 +884,27 @@ public final class Options extends NativeObject {
 	/// @return current memtable size threshold that triggers a flush
 	public MemorySize getWriteBufferSize() {
 		return NativeFields.getMemorySize(MH_GET_WRITE_BUFFER_SIZE, ptr());
+	}
+
+	/// Sets whether an attached [WriteBufferManager]'s budget is enforced during WAL recovery.
+	///
+	/// When enabled, RocksDB checks the write buffer manager during WAL replay on open and
+	/// schedules flushes when it is over budget, which prevents running out of memory when
+	/// several DBs share one manager and one of them is recovering. Such a flush may produce
+	/// smaller L0 files and overrides RocksDB's `avoid_flush_during_recovery`. Default: `true`.
+	///
+	/// @param enforce whether to enforce write buffer manager limits during recovery
+	/// @return `this` for chaining
+	public Options setEnforceWriteBufferManagerDuringRecovery(boolean enforce) {
+		NativeFields.setBoolean(MH_SET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY, ptr(), enforce);
+		return this;
+	}
+
+	/// Returns whether write buffer manager limits are enforced during recovery.
+	///
+	/// @return `true` if limits are enforced during recovery, `false` otherwise
+	public boolean getEnforceWriteBufferManagerDuringRecovery() {
+		return NativeFields.getBoolean(MH_GET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY, ptr());
 	}
 
 	/// Number of levels in the LSM tree for this column family. Default: 7.
@@ -1341,6 +1377,22 @@ public final class Options extends NativeObject {
 			return this;
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("setRateLimiter failed", t);
+		}
+	}
+
+	/// Attaches a [WriteBufferManager] to control write buffer memory across column families.
+	///
+	/// The write buffer manager uses shared ownership: this call does not transfer
+	/// ownership — both objects may be closed independently.
+	///
+	/// @param wbm the write buffer manager to attach
+	/// @return `this` for chaining
+	public Options setWriteBufferManager(WriteBufferManager wbm) {
+		try {
+			MH_SET_WRITE_BUFFER_MANAGER.invokeExact(ptr(), wbm.ptr());
+			return this;
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("setWriteBufferManager failed", t);
 		}
 	}
 

@@ -133,6 +133,8 @@ Other read/write methods on the read-write types:
 | `setInfoLog`, `setInfoLogLevel` / `getInfoLogLevel` | `Logger`, `LogLevel` |
 | `setEnv`                                    | `Env`                   |
 | `setRateLimiter`                            | `RateLimiter`           |
+| `setWriteBufferManager`                     | `WriteBufferManager`    |
+| `setEnforceWriteBufferManagerDuringRecovery` / `getEnforceWriteBufferManagerDuringRecovery` | `boolean` (default `true`) |
 | `setSstFileManager`                         | `SstFileManager`        |
 | `setMetadataWriteTemperature` / `getMetadataWriteTemperature` | `Temperature` |
 | `setWalWriteTemperature` / `getWalWriteTemperature` | `Temperature`   |
@@ -306,6 +308,7 @@ keys and read-heavy point lookups (no efficient range scans, no block compressio
 | `HyperClockCache`  | `newHyperClockCache(MemorySize, MemorySize charge[, int numShardBits])`| `MemorySize.ZERO` charge = auto-estimate; `-1` shard bits = auto |
 | `FilterPolicy`     | `newBloom(double bitsPerKey)`, `newRibbon(double)`, `newRibbonHybrid(double, int bloomBeforeLevel)` | Bloom `10` ≈ 1% false positives; Ribbon: ~30% smaller at similar query cost, more CPU/temp space to build; hybrid mixes Bloom for the top levels (cheap to rebuild on flush) with Ribbon below (`bloomBeforeLevel=1` is RocksDB's own standard example) |
 | `RateLimiter`      | `create`, `createAutoTuned`, `createWithMode` (`READS_ONLY`, `WRITES_ONLY`, `ALL_IO`) | Rate given as `MemorySize` per second |
+| `WriteBufferManager` | `create(MemorySize, boolean)`, `createWithCache(MemorySize, Cache, boolean)` | Shared write-buffer memory budget across DBs/CFs; `MemorySize.ZERO` = no limit; `createWithCache` charges memtables to the cache (e.g. the block cache, for one shared budget); `setBufferSize` (must be > 0), `setAllowStall`, `isEnabled`, `bufferSize`, `memoryUsage`, `mutableMemtableMemoryUsage`, `dummyEntriesInCacheUsage`, `costToCache` |
 | `SstFileManager`   | `create(Env)`                                                          | `setMaxAllowedSpaceUsage`, `setCompactionBufferSize`, `setDeleteRateBytesPerSecond`, `setMaxTrashDbRatio`, `getTotalSize`, `getTotalTrashSize`, `isMaxAllowedSpaceReached` |
 | `Env`              | `defaultEnv()`, `memEnv()`                                             | `setBackgroundThreads`, `setHighPriorityBackgroundThreads` |
 | `Logger`           | `newStderrLogger(LogLevel, String prefix)`, `newCallbackLogger(LogLevel, LogCallback)` | Callback must not throw |
@@ -531,6 +534,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Rate limiter               |   ✅    | Writes-only, reads-only, all-IO; auto-tuned variant                                         |
 | Env                        |   ✅    | `defaultEnv()`, `memEnv()`, background thread pools                                         |
 | SST file manager           |   ✅    | Disk-space limits, trash-deletion rate, compaction buffer                                   |
+| Write buffer manager       |   ✅    | Shared write-buffer memory budget across DBs/CFs via `Options.setWriteBufferManager`      |
 | Secondary DB               |   ✅    | `tryCatchUpWithPrimary`, get, iterator, snapshot, properties                                |
 | Blob DB                    |   ✅    | Blob options, blob properties, `PrepopulateBlobCache`                                       |
 | Logger                     |   ✅    | Stderr and callback loggers                                                                 |

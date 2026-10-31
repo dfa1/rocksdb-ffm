@@ -26,6 +26,32 @@ class OptionsTest {
 	}
 
 	@Test
+	void enforceWriteBufferManagerDuringRecovery_defaultsToTrue() {
+		// Given
+		try (var opts = Options.newOptions()) {
+
+			// When
+			var result = opts.getEnforceWriteBufferManagerDuringRecovery();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
+	void setEnforceWriteBufferManagerDuringRecovery_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setEnforceWriteBufferManagerDuringRecovery(false)) {
+
+			// When
+			var result = opts.getEnforceWriteBufferManagerDuringRecovery();
+
+			// Then
+			assertThat(result).isFalse();
+		}
+	}
+
+	@Test
 	void setWriteBufferSize_roundTrips() {
 		// Given
 		try (var opts = Options.newOptions().setWriteBufferSize(MemorySize.ofKB(64))) {
