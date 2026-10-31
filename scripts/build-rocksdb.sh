@@ -92,6 +92,16 @@ if [ "$HOST_OS_NAME" = "windows" ]; then
     exit 0
 fi
 
+# Fail fast on missing host tools: otherwise the build gets minutes in before
+# make reports a bare "zig: No such file or directory" (zstd/lz4) or
+# "cmake: command not found" (snappy, below) from deep inside a sub-make.
+for tool in zig cmake make; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        echo "[build-rocksdb] Required tool '$tool' not found on PATH (see docs/how-to.md#prerequisites)." >&2
+        exit 1
+    fi
+done
+
 CROSS=""
 if [ "$CLASSIFIER" != "$HOST_CLASSIFIER" ]; then
     CROSS=" (cross from $HOST_CLASSIFIER)"
