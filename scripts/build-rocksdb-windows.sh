@@ -297,7 +297,7 @@ EOF
             # output ever appeared even though ZSTD_TARBALL still ended up
             # with the right value (grep matched the printed-but-not-run
             # tar line's text). Sidestep entirely: hardcode the filename --
-            # the rocksdb submodule is pinned (v11.8.1), so this is stable
+            # the rocksdb submodule is pinned (v11.12), so this is stable
             # until that pin is deliberately bumped.
             ZSTD_TARBALL="zstd-1.5.7.tar.gz"
             make "$ZSTD_TARBALL"
@@ -367,7 +367,7 @@ EOF
         # zlib: compiled directly, see build-rocksdb.sh (no -fPIC: clang
         # rejects it for Windows targets).
         ZLIB_VER="$(awk '/^ZLIB_VER /{print $3}' Makefile)"
-        make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_BASE="https://github.com/madler/zlib/releases/download/v$ZLIB_VER"
+        make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_PREFIX="https://github.com/madler/zlib/releases/download/v$ZLIB_VER/zlib-"
         rm -rf "zlib-$ZLIB_VER" && tar xzf "zlib-$ZLIB_VER.tar.gz"
         cd "zlib-$ZLIB_VER"
         for src in adler32 compress crc32 deflate infback inffast inflate inftrees trees uncompr zutil; do

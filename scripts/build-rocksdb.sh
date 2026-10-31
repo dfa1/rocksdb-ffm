@@ -225,7 +225,7 @@ SNAPPY_SRC_DIR="$(ls -d snappy-*/ | head -1)"
 # serves CI runners an HTML page instead of the tarball, so fetch the
 # identical release asset from GitHub (checksum still verified by the Makefile).
 ZLIB_VER="$(awk '/^ZLIB_VER /{print $3}' Makefile)"
-make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_BASE="https://github.com/madler/zlib/releases/download/v$ZLIB_VER"
+make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_PREFIX="https://github.com/madler/zlib/releases/download/v$ZLIB_VER/zlib-"
 rm -rf "zlib-$ZLIB_VER" && tar xzf "zlib-$ZLIB_VER.tar.gz"
 (
     cd "zlib-$ZLIB_VER"

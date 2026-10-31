@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `rocksdb` submodule v11.8.1 → v11.12
 - Building from source requires Zig 0.17.x, pinned across CI and checked by the build scripts ([0886d0a](https://github.com/dfa1/rocksdb-ffm/commit/0886d0a))
 - Building from source requires CMake on every platform, not just Windows; the build scripts fail fast on a missing tool ([96d41da](https://github.com/dfa1/rocksdb-ffm/commit/96d41da))
 - `FfmValueSizeBenchmark`: ns/op, hot/uniform key access, `ByteBuffer` and copy-Mapper tiers, denser 1–64 KB sweep, pinned heap
