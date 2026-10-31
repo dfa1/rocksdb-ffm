@@ -34,6 +34,12 @@ import java.util.concurrent.TimeUnit;
 /// costs. The open question is only the wrapper's own overhead: one lambda instantiation and
 /// one virtual dispatch per call, and (for the value-returning shape) boxing the `int` result
 /// through a generic type parameter.
+///
+/// `viaWrapper`/`viaWrapperVoid` use a non-capturing lambda (every argument is a `static final`
+/// constant), which the JIT can hoist to a singleton. Real call sites capture the db pointer,
+/// key and error holder, so `viaWrapperCapturing` passes instance fields through the lambda
+/// -- a fresh lambda object per call unless escape analysis removes it -- against
+/// `directTryCatchCapturing`, the inline `try`/`catch` reading the same fields.
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
@@ -51,6 +57,12 @@ public class TryCatchWrapperBenchmark {
 	private static final MemorySegment A = ARENA.allocateFrom("benchmark-a");
 	private static final MemorySegment B = ARENA.allocateFrom("benchmark-b");
 	private static final long LEN = 11;
+
+	// Same values as A/B/LEN, but as instance fields: the JIT cannot treat them as
+	// constants, so a lambda reading them must capture them.
+	private MemorySegment a = A;
+	private MemorySegment b = B;
+	private long len = LEN;
 
 	@FunctionalInterface
 	private interface ThrowingIntCall {
@@ -96,6 +108,25 @@ public class TryCatchWrapperBenchmark {
 		return invoke(() -> (int) MH_MEMCMP.invokeExact(A, B, LEN));
 	}
 
+	// ---- capturing shape (models a real call site: arguments are not constants) ------------
+
+	@Benchmark
+	public int directTryCatchCapturing() {
+		try {
+			return (int) MH_MEMCMP.invokeExact(a, b, len);
+		} catch (Throwable t) {
+			throw new AssertionError(t);
+		}
+	}
+
+	@Benchmark
+	public int viaWrapperCapturing() {
+		MemorySegment x = a;
+		MemorySegment y = b;
+		long n = len;
+		return invoke(() -> (int) MH_MEMCMP.invokeExact(x, y, n));
+	}
+
 	// ---- void-returning shape (models put/delete — the common case) ----------------------
 
 	@Benchmark
@@ -114,11 +145,14 @@ public class TryCatchWrapperBenchmark {
 		});
 	}
 
+	/// `-Djmh.forks=<n>` overrides the `@Fork` count above.
 	static void main() throws Exception {
-		org.openjdk.jmh.runner.options.Options opt = new OptionsBuilder()
-				.include(TryCatchWrapperBenchmark.class.getSimpleName())
-				.build();
-
-		new org.openjdk.jmh.runner.Runner(opt).run();
+		OptionsBuilder builder = new OptionsBuilder();
+		builder.include(TryCatchWrapperBenchmark.class.getSimpleName());
+		String forks = System.getProperty("jmh.forks");
+		if (forks != null) {
+			builder.forks(Integer.parseInt(forks));
+		}
+		new org.openjdk.jmh.runner.Runner(builder.build()).run();
 	}
 }

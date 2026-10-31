@@ -4,6 +4,7 @@ import io.github.dfa1.rocksdbffm.CopyResult;
 import io.github.dfa1.rocksdbffm.ReadWriteDB;
 import io.github.dfa1.rocksdbffm.RocksDB;
 import io.github.dfa1.rocksdbffm.WriteBatch;
+import io.github.dfa1.rocksdbffm.WriteOptions;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -38,9 +39,15 @@ import java.util.concurrent.TimeUnit;
 /// that is the downcall itself plus argument marshalling, which is exactly what these
 /// numbers are good for -- comparing FFM against JNI call for call.
 ///
-/// Do not read them as read throughput. Real read performance, against a 10k/100k-key
-/// database with the LSM settled via flush + compaction, is [FfmScaleBenchmark] /
-/// [JniScaleBenchmark]; those are the numbers to quote for `get`.
+/// Do not read them as read throughput. Lookups through a 10k/100k-key database with the LSM
+/// settled via flush + compaction are [FfmScaleBenchmark] / [JniScaleBenchmark] -- still one
+/// cache-hot key per trial, so a settled-LSM lookup cost rather than a realistic random-read
+/// workload.
+///
+/// Writes use default [WriteOptions]: WAL on, `sync=false`, so each put is a `write(2)` into
+/// the page cache, not an fsync. Every put overwrites the same key, so the memtable keeps
+/// filling and background flushes run during measurement; the `NoWal` rows take the WAL out
+/// to show how much of the write cost it is.
 ///
 /// The `ByteBuffer` read tier currently has no realistic counterpart in the scale
 /// benchmarks -- only byte[] and zero-copy are swept there.
@@ -73,6 +80,13 @@ public class FfmBenchmark {
 	private MemorySegment readKeyMemorySegment;
 	private MemorySegment readValMemorySegment;
 
+	// Same writes with the WAL off, to separate WAL cost from memtable-insert cost.
+	private WriteOptions noWalWriteOptions;
+
+	// "arena reuse" rows: one arena rewound before every put instead of a fresh
+	// Arena.ofConfined() per call. 4 KB is far more than one put's key + value + err holder.
+	private ResettableArena reusedArena;
+
 	private WriteBatch batch;
 	private byte[][] batchKeys;
 	private byte[][] batchValues;
@@ -89,6 +103,8 @@ public class FfmBenchmark {
 	public void setup() throws Exception {
 		dbPath = Files.createTempDirectory("bench-ffm-");
 		db = RocksDB.openReadWrite(dbPath);
+		noWalWriteOptions = WriteOptions.newWriteOptions().setDisableWal(true);
+		reusedArena = new ResettableArena(4096);
 
 		// --- byte[] tier ---
 		writeKeyBytes = TestData.WRITE_KEY_BYTES.clone();
@@ -147,13 +163,13 @@ public class FfmBenchmark {
 	public void teardown() throws IOException {
 		batch.close();
 		db.close();
+		noWalWriteOptions.close();
+		reusedArena.close();
 		arenaMemorySegment.close();
 		TestData.deleteDir(dbPath);
 	}
 
 	// ---- byte[] tier -------------------------------------------------------
-
-	private static final Arena ARENA = Arena.ofAuto();
 
 	@Benchmark
 	public void writesBytes() {
@@ -161,8 +177,14 @@ public class FfmBenchmark {
 	}
 
 	@Benchmark
+	public void writesBytesNoWal() {
+		db.put(noWalWriteOptions, writeKeyBytes, writeValueBytes);
+	}
+
+	@Benchmark
 	public void writesBytesArena() {
-		db.put(ARENA, writeKeyBytes, writeValueBytes);
+		reusedArena.reset();
+		db.put(reusedArena, writeKeyBytes, writeValueBytes);
 	}
 
 	@Benchmark
@@ -206,7 +228,8 @@ public class FfmBenchmark {
 
 	@Benchmark
 	public void writesMemorySegmentArena() {
-		db.put(ARENA, writeKeyMemorySegment, writeValueMemorySegment);
+		reusedArena.reset();
+		db.put(reusedArena, writeKeyMemorySegment, writeValueMemorySegment);
 	}
 
 	@Benchmark

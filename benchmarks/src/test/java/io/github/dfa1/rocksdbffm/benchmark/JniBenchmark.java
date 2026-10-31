@@ -46,6 +46,7 @@ public class JniBenchmark {
 	private RocksDB db;
 	private Options options;
 	private WriteOptions writeOptions;
+	private WriteOptions noWalWriteOptions;
 	private ReadOptions readOptions;
 	private Path dbPath;
 
@@ -70,6 +71,7 @@ public class JniBenchmark {
 		options = new Options().setCreateIfMissing(true);
 		db = RocksDB.open(options, dbPath.toString());
 		writeOptions = new WriteOptions();
+		noWalWriteOptions = new WriteOptions().setDisableWAL(true);
 		readOptions = new ReadOptions();
 
 		// --- byte[] tier ---
@@ -100,6 +102,7 @@ public class JniBenchmark {
 		db.close();
 		options.close();
 		writeOptions.close();
+		noWalWriteOptions.close();
 		readOptions.close();
 		TestData.deleteDir(dbPath);
 	}
@@ -109,6 +112,11 @@ public class JniBenchmark {
 	@Benchmark
 	public void writesBytes() throws Exception {
 		db.put(writeKey, writeValue);
+	}
+
+	@Benchmark
+	public void writesBytesNoWal() throws Exception {
+		db.put(noWalWriteOptions, writeKey, writeValue);
 	}
 
 	@Benchmark

@@ -42,6 +42,21 @@ import java.util.concurrent.TimeUnit;
 ///
 /// `direct` is the fixed baseline: today's rule exactly, one `static final` field read at its own
 /// call site, untouched by any of the above.
+///
+/// `degreeN` models one shared call site that *sees* N different handles at runtime. That is
+/// not the only way a shared helper gets used: a merged `TransactionDB`/`Transaction` helper
+/// would more likely be called from N different callers, each passing its own constant
+/// `static final` handle. If the JIT inlines the helper into each caller, every inlined copy
+/// sees one constant handle -- the `degree1` case, not `degreeN`. `callersN` measures that
+/// shape (N call sites, each `invokeViaParameter(H_i, ...)` with a constant `H_i`), and
+/// `controlN` is the design the rule actually prescribes for it: the same N-way `switch`, but
+/// each case its own `static final` `invokeExact`. Both pay the same `rotation++ % N` + switch
+/// as `degreeN`, so `callersN` vs `controlN` isolates passing a constant handle through a
+/// parameter, and `degreeN` vs `controlN` isolates sharing one call site.
+///
+/// What this cannot settle: `invokeViaParameter` here is tiny and trivially inlined. A real
+/// merged helper with more code in it may exceed the JIT's inlining budget, at which point
+/// its single compiled body sees every caller's handle -- back to `degreeN`.
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
@@ -196,11 +211,92 @@ public class MethodHandleParameterBenchmark {
 		return invokeViaParameter(mh, A, B, LEN);
 	}
 
-	static void main() throws Exception {
-		org.openjdk.jmh.runner.options.Options opt = new OptionsBuilder()
-				.include(MethodHandleParameterBenchmark.class.getSimpleName())
-				.build();
+	// ---- N callers of the shared helper, each passing its own constant handle ------------
 
-		new org.openjdk.jmh.runner.Runner(opt).run();
+	@Benchmark
+	public int callers2() {
+		return switch (rotation++ % 2) {
+			case 0 -> invokeViaParameter(H1, A, B, LEN);
+			default -> invokeViaParameter(H2, A, B, LEN);
+		};
+	}
+
+	@Benchmark
+	public int callers3() {
+		return switch (rotation++ % 3) {
+			case 0 -> invokeViaParameter(H1, A, B, LEN);
+			case 1 -> invokeViaParameter(H2, A, B, LEN);
+			default -> invokeViaParameter(H3, A, B, LEN);
+		};
+	}
+
+	@Benchmark
+	public int callers8() {
+		return switch (rotation++ % 8) {
+			case 0 -> invokeViaParameter(H1, A, B, LEN);
+			case 1 -> invokeViaParameter(H2, A, B, LEN);
+			case 2 -> invokeViaParameter(H3, A, B, LEN);
+			case 3 -> invokeViaParameter(H4, A, B, LEN);
+			case 4 -> invokeViaParameter(H5, A, B, LEN);
+			case 5 -> invokeViaParameter(H6, A, B, LEN);
+			case 6 -> invokeViaParameter(H7, A, B, LEN);
+			default -> invokeViaParameter(H8, A, B, LEN);
+		};
+	}
+
+	// ---- control: the same switch, each case its own static final invokeExact ------------
+
+	@Benchmark
+	public int control2() {
+		try {
+			return switch (rotation++ % 2) {
+				case 0 -> (int) H1.invokeExact(A, B, LEN);
+				default -> (int) H2.invokeExact(A, B, LEN);
+			};
+		} catch (Throwable t) {
+			throw new AssertionError(t);
+		}
+	}
+
+	@Benchmark
+	public int control3() {
+		try {
+			return switch (rotation++ % 3) {
+				case 0 -> (int) H1.invokeExact(A, B, LEN);
+				case 1 -> (int) H2.invokeExact(A, B, LEN);
+				default -> (int) H3.invokeExact(A, B, LEN);
+			};
+		} catch (Throwable t) {
+			throw new AssertionError(t);
+		}
+	}
+
+	@Benchmark
+	public int control8() {
+		try {
+			return switch (rotation++ % 8) {
+				case 0 -> (int) H1.invokeExact(A, B, LEN);
+				case 1 -> (int) H2.invokeExact(A, B, LEN);
+				case 2 -> (int) H3.invokeExact(A, B, LEN);
+				case 3 -> (int) H4.invokeExact(A, B, LEN);
+				case 4 -> (int) H5.invokeExact(A, B, LEN);
+				case 5 -> (int) H6.invokeExact(A, B, LEN);
+				case 6 -> (int) H7.invokeExact(A, B, LEN);
+				default -> (int) H8.invokeExact(A, B, LEN);
+			};
+		} catch (Throwable t) {
+			throw new AssertionError(t);
+		}
+	}
+
+	/// `-Djmh.forks=<n>` overrides the `@Fork` count above.
+	static void main() throws Exception {
+		OptionsBuilder builder = new OptionsBuilder();
+		builder.include(MethodHandleParameterBenchmark.class.getSimpleName());
+		String forks = System.getProperty("jmh.forks");
+		if (forks != null) {
+			builder.forks(Integer.parseInt(forks));
+		}
+		new org.openjdk.jmh.runner.Runner(builder.build()).run();
 	}
 }
