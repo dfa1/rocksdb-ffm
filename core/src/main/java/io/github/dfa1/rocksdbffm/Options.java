@@ -107,6 +107,8 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_GET_INFO_LOG_LEVEL;
 	/// `void rocksdb_options_set_ratelimiter(rocksdb_options_t* opt, rocksdb_ratelimiter_t* limiter);`
 	private static final MethodHandle MH_SET_RATELIMITER;
+	/// `void rocksdb_options_set_write_buffer_manager(rocksdb_options_t* opt, rocksdb_write_buffer_manager_t* wbm);`
+	private static final MethodHandle MH_SET_WRITE_BUFFER_MANAGER;
 	/// `void rocksdb_options_set_env(rocksdb_options_t*, rocksdb_env_t*);`
 	private static final MethodHandle MH_SET_ENV;
 	/// `void rocksdb_options_set_sst_file_manager(rocksdb_options_t* opt, rocksdb_sst_file_manager_t* sfm);`
@@ -378,6 +380,9 @@ public final class Options extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
 		MH_SET_RATELIMITER = NativeLibrary.lookup("rocksdb_options_set_ratelimiter",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_SET_WRITE_BUFFER_MANAGER = NativeLibrary.lookup("rocksdb_options_set_write_buffer_manager",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_SET_ENV = NativeLibrary.lookup("rocksdb_options_set_env",
@@ -1324,6 +1329,22 @@ public final class Options extends NativeObject {
 			return this;
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("setRateLimiter failed", t);
+		}
+	}
+
+	/// Attaches a [WriteBufferManager] to control write buffer memory across column families.
+	///
+	/// The write buffer manager uses shared ownership: this call does not transfer
+	/// ownership — both objects may be closed independently.
+	///
+	/// @param wbm the write buffer manager to attach
+	/// @return `this` for chaining
+	public Options setWriteBufferManager(WriteBufferManager wbm) {
+		try {
+			MH_SET_WRITE_BUFFER_MANAGER.invokeExact(ptr(), wbm.ptr());
+			return this;
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("setWriteBufferManager failed", t);
 		}
 	}
 
