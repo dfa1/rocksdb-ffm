@@ -62,6 +62,19 @@ if [ -f "$DEST_DIR/$LIB_NAME" ] && [ -f "$DEST_DIR/ldb.exe" ]; then
     exit 0
 fi
 
+# Pinned to one Zig minor release: zig cc bundles its own clang/libc++, so a
+# different Zig is a different compiler and a different libc++ ABI. Keep in
+# sync (and with build-rocksdb.sh) with ZIG_VERSION in .github/workflows/{ci,publish,sonar}.yml.
+REQUIRED_ZIG_MINOR="0.17"
+ZIG_FOUND="$(zig version)"
+case "$ZIG_FOUND" in
+    "$REQUIRED_ZIG_MINOR" | "$REQUIRED_ZIG_MINOR".*) ;;
+    *)
+        echo "[build-rocksdb-windows] Zig $REQUIRED_ZIG_MINOR.x required, found $ZIG_FOUND (see docs/how-to.md#prerequisites)." >&2
+        exit 1
+        ;;
+esac
+
 echo "[build-rocksdb-windows] Building RocksDB $CLASSIFIER with CMake + zig cc/c++ (jobs=$JOBS)..."
 
 # ---------------------------------------------------------------------------

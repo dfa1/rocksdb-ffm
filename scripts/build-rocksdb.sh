@@ -101,6 +101,18 @@ for tool in zig cmake make; do
         exit 1
     fi
 done
+# Pinned to one Zig minor release: zig cc bundles its own clang/libc++, so a
+# different Zig is a different compiler and a different libc++ ABI. Keep in
+# sync with ZIG_VERSION in .github/workflows/{ci,publish,sonar}.yml.
+REQUIRED_ZIG_MINOR="0.17"
+ZIG_FOUND="$(zig version)"
+case "$ZIG_FOUND" in
+    "$REQUIRED_ZIG_MINOR" | "$REQUIRED_ZIG_MINOR".*) ;;
+    *)
+        echo "[build-rocksdb] Zig $REQUIRED_ZIG_MINOR.x required, found $ZIG_FOUND (see docs/how-to.md#prerequisites)." >&2
+        exit 1
+        ;;
+esac
 
 CROSS=""
 if [ "$CLASSIFIER" != "$HOST_CLASSIFIER" ]; then
