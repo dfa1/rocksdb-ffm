@@ -139,6 +139,33 @@ shapes: the `invokeExact` call still lives in the lambda's own compiled body, wh
 the `static final` field directly, so nothing about the JIT property this project cares about is
 affected by moving the surrounding `try`/`catch` outward.
 
+**Re-run, 2026-10-31, on different hardware.** Both benchmarks were re-run unchanged on a Mac Studio
+(Apple M5 Max, JDK 25.0.5 Homebrew OpenJDK, same JMH settings). Its core layout differs from the
+laptop's above: 6 + 12 cores across two performance levels (`hw.perflevel0`/`hw.perflevel1`, which
+macOS names "Super" and "Performance"), with no efficiency tier. The tables above are left as the
+measurements this decision was made on; this one is the confirmation:
+
+| Benchmark | ops/s | vs. `direct` |
+|:---|---:|---:|
+| `direct` | 353,042,290 | — |
+| `degree1` | 351,993,795 | −0.3% (noise) |
+| `degree2` | 76,656,667 | **−78.3%** |
+| `degree3` | 210,263,767 | **−40.4%** |
+| `degree4` | 204,889,152 | −42.0% |
+| `degree5` | 197,049,344 | −44.2% |
+| `degree6` | 191,565,181 | −45.7% |
+| `degree7` | 186,772,151 | −47.1% |
+| `degree8` | 184,084,998 | −47.9% |
+| `directTryCatch` / `directTryCatchVoid` | 353,089,785 / 353,030,178 | — |
+| `viaWrapper` / `viaWrapperVoid` | 352,983,245 / 353,004,512 | −0.03% / −0.01% (noise) |
+
+Absolute throughput is ~7% higher across the board, but the shape is the same in every respect:
+`degree1` is free, `degree2` is again the single worst point (−78%), `degree3` recovers to roughly
+−40%, the slide continues to −48% by `degree8`, and the lambda wrapper costs nothing. Reproducing
+the `degree2` dip on a chip with no efficiency cores removes core-migration noise as an
+explanation outright, and is one second Apple Silicon data point for the generalization question
+below — still the same OS, scheduler family and HotSpot build, so not yet a cross-architecture one.
+
 `TransactionDB`/`Transaction`/the six shared-symbol-family types merged into one call site would
 land at `degree3` — three symbol families — which is where the ~40% figure this ADR's Decision
 relies on comes from (−42% in the primary run, −39% to −41% across the three reproducibility
