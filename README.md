@@ -83,8 +83,8 @@ Docs follow the [Diátaxis](https://diataxis.fr/) framework.
 
 ## Contributing
 
-**Requirements:** JDK 25+, [Zig](https://ziglang.org/) 0.16.x, and — for the Windows native builds
-only — [CMake](https://cmake.org/) plus `make` or [Ninja](https://ninja-build.org/).
+**Requirements:** JDK 25+, [Zig](https://ziglang.org/) 0.16.x, [CMake](https://cmake.org/), and — for
+the Windows native builds only — `make` or [Ninja](https://ninja-build.org/).
 
 ```bash
 git clone --recurse-submodules https://github.com/dfa1/rocksdb-ffm.git

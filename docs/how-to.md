@@ -972,7 +972,8 @@ of this; see the [Quickstart](../README.md#quickstart) instead.
 | JDK                   | 25+     | first LTS with stable `java.lang.foreign`                              |
 | Zig                   | 0.16.x  | on `PATH`; compiles the vendored RocksDB C/C++ sources via `zig cc`/`zig c++` |
 | Git                   | any     | needed for the `rocksdb` submodule                                     |
-| CMake + `make`/Ninja  | any     | Windows targets only                                                   |
+| CMake                 | any     | on `PATH`; builds the bundled Snappy codec on every target            |
+| `make`/Ninja          | any     | Windows targets only (macOS/Linux already ship `make`)                 |
 
 Maven itself is *not* required — the repo ships the Maven Wrapper (`./mvnw`/`./mvnw.cmd`), which
 downloads the pinned Maven version on first run. Never use a system `mvn`.
@@ -984,6 +985,9 @@ downloads the pinned Maven version on first run. Never use a system `mvn`.
 ```bash
 zig version   # must print 0.16.0 or newer
 ```
+
+**Installing CMake** — `brew install cmake` on macOS, `apt install cmake` (or your distro's
+equivalent) on Linux, or a release from [cmake.org/download](https://cmake.org/download/).
 
 ### Clone and build
 
