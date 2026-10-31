@@ -36,7 +36,7 @@ including the `NullPointerException` `PinnableHandle#map` deliberately throws wh
 
 Move the wrap/rethrow decision off `RocksDBException` and onto `RocksDB`, as
 `RocksDB.wrapInvokeFailure(String, Throwable)` — alongside the other shared FFM plumbing already
-there (`errHolder`, `checkError`, `toNative`; see `CLAUDE.md`'s "Centralized Error Handling" section):
+there (`errHolder`, `checkError`, `toNative`; see `AGENTS.md`'s "Centralized Error Handling" section):
 
 ```java
 static RuntimeException wrapInvokeFailure(String message, Throwable t) {

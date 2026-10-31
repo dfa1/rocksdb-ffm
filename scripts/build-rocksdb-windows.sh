@@ -443,7 +443,7 @@ fi
 # ever selects the shared library as ROCKSDB_LIB — the target the tools link
 # against — off Windows. There is no CMake option to override that on this
 # target short of patching the vendored CMakeLists.txt, which is out of
-# scope (the submodule is pinned, not ours to edit — see CLAUDE.md). So the
+# scope (the submodule is pinned, not ours to edit — see AGENTS.md). So the
 # ADR 0008 dynamic-linking approach (and its libc++ double-copy interposition
 # fix) is POSIX-only; `ldb.exe`/`sst_dump.exe` ship self-contained and
 # noticeably larger (tens of MB apiece, RocksDB's own static-link default)

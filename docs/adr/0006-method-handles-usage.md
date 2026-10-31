@@ -23,7 +23,7 @@ direct ops call a second symbol family (`rocksdb_transactiondb_put`, …); `Tran
 transactional ops call a third (`rocksdb_transaction_put`, …) — a transactional put has to go
 through the lock manager, a plain put never does.
 
-CLAUDE.md's stated reason for keeping these separate: "always keep the MethodHandles private
+AGENTS.md's stated reason for keeping these separate: "always keep the MethodHandles private
 static final … never pass a `MethodHandle` as a method parameter, even internally: `invokeExact`
 on a `static final` field lets the JIT treat the target as a compile-time constant; routed
 through a parameter, that constant-folding is lost." Taken literally, this forbids the one
@@ -35,7 +35,7 @@ That reason traces back to a real attempt, not an unchecked assertion: commit `4
 (2026-08-15, the `RocksIterator`/`PinnableSlice` dedup) tried collapsing `readKey()`/`readValue()`
 — which call two different symbols, `rocksdb_iter_key` and `rocksdb_iter_value` — into one shared
 method taking the target `MethodHandle` as a parameter, reverted it, and documented the rule in
-CLAUDE.md specifically so it would not be reintroduced. In this ADR's own vocabulary, that is a
+AGENTS.md specifically so it would not be reintroduced. In this ADR's own vocabulary, that is a
 real `degree2` case the project had already hit and backed out of, months before this ADR existed.
 What that commit does not carry forward is a number: "tried … reverted" is the language of an
 observed regression, not a theory, but no benchmark was captured or committed alongside it, so
@@ -283,7 +283,7 @@ call site in the codebase and deserves its own change, reviewed on its own.
 - `viaWrapper`'s result opens a concrete, evidence-backed simplification (Option C) that removes
   485 duplicated `try`/`catch` sites without touching the property the project's whole
   performance story depends on.
-- The `MethodHandle` rule in CLAUDE.md can be stated more precisely than "never pass as a
+- The `MethodHandle` rule in AGENTS.md can be stated more precisely than "never pass as a
   parameter" — the real constraint is "never let one `invokeExact` call site see more than one
   distinct target in practice," which is both narrower (a same-handle parameter is fine) and
   clearer about why it exists.
@@ -329,7 +329,7 @@ Covered inline above as Options A–E; no additional alternatives were evaluated
 
 ## References
 
-- `CLAUDE.md`, "Code" section — the `static final MethodHandle` / no-parameter-passing rule this
+- `AGENTS.md`, "Code" section — the `static final MethodHandle` / no-parameter-passing rule this
   ADR narrows
 - [ADR 0004](0004-error-handling.md) — centralized the classification logic
   (`NativeCalls.wrapInvokeFailure`, originally on `RocksDB`) this ADR's Option C builds on, and already rejected composing it

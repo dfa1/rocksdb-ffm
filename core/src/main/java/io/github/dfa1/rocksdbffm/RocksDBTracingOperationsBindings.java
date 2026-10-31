@@ -10,7 +10,7 @@ import java.nio.file.Path;
 /// FFM plumbing for [RocksDBTracingOperations]'s default methods -- kept out of [RocksDB] itself
 /// so that class doesn't also have to hold every feature area's `MH_` fields. Not an
 /// `interface`-nested holder: interface fields are implicitly `public static final`, so a
-/// `private static final MethodHandle` (required by CLAUDE.md) cannot live directly on
+/// `private static final MethodHandle` (required by AGENTS.md) cannot live directly on
 /// `RocksDBTracingOperations` -- this package-private top-level class is the closest equivalent.
 /// Named after the interface it backs, `<InterfaceName>Bindings`, so the pairing stays obvious
 /// as more capability interfaces (`RocksDBReadOperations`, ...) get the same treatment.

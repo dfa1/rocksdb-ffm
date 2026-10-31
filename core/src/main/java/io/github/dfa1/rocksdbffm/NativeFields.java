@@ -10,7 +10,7 @@ import java.lang.invoke.MethodHandle;
 /// `MethodHandle`, the same way [NativeCalls#wrapInvokeFailure(String, Throwable)] and friends are
 /// already shared static FFM plumbing rather than instance state.
 ///
-/// This is a documented, scoped exception to CLAUDE.md's "never pass a MethodHandle as a method
+/// This is a documented, scoped exception to AGENTS.md's "never pass a MethodHandle as a method
 /// parameter" rule: that rule protects hot-path `invokeExact` call sites (`Get`/`Put`/iterator),
 /// where losing the JIT's `static final`-target constant-folding is measurable. The classes that
 /// call these helpers do so a handful of times during setup/inspection, never in a per-operation

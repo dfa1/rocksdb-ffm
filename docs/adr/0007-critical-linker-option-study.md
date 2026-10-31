@@ -106,7 +106,7 @@ drawing any conclusion from a RocksDB-shaped one.
   future contributors can extend instead of re-litigating from scratch.
 - Prevents repeating this session's exact mistake — chasing a specific class's number before knowing
   whether the mechanism can produce a measurable effect at all on calls this cheap.
-- Gives `CLAUDE.md`'s `critical`/trivial-downcall guidance (currently just the two inline comments in
+- Gives `AGENTS.md`'s `critical`/trivial-downcall guidance (currently just the two inline comments in
   `PinnableHandle.java`/`RocksDBReadOperationsBindings.java`) a place to point to for the full reasoning, the way ADR 0004
   and ADR 0006 already anchor their respective inline rules.
 

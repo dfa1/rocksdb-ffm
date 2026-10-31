@@ -19,7 +19,7 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.util.concurrent.TimeUnit;
 
-/// Isolates the one variable behind CLAUDE.md's "never pass a `MethodHandle` as a method
+/// Isolates the one variable behind AGENTS.md's "never pass a `MethodHandle` as a method
 /// parameter" rule: does reading the downcall target from a `static final` field at the
 /// `invokeExact` call site actually out-perform reading the same target through a parameter,
 /// on a JDK 25 JIT -- and if it does, *where* does it start costing something? See

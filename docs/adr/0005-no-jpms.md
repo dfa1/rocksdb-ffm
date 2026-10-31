@@ -18,7 +18,7 @@ Two things make this worth writing down rather than deciding informally:
 - The project's entire public surface already lives in one package,
   `io.github.dfa1.rocksdbffm`, with `package-private` and `sealed` types doing the encapsulation
   work internally (`NativeObject`, `Custom` merge-operator/logger implementations, etc. — see
-  `CLAUDE.md`'s "use NativeObject as base class" and "don't expose public constructors" rules). A
+  `AGENTS.md`'s "use NativeObject as base class" and "don't expose public constructors" rules). A
   module boundary would wrap a second encapsulation mechanism around a surface that is already
   fully encapsulated by the first.
 - The library uses `java.lang.foreign` throughout, which requires an explicit native-access grant
@@ -91,7 +91,7 @@ ADR — it stays available, not scheduled.
 
 ## References
 
-- `CLAUDE.md` — "Manual Memory Management & Lifecycle", "don't expose public constructors"
+- `AGENTS.md` — "Manual Memory Management & Lifecycle", "don't expose public constructors"
 - `docs/reference.md` — "Source Map" (the `native/*` classifier matrix this ADR avoids duplicating
   in a module graph)
 - `docs/adr/0001-ffm-instead-of-jni.md` — the FFM API this project builds on, and the
