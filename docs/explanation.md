@@ -291,16 +291,23 @@ API bloat for its own sake — the three answer different questions about who ow
 - `ByteBuffer` — for code already built on NIO. Direct buffers are wrapped with
   `MemorySegment.ofBuffer(...)`, so no copy happens on the way in; the value is copied once into the
   caller's buffer.
-- `MemorySegment` — the native-first tier. The caller supplies the arena, so the library allocates
-  nothing and the JIT sees a plain memory access. Segments from a confined arena carry no GC
-  scope-check overhead, which is why it pulls ahead of `byte[]` as values grow (see
-  [benchmarks.md](benchmarks.md); on tiny memtable-hit values the three tiers are within a few
-  percent).
+- `MemorySegment` — the native-first tier. The caller supplies the destination segment, so a read
+  allocates nothing on the Java heap; the library still makes a few small native allocations per
+  call (the error holder and out-parameters) in a short-lived confined arena.
 
-Reads use `rocksdb_get_pinned` (a `PinnableSlice`) underneath, so the value is read straight out of
-the block cache without an intermediate copy on the native side. Iterators go further: `key(Mapper)`
-and `value(Mapper)` hand the callback a view pointing directly into RocksDB's own memory, with zero
-copies. The trade-off is a lifetime rule enforced at runtime rather than compile time — the view is
+On reads, the `byte[]` and buffer tiers each copy the value exactly once — what separates them is
+the path. `get(byte[])` goes through `rocksdb_get_pinned_v2` (three downcalls: get, fetch the
+pinned value, release the handle), then allocates a fresh array and copies into it. The
+`ByteBuffer` and `MemorySegment` tiers make a single `rocksdb_get_into_buffer` downcall that copies
+straight into the caller's buffer. So the buffer tiers save a Java allocation (with its zeroing and
+GC pressure) and two downcalls, not a copy, which is why they only pull ahead of `byte[]` once
+values are large enough for the allocation to matter — see [benchmarks.md](benchmarks.md) for
+where that crossover sits.
+
+`get(key, Mapper)` is the zero-copy tier: it uses the same `rocksdb_get_pinned_v2` path as
+`byte[]`, but hands the callback a view directly into RocksDB's pinned memory (block cache or
+memtable) instead of copying out. Iterators' `key(Mapper)` and `value(Mapper)` work the same
+way. The trade-off is a lifetime rule enforced at runtime rather than compile time — the view is
 bound to an arena that closes the moment the callback returns, so using it afterward throws instead
 of silently reading whatever the next positioning call left behind.
 

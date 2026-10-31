@@ -88,6 +88,13 @@ box on every present result, defeating the point of a zero-copy path. See
 `MemorySegment` exist as three separate tiers, and for the zero-copy `Mapper` path layered on top of
 the `MemorySegment` tier.
 
+**Which tier to pick, by value size:** up to ~1 KB they all cost the same — the lookup dominates —
+so use `byte[]` if that is what your code already has. From a few KB up (~2 KB for a hot key, ~8 KB
+for reads spread over the whole database), reading into a reused `ByteBuffer`/`MemorySegment` wins,
+and it is ~2× faster than `byte[]` from 16–64 KB on, because `byte[]` both zeroes a fresh array and
+copies into it. If you only need part of the value (a header, a length, one field), `get(key, Mapper)`
+costs the same at any size. Numbers in [benchmarks.md](benchmarks.md#value-size-when-do-bytebuffermemorysegment-beat-byte).
+
 The `Mapper` view is only valid for the duration of the callback — it's bound to an arena that
 closes the moment `fn` returns, so copy anything you need to keep (`value.toArray(JAVA_BYTE)`,
 a parsed primitive, …) before returning. Retaining the view itself throws `IllegalStateException`.

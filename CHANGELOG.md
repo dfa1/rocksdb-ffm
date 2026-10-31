@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Building from source requires Zig 0.17.x, pinned across CI and checked by the build scripts ([0886d0a](https://github.com/dfa1/rocksdb-ffm/commit/0886d0a))
+- Building from source requires CMake on every platform, not just Windows; the build scripts fail fast on a missing tool ([96d41da](https://github.com/dfa1/rocksdb-ffm/commit/96d41da))
+- `FfmValueSizeBenchmark`: ns/op, hot/uniform key access, `ByteBuffer` and copy-Mapper tiers, denser 1–64 KB sweep, pinned heap
+
+### Fixed
+
+- `MultiGetScaleBenchmark`/`JniMultiGetScaleBenchmark`: no longer abort on macOS by attaching the Linux-only `perf` profiler ([b5e6f09](https://github.com/dfa1/rocksdb-ffm/commit/b5e6f09))
+- `FfmBenchmark`: "arena reuse" write rows reuse one arena instead of leaking a native allocation per put
+
 ## [0.15] — 2026-10-25
 
 Snappy and zlib compression, `RocksIterator.stream`, and a cleaner published BOM.
