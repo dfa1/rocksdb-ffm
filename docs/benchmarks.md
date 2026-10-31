@@ -8,7 +8,7 @@ them.
 ## Methodology
 
 Benchmarks run on a Mac Studio (Apple M5 Max), JDK 25.0.5 (Homebrew OpenJDK), measured 2026-10-31,
-with the native library built locally by zig 0.17.0 (CI pins 0.16.0). Each tier uses the same pre-seeded key, so the numbers reflect
+with the native library built locally by zig 0.17.0 (the version CI pins). Each tier uses the same pre-seeded key, so the numbers reflect
 call overhead rather than cache-miss variance. Both libraries use `PinnableSlice` for reads.
 
 > **The two sides do not run the same RocksDB build, and cannot be made to.** The FFM column uses

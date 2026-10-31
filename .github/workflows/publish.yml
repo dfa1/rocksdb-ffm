@@ -14,6 +14,12 @@ on:
 permissions:
   contents: read
 
+env:
+  # Single pin for the whole workflow: setup-zig installs it and the native
+  # cache key includes it, so a bump can't restore libraries the previous
+  # Zig built. Keep in sync with REQUIRED_ZIG_MINOR in scripts/build-rocksdb*.sh.
+  ZIG_VERSION: 0.17.0
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -39,7 +45,7 @@ jobs:
       - name: Install Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
         with:
-          version: 0.16.0
+          version: ${{ env.ZIG_VERSION }}
 
       # Same cache ci.yml's ubuntu-latest leg populates for this exact rocksdb
       # submodule commit; a release commit only bumps pom.xml versions, so the
@@ -59,7 +65,7 @@ jobs:
             native/linux-aarch64/src/main/resources/native
             native/windows-x86_64/src/main/resources/native
             native/windows-aarch64/src/main/resources/native
-          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt', 'rocksdb/Makefile', 'scripts/build-rocksdb.sh', 'scripts/build-rocksdb-windows.sh') }}-ubuntu-latest-${{ runner.arch }}
+          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt', 'rocksdb/Makefile', 'scripts/build-rocksdb.sh', 'scripts/build-rocksdb-windows.sh') }}-zig${{ env.ZIG_VERSION }}-ubuntu-latest-${{ runner.arch }}
 
       - name: Publish to Maven Central
         env:
