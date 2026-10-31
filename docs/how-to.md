@@ -973,7 +973,7 @@ of this; see the [Quickstart](../README.md#quickstart) instead.
 | Tool                  | Version | Notes                                                                 |
 |:----------------------|:--------|:-----------------------------------------------------------------------|
 | JDK                   | 25+     | first LTS with stable `java.lang.foreign`                              |
-| Zig                   | 0.16.x  | on `PATH`; compiles the vendored RocksDB C/C++ sources via `zig cc`/`zig c++` |
+| Zig                   | 0.17.x  | on `PATH`; compiles the vendored RocksDB C/C++ sources via `zig cc`/`zig c++` |
 | Git                   | any     | needed for the `rocksdb` submodule                                     |
 | CMake                 | any     | on `PATH`; builds the bundled Snappy codec on every target            |
 | `make`/Ninja          | any     | Windows targets only (macOS/Linux already ship `make`)                 |
@@ -983,10 +983,11 @@ downloads the pinned Maven version on first run. Never use a system `mvn`.
 
 **Installing Zig** — download a release archive from
 [ziglang.org/download](https://ziglang.org/download/) and put the extracted `zig` binary on
-`PATH`, or use a version manager (`asdf install zig 0.16.0`, `mise use zig@0.16.0`). Confirm with:
+`PATH`, or use a version manager (`asdf install zig 0.17.0`, `mise use zig@0.17.0`). On macOS,
+`brew install zig` works too while Homebrew's current release is 0.17.x. Confirm with:
 
 ```bash
-zig version   # must print 0.16.0 or newer
+zig version   # must print 0.17.x — the build scripts reject any other release
 ```
 
 **Installing CMake** — `brew install cmake` on macOS, `apt install cmake` (or your distro's
