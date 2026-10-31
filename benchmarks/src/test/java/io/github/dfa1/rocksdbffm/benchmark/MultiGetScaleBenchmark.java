@@ -202,7 +202,7 @@ public class MultiGetScaleBenchmark {
 		return zeroCopyAccumulator[0];
 	}
 
-	/// Runs this class with [GCProfiler] and (unless forking is disabled) [LinuxPerfNormProfiler]
+	/// Runs this class with [GCProfiler] and (on Linux, unless forking is disabled) [LinuxPerfNormProfiler]
 	/// attached — the latter shells out to `perf stat` per fork and reports hardware counters
 	/// (cycles, instructions, cache misses, branches) normalized per benchmark op.
 	/// `-Djmh.include=<regex>` narrows which benchmarks run, `-Djmh.forks=<n>` overrides the
@@ -213,14 +213,15 @@ public class MultiGetScaleBenchmark {
 		OptionsBuilder builder = new OptionsBuilder();
 		builder.addProfiler(GCProfiler.class);
 		builder.include(System.getProperty("jmh.include", MultiGetScaleBenchmark.class.getName()));
+		// perf is Linux-only: attaching LinuxPerfNormProfiler anywhere else fails the whole run
+		// at startup (Cannot run program "perf") instead of just dropping the counters.
+		boolean perfAvailable = System.getProperty("os.name", "").startsWith("Linux");
 		String forks = System.getProperty("jmh.forks");
+		int forkCount = forks != null ? Integer.parseInt(forks) : -1;
 		if (forks != null) {
-			int forkCount = Integer.parseInt(forks);
 			builder.forks(forkCount);
-			if (forkCount > 0) {
-				builder.addProfiler(LinuxPerfNormProfiler.class);
-			}
-		} else {
+		}
+		if (perfAvailable && forkCount != 0) {
 			builder.addProfiler(LinuxPerfNormProfiler.class);
 		}
 		String batchSizes = System.getProperty("jmh.batchSize");

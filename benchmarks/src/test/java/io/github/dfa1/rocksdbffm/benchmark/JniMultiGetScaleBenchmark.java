@@ -107,12 +107,16 @@ public class JniMultiGetScaleBenchmark {
 		return total;
 	}
 
-	/// Runs this class with [GCProfiler] and [LinuxPerfNormProfiler] attached. `-Djmh.include=<regex>`
-	/// narrows which benchmarks run and `-Djmh.forks=<n>` overrides the `@Fork` count above.
+	/// Runs this class with [GCProfiler] and (on Linux) [LinuxPerfNormProfiler] attached.
+	/// `-Djmh.include=<regex>` narrows which benchmarks run and `-Djmh.forks=<n>` overrides the
+	/// `@Fork` count above.
 	static void main() throws Exception {
 		OptionsBuilder builder = new OptionsBuilder();
 		builder.addProfiler(GCProfiler.class);
-		builder.addProfiler(LinuxPerfNormProfiler.class);
+		// perf is Linux-only: see MultiGetScaleBenchmark#main
+		if (System.getProperty("os.name", "").startsWith("Linux")) {
+			builder.addProfiler(LinuxPerfNormProfiler.class);
+		}
 		builder.include(System.getProperty("jmh.include", JniMultiGetScaleBenchmark.class.getName()));
 		String forks = System.getProperty("jmh.forks");
 		if (forks != null) {
