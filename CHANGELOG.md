@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `JfrEventNotifier`: RocksDB flushes, compactions and write stalls as JFR events ([#200](https://github.com/dfa1/rocksdb-ffm/issues/200))
+
 ### Changed
 
 - `rocksdb` submodule v11.8.1 → v11.12
