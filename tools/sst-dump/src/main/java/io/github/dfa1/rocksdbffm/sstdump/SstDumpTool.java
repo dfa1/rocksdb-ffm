@@ -127,6 +127,11 @@ public final class SstDumpTool {
 
 		/// Caps the number of entries read while executing `check`/`scan`.
 		///
+		/// Not reliable on Windows: upstream `sst_dump` parses the flag with `sscanf("%lu")` into a
+		/// 64-bit variable it never initializes, and `unsigned long` is 32 bits there, so the cap can
+		/// come out as an arbitrary larger number
+		/// ([meta/rocksdb#15574](https://github.com/meta/rocksdb/issues/15574)).
+		///
 		/// @param readNum the maximum number of entries to read
 		/// @return this request, for chaining
 		public Request readNum(int readNum) {

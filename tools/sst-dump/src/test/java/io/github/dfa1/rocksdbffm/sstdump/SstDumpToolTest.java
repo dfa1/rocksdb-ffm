@@ -4,6 +4,8 @@ import io.github.dfa1.rocksdbffm.NativeTool;
 import io.github.dfa1.rocksdbffm.Options;
 import io.github.dfa1.rocksdbffm.SstFileWriter;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
@@ -84,6 +86,9 @@ class SstDumpToolTest {
 	}
 
 	@Test
+	@DisabledOnOs(value = OS.WINDOWS, disabledReason = "upstream sst_dump parses --read_num with sscanf(\"%lu\") into a "
+			+ "64-bit variable it never initializes, so the cap is random on Windows; "
+			+ "re-enable once https://github.com/meta/rocksdb/issues/15574 is fixed and the submodule has it")
 	void request_withReadNum_capsTheNumberOfEntriesScanned(@TempDir Path dir) {
 		// Given
 		Path sstPath = writeSstFile(dir);
