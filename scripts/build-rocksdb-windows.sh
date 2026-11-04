@@ -297,7 +297,7 @@ EOF
             # output ever appeared even though ZSTD_TARBALL still ended up
             # with the right value (grep matched the printed-but-not-run
             # tar line's text). Sidestep entirely: hardcode the filename --
-            # the rocksdb submodule is pinned (v11.12), so this is stable
+            # the rocksdb submodule is pinned (v11.13.2), so this is stable
             # until that pin is deliberately bumped.
             ZSTD_TARBALL="zstd-1.5.7.tar.gz"
             make "$ZSTD_TARBALL"
