@@ -136,35 +136,39 @@ class JfrEventNotifierTest {
 		// Given — slowdown at two L0 files. A second listener, registered after the JFR one and so
 		// called after it on the same thread, reads the notifier's state as the DELAYED transition
 		// is delivered. Whether the stall is later committed depends on RocksDB delivering its
-		// transitions in order, which it doesn't guarantee, so that is covered by the recordStall tests
-		var notifier = JfrEventNotifier.create();
-		var delayed = new CountDownLatch(1);
+		// transitions in order, which it doesn't guarantee, so that is covered by the recordStall tests.
+		// For the same reason the compaction this triggers can clear the stall before DELAYED is
+		// delivered, so the scenario is retried on a fresh database a few times
 		var openStallsAtDelayed = new AtomicInteger(-1);
-		EventNotifier probe = new EventNotifier() {
-			@Override
-			public void onStallConditionsChanged(WriteStallInfo info) {
-				if (info.current() == WriteStallCondition.DELAYED) {
-					openStallsAtDelayed.set(notifier.openStalls());
-					delayed.countDown();
-				}
-			}
-		};
-		boolean delivered;
-		try (var recording = startRecording(WRITE_STALL);
-		     var opts = Options.newOptions().setCreateIfMissing(true)
-				     .setLevel0FileNumCompactionTrigger(2)
-				     .setLevel0SlowdownWritesTrigger(2)
-				     .setLevel0StopWritesTrigger(999_999)
-				     .addEventListener(notifier)
-				     .addEventListener(probe);
-		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"))) {
-			db.put("k".getBytes(), "v1".getBytes());
-			flush(db);
-			db.put("k".getBytes(), "v2".getBytes());
+		boolean delivered = false;
 
-			// When
-			flush(db);
-			delivered = delayed.await(5, TimeUnit.SECONDS);
+		// When
+		for (int attempt = 0; attempt < 5 && openStallsAtDelayed.get() != 1; attempt++) {
+			var notifier = JfrEventNotifier.create();
+			var delayed = new CountDownLatch(1);
+			EventNotifier probe = new EventNotifier() {
+				@Override
+				public void onStallConditionsChanged(WriteStallInfo info) {
+					if (info.current() == WriteStallCondition.DELAYED) {
+						openStallsAtDelayed.set(notifier.openStalls());
+						delayed.countDown();
+					}
+				}
+			};
+			try (var recording = startRecording(WRITE_STALL);
+			     var opts = Options.newOptions().setCreateIfMissing(true)
+					     .setLevel0FileNumCompactionTrigger(2)
+					     .setLevel0SlowdownWritesTrigger(2)
+					     .setLevel0StopWritesTrigger(999_999)
+					     .addEventListener(notifier)
+					     .addEventListener(probe);
+			     var db = RocksDB.openReadWrite(opts, dir.resolve("db" + attempt))) {
+				db.put("k".getBytes(), "v1".getBytes());
+				flush(db);
+				db.put("k".getBytes(), "v2".getBytes());
+				flush(db);
+				delivered = delayed.await(5, TimeUnit.SECONDS);
+			}
 		}
 
 		// Then
