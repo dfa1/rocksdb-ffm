@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16] — 2026-11-05
+
+RocksDB v11.13, `WriteBufferManager`, and RocksDB activity as JFR events.
+
 ### Added
 
 - `WriteBufferManager` and `Options.setEnforceWriteBufferManagerDuringRecovery`/`getEnforceWriteBufferManagerDuringRecovery` ([#217](https://github.com/dfa1/rocksdb-ffm/pull/217))
@@ -359,7 +363,8 @@ Initial release. An FFM-based RocksDB binding built from scratch against `rocksd
 - All tests migrated to the `// Given / // When / // Then` + AssertJ convention. ([c8cfae5](https://github.com/dfa1/rocksdb-ffm/commit/c8cfae5))
 - Error handling centralized on `RocksDB.errHolder`/`checkError`; per-class `ThreadLocal` error pointers removed in favor of a shared `Arena`-based pattern. ([736c926](https://github.com/dfa1/rocksdb-ffm/commit/736c926))
 
-[Unreleased]: https://github.com/dfa1/rocksdb-ffm/compare/v0.15...HEAD
+[Unreleased]: https://github.com/dfa1/rocksdb-ffm/compare/v0.16...HEAD
+[0.16]: https://github.com/dfa1/rocksdb-ffm/compare/v0.15...v0.16
 [0.15]: https://github.com/dfa1/rocksdb-ffm/compare/v0.14...v0.15
 [0.14]: https://github.com/dfa1/rocksdb-ffm/compare/v0.13...v0.14
 [0.13]: https://github.com/dfa1/rocksdb-ffm/compare/v0.12...v0.13
