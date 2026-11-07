@@ -213,7 +213,7 @@ try (var loaded = RocksDB.loadLatestOptions(dbPath, false);
 ```
 
 Only settings RocksDB can serialize come back: set comparators, merge operators, compaction filters, listeners and
-loggers again yourself. Pass `true` as the second argument to skip options this build does not know; RocksDB honors
+loggers again yourself, on `loaded.dbOptions()` or `loaded.columnFamilyOptions("name")`, before opening. Pass `true` as the second argument to skip options this build does not know; RocksDB honors
 that only when the `OPTIONS` file was written by a newer version.
 
 To tweak a few settings from a string, apply overrides on top of existing options:
