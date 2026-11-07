@@ -136,8 +136,6 @@ export CXX="zig c++ -target $ZIG_TARGET"
 # an archive the matching target linker understands, cross or not.
 export AR="zig ar"
 export PORTABLE=1
-# TODO: to have hermetic zig build, disable external libs for now
-export ROCKSDB_DISABLE_BZ2=1
 export TARGET_OS=$TARGET_OS
 cd "$ROCKSDB_DIR"
 
@@ -235,7 +233,21 @@ rm -rf "zlib-$ZLIB_VER" && tar xzf "zlib-$ZLIB_VER.tar.gz"
     rm -f ../libz.a && zig ar rcs ../libz.a ./*.o
 )
 
-COMPRESSION_INCLUDES="-I$ROCKSDB_DIR/${ZSTD_SRC_DIR}lib -I$ROCKSDB_DIR/${LZ4_SRC_DIR}lib -I$ROCKSDB_DIR/${SNAPPY_SRC_DIR} -I$ROCKSDB_DIR/${SNAPPY_SRC_DIR}build -I$ROCKSDB_DIR/zlib-$ZLIB_VER"
+# bzip2: compiled directly, same rationale as zlib above (its own Makefile
+# hardcodes CC=gcc, so the env CC is ignored). Library sources only. Do NOT
+# define BZ_NO_STDIO: that requires the embedder to supply bz_internal_error.
+BZIP2_VER="$(awk '/^BZIP2_VER /{print $3}' Makefile)"
+make "bzip2-$BZIP2_VER.tar.gz" BZIP2_DOWNLOAD_PREFIX="https://sourceware.org/pub/bzip2/bzip2-"
+rm -rf "bzip2-$BZIP2_VER" && tar xzf "bzip2-$BZIP2_VER.tar.gz"
+(
+    cd "bzip2-$BZIP2_VER"
+    for src in blocksort huffman crctable randtable compress decompress bzlib; do
+        $CC -O2 -fPIC -D_FILE_OFFSET_BITS=64 -c "$src.c" -o "$src.o"
+    done
+    rm -f ../libbz2.a && zig ar rcs ../libbz2.a ./*.o
+)
+
+COMPRESSION_INCLUDES="-I$ROCKSDB_DIR/${ZSTD_SRC_DIR}lib -I$ROCKSDB_DIR/${LZ4_SRC_DIR}lib -I$ROCKSDB_DIR/${SNAPPY_SRC_DIR} -I$ROCKSDB_DIR/${SNAPPY_SRC_DIR}build -I$ROCKSDB_DIR/zlib-$ZLIB_VER -I$ROCKSDB_DIR/bzip2-$BZIP2_VER"
 
 export CC="zig cc -target $ZIG_TARGET $COMPRESSION_INCLUDES -L$ROCKSDB_DIR"
 export CXX="zig c++ -target $ZIG_TARGET $COMPRESSION_INCLUDES -L$ROCKSDB_DIR"
