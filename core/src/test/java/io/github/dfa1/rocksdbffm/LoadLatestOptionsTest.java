@@ -140,4 +140,34 @@ class LoadLatestOptionsTest {
 			copy.close();
 		}
 	}
+
+	@Test
+	void columnFamilyOptions_returnsThatFamilysOptions() {
+		// Given
+		createDb(MemorySize.ofMB(16), MemorySize.ofMB(8));
+
+		// When
+		try (var loaded = RocksDB.loadLatestOptions(dir, false)) {
+			var cf1Buffer = loaded.columnFamilyOptions("cf1").getWriteBufferSize();
+			var defaultBuffer = loaded.columnFamilyOptions("default".getBytes(StandardCharsets.UTF_8)).getWriteBufferSize();
+
+			// Then
+			assertThat(cf1Buffer).isEqualTo(MemorySize.ofMB(8));
+			assertThat(defaultBuffer).isEqualTo(MemorySize.ofMB(16));
+		}
+	}
+
+	@Test
+	void columnFamilyOptions_unknownName_throws() {
+		// Given
+		createDb(MemorySize.ofMB(16), MemorySize.ofMB(8));
+
+		// When
+		try (var loaded = RocksDB.loadLatestOptions(dir, false)) {
+			var thrown = assertThatThrownBy(() -> loaded.columnFamilyOptions("nope"));
+
+			// Then
+			thrown.isInstanceOf(java.util.NoSuchElementException.class).hasMessageContaining("nope");
+		}
+	}
 }
