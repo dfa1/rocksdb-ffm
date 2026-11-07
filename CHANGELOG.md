@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `RocksDB.loadLatestOptions`/`LoadedOptions`: reopen a database with the options from its latest `OPTIONS-*` file
+- `Options.withOverrides(String)` (options from a `key=value;...` string) and `Options.copy()` ([#202](https://github.com/dfa1/rocksdb-ffm/issues/202))
+
 ## [0.16] — 2026-11-05
 
 RocksDB v11.13, `WriteBufferManager`, and RocksDB activity as JFR events.

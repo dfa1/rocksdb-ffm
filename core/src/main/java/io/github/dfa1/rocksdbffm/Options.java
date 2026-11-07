@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
@@ -23,6 +24,10 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_CREATE;
 	/// `void rocksdb_options_destroy(rocksdb_options_t*);`
 	private static final MethodHandle MH_DESTROY;
+	/// `rocksdb_options_t* rocksdb_options_create_copy(rocksdb_options_t*);`
+	private static final MethodHandle MH_CREATE_COPY;
+	/// `void rocksdb_get_options_from_string(const rocksdb_options_t* base_options, const char* opts_str, rocksdb_options_t* new_options, char** errptr);`
+	private static final MethodHandle MH_GET_OPTIONS_FROM_STRING;
 	/// `void rocksdb_options_set_create_if_missing(rocksdb_options_t*, unsigned char);`
 	private static final MethodHandle MH_SET_CREATE_IF_MISSING;
 	/// `unsigned char rocksdb_options_get_create_if_missing(rocksdb_options_t*);`
@@ -253,6 +258,12 @@ public final class Options extends NativeObject {
 
 		MH_DESTROY = NativeLibrary.lookup("rocksdb_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+
+		MH_CREATE_COPY = NativeLibrary.lookup("rocksdb_options_create_copy",
+				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_GET_OPTIONS_FROM_STRING = NativeLibrary.lookup("rocksdb_get_options_from_string",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_SET_CREATE_IF_MISSING = NativeLibrary.lookup("rocksdb_options_set_create_if_missing",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
@@ -625,6 +636,52 @@ public final class Options extends NativeObject {
 			return new Options((MemorySegment) MH_CREATE.invokeExact());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("options create failed", t);
+		}
+	}
+
+	/// Copies a native `rocksdb_options_t*` this class does not own into a new, independently
+	/// owned [Options].
+	///
+	/// @param nativeOptions the options to copy; left untouched
+	/// @return a new instance; caller must close it
+	static Options copyOf(MemorySegment nativeOptions) {
+		try {
+			return new Options((MemorySegment) MH_CREATE_COPY.invokeExact(nativeOptions));
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("options copy failed", t);
+		}
+	}
+
+	/// Returns an independent copy of these options.
+	///
+	/// Settings held by shared native objects (caches, filter policies, ...) stay shared with
+	/// the original, so closing either [Options] does not affect the other.
+	///
+	/// @return a new instance; caller must close it
+	public Options copy() {
+		return copyOf(ptr());
+	}
+
+	/// Returns a new [Options] equal to these with the settings in `optionsString` applied on top.
+	///
+	/// The string uses RocksDB's `key=value;key=value` syntax, e.g.
+	/// `"write_buffer_size=64M;max_background_jobs=4"`; nested options use braces. Only settings
+	/// RocksDB can serialize to a string are available: comparators, merge operators, compaction
+	/// filters, listeners and loggers cannot be set this way. These options are left unchanged.
+	///
+	/// @param optionsString the overrides, in RocksDB's option-string syntax
+	/// @return a new instance; caller must close it
+	/// @throws RocksDBException if the string is malformed or names an unknown option
+	public Options withOverrides(String optionsString) {
+		Options result = Options.newOptions();
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MH_GET_OPTIONS_FROM_STRING.invokeExact(ptr(), arena.allocateFrom(optionsString), result.ptr(), err);
+			NativeCalls.checkError(err);
+			return result;
+		} catch (Throwable t) {
+			result.close();
+			throw NativeCalls.wrapInvokeFailure("withOverrides failed", t);
 		}
 	}
 

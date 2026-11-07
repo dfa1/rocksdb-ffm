@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /// Entry point for opening RocksDB databases.
 ///
@@ -64,6 +65,10 @@ public final class RocksDB {
 	private static final MethodHandle MH_LIST_CF;
 	/// `void rocksdb_list_column_families_destroy(char** list, size_t len);`
 	private static final MethodHandle MH_LIST_CF_DESTROY;
+	/// `void rocksdb_load_latest_options(const char* db_path, rocksdb_env_t* env, bool ignore_unknown_options, rocksdb_cache_t* cache, rocksdb_options_t** db_options, size_t* num_column_families, char*** column_family_names, rocksdb_options_t*** column_family_options, char** errptr);`
+	private static final MethodHandle MH_LOAD_LATEST_OPTIONS;
+	/// `void rocksdb_load_latest_options_destroy(rocksdb_options_t* db_options, char** list_column_family_names, rocksdb_options_t** list_column_family_options, size_t len);`
+	private static final MethodHandle MH_LOAD_LATEST_OPTIONS_DESTROY;
 	/// `rocksdb_t* rocksdb_open_for_read_only_column_families(const rocksdb_options_t* options, const char* name, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, unsigned char error_if_wal_file_exists, char** errptr);`
 	private static final MethodHandle MH_OPEN_FOR_READ_ONLY_CF;
 	/// `rocksdb_t* rocksdb_open_as_secondary_column_families(const rocksdb_options_t* options, const char* name, const char* secondary_path, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, char** errptr);`
@@ -123,6 +128,16 @@ public final class RocksDB {
 
 		MH_LIST_CF_DESTROY = NativeLibrary.lookup("rocksdb_list_column_families_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_LOAD_LATEST_OPTIONS = NativeLibrary.lookup("rocksdb_load_latest_options",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_BOOLEAN,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_LOAD_LATEST_OPTIONS_DESTROY = NativeLibrary.lookup("rocksdb_load_latest_options_destroy",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
 		MH_OPEN_FOR_READ_ONLY_CF = NativeLibrary.lookup("rocksdb_open_for_read_only_column_families",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -673,6 +688,79 @@ public final class RocksDB {
 			return result;
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("listColumnFamilies failed", t);
+		}
+	}
+
+	/// Loads the options the database at `path` was last opened with, from its latest
+	/// `OPTIONS-*` file, using the default [Env] and a default 32 MiB block cache.
+	///
+	/// See [LoadedOptions] for what is and is not restored.
+	///
+	/// @param path                 path to the database directory
+	/// @param ignoreUnknownOptions if `true`, options this RocksDB version does not know (e.g.
+	///                             written by a newer one) are skipped instead of failing the load
+	/// @return the loaded options; caller must close it
+	/// @throws RocksDBException if there is no readable `OPTIONS` file or it fails to parse
+	public static LoadedOptions loadLatestOptions(Path path, boolean ignoreUnknownOptions) {
+		try (Env env = Env.defaultEnv(); Cache cache = LRUCache.newLRUCache(MemorySize.ofMB(32))) {
+			return loadLatestOptions(path, ignoreUnknownOptions, env, cache);
+		}
+	}
+
+	/// Loads the options the database at `path` was last opened with, from its latest
+	/// `OPTIONS-*` file.
+	///
+	/// `cache` becomes the block cache of every block-based table factory in the loaded options,
+	/// so the loaded options keep it alive after the caller closes its own [Cache] wrapper. See
+	/// [LoadedOptions] for what is and is not restored.
+	///
+	/// @param path                 path to the database directory
+	/// @param ignoreUnknownOptions if `true`, options this RocksDB version does not know (e.g.
+	///                             written by a newer one) are skipped instead of failing the load
+	/// @param env                  environment used to read the `OPTIONS` file
+	/// @param cache                block cache shared into the loaded table options
+	/// @return the loaded options; caller must close it
+	/// @throws RocksDBException if there is no readable `OPTIONS` file or it fails to parse
+	public static LoadedOptions loadLatestOptions(Path path, boolean ignoreUnknownOptions, Env env, Cache cache) {
+		Objects.requireNonNull(env, "env");
+		Objects.requireNonNull(cache, "cache");
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MemorySegment dbOptionsOut = arena.allocate(ValueLayout.ADDRESS);
+			MemorySegment countOut = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment namesOut = arena.allocate(ValueLayout.ADDRESS);
+			MemorySegment optionsOut = arena.allocate(ValueLayout.ADDRESS);
+
+			MH_LOAD_LATEST_OPTIONS.invokeExact(arena.allocateFrom(path.toString()), env.ptr(),
+					ignoreUnknownOptions, cache.ptr(), dbOptionsOut, countOut, namesOut, optionsOut, err);
+			NativeCalls.checkError(err);
+
+			MemorySegment nativeDbOptions = dbOptionsOut.get(ValueLayout.ADDRESS, 0);
+			long count = countOut.get(ValueLayout.JAVA_LONG, 0);
+			MemorySegment names = namesOut.get(ValueLayout.ADDRESS, 0);
+			MemorySegment options = optionsOut.get(ValueLayout.ADDRESS, 0);
+			try {
+				MemorySegment namesArr = names.reinterpret(ValueLayout.ADDRESS.byteSize() * count);
+				MemorySegment optionsArr = options.reinterpret(ValueLayout.ADDRESS.byteSize() * count);
+				List<ColumnFamilyDescriptor> descriptors = new ArrayList<>((int) count);
+				Options dbOptions = Options.copyOf(nativeDbOptions);
+				try {
+					for (int i = 0; i < count; i++) {
+						String name = NativeCalls.toBorrowedJavaString(namesArr.getAtIndex(ValueLayout.ADDRESS, i));
+						descriptors.add(ColumnFamilyDescriptor.of(name.getBytes(StandardCharsets.UTF_8),
+								Options.copyOf(optionsArr.getAtIndex(ValueLayout.ADDRESS, i))));
+					}
+				} catch (Throwable t) {
+					dbOptions.close();
+					descriptors.forEach(d -> d.options().close());
+					throw t;
+				}
+				return new LoadedOptions(dbOptions, descriptors);
+			} finally {
+				MH_LOAD_LATEST_OPTIONS_DESTROY.invokeExact(nativeDbOptions, names, options, count);
+			}
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("loadLatestOptions failed", t);
 		}
 	}
 
