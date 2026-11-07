@@ -199,7 +199,7 @@ fi
 # behavior) if it is not on PATH -- e.g. a native Windows host without Git
 # Bash's bundled make.
 # ---------------------------------------------------------------------------
-ZSTD_LZ4_CMAKE_ARGS=(-DWITH_ZSTD=OFF -DWITH_LZ4=OFF -DWITH_SNAPPY=OFF -DWITH_ZLIB=OFF)
+ZSTD_LZ4_CMAKE_ARGS=(-DWITH_ZSTD=OFF -DWITH_LZ4=OFF -DWITH_SNAPPY=OFF -DWITH_ZLIB=OFF -DWITH_BZ2=OFF)
 if command -v make >/dev/null 2>&1; then
     if [ "$IS_WINDOWS_HOST" = true ]; then
         ZSTD_LZ4_MAKE_CC="$ZIG_EXE cc -target $ZIG_TARGET"
@@ -374,11 +374,21 @@ EOF
             zig cc -target "$ZIG_TARGET" -O3 -c "$src.c" -o "$src.o"
         done
         rm -f ../libz.a && zig ar rcs ../libz.a ./*.o
+        cd ..
+        BZIP2_VER="$(awk '/^BZIP2_VER /{print $3}' Makefile)"
+        make "bzip2-$BZIP2_VER.tar.gz" BZIP2_DOWNLOAD_PREFIX="https://sourceware.org/pub/bzip2/bzip2-"
+        rm -rf "bzip2-$BZIP2_VER" && tar xzf "bzip2-$BZIP2_VER.tar.gz"
+        cd "bzip2-$BZIP2_VER"
+        for src in blocksort huffman crctable randtable compress decompress bzlib; do
+            zig cc -target "$ZIG_TARGET" -O2 -c "$src.c" -o "$src.o"
+        done
+        rm -f ../libbz2.a && zig ar rcs ../libbz2.a ./*.o
     )
     ZSTD_SRC_DIR="$(ls -d "$ROCKSDB_DIR"/zstd-*/ | head -1)"
     LZ4_SRC_DIR="$(ls -d "$ROCKSDB_DIR"/lz4-*/ | head -1)"
     SNAPPY_BUILD_DIR="$(ls -d "$ROCKSDB_DIR"/snappy-*/ | head -1)build"
     ZLIB_SRC_DIR="$(ls -d "$ROCKSDB_DIR"/zlib-*/ | head -1)"
+    BZIP2_SRC_DIR="$(ls -d "$ROCKSDB_DIR"/bzip2-*/ | head -1)"
     # RocksDB tries find_package(Snappy CONFIG) before its FindSnappy module,
     # and config mode would happily pick up a host-installed SnappyConfig.cmake
     # (e.g. Homebrew's) built for the wrong target. Hand it a config for our
@@ -392,6 +402,7 @@ set_target_properties(Snappy::snappy PROPERTIES
 EOF
 
     ZSTD_LZ4_CMAKE_ARGS=(
+        -DWITH_BZ2=ON -DBZIP2_INCLUDE_DIR="$BZIP2_SRC_DIR" -DBZIP2_LIBRARY_RELEASE="$ROCKSDB_DIR/libbz2.a"
         -DWITH_ZSTD=ON -DWITH_LZ4=ON
         -DZSTD_INCLUDE_DIRS="${ZSTD_SRC_DIR}lib"
         -DZSTD_LIBRARIES="$ROCKSDB_DIR/libzstd.a"
