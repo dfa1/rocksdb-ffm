@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import javax.annotation.CheckReturnValue;
 import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -64,6 +65,7 @@ public interface RocksDBReadOperations {
 	/// @param value direct [ByteBuffer] to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+    @CheckReturnValue
 	default CopyResult get(ByteBuffer key, ByteBuffer value) {
 		return RocksDBReadOperationsBindings.getIntoBuffer(this, NativeCalls.DEFAULT_READ_OPTIONS,
 				MemorySegment.ofBuffer(key), value);
@@ -76,6 +78,7 @@ public interface RocksDBReadOperations {
 	/// @param value       direct [ByteBuffer] to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	default CopyResult get(ReadOptions readOptions, ByteBuffer key, ByteBuffer value) {
 		return RocksDBReadOperationsBindings.getIntoBuffer(this, readOptions,
 				MemorySegment.ofBuffer(key), value);
@@ -88,6 +91,7 @@ public interface RocksDBReadOperations {
 	/// @param value native segment to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	default CopyResult get(MemorySegment key, MemorySegment value) {
 		return RocksDBReadOperationsBindings.getIntoSegment(this, NativeCalls.DEFAULT_READ_OPTIONS, key, value);
 	}
@@ -99,6 +103,7 @@ public interface RocksDBReadOperations {
 	/// @param value       native segment to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	default CopyResult get(ReadOptions readOptions, MemorySegment key, MemorySegment value) {
 		return RocksDBReadOperationsBindings.getIntoSegment(this, readOptions, key, value);
 	}
@@ -163,6 +168,7 @@ public interface RocksDBReadOperations {
 	/// @param value direct [ByteBuffer] to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	default CopyResult get(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
 		return RocksDBReadOperationsBindings.getCfIntoBuffer(this, NativeCalls.DEFAULT_READ_OPTIONS, cf,
 				MemorySegment.ofBuffer(key), value);
@@ -176,6 +182,7 @@ public interface RocksDBReadOperations {
 	/// @param value       direct [ByteBuffer] to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	default CopyResult get(ColumnFamilyHandle cf, ReadOptions readOptions, ByteBuffer key, ByteBuffer value) {
 		return RocksDBReadOperationsBindings.getCfIntoBuffer(this, readOptions, cf,
 				MemorySegment.ofBuffer(key), value);
@@ -189,6 +196,7 @@ public interface RocksDBReadOperations {
 	/// @param value native segment to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	default CopyResult get(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
 		return RocksDBReadOperationsBindings.getCfIntoSegment(this, NativeCalls.DEFAULT_READ_OPTIONS, cf, key, value);
 	}
@@ -201,6 +209,7 @@ public interface RocksDBReadOperations {
 	/// @param value       native segment to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	default CopyResult get(ColumnFamilyHandle cf, ReadOptions readOptions, MemorySegment key, MemorySegment value) {
 		return RocksDBReadOperationsBindings.getCfIntoSegment(this, readOptions, cf, key, value);
 	}
@@ -240,6 +249,7 @@ public interface RocksDBReadOperations {
 	///
 	/// @param key the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
+	@CheckReturnValue
 	default boolean keyMayExist(byte[] key) {
 		return RocksDBReadOperationsBindings.keyMayExistBytes(this, NativeCalls.DEFAULT_READ_OPTIONS, key);
 	}
@@ -249,6 +259,7 @@ public interface RocksDBReadOperations {
 	/// @param readOptions read options (e.g. snapshot)
 	/// @param key         the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
+	@CheckReturnValue
 	default boolean keyMayExist(ReadOptions readOptions, byte[] key) {
 		return RocksDBReadOperationsBindings.keyMayExistBytes(this, readOptions, key);
 	}
@@ -257,6 +268,7 @@ public interface RocksDBReadOperations {
 	///
 	/// @param key direct [ByteBuffer] containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
+	@CheckReturnValue
 	default boolean keyMayExist(ByteBuffer key) {
 		return RocksDBReadOperationsBindings.keyMayExistSegment(this, NativeCalls.DEFAULT_READ_OPTIONS, MemorySegment.ofBuffer(key));
 	}
@@ -265,6 +277,7 @@ public interface RocksDBReadOperations {
 	///
 	/// @param key native segment containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
+	@CheckReturnValue
 	default boolean keyMayExist(MemorySegment key) {
 		return RocksDBReadOperationsBindings.keyMayExistSegment(this, NativeCalls.DEFAULT_READ_OPTIONS, key);
 	}
@@ -274,6 +287,7 @@ public interface RocksDBReadOperations {
 	/// @param cf  target column family
 	/// @param key the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
+	@CheckReturnValue
 	default boolean keyMayExist(ColumnFamilyHandle cf, byte[] key) {
 		return RocksDBReadOperationsBindings.keyMayExistCfBytes(this, NativeCalls.DEFAULT_READ_OPTIONS, cf, key);
 	}
@@ -284,6 +298,7 @@ public interface RocksDBReadOperations {
 	/// @param readOptions read options (e.g. snapshot)
 	/// @param key         the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
+	@CheckReturnValue
 	default boolean keyMayExist(ColumnFamilyHandle cf, ReadOptions readOptions, byte[] key) {
 		return RocksDBReadOperationsBindings.keyMayExistCfBytes(this, readOptions, cf, key);
 	}
@@ -293,6 +308,7 @@ public interface RocksDBReadOperations {
 	/// @param cf  target column family
 	/// @param key direct [ByteBuffer] containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
+	@CheckReturnValue
 	default boolean keyMayExist(ColumnFamilyHandle cf, ByteBuffer key) {
 		return RocksDBReadOperationsBindings.keyMayExistCfSegment(this, NativeCalls.DEFAULT_READ_OPTIONS, cf,
 				MemorySegment.ofBuffer(key));
@@ -303,6 +319,7 @@ public interface RocksDBReadOperations {
 	/// @param cf  target column family
 	/// @param key native segment containing the key to probe
 	/// @return `false` if definitely absent, `true` if possibly present
+	@CheckReturnValue
 	default boolean keyMayExist(ColumnFamilyHandle cf, MemorySegment key) {
 		return RocksDBReadOperationsBindings.keyMayExistCfSegment(this, NativeCalls.DEFAULT_READ_OPTIONS, cf, key);
 	}

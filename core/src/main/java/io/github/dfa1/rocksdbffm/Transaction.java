@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import javax.annotation.CheckReturnValue;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
@@ -332,6 +333,7 @@ public final class Transaction extends NativeObject {
 	/// @param value       direct [ByteBuffer] to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	public CopyResult get(ReadOptions readOptions, ByteBuffer key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
@@ -357,6 +359,7 @@ public final class Transaction extends NativeObject {
 	/// @param value       native segment to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	public CopyResult get(ReadOptions readOptions, MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
@@ -442,6 +445,7 @@ public final class Transaction extends NativeObject {
 	/// @param exclusive   if `true`, acquires an exclusive (write) lock; otherwise a shared (read) lock
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	public CopyResult getForUpdate(ReadOptions readOptions, ByteBuffer key, ByteBuffer value, boolean exclusive) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
@@ -470,6 +474,7 @@ public final class Transaction extends NativeObject {
 	/// @param exclusive   if `true`, acquires an exclusive (write) lock; otherwise a shared (read) lock
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	public CopyResult getForUpdate(ReadOptions readOptions, MemorySegment key, MemorySegment value, boolean exclusive) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
@@ -666,6 +671,7 @@ public final class Transaction extends NativeObject {
 	/// @param value       direct [ByteBuffer] to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	public CopyResult get(ColumnFamilyHandle cf, ReadOptions readOptions, ByteBuffer key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
@@ -693,6 +699,7 @@ public final class Transaction extends NativeObject {
 	/// @param value       native segment to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	public CopyResult get(ColumnFamilyHandle cf, ReadOptions readOptions, MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
@@ -779,6 +786,7 @@ public final class Transaction extends NativeObject {
 	/// @param exclusive   if `true`, acquires an exclusive (write) lock; otherwise a shared (read) lock
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	public CopyResult getForUpdate(ColumnFamilyHandle cf, ReadOptions readOptions,
 	                                ByteBuffer key, ByteBuffer value, boolean exclusive) {
 		try (Arena arena = Arena.ofConfined()) {
@@ -810,6 +818,7 @@ public final class Transaction extends NativeObject {
 	/// @param exclusive   if `true`, acquires an exclusive (write) lock; otherwise a shared (read) lock
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	public CopyResult getForUpdate(ColumnFamilyHandle cf, ReadOptions readOptions,
 	                                MemorySegment key, MemorySegment value, boolean exclusive) {
 		try (Arena arena = Arena.ofConfined()) {

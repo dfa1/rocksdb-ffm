@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import javax.annotation.CheckReturnValue;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
@@ -415,6 +416,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param dst destination buffer to copy the key into
 	/// @return [CopyResult.Copied] if copied, or [CopyResult.NotEnoughCapacity] if `dst` is too small
+	@CheckReturnValue
 	public CopyResult key(ByteBuffer dst) {
 		MemorySegment raw = readKey();
 		long len = lenSegment.get(ValueLayout.JAVA_LONG, 0);
@@ -435,6 +437,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param dst destination buffer to copy the value into
 	/// @return [CopyResult.Copied] if copied, or [CopyResult.NotEnoughCapacity] if `dst` is too small
+	@CheckReturnValue
 	public CopyResult value(ByteBuffer dst) {
 		MemorySegment raw = readValue();
 		long len = lenSegment.get(ValueLayout.JAVA_LONG, 0);
