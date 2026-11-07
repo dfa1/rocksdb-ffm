@@ -99,7 +99,9 @@ public class JniBlogGetBenchmark {
 
 		byte[] expected = BlogGetBenchmark.padded("value", 0, valueSize);
 		check(java.util.Arrays.equals(get(), expected), "byte[]");
+		cursor = 0;
 		check(preallocatedGet() == valueSize && java.util.Arrays.equals(valueBytes, expected), "preallocated byte[]");
+		cursor = 0;
 		check(preallocatedByteBufferGet() == valueSize && valueByteBuffer.get(valueSize - 1) == '0', "DirectByteBuffer");
 		cursor = 0;
 	}
