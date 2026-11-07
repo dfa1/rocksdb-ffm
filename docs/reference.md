@@ -120,6 +120,23 @@ Other read/write methods on the read-write types:
 | `write(WriteBatch)` / `write(Arena, WriteBatch)`    | Atomic apply                                                 |
 | `put(Arena, ...)`                                   | Reuse a caller-supplied arena instead of an internal one     |
 
+### Ignored return values
+
+Read methods whose result must not be dropped are annotated with
+`javax.annotation.CheckReturnValue` (JSR-305, `com.google.code.findbugs:jsr305`): the
+`CopyResult`-returning `get` and `getForUpdate` overloads, `keyMayExist`, and
+`RocksIterator.key(ByteBuffer)` / `value(ByteBuffer)`. Fluent option setters are not
+annotated, since ignoring their return value is correct.
+
+```java
+db.get(key, valueBuffer);   // CopyResult discarded: a miss looks like a successful copy
+```
+
+The dependency has `provided` scope, so it is not added to the consumer's classpath and
+`rocksdbffm-core` still has no compile-scope dependencies. The annotation is kept in the
+class files, where tools that recognise it (for example Sonar rule `java:S2201`, or an IDE
+inspection) can read it. The library only marks the methods; whether a dropped result
+fails the build is up to the consumer's own tooling.
 ## Options
 
 `Options.newOptions()`; all setters return `this`. Only read during `open` — close it afterwards.

@@ -67,26 +67,6 @@ try (var db = RocksDB.openReadWrite(Path.of("/tmp/demo-db"))) {
 Run with `--enable-native-access=ALL-UNNAMED`. Step-by-step setup — including batches, iterators, and
 options — is in the [tutorial](docs/tutorial.md).
 
-## Ignored return values
-
-The read methods whose result must not be dropped are annotated with
-`javax.annotation.CheckReturnValue` from JSR-305 (`com.google.code.findbugs:jsr305`):
-the `CopyResult`-returning `get` overloads, `keyMayExist`, and
-`RocksIterator.key(ByteBuffer)` / `value(ByteBuffer)`.
-
-```java
-db.get(key, valueBuffer);   // CopyResult discarded: a miss looks like a successful copy
-```
-
-The dependency has `provided` scope, so it is **not** added to your classpath and
-`rocksdbffm-core` still has no compile-scope dependencies. The annotation is kept in
-the class files, where static analysis tools that recognise it (for example Sonar rule
-`java:S2201`, or an IDE inspection) can read it.
-
-This library only marks the methods. Whether a dropped result fails your build is up
-to your own tooling. Fluent option setters are intentionally not annotated, since
-ignoring their return value is correct.
-
 ## Documentation
 
 Docs follow the [Diátaxis](https://diataxis.fr/) framework.
