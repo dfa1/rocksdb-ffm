@@ -1,5 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
+import javax.annotation.CheckReturnValue;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
@@ -477,6 +478,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value direct [java.nio.ByteBuffer] to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	public CopyResult get(java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
@@ -502,6 +504,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value native segment to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	public CopyResult get(MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
@@ -908,6 +911,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value direct [java.nio.ByteBuffer] to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	public CopyResult get(ColumnFamilyHandle cf, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
@@ -934,6 +938,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param value native segment to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
+	@CheckReturnValue
 	public CopyResult get(ColumnFamilyHandle cf, MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
