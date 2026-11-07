@@ -79,6 +79,7 @@ Column families are not a separate method name — every factory that supports t
 | `openTransaction(Options, TransactionDBOptions, Path)`                         | yes               | `TransactionDB`           |
 | `openOptimistic(Options, Path)`                                                | yes               | `OptimisticTransactionDB` |
 | `listColumnFamilies(Options, Path)`                                            | —                 | `List<byte[]>`            |
+| `loadLatestOptions(Path, boolean ignoreUnknownOptions)` / `(…, Env, Cache)`    | —                 | `LoadedOptions`           |
 
 ## DB types
 
@@ -134,6 +135,7 @@ Other read/write methods on the read-write types:
 | `setEnv`                                    | `Env`                   |
 | `setRateLimiter`                            | `RateLimiter`           |
 | `setWriteBufferManager`                     | `WriteBufferManager`    |
+| `withOverrides(String)` / `copy()`          | `Options` (new instance; string uses `key=value;key=value` syntax) |
 | `setEnforceWriteBufferManagerDuringRecovery` / `getEnforceWriteBufferManagerDuringRecovery` | `boolean` (default `true`) |
 | `setSstFileManager`                         | `SstFileManager`        |
 | `setMetadataWriteTemperature` / `getMetadataWriteTemperature` | `Temperature` |
@@ -308,6 +310,7 @@ keys and read-heavy point lookups (no efficient range scans, no block compressio
 | `HyperClockCache`  | `newHyperClockCache(MemorySize, MemorySize charge[, int numShardBits])`| `MemorySize.ZERO` charge = auto-estimate; `-1` shard bits = auto |
 | `FilterPolicy`     | `newBloom(double bitsPerKey)`, `newRibbon(double)`, `newRibbonHybrid(double, int bloomBeforeLevel)` | Bloom `10` ≈ 1% false positives; Ribbon: ~30% smaller at similar query cost, more CPU/temp space to build; hybrid mixes Bloom for the top levels (cheap to rebuild on flush) with Ribbon below (`bloomBeforeLevel=1` is RocksDB's own standard example) |
 | `RateLimiter`      | `create`, `createAutoTuned`, `createWithMode` (`READS_ONLY`, `WRITES_ONLY`, `ALL_IO`) | Rate given as `MemorySize` per second |
+| `LoadedOptions` | `RocksDB.loadLatestOptions(Path, boolean)` / `(Path, boolean, Env, Cache)` | DB options plus one `ColumnFamilyDescriptor` per CF read from the latest `OPTIONS-*` file; owns and closes them all; object-valued settings (comparator, merge operator, filters, listeners, loggers) are not restored |
 | `WriteBufferManager` | `create(MemorySize, boolean)`, `createWithCache(MemorySize, Cache, boolean)` | Shared write-buffer memory budget across DBs/CFs; `MemorySize.ZERO` = no limit; `createWithCache` charges memtables to the cache (e.g. the block cache, for one shared budget); `setBufferSize` (must be > 0), `setAllowStall`, `isEnabled`, `bufferSize`, `memoryUsage`, `mutableMemtableMemoryUsage`, `dummyEntriesInCacheUsage`, `costToCache` |
 | `SstFileManager`   | `create(Env)`                                                          | `setMaxAllowedSpaceUsage`, `setCompactionBufferSize`, `setDeleteRateBytesPerSecond`, `setMaxTrashDbRatio`, `getTotalSize`, `getTotalTrashSize`, `isMaxAllowedSpaceReached` |
 | `Env`              | `defaultEnv()`, `memEnv()`                                             | `setBackgroundThreads`, `setHighPriorityBackgroundThreads` |

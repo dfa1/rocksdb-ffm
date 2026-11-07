@@ -198,6 +198,33 @@ try (var options = Options.newOptions()) {
 Every DB type has the same column-family overloads — see
 [reference.md#column-families](reference.md#column-families).
 
+## Reopen a database with the options it was created with
+
+Instead of repeating every setting in Java, read them back from the database's latest `OPTIONS-*` file and
+reopen with them:
+
+```java
+var handles = new ArrayList<ColumnFamilyHandle>();
+try (var loaded = RocksDB.loadLatestOptions(dbPath, false);
+     var db = RocksDB.openReadWrite(loaded.dbOptions(), dbPath, loaded.columnFamilies(), handles)) {
+	// ...
+	handles.forEach(ColumnFamilyHandle::close);
+}
+```
+
+Only settings RocksDB can serialize come back: set comparators, merge operators, compaction filters, listeners and
+loggers again yourself. Pass `true` as the second argument to skip options this build does not know; RocksDB honors
+that only when the `OPTIONS` file was written by a newer version.
+
+To tweak a few settings from a string, apply overrides on top of existing options:
+
+```java
+try (var base = Options.newOptions();
+     var tuned = base.withOverrides("write_buffer_size=67108864;max_background_jobs=4")) {
+	// base is unchanged
+}
+```
+
 ## Read a consistent point-in-time view
 
 A snapshot pins a sequence number; reads through it ignore everything written afterwards.
