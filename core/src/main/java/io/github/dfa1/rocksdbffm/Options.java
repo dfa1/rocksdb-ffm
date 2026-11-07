@@ -655,7 +655,9 @@ public final class Options extends NativeObject {
 	/// Returns an independent copy of these options.
 	///
 	/// Settings held by shared native objects (caches, filter policies, ...) stay shared with
-	/// the original, so closing either [Options] does not affect the other.
+	/// the original, so closing either [Options] does not affect the other. The exception is an
+	/// [Env] set with [#setEnv(Env)]: it is shared by raw pointer, not reference-counted, so it
+	/// must stay open for as long as the original or any copy is in use.
 	///
 	/// @return a new instance; caller must close it
 	public Options copy() {
