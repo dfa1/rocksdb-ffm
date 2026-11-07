@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `CompressionType.BZLIB2`: bzip2 is now built hermetically with `zig cc` for every classifier, so it works without a system package ([#117](https://github.com/dfa1/rocksdb-ffm/issues/117))
+
 ## [0.16] — 2026-11-05
 
 RocksDB v11.13, `WriteBufferManager`, and RocksDB activity as JFR events.
