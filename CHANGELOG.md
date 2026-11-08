@@ -7,11 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17] — 2026-11-08
+
+Reopen a database with its saved options, hermetic bzip2, and a refreshed benchmark suite on the M5 Max.
+
 ### Added
 
 - `RocksDB.loadLatestOptions`/`LoadedOptions`: reopen a database with the options from its latest `OPTIONS-*` file; `LoadedOptions.columnFamilyOptions(name)` reaches a family's options to re-set object-valued settings
 - `Options.withOverrides(String)` (options from a `key=value;...` string) and `Options.copy()` ([#202](https://github.com/dfa1/rocksdb-ffm/issues/202))
 - `CompressionType.BZLIB2`: bzip2 is now built hermetically with `zig cc` for every classifier, so it works without a system package ([#117](https://github.com/dfa1/rocksdb-ffm/issues/117))
+- `BlogGetBenchmark`/`JniBlogGetBenchmark`: our counterpart of the `get` scenario in RocksDB's 2023 Java JNI benchmarks blog post, with the JNI twin kept identical apart from the API under test
+
+### Changed
+
+- Read APIs are annotated with `@CheckReturnValue` (jsr305, `provided` scope), so an ignored `get` result is flagged by static analysis
+- `docs/benchmarks.md`: every table re-run on the M5 Max against RocksDB v11.13.2, plus a section on the blog's `get` scenario
+- `docs/c-api-gaps.md`: more Type B gaps (cross-CF iterators, `GetMergeOperands`, `MultiScan`, custom flush-block policy, memtable and compression factories, `LockWAL`, multi-CF ingestion, table-properties queries)
 
 ## [0.16] — 2026-11-05
 
