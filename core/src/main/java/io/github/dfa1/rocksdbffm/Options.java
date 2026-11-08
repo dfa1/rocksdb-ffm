@@ -5,6 +5,8 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.util.List;
+import java.util.Objects;
 
 /// FFM wrapper for `rocksdb_options_t`.
 ///
@@ -124,6 +126,14 @@ public final class Options extends NativeObject {
     private static final MethodHandle MH_SET_FILE_CHECKSUM_GEN_FACTORY = NativeLibrary.lookup("rocksdb_options_set_file_checksum_gen_factory", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
     /// `void rocksdb_options_set_file_checksum_gen_factory(rocksdb_options_t*, rocksdb_file_checksum_gen_factory_t*);`
 	private static final MethodHandle MH_SET_PREFIX_EXTRACTOR;
+	/// `rocksdb_dbpath_t* rocksdb_dbpath_create(const char* path, uint64_t target_size);`
+	private static final MethodHandle MH_DBPATH_CREATE;
+	/// `void rocksdb_dbpath_destroy(rocksdb_dbpath_t*);`
+	private static final MethodHandle MH_DBPATH_DESTROY;
+	/// `void rocksdb_options_set_db_paths(rocksdb_options_t*, const rocksdb_dbpath_t** path_values, size_t num_paths);`
+	private static final MethodHandle MH_SET_DB_PATHS;
+	/// `void rocksdb_options_set_cf_paths(rocksdb_options_t*, const rocksdb_dbpath_t** path_values, size_t num_paths);`
+	private static final MethodHandle MH_SET_CF_PATHS;
 	/// `void rocksdb_options_set_metadata_write_temperature(rocksdb_options_t* opt, int v);`
 	private static final MethodHandle MH_SET_METADATA_WRITE_TEMPERATURE;
 	/// `int rocksdb_options_get_metadata_write_temperature(rocksdb_options_t* opt);`
@@ -413,6 +423,18 @@ public final class Options extends NativeObject {
 
 		MH_SET_PREFIX_EXTRACTOR = NativeLibrary.lookup("rocksdb_options_set_prefix_extractor",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_DBPATH_CREATE = NativeLibrary.lookup("rocksdb_dbpath_create",
+				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_DBPATH_DESTROY = NativeLibrary.lookup("rocksdb_dbpath_destroy",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+
+		MH_SET_DB_PATHS = NativeLibrary.lookup("rocksdb_options_set_db_paths",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_SET_CF_PATHS = NativeLibrary.lookup("rocksdb_options_set_cf_paths",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
 		MH_SET_METADATA_WRITE_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_set_metadata_write_temperature",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
@@ -1398,6 +1420,80 @@ public final class Options extends NativeObject {
             throw NativeCalls.wrapInvokeFailure("setFileChecksumGenFactory failed", t);
         }
     }
+
+	/// Sets the directories SST files are spread over, for tiered storage across several mount points.
+	///
+	/// SST files go into the first path until its target size is reached, then spill to the next one.
+	/// The WAL and the MANIFEST stay in the main database directory. Column families that set
+	/// [#setCfPaths(List)] use those paths instead. An empty list restores the default (everything in
+	/// the database directory). RocksDB offers no getter for this setting.
+	///
+	/// @param dbPaths the paths, in the order they are filled
+	/// @return `this` for chaining
+	public Options setDbPaths(List<DbPath> dbPaths) {
+		Objects.requireNonNull(dbPaths, "dbPaths");
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment[] natives = new MemorySegment[dbPaths.size()];
+			try {
+				MemorySegment array = createDbPaths(arena, dbPaths, natives);
+				MH_SET_DB_PATHS.invokeExact(ptr(), array, (long) natives.length);
+				return this;
+			} finally {
+				destroyDbPaths(natives);
+			}
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("setDbPaths failed", t);
+		}
+	}
+
+	/// Sets the per-column-family equivalent of [#setDbPaths(List)]; when set, it takes precedence
+	/// over [#setDbPaths(List)] for this column family. An empty list restores the default. RocksDB
+	/// offers no getter for this setting.
+	///
+	/// @param cfPaths the paths, in the order they are filled
+	/// @return `this` for chaining
+	public Options setCfPaths(List<DbPath> cfPaths) {
+		Objects.requireNonNull(cfPaths, "cfPaths");
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment[] natives = new MemorySegment[cfPaths.size()];
+			try {
+				MemorySegment array = createDbPaths(arena, cfPaths, natives);
+				MH_SET_CF_PATHS.invokeExact(ptr(), array, (long) natives.length);
+				return this;
+			} finally {
+				destroyDbPaths(natives);
+			}
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("setCfPaths failed", t);
+		}
+	}
+
+	/// Creates one native `rocksdb_dbpath_t` per path, recording each in `natives` so the caller can
+	/// destroy them; RocksDB copies the paths by value inside the setter, so they only need to live
+	/// until it returns.
+	private static MemorySegment createDbPaths(Arena arena, List<DbPath> paths, MemorySegment[] natives) throws Throwable {
+		MemorySegment array = arena.allocate(ValueLayout.ADDRESS, Math.max(1, paths.size()));
+		for (int i = 0; i < natives.length; i++) {
+			DbPath dbPath = Objects.requireNonNull(paths.get(i), "dbPaths element");
+			natives[i] = (MemorySegment) MH_DBPATH_CREATE.invokeExact(
+					arena.allocateFrom(dbPath.path().toString()), dbPath.targetSize().toBytes());
+			array.setAtIndex(ValueLayout.ADDRESS, i, natives[i]);
+		}
+		return array;
+	}
+
+	private static void destroyDbPaths(MemorySegment[] natives) {
+		for (MemorySegment nativePath : natives) {
+			if (nativePath == null) {
+				continue;
+			}
+			try {
+				MH_DBPATH_DESTROY.invokeExact(nativePath);
+			} catch (Throwable t) {
+				throw NativeCalls.wrapInvokeFailure("rocksdb_dbpath_destroy failed", t);
+			}
+		}
+	}
 
 	/// Attaches a [SliceTransform] as the prefix extractor, enabling prefix-based Bloom filters
 	/// (attach one via [BlockBasedTableOptions#setFilterPolicy(FilterPolicy)]) and prefix

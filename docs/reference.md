@@ -152,6 +152,7 @@ fails the build is up to the consumer's own tooling.
 | `setEnv`                                    | `Env`                   |
 | `setRateLimiter`                            | `RateLimiter`           |
 | `setWriteBufferManager`                     | `WriteBufferManager`    |
+| `setDbPaths(List<DbPath>)` / `setCfPaths(List<DbPath>)` | `DbPath` (no getters in the C API) |
 | `withOverrides(String)` / `copy()`          | `Options` (new instance; string uses `key=value;key=value` syntax) |
 | `setEnforceWriteBufferManagerDuringRecovery` / `getEnforceWriteBufferManagerDuringRecovery` | `boolean` (default `true`) |
 | `setSstFileManager`                         | `SstFileManager`        |
@@ -489,6 +490,7 @@ return `null` to run that compaction with no filter at all.
 | `BackupId`        | Backup identity (native `uint32`). `of(long)`, `toLong()`; `Comparable`                      |
 | `Ratio`           | Fraction in `[0.0, 1.0]`. `of(double)`, `toDouble()`, `ZERO`, `ONE`; immutable, `Comparable` |
 | `CopyResult`      | Sealed: `Copied()`, `NotEnoughCapacity(long required)`, `NotFound()`                         |
+| `DbPath`          | SST directory plus the target size to fill before spilling to the next. `of(Path, MemorySize)`; used by `Options.setDbPaths`/`setCfPaths` |
 | `Range`           | Half-open key range `[startKey, endKey)`. `of(byte[], byte[])`; used by `getApproximateSizes` |
 | `RocksDBException`| Unchecked; thrown for a genuine RocksDB-reported error (see [explanation.md#errors-are-always-loud](explanation.md#errors-are-always-loud)) |
 | `NativeObject`    | Base class of every native wrapper; `ptr()`, `close()` (idempotent), abstract `tryClose`      |
@@ -557,6 +559,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Rate limiter               |   ✅    | Writes-only, reads-only, all-IO; auto-tuned variant                                         |
 | Env                        |   ✅    | `defaultEnv()`, `memEnv()`, background thread pools                                         |
 | SST file manager           |   ✅    | Disk-space limits, trash-deletion rate, compaction buffer                                   |
+| Multi-path storage         |   ✅    | `Options.setDbPaths`/`setCfPaths(List<DbPath>)` — tiered SST placement across mount points |
 | Write buffer manager       |   ✅    | Shared write-buffer memory budget across DBs/CFs via `Options.setWriteBufferManager`      |
 | Secondary DB               |   ✅    | `tryCatchUpWithPrimary`, get, iterator, snapshot, properties                                |
 | Blob DB                    |   ✅    | Blob options, blob properties, `PrepopulateBlobCache`                                       |
