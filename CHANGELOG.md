@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `DbPath` and `Options.setDbPaths`/`setCfPaths`: tiered SST storage across several mount points ([#222](https://github.com/dfa1/rocksdb-ffm/issues/222), PR link to be added once opened)
+- `DbPath` and `Options.setDbPaths`/`setCfPaths`: tiered SST storage across several mount points ([#253](https://github.com/dfa1/rocksdb-ffm/pull/253), closes [#222](https://github.com/dfa1/rocksdb-ffm/issues/222))
 
 ## [0.17] — 2026-11-08
 
