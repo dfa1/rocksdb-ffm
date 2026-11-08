@@ -203,8 +203,8 @@ type (`ReadWriteDB`, `TtlDB`, …) or its capability interface, not on `RocksDB`
   | `docs/c-api-gaps.md`   | Type A/B gap catalogue against `rocksdb/c.h`                            |
 
 - `README.md` links to `docs/` and must not duplicate their content: it holds badges, a minimal quickstart, the docs
-  index, a short contributing pointer, and releasing only
-- `CONTRIBUTING.md` holds the full build, test, and convention reference for contributors; keep it in sync with this file
+  index, and a one-line pointer to `CONTRIBUTING.md` only
+- `CONTRIBUTING.md` holds the full build, test, convention, and release reference for contributors; keep it in sync with this file
 - Java snippets in `docs/` must compile against `core` before being committed
 - `CHANGELOG.md` sections are published verbatim as the GitHub release notes (`publish.yml`). Every entry links the
   pull request that introduced it (`[#NNN](https://github.com/dfa1/rocksdb-ffm/pull/NNN)`, plus the issue when there

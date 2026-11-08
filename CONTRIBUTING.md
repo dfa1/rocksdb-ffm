@@ -80,6 +80,20 @@ published as the GitHub release notes. Link the pull request that introduces the
 find the context, and the issue it closes if any. Contributions from outside the maintainer end with
 `— thanks [@your-handle](https://github.com/your-handle)`; the release notes show a bare `@your-handle`, which notifies the contributor when the release is published.
 
+## Releasing
+
+Maintainers only. Finalize the version's section in [CHANGELOG.md](CHANGELOG.md) (it becomes the GitHub
+release notes), then:
+
+```bash
+./mvnw --batch-mode release:clean release:prepare \
+    -DreleaseVersion=<version> \
+    -DdevelopmentVersion=<next>-SNAPSHOT
+git push && git push --tags
+```
+
+GitHub Actions picks up the tag and deploys to Maven Central.
+
 ## Benchmarks
 
 Performance claims need JMH numbers:

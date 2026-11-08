@@ -83,19 +83,7 @@ Docs follow the [Diátaxis](https://diataxis.fr/) framework.
 
 ## Contributing
 
-**Requirements:** JDK 25+, [Zig](https://ziglang.org/) 0.17.x, [CMake](https://cmake.org/). Build and test with
-`./mvnw test` (cross-compiles RocksDB for your host platform).
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full build reference, conventions, and documentation rules.
-
-## Releasing
-
-```bash
-./mvnw --batch-mode release:clean release:prepare
-git push && git push --tags
-```
-
-GitHub Actions picks up the tag and deploys to Maven Central.
+Build setup, conventions, and the release process are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
