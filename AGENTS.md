@@ -203,7 +203,8 @@ type (`ReadWriteDB`, `TtlDB`, …) or its capability interface, not on `RocksDB`
   | `docs/c-api-gaps.md`   | Type A/B gap catalogue against `rocksdb/c.h`                            |
 
 - `README.md` links to `docs/` and must not duplicate their content: it holds badges, a minimal quickstart, the docs
-  index, contributing, and releasing only
+  index, a short contributing pointer, and releasing only
+- `CONTRIBUTING.md` holds the full build, test, and convention reference for contributors; keep it in sync with this file
 - Java snippets in `docs/` must compile against `core` before being committed
 
 ## Code

@@ -83,19 +83,10 @@ Docs follow the [Diátaxis](https://diataxis.fr/) framework.
 
 ## Contributing
 
-**Requirements:** JDK 25+, [Zig](https://ziglang.org/) 0.17.x, [CMake](https://cmake.org/), and — for
-the Windows native builds only — `make` or [Ninja](https://ninja-build.org/).
+**Requirements:** JDK 25+, [Zig](https://ziglang.org/) 0.17.x, [CMake](https://cmake.org/). Build and test with
+`./mvnw test` (cross-compiles RocksDB for your host platform).
 
-```bash
-git clone --recurse-submodules https://github.com/dfa1/rocksdb-ffm.git
-cd rocksdb-ffm
-./mvnw test
-```
-
-Cloned without `--recurse-submodules`? Run `git submodule update --init --recursive` first — a
-plain `./mvnw test` already cross-compiles RocksDB for your host platform, no extra profile flag
-needed. Full first-build walkthrough and troubleshooting:
-[docs/how-to.md#build-the-native-library-from-source](docs/how-to.md#build-the-native-library-from-source).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full build reference, conventions, and documentation rules.
 
 ## Releasing
 
