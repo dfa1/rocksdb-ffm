@@ -78,7 +78,7 @@ compile against `core`. The mapping is in [AGENTS.md](AGENTS.md#documentation).
 User-visible changes get a line under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md); the section is
 published as the GitHub release notes. Link the pull request that introduces the change, so readers can
 find the context, and the issue it closes if any. Contributions from outside the maintainer end with
-`— thanks @your-handle`, which notifies the contributor when the release is published.
+`— thanks [@your-handle](https://github.com/your-handle)`; the release notes show a bare `@your-handle`, which notifies the contributor when the release is published.
 
 ## Benchmarks
 

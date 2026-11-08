@@ -87,5 +87,8 @@ jobs:
             exit 0
           fi
           DATE=$(grep -m1 -E "^## \[$VERSION\] — " CHANGELOG.md | sed -E 's/^.* — //')
-          NOTES=$(awk "/^## \[$VERSION\]/{found=1; next} found && /^## \[/{exit} found{print}" CHANGELOG.md)
+          # CHANGELOG.md links contributors as [@handle](https://github.com/handle) so they are clickable in
+          # the file view; release notes use the bare @handle, which GitHub links and notifies on publish.
+          NOTES=$(awk "/^## \[$VERSION\]/{found=1; next} found && /^## \[/{exit} found{print}" CHANGELOG.md \
+            | sed -E 's#\[(@[A-Za-z0-9_-]+)\]\(https://github\.com/[A-Za-z0-9_-]+\)#\1#g')
           gh release create "$TAG" --title "$TAG — $DATE" --notes "$NOTES" --verify-tag
