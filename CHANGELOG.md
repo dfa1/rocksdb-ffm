@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `RocksDB.loadLatestOptions`/`LoadedOptions`: reopen a database with the options from its latest `OPTIONS-*` file; `LoadedOptions.columnFamilyOptions(name)` reaches a family's options to re-set object-valued settings
 - `Options.withOverrides(String)` (options from a `key=value;...` string) and `Options.copy()` ([#202](https://github.com/dfa1/rocksdb-ffm/issues/202))
+- `CompressionType.BZLIB2`: bzip2 is now built hermetically with `zig cc` for every classifier, so it works without a system package ([#117](https://github.com/dfa1/rocksdb-ffm/issues/117))
 
 ## [0.16] — 2026-11-05
 
