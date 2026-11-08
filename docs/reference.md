@@ -49,7 +49,7 @@ Depend on `rocksdbffm-core` plus one native artifact per platform you ship to; d
 normal and the loader picks the matching one at startup. Gradle:
 
 ```kotlin
-implementation(platform("io.github.dfa1:rocksdbffm-bom:0.14"))
+implementation(platform("io.github.dfa1:rocksdbffm-bom:0.17"))
 implementation("io.github.dfa1:rocksdbffm-core")
 runtimeOnly("io.github.dfa1:rocksdbffm-native-linux-x86_64")
 ```
@@ -58,7 +58,7 @@ runtimeOnly("io.github.dfa1:rocksdbffm-native-linux-x86_64")
 restricted-method warning.
 
 **SBOM:** a CycloneDX SBOM is published with every release. PURL:
-`pkg:maven/io.github.dfa1/rocksdbffm-core@0.14`, which SCA tools (Syft, Grype, Trivy, osv.dev,
+`pkg:maven/io.github.dfa1/rocksdbffm-core@0.17`, which SCA tools (Syft, Grype, Trivy, osv.dev,
 GitHub Advisory DB) use to identify the artifact.
 
 ## Entry points
@@ -247,7 +247,7 @@ Per-call options:
 | `CompactOptions`                 | `newCompactOptions()`                   | `setExclusiveManualCompaction`, `setBottommostLevelCompaction`, `setChangeLevel`, `setTargetLevel` |
 | `WaitForCompactOptions`          | `create()`                              | `setAbortOnPause`, `setFlush`, `setCloseDb`, `setTimeout(Duration)` |
 | `IngestExternalFileOptions`      | `newIngestExternalFileOptions()`        | `setMoveFiles`, `setSnapshotConsistency`, `setAllowGlobalSeqno`, `setAllowBlockingFlush`, `setIngestBehind`, `setFailIfNotBottommostLevel` |
-| `TransactionDBOptions`           | `newTransactionDBOptions()`             | `setMaxNumLocks(long)`, `setNumStripes(long)`               |
+| `TransactionDBOptions`           | `newTransactionDBOptions()`             | `setMaxNumLocks(long)`, `setMaxNumDeadlocks(int)`, `setNumStripes(long)`, `setTransactionLockTimeout(Duration)`, `setDefaultLockTimeout(Duration)`, `setWritePolicy(WritePolicy)`, `setRollbackMergeOperands`, `setUsePerKeyPointLockMgr`, `setSkipConcurrencyControl`, `setDefaultWriteBatchFlushThreshold(MemorySize)`, `setEnableUdtValidation`, `setTxnCommitBypassMemtableThreshold(int)` |
 | `TransactionOptions`             | `newTransactionOptions()`               | `setSetSnapshot`, `setDeadlockDetect`, `setLockTimeout(Duration)` |
 | `OptimisticTransactionOptions`   | `newOptimisticTransactionOptions()`     | `setSetSnapshot`                                            |
 | `RestoreOptions`                 | `create()`                              | `setKeepLogFiles(boolean)`                                  |
@@ -331,6 +331,7 @@ keys and read-heavy point lookups (no efficient range scans, no block compressio
 | `WriteBufferManager` | `create(MemorySize, boolean)`, `createWithCache(MemorySize, Cache, boolean)` | Shared write-buffer memory budget across DBs/CFs; `MemorySize.ZERO` = no limit; `createWithCache` charges memtables to the cache (e.g. the block cache, for one shared budget); `setBufferSize` (must be > 0), `setAllowStall`, `isEnabled`, `bufferSize`, `memoryUsage`, `mutableMemtableMemoryUsage`, `dummyEntriesInCacheUsage`, `costToCache` |
 | `SstFileManager`   | `create(Env)`                                                          | `setMaxAllowedSpaceUsage`, `setCompactionBufferSize`, `setDeleteRateBytesPerSecond`, `setMaxTrashDbRatio`, `getTotalSize`, `getTotalTrashSize`, `isMaxAllowedSpaceReached` |
 | `Env`              | `defaultEnv()`, `memEnv()`                                             | `setBackgroundThreads`, `setHighPriorityBackgroundThreads` |
+| `FileChecksumGenFactory` | `newCrc32cFactory()`                                              | CRC32C SST file checksums via `Options.setFileChecksumGenFactory`; shared ownership, so it and the `Options` close independently |
 | `Logger`           | `newStderrLogger(LogLevel, String prefix)`, `newCallbackLogger(LogLevel, LogCallback)` | Callback must not throw |
 
 ## WriteBatch
@@ -513,6 +514,7 @@ return `null` to run that compaction with no filter at all.
 | `FlushReason`                       | Why a flush ran: `MANUAL_FLUSH`, `WRITE_BUFFER_FULL`, `WAL_FULL`, `AUTO_COMPACTION`, `ERROR_RECOVERY`, … (16 constants) |
 | `CompactionReason`                  | Why a compaction ran: `MANUAL_COMPACTION`, `LEVEL_L0_FILES_NUM`, `TTL`, `BOTTOMMOST_FILES`, `PERIODIC_COMPACTION`, … (21 constants) |
 | `BackgroundErrorReason`             | `FLUSH`, `COMPACTION`, `WRITE_CALLBACK`, `MEMTABLE`, `MANIFEST_WRITE`, `FLUSH_NO_WAL`, `MANIFEST_WRITE_NO_WAL`, `ASYNC_FILE_OPEN` |
+| `WritePolicy`                       | `WRITE_COMMITTED` (default), `WRITE_PREPARED`, `WRITE_UNPREPARED` — when a `TransactionDB`'s writes reach the DB; set via `TransactionDBOptions.setWritePolicy` |
 | `WriteStallCondition`               | `NORMAL`, `DELAYED`, `STOPPED`                                                                 |
 | `Property`, `TickerType`, `HistogramType`, `PerfMetric` | Large enumerations; see the Javadoc for the full lists                     |
 
@@ -565,10 +567,10 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Background jobs            |   🚧    | `cancelAllBackgroundWork`, manual-compaction toggles, `waitForCompact`                       |
 | Compaction style            |   ✅    | `Options.CompactionStyle` (`LEVEL`/`UNIVERSAL`/`FIFO`); `FifoCompactionOptions`, `UniversalCompactionOptions` |
 | Command-line tools         |   ✅    | `rocksdbffm-tool-ldb`/`rocksdbffm-tool-sstdump` — `LdbTool`/`SstDumpTool` wrap the bundled `ldb`/`sst_dump` binaries (not in `c.h`, no C API equivalent) as subprocesses; also directly `java -jar`-able |
-| MultiGet                   |  🚧    | `ReadBatch` — the sole entry point for batched reads (all three tiers), built on `rocksdb_batched_multi_get_cf` — the modern, PinnableSlice-based, single-CF-per-call variant only; reusable and preallocated (create once for up to N keys, no per-call bookkeeping-array allocation on reuse); no separate one-shot `multiGet()` method exists — a single-batch read is just `try (var batch = ReadBatch.create(db, keys.size())) { return batch.get(keys, fn); }`; legacy `rocksdb_multi_get`/`_cf`/`_with_ts` (no batching perf benefit per upstream) and `TransactionDB`/`Transaction` multi-get are not wrapped |
+| MultiGet                   |  🚧    | `ReadBatch` (all three tiers; built on `rocksdb_batched_multi_get_cf`, single CF per call). Legacy `rocksdb_multi_get`/`_cf`/`_with_ts` and `TransactionDB`/`Transaction` multi-get are not wrapped — see [how-to.md](how-to.md#batch-multiple-reads-together), [c-api-gaps.md](c-api-gaps.md) |
 | Merge                      |   ✅    | `merge()` write op on all 7 write-capable types (byte[]/ByteBuffer/MemorySegment, CF variants), see [#8](https://github.com/dfa1/rocksdb-ffm/issues/8); requires a `MergeOperator` configured via `Options.setMergeOperator`, else calls fail with `RocksDBException` |
-| MergeOperator               |   ✅    | `MergeOperator.uint64Add()` (built-in `rocksdb_options_set_uint64add_merge_operator`) and `MergeOperator.custom(String, FullMergeFn)` (`rocksdb_mergeoperator_create()` — `full_merge` implemented in Java, `partial_merge` always declines; `fn` receives zero-copy `MemorySegment` views of key/existing-value/operands instead of copied `byte[]`s, see [#94](https://github.com/dfa1/rocksdb-ffm/issues/94)) |
-| Tracing & Replay           |   ✅    | `RocksDBTracingOperations.startTrace`/`endTrace` (`rocksdb_start_trace`/`rocksdb_end_trace`) capture every op to a file, tuned via `TraceOptions` (rollover size, sampling frequency, per-op-type `TraceFilter` exclusion, write-order preservation) — its own interface, implemented by the same broad set of types as `RocksDBMonitoringOperations` (including read-only and secondary handles, since tracing captures reads too); `Replayer` (`rocksdb_new_default_replayer`) + `ReplayOptions` reissue a captured trace against a target database (any CF set, concurrency, speed multiplier) — no callback plumbing needed, since RocksDB decodes the trace file internally. No parity gap with `rocksdbjni`: it has capture only (via a JNI-only `DB::StartTrace` path with a pluggable `TraceWriter` sink, file-only here) and no replayer at all. The same interface also exposes `startIoTrace`/`endIoTrace` (`rocksdb_start_io_trace`/`rocksdb_end_io_trace`, file I/O instead of DB ops, reusing `TraceOptions`) and `startBlockCacheTrace`/`endBlockCacheTrace` (`rocksdb_start_block_cache_trace`/`_with_options`/`rocksdb_end_block_cache_trace`, block cache hit/miss/type/caller) — the latter has a `TraceOptions` overload and a `BlockCacheTraceOptions` (sampling only) + `BlockCacheTraceWriterOptions` (rollover size) overload, matching the two C API entry points |
+| MergeOperator              |   ✅    | `MergeOperator.uint64Add()` and `MergeOperator.custom(String, FullMergeFn)` (`full_merge` in Java with zero-copy `MemorySegment` views; `partial_merge` always declines), see [#94](https://github.com/dfa1/rocksdb-ffm/issues/94) |
+| Tracing & Replay           |   ✅    | `RocksDBTracingOperations`: `startTrace`/`endTrace` (+ `TraceOptions`, `TraceFilter`), `startIoTrace`/`endIoTrace`, `startBlockCacheTrace`/`endBlockCacheTrace` (+ `BlockCacheTraceOptions`, `BlockCacheTraceWriterOptions`); `Replayer` + `ReplayOptions`. Available on read-only and secondary handles too. `rocksdbjni` has capture only, no replayer |
 | CompactionFilter           |   ✅    | `CompactionFilter.create(String, FilterFn)` (`rocksdb_compactionfilter_create`) + `Options.setCompactionFilter`; `CompactionFilterFactory.create(String, CreateFilterFn)` (`rocksdb_compactionfilterfactory_create`) + `Options.setCompactionFilterFactory` for a fresh, thread-confined filter per compaction |
 | Custom comparators         |   ❌    | `rocksdb_comparator_create()` exists in the C API                                           |
 | Advanced column family     |   ❌    | Per-CF compaction style, level multipliers                                                  |
