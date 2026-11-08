@@ -30,6 +30,7 @@ Every snippet omits imports; all types live in `io.github.dfa1.rocksdbffm`.
 - [Tune the block cache and bloom filters](#tune-the-block-cache-and-bloom-filters)
 - [Throttle background I/O](#throttle-background-io)
 - [Cap disk usage](#cap-disk-usage)
+- [Spread SST files across several disks](#spread-sst-files-across-several-disks)
 - [Inspect properties and statistics](#inspect-properties-and-statistics)
 - [Inspect a database with ldb and sst_dump](#inspect-a-database-with-ldb-and-sst_dump)
 - [Profile a single operation](#profile-a-single-operation)
@@ -745,6 +746,27 @@ try (var env = Env.defaultEnv();
 ```
 
 Throttling deletions keeps file removal from starving foreground I/O on slow disks.
+
+## Spread SST files across several disks
+
+Put hot data on a fast disk and let older data spill to a bigger, slower one. SST files fill the first
+path up to its target size, then move on to the next; the WAL and MANIFEST stay in the database
+directory.
+
+```java
+try (var options = Options.newOptions()
+		.setCreateIfMissing(true)
+		.setDbPaths(List.of(
+				DbPath.of(Path.of("/mnt/nvme/db"), MemorySize.ofGB(100)),
+				DbPath.of(Path.of("/mnt/hdd/db"), MemorySize.ofGB(2000))));
+     var db = RocksDB.openReadWrite(options, dbPath)) {
+	// ...
+}
+```
+
+`setCfPaths` is the per-column-family equivalent and takes precedence over `setDbPaths` when set.
+Create the directories beforehand; RocksDB offers no getter, so keep the list around if you need it
+again.
 
 ## Inspect properties and statistics
 
