@@ -206,6 +206,10 @@ type (`ReadWriteDB`, `TtlDB`, …) or its capability interface, not on `RocksDB`
   index, a short contributing pointer, and releasing only
 - `CONTRIBUTING.md` holds the full build, test, and convention reference for contributors; keep it in sync with this file
 - Java snippets in `docs/` must compile against `core` before being committed
+- `CHANGELOG.md` sections are published verbatim as the GitHub release notes (`publish.yml`). Every entry links the
+  pull request that introduced it (`[#NNN](https://github.com/dfa1/rocksdb-ffm/pull/NNN)`, plus the issue when there
+  is one), and an entry from an external contributor ends with `— thanks @handle`; an `@` mention in release notes
+  notifies that person when the release is published
 
 ## Code
 

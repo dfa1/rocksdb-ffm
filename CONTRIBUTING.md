@@ -73,6 +73,13 @@ Docs follow [Diátaxis](https://diataxis.fr/): put prose in the page matching it
 how-to, reference, explanation) and cross-link rather than repeat. Java snippets in `docs/` must
 compile against `core`. The mapping is in [AGENTS.md](AGENTS.md#documentation).
 
+## Changelog
+
+User-visible changes get a line under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md); the section is
+published as the GitHub release notes. Link the pull request that introduces the change, so readers can
+find the context, and the issue it closes if any. Contributions from outside the maintainer end with
+`— thanks @your-handle`, which notifies the contributor when the release is published.
+
 ## Benchmarks
 
 Performance claims need JMH numbers:

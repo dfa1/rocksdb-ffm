@@ -15,12 +15,12 @@ Reopen a database with its saved options, hermetic bzip2, and a refreshed benchm
 
 - `RocksDB.loadLatestOptions`/`LoadedOptions`: reopen a database with the options from its latest `OPTIONS-*` file; `LoadedOptions.columnFamilyOptions(name)` reaches a family's options to re-set object-valued settings
 - `Options.withOverrides(String)` (options from a `key=value;...` string) and `Options.copy()` ([#202](https://github.com/dfa1/rocksdb-ffm/issues/202))
-- `CompressionType.BZLIB2`: bzip2 is now built hermetically with `zig cc` for every classifier, so it works without a system package ([#117](https://github.com/dfa1/rocksdb-ffm/issues/117))
+- `CompressionType.BZLIB2`: bzip2 is now built hermetically with `zig cc` for every classifier, so it works without a system package ([#224](https://github.com/dfa1/rocksdb-ffm/pull/224), closes [#117](https://github.com/dfa1/rocksdb-ffm/issues/117)) — thanks @Mohammadjavadfakhri
 - `BlogGetBenchmark`/`JniBlogGetBenchmark`: our counterpart of the `get` scenario in RocksDB's 2023 Java JNI benchmarks blog post, with the JNI twin kept identical apart from the API under test
 
 ### Changed
 
-- Read APIs are annotated with `@CheckReturnValue` (jsr305, `provided` scope), so an ignored `get` result is flagged by static analysis
+- Read APIs are annotated with `@CheckReturnValue` (jsr305, `provided` scope), so an ignored `get` result is flagged by static analysis ([#223](https://github.com/dfa1/rocksdb-ffm/pull/223), docs in [#228](https://github.com/dfa1/rocksdb-ffm/pull/228)) — thanks @Mohammadjavadfakhri
 - `docs/benchmarks.md`: every table re-run on the M5 Max against RocksDB v11.13.2, plus a section on the blog's `get` scenario
 - `docs/c-api-gaps.md`: more Type B gaps (cross-CF iterators, `GetMergeOperands`, `MultiScan`, custom flush-block policy, memtable and compression factories, `LockWAL`, multi-CF ingestion, table-properties queries)
 
@@ -32,6 +32,7 @@ RocksDB v11.13, `WriteBufferManager`, and RocksDB activity as JFR events.
 
 - `WriteBufferManager` and `Options.setEnforceWriteBufferManagerDuringRecovery`/`getEnforceWriteBufferManagerDuringRecovery` ([#217](https://github.com/dfa1/rocksdb-ffm/pull/217))
 - `JfrEventNotifier`: RocksDB flushes, compactions and write stalls as JFR events ([#200](https://github.com/dfa1/rocksdb-ffm/issues/200))
+- `FileChecksumGenFactory` (CRC32C), `Options.setFileChecksumGenFactory`, and `verifyChecksum()`/`verifyFileChecksums()` with `ReadOptions` overloads ([#207](https://github.com/dfa1/rocksdb-ffm/pull/207), closes [#201](https://github.com/dfa1/rocksdb-ffm/issues/201)) — thanks @AryanGupta833
 
 ### Changed
 
@@ -52,7 +53,7 @@ Snappy and zlib compression, `RocksIterator.stream`, and a cleaner published BOM
 ### Added
 
 - `RocksIterator.stream(Mapper, Mapper)`: zero-copy `Stream<KeyValue<K, V>>` from the current
-  position; never closes the iterator, calls `checkError()` at end of range ([#181](https://github.com/dfa1/rocksdb-ffm/issues/181))
+  position; never closes the iterator, calls `checkError()` at end of range ([#186](https://github.com/dfa1/rocksdb-ffm/pull/186), closes [#181](https://github.com/dfa1/rocksdb-ffm/issues/181)) — thanks @arpitJ-dev
 - `CompressionType.SNAPPY`: Snappy is now built hermetically and linked into every native classifier ([#115](https://github.com/dfa1/rocksdb-ffm/issues/115))
 - `CompressionType.ZLIB`: zlib is now built hermetically and linked into every native classifier ([#116](https://github.com/dfa1/rocksdb-ffm/issues/116))
 
@@ -226,7 +227,7 @@ Hermetic ZSTD/LZ4 on all five platforms, host-only local native builds, ADRs, an
 ### Build & Tooling
 
 - `checkstyle` 13.9.0 → 13.10.0 ([0c40152](https://github.com/dfa1/rocksdb-ffm/commit/0c40152))
-- Zig bumped in CI ([21158b4](https://github.com/dfa1/rocksdb-ffm/commit/21158b4))
+- Zig bumped in CI ([21158b4](https://github.com/dfa1/rocksdb-ffm/commit/21158b4), [#82](https://github.com/dfa1/rocksdb-ffm/pull/82)) — thanks @vidya166
 - `WriteBatchSizeBenchmark`: `-Djmh.forks` override ([b214b86](https://github.com/dfa1/rocksdb-ffm/commit/b214b86))
 
 ## [0.7] — 2026-08-15
@@ -264,6 +265,7 @@ Last three-tier gaps closed, open-factory names normalized, scoped zero-copy `ge
 ### Fixed
 
 - `TransactionDB.createColumnFamily()` uses the `txn_db` handle ([626428b](https://github.com/dfa1/rocksdb-ffm/commit/626428b))
+- `Transaction.get` uses `rocksdb_transaction_get` instead of a `PinnableSlice` ([#50](https://github.com/dfa1/rocksdb-ffm/pull/50), closes [#49](https://github.com/dfa1/rocksdb-ffm/issues/49)) — thanks @vjymisal0
 - `getBytes()` uses `rocksdb_get_into_buffer` ([#54](https://github.com/dfa1/rocksdb-ffm/pull/54))
 - README CI badge ([#51](https://github.com/dfa1/rocksdb-ffm/pull/51))
 - Read benchmarks use a realistic dataset ([38b32e6](https://github.com/dfa1/rocksdb-ffm/commit/38b32e6))
