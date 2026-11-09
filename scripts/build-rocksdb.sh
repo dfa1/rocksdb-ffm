@@ -222,8 +222,16 @@ SNAPPY_SRC_DIR="$(ls -d snappy-*/ | head -1)"
 # Makefile's zlib.net URL 404s once a release is superseded, and zlib.net
 # serves CI runners an HTML page instead of the tarball, so fetch the
 # identical release asset from GitHub (checksum still verified by the Makefile).
+# GitHub release downloads 504 now and then, so fall back to zlib.net/fossils
+# (an HTML page from it fails the checksum). A failed attempt leaves its file
+# behind (no .DELETE_ON_ERROR), which make would then treat as up to date.
 ZLIB_VER="$(awk '/^ZLIB_VER /{print $3}' Makefile)"
-make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_PREFIX="https://github.com/madler/zlib/releases/download/v$ZLIB_VER/zlib-"
+ZLIB_OK=
+for prefix in "https://github.com/madler/zlib/releases/download/v$ZLIB_VER/zlib-" "https://zlib.net/fossils/zlib-"; do
+    rm -f "zlib-$ZLIB_VER.tar.gz"
+    if make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_PREFIX="$prefix"; then ZLIB_OK=1; break; fi
+done
+[ -n "$ZLIB_OK" ] || { echo "[build-rocksdb] zlib-$ZLIB_VER.tar.gz: every mirror failed" >&2; exit 1; }
 rm -rf "zlib-$ZLIB_VER" && tar xzf "zlib-$ZLIB_VER.tar.gz"
 (
     cd "zlib-$ZLIB_VER"
