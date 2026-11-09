@@ -177,304 +177,387 @@ public enum TickerType {
 	WAL_FILE_SYNCED(84),
 	/// Total bytes written to WAL files.
 	WAL_FILE_BYTES(85),
+	/// Number of WAL rotations that consumed an async precreated WAL.
+	WAL_PRECREATE_HIT(86),
+	/// Number of WAL rotations that found no async precreated WAL to consume.
+	WAL_PRECREATE_MISS(87),
+	/// Number of WAL rotations that waited for an in-flight WAL precreation.
+	WAL_PRECREATE_WAITED(88),
+	/// Total foreground wait time for in-flight WAL precreation.
+	WAL_PRECREATE_WAIT_MICROS(89),
+	/// Number of async WAL precreation attempts that failed.
+	WAL_PRECREATE_FAILED(90),
 	/// Number of writes done by the writing thread itself.
-	WRITE_DONE_BY_SELF(86),
+	WRITE_DONE_BY_SELF(91),
 	/// Number of writes done by another thread in a group commit.
-	WRITE_DONE_BY_OTHER(87),
+	WRITE_DONE_BY_OTHER(92),
 	/// Number of writes that included a WAL write.
-	WRITE_WITH_WAL(88),
+	WRITE_WITH_WAL(93),
 	/// Bytes read during compaction.
-	COMPACT_READ_BYTES(89),
+	COMPACT_READ_BYTES(94),
 	/// Bytes written during compaction.
-	COMPACT_WRITE_BYTES(90),
+	COMPACT_WRITE_BYTES(95),
 	/// Bytes written during flush.
-	FLUSH_WRITE_BYTES(91),
+	FLUSH_WRITE_BYTES(96),
 	/// Compaction bytes read for explicitly marked files.
-	COMPACT_READ_BYTES_MARKED(92),
+	COMPACT_READ_BYTES_MARKED(97),
 	/// Compaction bytes read for periodic compaction.
-	COMPACT_READ_BYTES_PERIODIC(93),
+	COMPACT_READ_BYTES_PERIODIC(98),
 	/// Compaction bytes read for TTL compaction.
-	COMPACT_READ_BYTES_TTL(94),
+	COMPACT_READ_BYTES_TTL(99),
 	/// Compaction bytes written for explicitly marked files.
-	COMPACT_WRITE_BYTES_MARKED(95),
+	COMPACT_WRITE_BYTES_MARKED(100),
 	/// Compaction bytes written for periodic compaction.
-	COMPACT_WRITE_BYTES_PERIODIC(96),
+	COMPACT_WRITE_BYTES_PERIODIC(101),
 	/// Compaction bytes written for TTL compaction.
-	COMPACT_WRITE_BYTES_TTL(97),
+	COMPACT_WRITE_BYTES_TTL(102),
 	/// Number of times table properties were loaded directly.
-	NUMBER_DIRECT_LOAD_TABLE_PROPERTIES(98),
+	NUMBER_DIRECT_LOAD_TABLE_PROPERTIES(103),
 	/// Number of superversion acquisitions.
-	NUMBER_SUPERVERSION_ACQUIRES(99),
+	NUMBER_SUPERVERSION_ACQUIRES(104),
 	/// Number of superversion releases.
-	NUMBER_SUPERVERSION_RELEASES(100),
+	NUMBER_SUPERVERSION_RELEASES(105),
 	/// Number of superversion cleanups.
-	NUMBER_SUPERVERSION_CLEANUPS(101),
+	NUMBER_SUPERVERSION_CLEANUPS(106),
 	/// Number of blocks compressed.
-	NUMBER_BLOCK_COMPRESSED(102),
+	NUMBER_BLOCK_COMPRESSED(107),
 	/// Number of blocks decompressed.
-	NUMBER_BLOCK_DECOMPRESSED(103),
+	NUMBER_BLOCK_DECOMPRESSED(108),
 	/// Bytes before compression.
-	BYTES_COMPRESSED_FROM(104),
+	BYTES_COMPRESSED_FROM(109),
 	/// Bytes after compression.
-	BYTES_COMPRESSED_TO(105),
+	BYTES_COMPRESSED_TO(110),
 	/// Bytes bypassed by compression (stored uncompressed).
-	BYTES_COMPRESSION_BYPASSED(106),
+	BYTES_COMPRESSION_BYPASSED(111),
 	/// Bytes rejected by compression filter.
-	BYTES_COMPRESSION_REJECTED(107),
+	BYTES_COMPRESSION_REJECTED(112),
 	/// Number of blocks that bypassed compression.
-	NUMBER_BLOCK_COMPRESSION_BYPASSED(108),
+	NUMBER_BLOCK_COMPRESSION_BYPASSED(113),
 	/// Number of blocks rejected by compression filter.
-	NUMBER_BLOCK_COMPRESSION_REJECTED(109),
+	NUMBER_BLOCK_COMPRESSION_REJECTED(114),
 	/// Bytes before decompression.
-	BYTES_DECOMPRESSED_FROM(110),
+	BYTES_DECOMPRESSED_FROM(115),
 	/// Bytes after decompression.
-	BYTES_DECOMPRESSED_TO(111),
+	BYTES_DECOMPRESSED_TO(116),
 	/// Total time spent in merge operations, in microseconds.
-	MERGE_OPERATION_TOTAL_TIME(112),
+	MERGE_OPERATION_TOTAL_TIME(117),
 	/// Total time spent in filter operations, in microseconds.
-	FILTER_OPERATION_TOTAL_TIME(113),
+	FILTER_OPERATION_TOTAL_TIME(118),
 	/// Total CPU time spent in compaction, in microseconds.
-	COMPACTION_CPU_TOTAL_TIME(114),
+	COMPACTION_CPU_TOTAL_TIME(119),
 	/// Number of row cache hits.
-	ROW_CACHE_HIT(115),
+	ROW_CACHE_HIT(120),
 	/// Number of row cache misses.
-	ROW_CACHE_MISS(116),
+	ROW_CACHE_MISS(121),
 	/// Estimate of useful bytes read (read amplification numerator).
-	READ_AMP_ESTIMATE_USEFUL_BYTES(117),
+	READ_AMP_ESTIMATE_USEFUL_BYTES(122),
 	/// Total bytes read including amplification (read amplification denominator).
-	READ_AMP_TOTAL_READ_BYTES(118),
+	READ_AMP_TOTAL_READ_BYTES(123),
 	/// Number of rate limiter drains.
-	NUMBER_RATE_LIMITER_DRAINS(119),
+	NUMBER_RATE_LIMITER_DRAINS(124),
+	/// Bytes granted by the rate limiter for read requests.
+	RATE_LIMITER_BYTES_READ(125),
+	/// Bytes granted by the rate limiter for write requests.
+	RATE_LIMITER_BYTES_WRITE(126),
+	/// Number of read requests granted by the rate limiter.
+	RATE_LIMITER_REQUESTS_READ(127),
+	/// Number of write requests granted by the rate limiter.
+	RATE_LIMITER_REQUESTS_WRITE(128),
+	/// Number of read requests that waited for a future rate limiter refill.
+	RATE_LIMITER_DELAYED_REQUESTS_READ(129),
+	/// Number of write requests that waited for a future rate limiter refill.
+	RATE_LIMITER_DELAYED_REQUESTS_WRITE(130),
+	/// Total time read requests spent waiting for rate limiter refills.
+	RATE_LIMITER_TOTAL_WAIT_MICROS_READ(131),
+	/// Total time write requests spent waiting for rate limiter refills.
+	RATE_LIMITER_TOTAL_WAIT_MICROS_WRITE(132),
 	/// Number of blob DB Put operations.
-	BLOB_DB_NUM_PUT(120),
+	BLOB_DB_NUM_PUT(133),
 	/// Number of blob DB Write operations.
-	BLOB_DB_NUM_WRITE(121),
+	BLOB_DB_NUM_WRITE(134),
 	/// Number of blob DB Get operations.
-	BLOB_DB_NUM_GET(122),
+	BLOB_DB_NUM_GET(135),
 	/// Number of blob DB MultiGet operations.
-	BLOB_DB_NUM_MULTIGET(123),
+	BLOB_DB_NUM_MULTIGET(136),
 	/// Number of blob DB Seek operations.
-	BLOB_DB_NUM_SEEK(124),
+	BLOB_DB_NUM_SEEK(137),
 	/// Number of blob DB Next operations.
-	BLOB_DB_NUM_NEXT(125),
+	BLOB_DB_NUM_NEXT(138),
 	/// Number of blob DB Prev operations.
-	BLOB_DB_NUM_PREV(126),
+	BLOB_DB_NUM_PREV(139),
 	/// Number of keys written to blob DB.
-	BLOB_DB_NUM_KEYS_WRITTEN(127),
+	BLOB_DB_NUM_KEYS_WRITTEN(140),
 	/// Number of keys read from blob DB.
-	BLOB_DB_NUM_KEYS_READ(128),
+	BLOB_DB_NUM_KEYS_READ(141),
 	/// Bytes written to blob DB.
-	BLOB_DB_BYTES_WRITTEN(129),
+	BLOB_DB_BYTES_WRITTEN(142),
 	/// Bytes read from blob DB.
-	BLOB_DB_BYTES_READ(130),
+	BLOB_DB_BYTES_READ(143),
 	/// Deprecated: number of inlined blob DB writes.
-	BLOB_DB_WRITE_INLINED_DEPRECATED(131),
+	BLOB_DB_WRITE_INLINED_DEPRECATED(144),
 	/// Deprecated: number of inlined TTL blob DB writes.
-	BLOB_DB_WRITE_INLINED_TTL_DEPRECATED(132),
+	BLOB_DB_WRITE_INLINED_TTL_DEPRECATED(145),
 	/// Number of values written as blobs.
-	BLOB_DB_WRITE_BLOB(133),
+	BLOB_DB_WRITE_BLOB(146),
 	/// Number of values written as TTL blobs.
-	BLOB_DB_WRITE_BLOB_TTL(134),
+	BLOB_DB_WRITE_BLOB_TTL(147),
 	/// Bytes written to blob files.
-	BLOB_DB_BLOB_FILE_BYTES_WRITTEN(135),
+	BLOB_DB_BLOB_FILE_BYTES_WRITTEN(148),
 	/// Bytes read from blob files.
-	BLOB_DB_BLOB_FILE_BYTES_READ(136),
+	BLOB_DB_BLOB_FILE_BYTES_READ(149),
 	/// Number of blob file syncs.
-	BLOB_DB_BLOB_FILE_SYNCED(137),
+	BLOB_DB_BLOB_FILE_SYNCED(150),
 	/// Number of expired blob index entries.
-	BLOB_DB_BLOB_INDEX_EXPIRED_COUNT(138),
+	BLOB_DB_BLOB_INDEX_EXPIRED_COUNT(151),
 	/// Size of expired blob index entries.
-	BLOB_DB_BLOB_INDEX_EXPIRED_SIZE(139),
+	BLOB_DB_BLOB_INDEX_EXPIRED_SIZE(152),
 	/// Number of evicted blob index entries.
-	BLOB_DB_BLOB_INDEX_EVICTED_COUNT(140),
+	BLOB_DB_BLOB_INDEX_EVICTED_COUNT(153),
 	/// Size of evicted blob index entries.
-	BLOB_DB_BLOB_INDEX_EVICTED_SIZE(141),
+	BLOB_DB_BLOB_INDEX_EVICTED_SIZE(154),
 	/// Number of blob files considered for GC.
-	BLOB_DB_GC_NUM_FILES(142),
+	BLOB_DB_GC_NUM_FILES(155),
 	/// Number of new blob files created during GC.
-	BLOB_DB_GC_NUM_NEW_FILES(143),
+	BLOB_DB_GC_NUM_NEW_FILES(156),
 	/// Number of blob GC failures.
-	BLOB_DB_GC_FAILURES(144),
+	BLOB_DB_GC_FAILURES(157),
 	/// Number of keys relocated during blob GC.
-	BLOB_DB_GC_NUM_KEYS_RELOCATED(145),
+	BLOB_DB_GC_NUM_KEYS_RELOCATED(158),
 	/// Bytes relocated during blob GC.
-	BLOB_DB_GC_BYTES_RELOCATED(146),
+	BLOB_DB_GC_BYTES_RELOCATED(159),
 	/// Number of files evicted by FIFO compaction.
-	BLOB_DB_FIFO_NUM_FILES_EVICTED(147),
+	BLOB_DB_FIFO_NUM_FILES_EVICTED(160),
 	/// Number of keys evicted by FIFO compaction.
-	BLOB_DB_FIFO_NUM_KEYS_EVICTED(148),
+	BLOB_DB_FIFO_NUM_KEYS_EVICTED(161),
 	/// Bytes evicted by FIFO compaction.
-	BLOB_DB_FIFO_BYTES_EVICTED(149),
+	BLOB_DB_FIFO_BYTES_EVICTED(162),
 	/// Number of blob cache misses.
-	BLOB_DB_CACHE_MISS(150),
+	BLOB_DB_CACHE_MISS(163),
 	/// Number of blob cache hits.
-	BLOB_DB_CACHE_HIT(151),
+	BLOB_DB_CACHE_HIT(164),
 	/// Number of blob cache adds.
-	BLOB_DB_CACHE_ADD(152),
+	BLOB_DB_CACHE_ADD(165),
 	/// Number of blob cache add failures.
-	BLOB_DB_CACHE_ADD_FAILURES(153),
+	BLOB_DB_CACHE_ADD_FAILURES(166),
 	/// Bytes read from the blob cache.
-	BLOB_DB_CACHE_BYTES_READ(154),
+	BLOB_DB_CACHE_BYTES_READ(167),
 	/// Bytes written to the blob cache.
-	BLOB_DB_CACHE_BYTES_WRITE(155),
+	BLOB_DB_CACHE_BYTES_WRITE(168),
 	/// Overhead from transaction prepare mutex.
-	TXN_PREPARE_MUTEX_OVERHEAD(156),
+	TXN_PREPARE_MUTEX_OVERHEAD(169),
 	/// Overhead from transaction old commit map mutex.
-	TXN_OLD_COMMIT_MAP_MUTEX_OVERHEAD(157),
+	TXN_OLD_COMMIT_MAP_MUTEX_OVERHEAD(170),
 	/// Overhead from duplicate key checks in transactions.
-	TXN_DUPLICATE_KEY_OVERHEAD(158),
+	TXN_DUPLICATE_KEY_OVERHEAD(171),
 	/// Overhead from transaction snapshot mutex.
-	TXN_SNAPSHOT_MUTEX_OVERHEAD(159),
+	TXN_SNAPSHOT_MUTEX_OVERHEAD(172),
 	/// Number of transaction Get try-again retries.
-	TXN_GET_TRY_AGAIN(160),
+	TXN_GET_TRY_AGAIN(173),
 	/// Number of files marked as trash for background deletion.
-	FILES_MARKED_TRASH(161),
+	FILES_MARKED_TRASH(174),
 	/// Number of files deleted from the trash queue.
-	FILES_DELETED_FROM_TRASH_QUEUE(162),
+	FILES_DELETED_FROM_TRASH_QUEUE(175),
 	/// Number of files deleted immediately (not via trash queue).
-	FILES_DELETED_IMMEDIATELY(163),
+	FILES_DELETED_IMMEDIATELY(176),
 	/// Number of background errors handled by the error handler.
-	ERROR_HANDLER_BG_ERROR_COUNT(164),
+	ERROR_HANDLER_BG_ERROR_COUNT(177),
 	/// Number of background I/O errors handled by the error handler.
-	ERROR_HANDLER_BG_IO_ERROR_COUNT(165),
+	ERROR_HANDLER_BG_IO_ERROR_COUNT(178),
 	/// Number of retryable background I/O errors.
-	ERROR_HANDLER_BG_RETRYABLE_IO_ERROR_COUNT(166),
+	ERROR_HANDLER_BG_RETRYABLE_IO_ERROR_COUNT(179),
 	/// Number of automatic error resume attempts.
-	ERROR_HANDLER_AUTORESUME_COUNT(167),
+	ERROR_HANDLER_AUTORESUME_COUNT(180),
 	/// Total number of auto-resume retry attempts.
-	ERROR_HANDLER_AUTORESUME_RETRY_TOTAL_COUNT(168),
+	ERROR_HANDLER_AUTORESUME_RETRY_TOTAL_COUNT(181),
 	/// Number of successful auto-resume operations.
-	ERROR_HANDLER_AUTORESUME_SUCCESS_COUNT(169),
+	ERROR_HANDLER_AUTORESUME_SUCCESS_COUNT(182),
 	/// Bytes of useful payload in memtable at flush.
-	MEMTABLE_PAYLOAD_BYTES_AT_FLUSH(170),
+	MEMTABLE_PAYLOAD_BYTES_AT_FLUSH(183),
 	/// Bytes of garbage in memtable at flush.
-	MEMTABLE_GARBAGE_BYTES_AT_FLUSH(171),
+	MEMTABLE_GARBAGE_BYTES_AT_FLUSH(184),
 	/// Bytes read during checksum verification.
-	VERIFY_CHECKSUM_READ_BYTES(172),
+	VERIFY_CHECKSUM_READ_BYTES(185),
 	/// Bytes read during backup.
-	BACKUP_READ_BYTES(173),
+	BACKUP_READ_BYTES(186),
 	/// Bytes written during backup.
-	BACKUP_WRITE_BYTES(174),
+	BACKUP_WRITE_BYTES(187),
 	/// Bytes read during remote compaction.
-	REMOTE_COMPACT_READ_BYTES(175),
+	REMOTE_COMPACT_READ_BYTES(188),
 	/// Bytes written during remote compaction.
-	REMOTE_COMPACT_WRITE_BYTES(176),
+	REMOTE_COMPACT_WRITE_BYTES(189),
 	/// Bytes resumed from previous remote compaction.
-	REMOTE_COMPACT_RESUMED_BYTES(177),
+	REMOTE_COMPACT_RESUMED_BYTES(190),
 	/// Bytes read from hot-temperature files.
-	HOT_FILE_READ_BYTES(178),
+	HOT_FILE_READ_BYTES(191),
 	/// Bytes read from warm-temperature files.
-	WARM_FILE_READ_BYTES(179),
+	WARM_FILE_READ_BYTES(192),
 	/// Bytes read from cool-temperature files.
-	COOL_FILE_READ_BYTES(180),
+	COOL_FILE_READ_BYTES(193),
 	/// Bytes read from cold-temperature files.
-	COLD_FILE_READ_BYTES(181),
+	COLD_FILE_READ_BYTES(194),
 	/// Bytes read from ice-temperature files.
-	ICE_FILE_READ_BYTES(182),
+	ICE_FILE_READ_BYTES(195),
 	/// Number of reads from hot-temperature files.
-	HOT_FILE_READ_COUNT(183),
+	HOT_FILE_READ_COUNT(196),
 	/// Number of reads from warm-temperature files.
-	WARM_FILE_READ_COUNT(184),
+	WARM_FILE_READ_COUNT(197),
 	/// Number of reads from cool-temperature files.
-	COOL_FILE_READ_COUNT(185),
+	COOL_FILE_READ_COUNT(198),
 	/// Number of reads from cold-temperature files.
-	COLD_FILE_READ_COUNT(186),
+	COLD_FILE_READ_COUNT(199),
 	/// Number of reads from ice-temperature files.
-	ICE_FILE_READ_COUNT(187),
+	ICE_FILE_READ_COUNT(200),
 	/// Bytes read from the last LSM level.
-	LAST_LEVEL_READ_BYTES(188),
+	LAST_LEVEL_READ_BYTES(201),
 	/// Number of reads from the last LSM level.
-	LAST_LEVEL_READ_COUNT(189),
+	LAST_LEVEL_READ_COUNT(202),
 	/// Bytes read from non-last LSM levels.
-	NON_LAST_LEVEL_READ_BYTES(190),
+	NON_LAST_LEVEL_READ_BYTES(203),
 	/// Number of reads from non-last LSM levels.
-	NON_LAST_LEVEL_READ_COUNT(191),
+	NON_LAST_LEVEL_READ_COUNT(204),
 	/// Number of seeks on the last level filtered by Bloom/index.
-	LAST_LEVEL_SEEK_FILTERED(192),
+	LAST_LEVEL_SEEK_FILTERED(205),
 	/// Number of seeks on the last level that matched after Bloom/index filter.
-	LAST_LEVEL_SEEK_FILTER_MATCH(193),
+	LAST_LEVEL_SEEK_FILTER_MATCH(206),
 	/// Number of seeks on the last level that read data.
-	LAST_LEVEL_SEEK_DATA(194),
+	LAST_LEVEL_SEEK_DATA(207),
 	/// Seeks on the last level reading useful data, no filter.
-	LAST_LEVEL_SEEK_DATA_USEFUL_NO_FILTER(195),
+	LAST_LEVEL_SEEK_DATA_USEFUL_NO_FILTER(208),
 	/// Seeks on the last level reading useful data with a filter match.
-	LAST_LEVEL_SEEK_DATA_USEFUL_FILTER_MATCH(196),
+	LAST_LEVEL_SEEK_DATA_USEFUL_FILTER_MATCH(209),
 	/// Number of seeks on non-last levels filtered by Bloom/index.
-	NON_LAST_LEVEL_SEEK_FILTERED(197),
+	NON_LAST_LEVEL_SEEK_FILTERED(210),
 	/// Number of seeks on non-last levels matching after Bloom/index filter.
-	NON_LAST_LEVEL_SEEK_FILTER_MATCH(198),
+	NON_LAST_LEVEL_SEEK_FILTER_MATCH(211),
 	/// Number of seeks on non-last levels reading data.
-	NON_LAST_LEVEL_SEEK_DATA(199),
+	NON_LAST_LEVEL_SEEK_DATA(212),
 	/// Seeks on non-last levels reading useful data, no filter.
-	NON_LAST_LEVEL_SEEK_DATA_USEFUL_NO_FILTER(200),
+	NON_LAST_LEVEL_SEEK_DATA_USEFUL_NO_FILTER(213),
 	/// Seeks on non-last levels reading useful data with filter match.
-	NON_LAST_LEVEL_SEEK_DATA_USEFUL_FILTER_MATCH(201),
+	NON_LAST_LEVEL_SEEK_DATA_USEFUL_FILTER_MATCH(214),
 	/// Number of block checksum computations.
-	BLOCK_CHECKSUM_COMPUTE_COUNT(202),
+	BLOCK_CHECKSUM_COMPUTE_COUNT(215),
 	/// Number of block checksum mismatches detected.
-	BLOCK_CHECKSUM_MISMATCH_COUNT(203),
+	BLOCK_CHECKSUM_MISMATCH_COUNT(216),
 	/// Number of MultiGet coroutines invoked.
-	MULTIGET_COROUTINE_COUNT(204),
+	MULTIGET_COROUTINE_COUNT(217),
 	/// Microseconds spent in async reads.
-	READ_ASYNC_MICROS(205),
+	READ_ASYNC_MICROS(218),
 	/// Number of errors during async reads.
-	ASYNC_READ_ERROR_COUNT(206),
+	ASYNC_READ_ERROR_COUNT(219),
 	/// Number of table open prefetch tail misses.
-	TABLE_OPEN_PREFETCH_TAIL_MISS(207),
+	TABLE_OPEN_PREFETCH_TAIL_MISS(220),
 	/// Number of table open prefetch tail hits.
-	TABLE_OPEN_PREFETCH_TAIL_HIT(208),
+	TABLE_OPEN_PREFETCH_TAIL_HIT(221),
 	/// Number of tables checked by the timestamp filter.
-	TIMESTAMP_FILTER_TABLE_CHECKED(209),
+	TIMESTAMP_FILTER_TABLE_CHECKED(222),
 	/// Number of tables filtered out by the timestamp filter.
-	TIMESTAMP_FILTER_TABLE_FILTERED(210),
+	TIMESTAMP_FILTER_TABLE_FILTERED(223),
 	/// Number of readahead trims.
-	READAHEAD_TRIMMED(211),
+	READAHEAD_TRIMMED(224),
 	/// Number of FIFO compactions triggered by max size.
-	FIFO_MAX_SIZE_COMPACTIONS(212),
+	FIFO_MAX_SIZE_COMPACTIONS(225),
 	/// Number of FIFO compactions triggered by TTL.
-	FIFO_TTL_COMPACTIONS(213),
+	FIFO_TTL_COMPACTIONS(226),
 	/// Number of FIFO compactions triggered by temperature changes.
-	FIFO_CHANGE_TEMPERATURE_COMPACTIONS(214),
+	FIFO_CHANGE_TEMPERATURE_COMPACTIONS(227),
 	/// Total bytes prefetched.
-	PREFETCH_BYTES(215),
+	PREFETCH_BYTES(228),
 	/// Useful bytes from prefetching (actually consumed).
-	PREFETCH_BYTES_USEFUL(216),
+	PREFETCH_BYTES_USEFUL(229),
 	/// Number of prefetch hits.
-	PREFETCH_HITS(217),
+	PREFETCH_HITS(230),
 	/// Number of SST file footer corruption events.
-	SST_FOOTER_CORRUPTION_COUNT(218),
+	SST_FOOTER_CORRUPTION_COUNT(231),
 	/// Number of file read corruption retry attempts.
-	FILE_READ_CORRUPTION_RETRY_COUNT(219),
+	FILE_READ_CORRUPTION_RETRY_COUNT(232),
 	/// Number of successful file read corruption retries.
-	FILE_READ_CORRUPTION_RETRY_SUCCESS_COUNT(220),
+	FILE_READ_CORRUPTION_RETRY_SUCCESS_COUNT(233),
 	/// Number of WBWI ingest operations.
-	NUMBER_WBWI_INGEST(221),
+	NUMBER_WBWI_INGEST(234),
 	/// Number of failures loading user-defined SST index.
-	SST_USER_DEFINED_INDEX_LOAD_FAIL_COUNT(222),
+	SST_USER_DEFINED_INDEX_LOAD_FAIL_COUNT(235),
 	/// Number of multiscan prepare calls.
-	MULTISCAN_PREPARE_CALLS(223),
+	MULTISCAN_PREPARE_CALLS(236),
 	/// Number of multiscan prepare errors.
-	MULTISCAN_PREPARE_ERRORS(224),
+	MULTISCAN_PREPARE_ERRORS(237),
 	/// Number of blocks prefetched during multiscan.
-	MULTISCAN_BLOCKS_PREFETCHED(225),
+	MULTISCAN_BLOCKS_PREFETCHED(238),
 	/// Number of blocks served from cache during multiscan.
-	MULTISCAN_BLOCKS_FROM_CACHE(226),
+	MULTISCAN_BLOCKS_FROM_CACHE(239),
 	/// Bytes prefetched during multiscan.
-	MULTISCAN_PREFETCH_BYTES(227),
+	MULTISCAN_PREFETCH_BYTES(240),
 	/// Prefetched blocks wasted during multiscan.
-	MULTISCAN_PREFETCH_BLOCKS_WASTED(228),
+	MULTISCAN_PREFETCH_BLOCKS_WASTED(241),
 	/// Number of I/O requests during multiscan.
-	MULTISCAN_IO_REQUESTS(229),
+	MULTISCAN_IO_REQUESTS(242),
 	/// Number of coalesced non-adjacent I/O requests during multiscan.
-	MULTISCAN_IO_COALESCED_NONADJACENT(230),
+	MULTISCAN_IO_COALESCED_NONADJACENT(243),
 	/// Number of seek errors during multiscan.
-	MULTISCAN_SEEK_ERRORS(231),
+	MULTISCAN_SEEK_ERRORS(244),
 	/// Bytes granted for prefetch memory.
-	PREFETCH_MEMORY_BYTES_GRANTED(232),
+	PREFETCH_MEMORY_BYTES_GRANTED(245),
 	/// Bytes released from prefetch memory.
-	PREFETCH_MEMORY_BYTES_RELEASED(233),
+	PREFETCH_MEMORY_BYTES_RELEASED(246),
 	/// Number of prefetch memory requests blocked.
-	PREFETCH_MEMORY_REQUESTS_BLOCKED(234),
+	PREFETCH_MEMORY_REQUESTS_BLOCKED(247),
+	/// Number of range tombstones inserted by read-path conversion from contiguous
+	/// point tombstones.
+	READ_PATH_RANGE_TOMBSTONES_INSERTED(248),
+	/// Number of range tombstones not inserted. Reasons include:
+	/// - iterator's snapshot predates the memtable
+	/// - tombstones may be uncommitted (transactions)
+	/// - memtable already has a covering range tombstone
+	/// - memtable switched to immutable state.
+	READ_PATH_RANGE_TOMBSTONES_DISCARDED(249),
+	/// Number of times file open metadata was retrieved from the file system
+	/// via GetFileOpenMetadata() (when fast_sst_open is enabled).
+	FILE_OPEN_METADATA_RETRIEVED(250),
+	/// Number of times file open metadata was passed to NewRandomAccessFile()
+	/// via FileOptions::file_metadata (on DB open / table cache miss).
+	FILE_OPEN_METADATA_PASSED(251),
+	/// Number of times MANIFEST content validation detected corruption on DB close.
+	MANIFEST_VALIDATION_FAILURE_COUNT(252),
+	/// Number of flushes triggered because the memtable reached write_buffer_size.
+	FLUSH_REASON_WRITE_BUFFER_FULL(253),
+	/// Number of flushes triggered by WriteBufferManager memory pressure.
+	FLUSH_REASON_WRITE_BUFFER_MANAGER(254),
+	/// Number of flushes triggered because the memtable reached
+	/// memtable_max_range_deletions.
+	FLUSH_REASON_MEMTABLE_MAX_RANGE_DELETIONS(255),
+	/// Number of atomic flush requests triggered because a memtable reached
+	/// write_buffer_size.
+	ATOMIC_FLUSH_REQUEST_REASON_WRITE_BUFFER_FULL(256),
+	/// Number of atomic flush requests triggered by WriteBufferManager memory
+	/// pressure.
+	ATOMIC_FLUSH_REQUEST_REASON_WRITE_BUFFER_MANAGER(257),
+	/// Number of atomic flush requests triggered because a memtable reached
+	/// memtable_max_range_deletions.
+	ATOMIC_FLUSH_REQUEST_REASON_MEMTABLE_MAX_RANGE_DELETIONS(258),
+	/// Number of atomic flush requests triggered for reasons that do not have a
+	/// dedicated atomic flush request reason ticker.
+	ATOMIC_FLUSH_REQUEST_REASON_OTHER(259),
+	/// Bytes read while creating checkpoints.
+	CHECKPOINT_READ_BYTES(260),
+	/// Bytes written while creating checkpoints.
+	CHECKPOINT_WRITE_BYTES(261),
+	/// Number of SubmitReadAsync calls that fell back to a synchronous read.
+	FILE_SUBMIT_ASYNC_READ_FALLBACK(262),
+	/// Number of storage reads issued by lazy wide-column resolution
+	/// (DB::GetEntityLazy / DB::MultiGetEntityLazy), both whole-column and partial
+	/// byte-range reads. Cache hits, which do no storage read, are not counted.
+	BLOB_DB_LAZY_READ_COUNT(263),
+	/// Bytes read from storage by lazy resolution (on-disk record bytes for
+	/// whole-column reads; the requested sub-range length for partial reads).
+	BLOB_DB_LAZY_READ_BYTES(264),
+	/// Lazy-resolution reads that were partial (byte-range) reads: only
+	/// a requested sub-range of an uncompressed blob's value was read (skipping
+	/// the whole-column read). A whole-column read or a force_verify read is not
+	/// counted here.
+	BLOB_DB_LAZY_PARTIAL_READ_COUNT(265),
+	/// Bytes not read thanks to partial lazy-resolution reads: for each, the column's
+	/// logical value size minus the bytes actually read.
+	BLOB_DB_LAZY_PARTIAL_BYTES_SAVED(266),
 	;
 
 	private final int value;

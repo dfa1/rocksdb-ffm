@@ -133,6 +133,44 @@ public enum HistogramType {
 	NUM_OP_PER_TRANSACTION(63),
 	/// Number of iterators prepared for multiscan.
 	MULTISCAN_PREPARE_ITERATORS(64),
+	/// Total Prepare() latency for MultiScan.
+	MULTISCAN_PREPARE_MICROS(65),
+	/// Distribution of blocks prefetched per MultiScan Prepare().
+	MULTISCAN_BLOCKS_PER_PREPARE(66),
+	/// Time (microseconds) from IODispatcher async read submission until
+	/// completion callback execution.
+	IO_DISPATCHER_ASYNC_READ_OBSERVED_COMPLETION_MICROS(67),
+	/// Time (microseconds) IODispatcher spends waiting in FileSystem::Poll().
+	IO_DISPATCHER_ASYNC_READ_POLL_WAIT_MICROS(68),
+	/// Time (microseconds) from async read submission until the block consumer
+	/// starts polling for completion.
+	IO_DISPATCHER_ASYNC_READ_PREFETCH_LEAD_MICROS(69),
+	/// Coefficient of variation of key gaps in blocks, scaled by 10000
+	/// (e.g., CV of 0.4532 is recorded as 4532). Currently only used by index
+	/// blocks for uniform key distribution tracking.
+	BLOCK_KEY_DISTRIBUTION_CV(70),
+	/// Time (microseconds) in the "prepare" phase of an IngestExternalFile(s) call
+	/// (validation and reading/linking the files; does not block writes). One
+	/// sample per successful call; requires stats level > kExceptTimers.
+	INGEST_EXTERNAL_FILE_PREPARE_TIME(71),
+	/// Time (microseconds) in the "run" phase of an IngestExternalFile(s) call
+	/// (work under the DB mutex while writes are blocked). One sample per
+	/// successful call; requires stats level > kExceptTimers.
+	INGEST_EXTERNAL_FILE_RUN_TIME(72),
+	/// Time read requests spent waiting for rate limiter refills.
+	RATE_LIMITER_WAIT_MICROS_READ(73),
+	/// Time write requests spent waiting for rate limiter refills.
+	RATE_LIMITER_WAIT_MICROS_WRITE(74),
+	/// Distribution of total memtable memory usage at flush start.
+	FLUSH_MEMTABLE_MEMORY_BYTES(75),
+	/// Distribution of total memtable data size at flush start.
+	FLUSH_MEMTABLE_TOTAL_DATA_SIZE(76),
+	/// Distribution of total memtable memory usage for write-buffer-full flushes.
+	FLUSH_WRITE_BUFFER_FULL_MEMTABLE_MEMORY_BYTES(77),
+	/// Distribution of total memtable memory usage for WBM-triggered flushes.
+	FLUSH_WRITE_BUFFER_MANAGER_MEMTABLE_MEMORY_BYTES(78),
+	/// Time spent opening the secondary DB inside DB::OpenAndCompact().
+	OPEN_AND_COMPACT_DB_OPEN_MICROS(79),
 	;
 
 	private final int value;

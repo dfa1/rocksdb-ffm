@@ -29,6 +29,8 @@ public enum IOActivity {
 	MULTI_GET_ENTITY(9),
 	/// Reading file checksums from the current manifest.
 	GET_FILE_CHECKSUMS_FROM_CURRENT_MANIFEST(10),
+	/// Resolving lazily-read wide columns after the originating lookup returned.
+	LAZY_RESOLVE(11),
 	/// No specific activity recorded (default).
 	UNKNOWN(0xFF);
 
@@ -56,6 +58,7 @@ public enum IOActivity {
 			case 8 -> GET_ENTITY;
 			case 9 -> MULTI_GET_ENTITY;
 			case 10 -> GET_FILE_CHECKSUMS_FROM_CURRENT_MANIFEST;
+			case 11 -> LAZY_RESOLVE;
 			default -> UNKNOWN;
 		};
 	}

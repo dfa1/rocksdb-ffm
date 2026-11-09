@@ -31,7 +31,9 @@ class PerfLevelTest {
 		assertThat(PerfLevel.UNINITIALIZED.value).isZero();
 		assertThat(PerfLevel.DISABLE.value).isEqualTo(1);
 		assertThat(PerfLevel.ENABLE_COUNT.value).isEqualTo(2);
-		assertThat(PerfLevel.ENABLE_TIME_EXCEPT_FOR_MUTEX.value).isEqualTo(3);
-		assertThat(PerfLevel.ENABLE_TIME.value).isEqualTo(4);
+		assertThat(PerfLevel.ENABLE_WAIT.value).isEqualTo(3);
+		assertThat(PerfLevel.ENABLE_TIME_EXCEPT_FOR_MUTEX.value).isEqualTo(4);
+		assertThat(PerfLevel.ENABLE_TIME_AND_CPU_TIME_EXCEPT_FOR_MUTEX.value).isEqualTo(5);
+		assertThat(PerfLevel.ENABLE_TIME.value).isEqualTo(6);
 	}
 }
