@@ -205,8 +205,13 @@ type (`ReadWriteDB`, `TtlDB`, …) or its capability interface, not on `RocksDB`
   | `docs/c-api-gaps.md`   | Type A/B gap catalogue against `rocksdb/c.h`                            |
 
 - `README.md` links to `docs/` and must not duplicate their content: it holds badges, a minimal quickstart, the docs
-  index, and a one-line pointer to `CONTRIBUTING.md` only
+  index, and a one-line pointer to `CONTRIBUTING.md` (and Discussions) only
 - `CONTRIBUTING.md` holds the full build, test, convention, and release reference for contributors; keep it in sync with this file
+- `.github/PULL_REQUEST_TEMPLATE.md` is a checklist distilled from `CONTRIBUTING.md`; when a contributor-facing rule
+  changes there, update the checklist too. The issue forms in `.github/ISSUE_TEMPLATE/` list the native classifiers,
+  so a new `native/*` module goes into `bug_report.yml`'s dropdown
+- `SECURITY.md` supports the latest release only while pre-1.0; revisit its version table at 1.0
+- Questions go to GitHub Discussions (Q&A, Ideas), not issues: blank issues are disabled in `config.yml`
 - Java snippets in `docs/` must compile against `core` before being committed
 - `CHANGELOG.md` sections are published verbatim as the GitHub release notes (`publish.yml`). Every entry links the
   pull request that introduced it (`[#NNN](https://github.com/dfa1/rocksdb-ffm/pull/NNN)`, plus the issue when there
