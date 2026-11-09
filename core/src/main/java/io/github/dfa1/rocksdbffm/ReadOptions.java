@@ -12,9 +12,6 @@ import java.util.Optional;
 /// FFM wrapper for `rocksdb_readoptions_t`.
 public final class ReadOptions extends NativeObject {
 
-	private static final String SET_ITERATE_LOWER_BOUND_FAILED = "setIterateLowerBound failed";
-	private static final String SET_ITERATE_UPPER_BOUND_FAILED = "setIterateUpperBound failed";
-
 	/// `rocksdb_readoptions_t* rocksdb_readoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
 	/// `void rocksdb_readoptions_destroy(rocksdb_readoptions_t*);`
@@ -354,7 +351,7 @@ public final class ReadOptions extends NativeObject {
 			}
 			return this;
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(SET_ITERATE_LOWER_BOUND_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("setIterateLowerBound failed", t);
 		}
 	}
 
@@ -370,7 +367,7 @@ public final class ReadOptions extends NativeObject {
 					MemorySegment.ofBuffer(lowerBound), (long) lowerBound.remaining());
 			return this;
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(SET_ITERATE_LOWER_BOUND_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("setIterateLowerBound failed", t);
 		}
 	}
 
@@ -385,7 +382,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_ITERATE_LOWER_BOUND.invokeExact(ptr(), lowerBound, lowerBound.byteSize());
 			return this;
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(SET_ITERATE_LOWER_BOUND_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("setIterateLowerBound failed", t);
 		}
 	}
 
@@ -408,7 +405,7 @@ public final class ReadOptions extends NativeObject {
 			}
 			return this;
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(SET_ITERATE_UPPER_BOUND_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("setIterateUpperBound failed", t);
 		}
 	}
 
@@ -424,7 +421,7 @@ public final class ReadOptions extends NativeObject {
 					MemorySegment.ofBuffer(upperBound), (long) upperBound.remaining());
 			return this;
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(SET_ITERATE_UPPER_BOUND_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("setIterateUpperBound failed", t);
 		}
 	}
 
@@ -439,7 +436,7 @@ public final class ReadOptions extends NativeObject {
 			MH_SET_ITERATE_UPPER_BOUND.invokeExact(ptr(), upperBound, upperBound.byteSize());
 			return this;
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(SET_ITERATE_UPPER_BOUND_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("setIterateUpperBound failed", t);
 		}
 	}
 

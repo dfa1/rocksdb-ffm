@@ -69,6 +69,13 @@
 		     .github/smoke/ is a standalone post-release smoke project, not part of the reactor. -->
 		<sonar.exclusions>rocksdb/**,.github/smoke/**</sonar.exclusions>
 		<sonar.coverage.exclusions>rocksdb/**,benchmarks/**,.github/smoke/**</sonar.coverage.exclusions>
+		<!-- S1192 (duplicated string literals): every invokeExact call site owns its own
+		     try/catch per the static-final MethodHandle rule (AGENTS.md), so the same
+		     wrapInvokeFailure message legitimately repeats across overloads; hoisting each
+		     into a constant only moves the message away from its call. -->
+		<sonar.issue.ignore.multicriteria>s1192</sonar.issue.ignore.multicriteria>
+		<sonar.issue.ignore.multicriteria.s1192.ruleKey>java:S1192</sonar.issue.ignore.multicriteria.s1192.ruleKey>
+		<sonar.issue.ignore.multicriteria.s1192.resourceKey>core/src/main/java/**/*.java</sonar.issue.ignore.multicriteria.s1192.resourceKey>
 		<!-- tools/ldb and tools/sst-dump's own per-module reports (jacoco/jacoco.xml) cover
 		     their own classes (LdbTool/SstDumpTool/Main) but would always show core classes
 		     like NativeTool at 0%: core is exercised only through LdbTool/SstDumpTool from

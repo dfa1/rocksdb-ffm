@@ -21,11 +21,6 @@ import java.nio.ByteBuffer;
 /// ```
 public final class Transaction extends NativeObject {
 
-	private static final String TRANSACTION_PUT_FAILED = "transaction put failed";
-	private static final String TRANSACTION_DELETE_FAILED = "transaction delete failed";
-	private static final String TRANSACTION_GET_FAILED = "transaction get failed";
-	private static final String TRANSACTION_GET_FOR_UPDATE_FAILED = "transaction getForUpdate failed";
-
 	/// `rocksdb_pinnableslice_t* rocksdb_transaction_get_pinned_cf(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED_CF;
 	/// `rocksdb_pinnableslice_t* rocksdb_transaction_get_pinned_for_update_cf(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, unsigned char exclusive, char** errptr);`
@@ -182,7 +177,7 @@ public final class Transaction extends NativeObject {
 			MH_PUT.invokeExact(ptr(), k, (long) key.length, v, (long) value.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_PUT_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction put failed", t);
 		}
 	}
 
@@ -198,7 +193,7 @@ public final class Transaction extends NativeObject {
 					MemorySegment.ofBuffer(value), (long) value.remaining(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_PUT_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction put failed", t);
 		}
 	}
 
@@ -212,7 +207,7 @@ public final class Transaction extends NativeObject {
 			MH_PUT.invokeExact(ptr(), key, key.byteSize(), value, value.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_PUT_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction put failed", t);
 		}
 	}
 
@@ -226,7 +221,7 @@ public final class Transaction extends NativeObject {
 			MH_DELETE.invokeExact(ptr(), k, (long) key.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_DELETE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction delete failed", t);
 		}
 	}
 
@@ -239,7 +234,7 @@ public final class Transaction extends NativeObject {
 			MH_DELETE.invokeExact(ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_DELETE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction delete failed", t);
 		}
 	}
 
@@ -252,7 +247,7 @@ public final class Transaction extends NativeObject {
 			MH_DELETE.invokeExact(ptr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_DELETE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction delete failed", t);
 		}
 	}
 
@@ -326,7 +321,7 @@ public final class Transaction extends NativeObject {
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction get failed", t);
 		}
 	}
 
@@ -352,7 +347,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction get failed", t);
 		}
 	}
 
@@ -378,7 +373,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction get failed", t);
 		}
 	}
 
@@ -436,7 +431,7 @@ public final class Transaction extends NativeObject {
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_GET_FOR_UPDATE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction getForUpdate failed", t);
 		}
 	}
 
@@ -465,7 +460,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_GET_FOR_UPDATE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction getForUpdate failed", t);
 		}
 	}
 
@@ -494,7 +489,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_GET_FOR_UPDATE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction getForUpdate failed", t);
 		}
 	}
 
@@ -515,7 +510,7 @@ public final class Transaction extends NativeObject {
 					NativeCalls.toNative(arena, value), (long) value.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_PUT_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction put failed", t);
 		}
 	}
 
@@ -532,7 +527,7 @@ public final class Transaction extends NativeObject {
 					MemorySegment.ofBuffer(value), (long) value.remaining(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_PUT_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction put failed", t);
 		}
 	}
 
@@ -547,7 +542,7 @@ public final class Transaction extends NativeObject {
 			MH_PUT_CF.invokeExact(ptr(), cf.ptr(), key, key.byteSize(), value, value.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_PUT_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction put failed", t);
 		}
 	}
 
@@ -562,7 +557,7 @@ public final class Transaction extends NativeObject {
 					NativeCalls.toNative(arena, key), (long) key.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_DELETE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction delete failed", t);
 		}
 	}
 
@@ -577,7 +572,7 @@ public final class Transaction extends NativeObject {
 			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_DELETE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction delete failed", t);
 		}
 	}
 
@@ -591,7 +586,7 @@ public final class Transaction extends NativeObject {
 			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_DELETE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction delete failed", t);
 		}
 	}
 
@@ -663,7 +658,7 @@ public final class Transaction extends NativeObject {
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction get failed", t);
 		}
 	}
 
@@ -691,7 +686,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction get failed", t);
 		}
 	}
 
@@ -718,7 +713,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction get failed", t);
 		}
 	}
 
@@ -776,7 +771,7 @@ public final class Transaction extends NativeObject {
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_GET_FOR_UPDATE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction getForUpdate failed", t);
 		}
 	}
 
@@ -808,7 +803,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_GET_FOR_UPDATE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction getForUpdate failed", t);
 		}
 	}
 
@@ -839,7 +834,7 @@ public final class Transaction extends NativeObject {
 				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(TRANSACTION_GET_FOR_UPDATE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("transaction getForUpdate failed", t);
 		}
 	}
 

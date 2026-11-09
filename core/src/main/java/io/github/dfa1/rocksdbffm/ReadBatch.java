@@ -37,9 +37,6 @@ import java.util.List;
 /// ```
 public final class ReadBatch implements AutoCloseable {
 
-	private static final String READ_BATCH_GET_FAILED = "ReadBatch.get failed";
-	private static final String READ_BATCH_KEYS_ARRAY = "ReadBatch keys array";
-
 	/// `rocksdb_column_family_handle_t* rocksdb_get_default_column_family_handle(rocksdb_t* db);`
 	private static final MethodHandle MH_GET_DEFAULT_CF;
 	/// `void rocksdb_batched_multi_get_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, size_t num_keys, const char* const* keys_list, const size_t* keys_list_sizes, rocksdb_pinnableslice_t** values, char** errs, const bool sorted_input);`
@@ -147,12 +144,12 @@ public final class ReadBatch implements AutoCloseable {
 				byte[] key = keys.get(i);
 				writeKeySlot(i, NativeCalls.toNative(callArena, key), key.length);
 			}
-			RocksDB.requireNoNullEntries(keysArr, n, READ_BATCH_KEYS_ARRAY);
+			RocksDB.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
 			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collectBytes(n);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(READ_BATCH_GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("ReadBatch.get failed", t);
 		}
 	}
 
@@ -195,12 +192,12 @@ public final class ReadBatch implements AutoCloseable {
 				ByteBuffer key = keys.get(i);
 				writeKeySlot(i, MemorySegment.ofBuffer(key), key.remaining());
 			}
-			RocksDB.requireNoNullEntries(keysArr, n, READ_BATCH_KEYS_ARRAY);
+			RocksDB.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
 			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collectBuffers(n, values);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(READ_BATCH_GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("ReadBatch.get failed", t);
 		}
 	}
 
@@ -264,12 +261,12 @@ public final class ReadBatch implements AutoCloseable {
 				MemorySegment key = keys.get(i);
 				writeKeySlot(i, key, key.byteSize());
 			}
-			RocksDB.requireNoNullEntries(keysArr, n, READ_BATCH_KEYS_ARRAY);
+			RocksDB.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
 			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collect(n, fn);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(READ_BATCH_GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("ReadBatch.get failed", t);
 		}
 	}
 

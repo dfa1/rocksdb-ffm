@@ -15,8 +15,6 @@ import java.lang.invoke.MethodHandle;
 /// ```
 public final class LRUCache extends Cache {
 
-	private static final String LRUCACHE_CREATE_FAILED = "LRUCache create failed";
-
 	/// `rocksdb_cache_t* rocksdb_cache_create_lru(size_t capacity);`
 	private static final MethodHandle MH_CREATE;
 	/// `rocksdb_cache_t* rocksdb_cache_create_lru_with_strict_capacity_limit(size_t capacity);`
@@ -67,7 +65,7 @@ public final class LRUCache extends Cache {
 		try {
 			return new LRUCache((MemorySegment) MH_CREATE.invokeExact(capacity.toBytes()));
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(LRUCACHE_CREATE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("LRUCache create failed", t);
 		}
 	}
 
@@ -87,7 +85,7 @@ public final class LRUCache extends Cache {
 			}
 			return new LRUCache((MemorySegment) MH_CREATE.invokeExact(capacity.toBytes()));
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(LRUCACHE_CREATE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("LRUCache create failed", t);
 		}
 	}
 
@@ -108,7 +106,7 @@ public final class LRUCache extends Cache {
 			MH_OPTS_SET_NUM_SHARD_BITS.invokeExact(opts, numShardBits);
 			return new LRUCache((MemorySegment) MH_CREATE_OPTS.invokeExact(opts));
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(LRUCACHE_CREATE_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("LRUCache create failed", t);
 		} finally {
 			if (opts != null) {
 				try {
