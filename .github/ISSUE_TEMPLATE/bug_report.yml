@@ -1,0 +1,52 @@
+name: Bug report
+description: Something crashes, leaks, or behaves differently from RocksDB.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. For questions or usage help, use [Discussions](https://github.com/dfa1/rocksdb-ffm/discussions) instead.
+        Security issues: **don't file them here**, see [SECURITY.md](https://github.com/dfa1/rocksdb-ffm/blob/main/SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: rocksdbffm version
+      placeholder: "0.18"
+    validations:
+      required: true
+  - type: input
+    id: jdk
+    attributes:
+      label: JDK version
+      description: Output of `java -version`.
+      placeholder: Temurin 25.0.1
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Native classifier
+      options:
+        - osx-aarch64
+        - linux-x86_64
+        - linux-aarch64
+        - windows-x86_64
+        - windows-aarch64
+        - built from source (other)
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Expected vs. actual behavior. Include the full stack trace, or the `hs_err_pid*.log` header for a JVM crash.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The smallest code that triggers it, ideally a JUnit test with `@TempDir`.
+      render: java
+    validations:
+      required: true

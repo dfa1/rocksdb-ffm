@@ -83,7 +83,8 @@ Docs follow the [Diátaxis](https://diataxis.fr/) framework.
 
 ## Contributing
 
-Build setup, conventions, and the release process are in [CONTRIBUTING.md](CONTRIBUTING.md).
+Build setup, conventions, and the release process are in [CONTRIBUTING.md](CONTRIBUTING.md). Questions
+go to [Discussions](https://github.com/dfa1/rocksdb-ffm/discussions).
 
 ## License
 
