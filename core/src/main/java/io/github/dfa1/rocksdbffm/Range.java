@@ -26,10 +26,10 @@ public record Range(byte[] startKey, byte[] endKey) {
 		if (this == o) {
 			return true;
 		}
-		if (!(o instanceof Range other)) {
+		if (!(o instanceof Range(byte[] otherStart, byte[] otherEnd))) {
 			return false;
 		}
-		return Arrays.equals(startKey, other.startKey) && Arrays.equals(endKey, other.endKey);
+		return Arrays.equals(startKey, otherStart) && Arrays.equals(endKey, otherEnd);
 	}
 
 	@Override

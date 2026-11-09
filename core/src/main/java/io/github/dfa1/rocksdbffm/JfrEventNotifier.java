@@ -281,7 +281,7 @@ public final class JfrEventNotifier implements EventNotifier {
 			event.sstTotalSize = total;
 			event.sstTrashSize = trash;
 			event.sstSpaceLimitReached = limitReached;
-		} catch (IllegalStateException closed) {
+		} catch (IllegalStateException _) {
 			// the manager was closed before the database: keep the event, SST space fields stay 0/false
 		}
 	}
@@ -291,7 +291,7 @@ public final class JfrEventNotifier implements EventNotifier {
 	private static String nameOf(Supplier<? extends Enum<?>> value) {
 		try {
 			return value.get().name();
-		} catch (IllegalArgumentException unknown) {
+		} catch (IllegalArgumentException _) {
 			return "UNKNOWN";
 		}
 	}

@@ -28,6 +28,10 @@ import java.nio.file.Path;
 /// ```
 public final class SstFileWriter extends NativeObject {
 
+	private static final String SSTFILEWRITER_PUT_FAILED = "sstfilewriter put failed";
+	private static final String SSTFILEWRITER_DELETE_FAILED = "sstfilewriter delete failed";
+	private static final String SSTFILEWRITER_DELETE_RANGE_FAILED = "sstfilewriter deleteRange failed";
+
 	/// `rocksdb_sstfilewriter_t* rocksdb_sstfilewriter_create(const rocksdb_envoptions_t* env, const rocksdb_options_t* io_options);`
 	private static final MethodHandle MH_CREATE;
 	/// `void rocksdb_sstfilewriter_destroy(rocksdb_sstfilewriter_t* writer);`
@@ -144,7 +148,7 @@ public final class SstFileWriter extends NativeObject {
 					err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("sstfilewriter put failed", t);
+			throw NativeCalls.wrapInvokeFailure(SSTFILEWRITER_PUT_FAILED, t);
 		}
 	}
 
@@ -161,7 +165,7 @@ public final class SstFileWriter extends NativeObject {
 					err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("sstfilewriter put failed", t);
+			throw NativeCalls.wrapInvokeFailure(SSTFILEWRITER_PUT_FAILED, t);
 		}
 	}
 
@@ -178,7 +182,7 @@ public final class SstFileWriter extends NativeObject {
 					err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("sstfilewriter put failed", t);
+			throw NativeCalls.wrapInvokeFailure(SSTFILEWRITER_PUT_FAILED, t);
 		}
 	}
 
@@ -192,7 +196,7 @@ public final class SstFileWriter extends NativeObject {
 			MH_DELETE.invokeExact(ptr(), keyNative, (long) key.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("sstfilewriter delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(SSTFILEWRITER_DELETE_FAILED, t);
 		}
 	}
 
@@ -205,7 +209,7 @@ public final class SstFileWriter extends NativeObject {
 			MH_DELETE.invokeExact(ptr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("sstfilewriter delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(SSTFILEWRITER_DELETE_FAILED, t);
 		}
 	}
 
@@ -218,7 +222,7 @@ public final class SstFileWriter extends NativeObject {
 			MH_DELETE.invokeExact(ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("sstfilewriter delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(SSTFILEWRITER_DELETE_FAILED, t);
 		}
 	}
 
@@ -238,7 +242,7 @@ public final class SstFileWriter extends NativeObject {
 					err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("sstfilewriter deleteRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(SSTFILEWRITER_DELETE_RANGE_FAILED, t);
 		}
 	}
 
@@ -255,7 +259,7 @@ public final class SstFileWriter extends NativeObject {
 					err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("sstfilewriter deleteRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(SSTFILEWRITER_DELETE_RANGE_FAILED, t);
 		}
 	}
 
@@ -272,7 +276,7 @@ public final class SstFileWriter extends NativeObject {
 					err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("sstfilewriter deleteRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(SSTFILEWRITER_DELETE_RANGE_FAILED, t);
 		}
 	}
 

@@ -37,7 +37,7 @@ class BackupEngineTest {
 	void getBackupInfo_isEmptyForFreshEngine(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
+		     var _ = RocksDB.openReadWrite(opts, dir.resolve("db"));
 		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
 
 			// When

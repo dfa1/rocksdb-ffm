@@ -157,7 +157,7 @@ class EventNotifierTest {
 				try {
 					info.checkStatus();
 					statusSucceeded.add(true);
-				} catch (RocksDBException e) {
+				} catch (RocksDBException _) {
 					statusSucceeded.add(false);
 				}
 				cfIds.add(info.columnFamilyId());
@@ -401,7 +401,9 @@ class EventNotifierTest {
 			db.ingestExternalFile(sstPath);
 			db.compactRange();
 
-			// Then — no exception escaped any default callback
+			// Then — no exception escaped any default callback and the ingested key is readable
+			var result = db.get("aaa".getBytes());
+			assertThat(result).isEqualTo("val1".getBytes());
 		}
 	}
 }

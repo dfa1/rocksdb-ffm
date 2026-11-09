@@ -22,6 +22,8 @@ import java.util.Objects;
 /// it can be closed immediately after that call.
 public final class Options extends NativeObject {
 
+	private static final String SET_TABLE_FORMAT_CONFIG_FAILED = "setTableFormatConfig failed";
+
 	/// `rocksdb_options_t* rocksdb_options_create(void);`
 	private static final MethodHandle MH_CREATE;
 	/// `void rocksdb_options_destroy(rocksdb_options_t*);`
@@ -900,7 +902,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_BLOCK_BASED_TABLE_FACTORY.invokeExact(ptr(), tableConfig.ptr());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("setTableFormatConfig failed", t);
+			throw NativeCalls.wrapInvokeFailure(SET_TABLE_FORMAT_CONFIG_FAILED, t);
 		}
 		return this;
 	}
@@ -915,7 +917,7 @@ public final class Options extends NativeObject {
 		try {
 			MH_SET_CUCKOO_TABLE_FACTORY.invokeExact(ptr(), tableConfig.ptr());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("setTableFormatConfig failed", t);
+			throw NativeCalls.wrapInvokeFailure(SET_TABLE_FORMAT_CONFIG_FAILED, t);
 		}
 		return this;
 	}
@@ -940,7 +942,7 @@ public final class Options extends NativeObject {
 					NativeCalls.toByte(tableConfig.isFullScanMode()),
 					NativeCalls.toByte(tableConfig.isStoreIndexInFile()));
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("setTableFormatConfig failed", t);
+			throw NativeCalls.wrapInvokeFailure(SET_TABLE_FORMAT_CONFIG_FAILED, t);
 		}
 		return this;
 	}

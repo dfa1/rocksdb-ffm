@@ -359,7 +359,8 @@ public final class BackupEngine extends NativeObject {
 		} finally {
 			try {
 				MH_INFO_DESTROY.invokeExact(infoPtr);
-			} catch (Throwable ignored) {
+			} catch (Throwable _) {
+				// best-effort: the result (or the failure being propagated) is what matters
 			}
 		}
 	}

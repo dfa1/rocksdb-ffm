@@ -138,7 +138,7 @@ class WalIteratorTest {
 
 			try (WalIterator it = db.getUpdatesSince(start)) {
 				assertThat(it.isValid()).isTrue();
-				try (var result = it.getBatch()) {
+				try (var _ = it.getBatch()) {
 					// consume the one batch
 				}
 				it.next();
@@ -161,7 +161,7 @@ class WalIteratorTest {
 			db.put("b".getBytes(), "2".getBytes());
 
 			try (WalIterator it = db.getUpdatesSince(start)) {
-				try (var first = it.getBatch()) {
+				try (var _ = it.getBatch()) {
 					// consume
 				}
 

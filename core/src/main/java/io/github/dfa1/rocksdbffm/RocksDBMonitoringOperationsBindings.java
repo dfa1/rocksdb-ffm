@@ -14,6 +14,8 @@ import java.util.List;
 /// of its own; [LiveFiles]/[LiveFilesStorageInfo] own that plumbing directly.
 final class RocksDBMonitoringOperationsBindings {
 
+	private static final String GET_APPROXIMATE_SIZES_FAILED = "getApproximateSizes failed";
+
 	/// `void rocksdb_approximate_sizes(rocksdb_t* db, int num_ranges, const char* const* range_start_key, const size_t* range_start_key_len, const char* const* range_limit_key, const size_t* range_limit_key_len, uint64_t* sizes, char** errptr);`
 	private static final MethodHandle MH_APPROXIMATE_SIZES;
 	/// `void rocksdb_approximate_sizes_cf(rocksdb_t* db, rocksdb_column_family_handle_t* column_family, int num_ranges, const char* const* range_start_key, const size_t* range_start_key_len, const char* const* range_limit_key, const size_t* range_limit_key_len, uint64_t* sizes, char** errptr);`
@@ -138,7 +140,7 @@ final class RocksDBMonitoringOperationsBindings {
 			NativeCalls.checkError(err);
 			return sizes.toArray(ValueLayout.JAVA_LONG);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("getApproximateSizes failed", t);
+			throw NativeCalls.wrapInvokeFailure(GET_APPROXIMATE_SIZES_FAILED, t);
 		}
 	}
 
@@ -152,7 +154,7 @@ final class RocksDBMonitoringOperationsBindings {
 			NativeCalls.checkError(err);
 			return sizes.toArray(ValueLayout.JAVA_LONG);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("getApproximateSizes failed", t);
+			throw NativeCalls.wrapInvokeFailure(GET_APPROXIMATE_SIZES_FAILED, t);
 		}
 	}
 
@@ -166,7 +168,7 @@ final class RocksDBMonitoringOperationsBindings {
 			NativeCalls.checkError(err);
 			return sizes.toArray(ValueLayout.JAVA_LONG);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("getApproximateSizes failed", t);
+			throw NativeCalls.wrapInvokeFailure(GET_APPROXIMATE_SIZES_FAILED, t);
 		}
 	}
 
@@ -181,7 +183,7 @@ final class RocksDBMonitoringOperationsBindings {
 			NativeCalls.checkError(err);
 			return sizes.toArray(ValueLayout.JAVA_LONG);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("getApproximateSizes failed", t);
+			throw NativeCalls.wrapInvokeFailure(GET_APPROXIMATE_SIZES_FAILED, t);
 		}
 	}
     static void verifyChecksum(MemorySegment db) {

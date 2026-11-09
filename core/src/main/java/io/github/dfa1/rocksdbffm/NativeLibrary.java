@@ -38,7 +38,14 @@ public class NativeLibrary {
 
 	private static Path resolveLibPath() {
 		String classifier = classifier();
-		String ext = classifier.startsWith("osx") ? "dylib" : classifier.startsWith("windows") ? "dll" : "so";
+		String ext;
+		if (classifier.startsWith("osx")) {
+			ext = "dylib";
+		} else if (classifier.startsWith("windows")) {
+			ext = "dll";
+		} else {
+			ext = "so";
+		}
 		String resource = "/native/" + classifier + "/librocksdb." + ext;
 
 		try (InputStream in = RocksDB.class.getResourceAsStream(resource)) {
@@ -95,7 +102,14 @@ public class NativeLibrary {
 	static String classifier() {
 		String os = System.getProperty("os.name", "").toLowerCase();
 		String arch = System.getProperty("os.arch", "").toLowerCase();
-		String osName = os.contains("mac") ? "osx" : os.contains("win") ? "windows" : "linux";
+		String osName;
+		if (os.contains("mac")) {
+			osName = "osx";
+		} else if (os.contains("win")) {
+			osName = "windows";
+		} else {
+			osName = "linux";
+		}
 		String archName = (arch.equals("aarch64") || arch.equals("arm64")) ? "aarch64" : "x86_64";
 		return osName + "-" + archName;
 	}

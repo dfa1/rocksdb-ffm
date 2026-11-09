@@ -46,8 +46,7 @@ class LoggerTest {
 
 		// Then — at least one message should have been delivered
 		assertThat(messages).isNotEmpty();
-		assertThat(levels).isNotEmpty();
-		assertThat(levels).allSatisfy(l -> assertThat(l).isNotNull());
+		assertThat(levels).isNotEmpty().allSatisfy(l -> assertThat(l).isNotNull());
 	}
 
 	@Test

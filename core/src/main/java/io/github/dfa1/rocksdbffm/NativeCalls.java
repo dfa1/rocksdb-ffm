@@ -75,7 +75,7 @@ final class NativeCalls {
 	static void free(MemorySegment ptr) {
 		try {
 			MH_FREE.invokeExact(ptr);
-		} catch (Throwable ignored) {
+		} catch (Throwable _) {
 			// ignore errors as this is used in destructor-like code
 		}
 	}

@@ -14,6 +14,13 @@ import java.nio.ByteBuffer;
 /// the C level. Only `rocksdb_write` (on the DB) can fail.
 public final class WriteBatch extends NativeObject {
 
+	private static final String WRITEBATCH_PUT_FAILED = "writebatch put failed";
+	private static final String WRITEBATCH_DELETE_FAILED = "writebatch delete failed";
+	private static final String WRITEBATCH_DELETE_RANGE_FAILED = "writebatch deleteRange failed";
+	private static final String WRITEBATCH_PUT_CF_FAILED = "writebatch put_cf failed";
+	private static final String WRITEBATCH_DELETE_CF_FAILED = "writebatch delete_cf failed";
+	private static final String WRITEBATCH_DELETE_RANGE_CF_FAILED = "writebatch deleteRange_cf failed";
+
 	/// `rocksdb_writebatch_t* rocksdb_writebatch_create(void);`
 	private static final MethodHandle MH_CREATE;
 	/// `void rocksdb_writebatch_destroy(rocksdb_writebatch_t*);`
@@ -132,7 +139,7 @@ public final class WriteBatch extends NativeObject {
 			MemorySegment v = NativeCalls.toNative(arena, value);
 			MH_PUT.invokeExact(ptr(), k, (long) key.length, v, (long) value.length);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch put failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_PUT_FAILED, t);
 		}
 	}
 
@@ -146,7 +153,7 @@ public final class WriteBatch extends NativeObject {
 			MemorySegment v = NativeCalls.toNative(arena, value);
 			MH_PUT.invokeExact(ptr(), k, (long) key.length, v, (long) value.length);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch put failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_PUT_FAILED, t);
 		}
 	}
 
@@ -160,7 +167,7 @@ public final class WriteBatch extends NativeObject {
 					MemorySegment.ofBuffer(key), (long) key.remaining(),
 					MemorySegment.ofBuffer(value), (long) value.remaining());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch put failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_PUT_FAILED, t);
 		}
 	}
 
@@ -172,7 +179,7 @@ public final class WriteBatch extends NativeObject {
 		try {
 			MH_PUT.invokeExact(ptr(), key, key.byteSize(), value, value.byteSize());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch put failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_PUT_FAILED, t);
 		}
 	}
 
@@ -223,7 +230,7 @@ public final class WriteBatch extends NativeObject {
 			MemorySegment k = NativeCalls.toNative(arena, key);
 			MH_DELETE.invokeExact(ptr(), k, (long) key.length);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_DELETE_FAILED, t);
 		}
 	}
 
@@ -234,7 +241,7 @@ public final class WriteBatch extends NativeObject {
 		try {
 			MH_DELETE.invokeExact(ptr(), MemorySegment.ofBuffer(key), (long) key.remaining());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_DELETE_FAILED, t);
 		}
 	}
 
@@ -245,7 +252,7 @@ public final class WriteBatch extends NativeObject {
 		try {
 			MH_DELETE.invokeExact(ptr(), key, key.byteSize());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_DELETE_FAILED, t);
 		}
 	}
 
@@ -259,7 +266,7 @@ public final class WriteBatch extends NativeObject {
 					NativeCalls.toNative(arena, startKey), (long) startKey.length,
 					NativeCalls.toNative(arena, endKey), (long) endKey.length);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch deleteRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_DELETE_RANGE_FAILED, t);
 		}
 	}
 
@@ -273,7 +280,7 @@ public final class WriteBatch extends NativeObject {
 					MemorySegment.ofBuffer(startKey), (long) startKey.remaining(),
 					MemorySegment.ofBuffer(endKey), (long) endKey.remaining());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch deleteRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_DELETE_RANGE_FAILED, t);
 		}
 	}
 
@@ -287,7 +294,7 @@ public final class WriteBatch extends NativeObject {
 					startKey, startKey.byteSize(),
 					endKey, endKey.byteSize());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch deleteRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_DELETE_RANGE_FAILED, t);
 		}
 	}
 
@@ -306,7 +313,7 @@ public final class WriteBatch extends NativeObject {
 					NativeCalls.toNative(arena, key), (long) key.length,
 					NativeCalls.toNative(arena, value), (long) value.length);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch put_cf failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_PUT_CF_FAILED, t);
 		}
 	}
 
@@ -321,7 +328,7 @@ public final class WriteBatch extends NativeObject {
 					MemorySegment.ofBuffer(key), (long) key.remaining(),
 					MemorySegment.ofBuffer(value), (long) value.remaining());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch put_cf failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_PUT_CF_FAILED, t);
 		}
 	}
 
@@ -335,7 +342,7 @@ public final class WriteBatch extends NativeObject {
 			MH_PUT_CF.invokeExact(ptr(), cf.ptr(),
 					key, key.byteSize(), value, value.byteSize());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch put_cf failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_PUT_CF_FAILED, t);
 		}
 	}
 
@@ -382,7 +389,7 @@ public final class WriteBatch extends NativeObject {
 			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(),
 					NativeCalls.toNative(arena, key), (long) key.length);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch delete_cf failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_DELETE_CF_FAILED, t);
 		}
 	}
 
@@ -395,7 +402,7 @@ public final class WriteBatch extends NativeObject {
 			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch delete_cf failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_DELETE_CF_FAILED, t);
 		}
 	}
 
@@ -407,7 +414,7 @@ public final class WriteBatch extends NativeObject {
 		try {
 			MH_DELETE_CF.invokeExact(ptr(), cf.ptr(), key, key.byteSize());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch delete_cf failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_DELETE_CF_FAILED, t);
 		}
 	}
 
@@ -422,7 +429,7 @@ public final class WriteBatch extends NativeObject {
 					NativeCalls.toNative(arena, startKey), (long) startKey.length,
 					NativeCalls.toNative(arena, endKey), (long) endKey.length);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch deleteRange_cf failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_DELETE_RANGE_CF_FAILED, t);
 		}
 	}
 
@@ -437,7 +444,7 @@ public final class WriteBatch extends NativeObject {
 					MemorySegment.ofBuffer(startKey), (long) startKey.remaining(),
 					MemorySegment.ofBuffer(endKey), (long) endKey.remaining());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch deleteRange_cf failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_DELETE_RANGE_CF_FAILED, t);
 		}
 	}
 
@@ -451,7 +458,7 @@ public final class WriteBatch extends NativeObject {
 			MH_DELETE_RANGE_CF.invokeExact(ptr(), cf.ptr(),
 					startKey, startKey.byteSize(), endKey, endKey.byteSize());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("writebatch deleteRange_cf failed", t);
+			throw NativeCalls.wrapInvokeFailure(WRITEBATCH_DELETE_RANGE_CF_FAILED, t);
 		}
 	}
 

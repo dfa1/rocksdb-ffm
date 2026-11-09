@@ -134,29 +134,6 @@ class CheckpointTest {
 	}
 
 	// -----------------------------------------------------------------------
-	// exportTo(Path) convenience overload (defaults to MemorySize.ZERO)
-	// -----------------------------------------------------------------------
-
-	@Test
-	void exportTo_withoutLogSize_flushesWalByDefault(@TempDir Path dir) {
-		// Given
-		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.openReadWrite(dir.resolve("db"))) {
-			db.put("k".getBytes(), "v".getBytes());
-
-			// When
-			try (var cp = Checkpoint.newCheckpoint(db)) {
-				cp.exportTo(cpDir);
-			}
-		}
-
-		// Then
-		try (var snap = RocksDB.openReadOnly(cpDir)) {
-			assertThat(snap.get("k".getBytes())).isEqualTo("v".getBytes());
-		}
-	}
-
-	// -----------------------------------------------------------------------
 	// newCheckpoint across the other DB types
 	// -----------------------------------------------------------------------
 

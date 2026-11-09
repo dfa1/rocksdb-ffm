@@ -98,7 +98,7 @@ class BackgroundUpcallThreadsTest {
 	private static void awaitUninterruptibly(CountDownLatch latch) {
 		try {
 			latch.await();
-		} catch (InterruptedException e) {
+		} catch (InterruptedException _) {
 			Thread.currentThread().interrupt();
 		}
 	}

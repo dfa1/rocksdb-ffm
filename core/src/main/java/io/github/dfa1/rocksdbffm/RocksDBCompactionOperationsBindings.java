@@ -12,6 +12,8 @@ import java.nio.ByteBuffer;
 /// [#131](https://github.com/dfa1/rocksdbffm/issues/131).
 final class RocksDBCompactionOperationsBindings {
 
+	private static final String COMPACT_RANGE_FAILED = "compactRange failed";
+
 	/// `void rocksdb_compact_range(rocksdb_t* db, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len);`
 	private static final MethodHandle MH_COMPACT_RANGE;
 	/// `void rocksdb_compact_range_opt(rocksdb_t* db, rocksdb_compactoptions_t* opt, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len);`
@@ -76,7 +78,7 @@ final class RocksDBCompactionOperationsBindings {
 					s, startKey == null ? 0L : (long) startKey.length,
 					e, endKey == null ? 0L : (long) endKey.length);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("compactRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(COMPACT_RANGE_FAILED, t);
 		}
 	}
 
@@ -88,7 +90,7 @@ final class RocksDBCompactionOperationsBindings {
 					s, startKey == null ? 0L : (long) startKey.remaining(),
 					e, endKey == null ? 0L : (long) endKey.remaining());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("compactRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(COMPACT_RANGE_FAILED, t);
 		}
 	}
 
@@ -100,7 +102,7 @@ final class RocksDBCompactionOperationsBindings {
 					s, s == MemorySegment.NULL ? 0L : s.byteSize(),
 					e, e == MemorySegment.NULL ? 0L : e.byteSize());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("compactRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(COMPACT_RANGE_FAILED, t);
 		}
 	}
 
@@ -112,7 +114,7 @@ final class RocksDBCompactionOperationsBindings {
 					s, startKey == null ? 0L : (long) startKey.length,
 					e, endKey == null ? 0L : (long) endKey.length);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("compactRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(COMPACT_RANGE_FAILED, t);
 		}
 	}
 

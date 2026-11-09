@@ -21,7 +21,7 @@ class LoadLatestOptionsTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true).setWriteBufferSize(defaultBuffer);
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cfOpts = Options.newOptions().setWriteBufferSize(cf1Buffer);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts))) {
+		     var _ = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts))) {
 			db.put("k".getBytes(), "v".getBytes());
 		}
 	}

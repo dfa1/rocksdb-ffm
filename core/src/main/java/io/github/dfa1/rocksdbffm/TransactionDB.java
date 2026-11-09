@@ -28,6 +28,10 @@ import java.util.OptionalLong;
 public final class TransactionDB extends NativeObjectWithBaseDb
 		implements RocksDBCompactionOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
 
+	private static final String PUT_FAILED = "put failed";
+	private static final String GET_FAILED = "get failed";
+	private static final String DELETE_FAILED = "delete failed";
+
 	// -----------------------------------------------------------------------
 	// Method handles
 	// -----------------------------------------------------------------------
@@ -297,7 +301,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 			MH_PUT.invokeExact(ptr(), writeOptions.ptr(), k, (long) key.length, v, (long) value.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure(PUT_FAILED, t);
 		}
 	}
 
@@ -323,7 +327,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 					err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure(PUT_FAILED, t);
 		}
 	}
 
@@ -346,7 +350,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 			MH_PUT.invokeExact(ptr(), writeOptions.ptr(), key, key.byteSize(), value, value.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure(PUT_FAILED, t);
 		}
 	}
 
@@ -467,7 +471,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("get failed", t);
+			throw NativeCalls.wrapInvokeFailure(GET_FAILED, t);
 		}
 	}
 
@@ -493,7 +497,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("get failed", t);
+			throw NativeCalls.wrapInvokeFailure(GET_FAILED, t);
 		}
 	}
 
@@ -518,7 +522,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("get failed", t);
+			throw NativeCalls.wrapInvokeFailure(GET_FAILED, t);
 		}
 	}
 
@@ -608,7 +612,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 			MH_DELETE.invokeExact(ptr(), writeOptions.ptr(), k, (long) key.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_FAILED, t);
 		}
 	}
 
@@ -630,7 +634,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_FAILED, t);
 		}
 	}
 
@@ -651,7 +655,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 			MH_DELETE.invokeExact(ptr(), writeOptions.ptr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_FAILED, t);
 		}
 	}
 
@@ -724,7 +728,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 					NativeCalls.toNative(arena, value), (long) value.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure(PUT_FAILED, t);
 		}
 	}
 
@@ -751,7 +755,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 					MemorySegment.ofBuffer(value), (long) value.remaining(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure(PUT_FAILED, t);
 		}
 	}
 
@@ -777,7 +781,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 					key, key.byteSize(), value, value.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure(PUT_FAILED, t);
 		}
 	}
 
@@ -899,7 +903,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("get failed", t);
+			throw NativeCalls.wrapInvokeFailure(GET_FAILED, t);
 		}
 	}
 
@@ -926,7 +930,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.copyInto(value, err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("get failed", t);
+			throw NativeCalls.wrapInvokeFailure(GET_FAILED, t);
 		}
 	}
 
@@ -952,7 +956,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 				return slice.copyInto(value, value.byteSize(), err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("get failed", t);
+			throw NativeCalls.wrapInvokeFailure(GET_FAILED, t);
 		}
 	}
 
@@ -1008,7 +1012,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 					NativeCalls.toNative(arena, key), (long) key.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_FAILED, t);
 		}
 	}
 
@@ -1032,7 +1036,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_FAILED, t);
 		}
 	}
 
@@ -1055,7 +1059,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 			MH_DELETE_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_FAILED, t);
 		}
 	}
 

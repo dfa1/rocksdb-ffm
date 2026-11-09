@@ -102,7 +102,7 @@ class PropertyTest {
 			long before = db.getLongProperty(Property.NUM_SNAPSHOTS).orElseThrow();
 
 			// When
-			try (Snapshot _ = db.getSnapshot()) {
+			try (var _ = db.getSnapshot()) {
 				long during = db.getLongProperty(Property.NUM_SNAPSHOTS).orElseThrow();
 
 				// Then

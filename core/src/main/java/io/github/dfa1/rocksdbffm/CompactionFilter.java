@@ -280,10 +280,10 @@ public final class CompactionFilter extends NativeObject {
 				if (this == o) {
 					return true;
 				}
-				if (!(o instanceof ChangeValue other)) {
+				if (!(o instanceof ChangeValue(byte[] otherValue))) {
 					return false;
 				}
-				return Arrays.equals(newValue, other.newValue);
+				return Arrays.equals(newValue, otherValue);
 			}
 
 			@Override
@@ -368,13 +368,13 @@ public final class CompactionFilter extends NativeObject {
 			MemorySegment existingView = view(existingValue, valueLength, arena);
 			FilterDecision decision = s.fn().filter(level, keyView, existingView);
 			return switch (decision) {
-				case FilterDecision.Keep ignored -> (byte) 0;
-				case FilterDecision.Remove ignored -> (byte) 1;
-				case FilterDecision.ChangeValue c -> {
-					MemorySegment buf = scratchBuffer(s, c.newValue());
+				case FilterDecision.Keep _ -> (byte) 0;
+				case FilterDecision.Remove _ -> (byte) 1;
+				case FilterDecision.ChangeValue(byte[] replacement) -> {
+					MemorySegment buf = scratchBuffer(s, replacement);
 					newValue.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0, buf);
 					newValueLength.reinterpret(ValueLayout.JAVA_LONG.byteSize())
-							.set(ValueLayout.JAVA_LONG, 0, (long) c.newValue().length);
+							.set(ValueLayout.JAVA_LONG, 0, replacement.length);
 					valueChangedPtr.set(ValueLayout.JAVA_BYTE, 0, (byte) 1);
 					yield (byte) 0;
 				}

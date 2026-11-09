@@ -72,7 +72,7 @@ final class BackgroundUpcallThreads {
 			try {
 				Runtime.getRuntime().addShutdownHook(
 						new Thread(BackgroundUpcallThreads::drain, "rocksdbffm-background-thread-drain"));
-			} catch (IllegalStateException alreadyShuttingDown) {
+			} catch (IllegalStateException _) {
 				// Nothing left to arm: the JVM is already on its way out, so any callback
 				// registered now will not outlive it.
 			}
@@ -129,7 +129,7 @@ final class BackgroundUpcallThreads {
 			}
 			try {
 				thread.join(Duration.ofNanos(remaining));
-			} catch (InterruptedException e) {
+			} catch (InterruptedException _) {
 				Thread.currentThread().interrupt();
 				return;
 			}

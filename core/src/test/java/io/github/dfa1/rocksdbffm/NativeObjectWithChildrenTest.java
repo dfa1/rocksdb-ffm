@@ -166,7 +166,7 @@ class NativeObjectWithChildrenTest {
 		try {
 			child.ptr();
 			return false;
-		} catch (IllegalStateException e) {
+		} catch (IllegalStateException _) {
 			return true;
 		}
 	}

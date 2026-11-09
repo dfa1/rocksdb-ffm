@@ -16,6 +16,10 @@ import java.util.List;
 /// [#131](https://github.com/dfa1/rocksdbffm/issues/131).
 final class RocksDBWriteOperationsBindings {
 
+	private static final String PUT_FAILED = "put failed";
+	private static final String DELETE_FAILED = "delete failed";
+	private static final String DELETE_RANGE_FAILED = "deleteRange failed";
+
 	/// `void rocksdb_put(rocksdb_t* db, const rocksdb_writeoptions_t* options, const char* key, size_t keylen, const char* val, size_t vallen, char** errptr);`
 	private static final MethodHandle MH_PUT;
 	/// `void rocksdb_put_cf(rocksdb_t* db, const rocksdb_writeoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, const char* val, size_t vallen, char** errptr);`
@@ -155,7 +159,7 @@ final class RocksDBWriteOperationsBindings {
 			MH_PUT.invokeExact(db.dbPtr(), writeOpts.ptr(), k, (long) key.length, v, (long) value.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure(PUT_FAILED, t);
 		}
 	}
 
@@ -168,7 +172,7 @@ final class RocksDBWriteOperationsBindings {
 			MH_PUT.invokeExact(db.dbPtr(), writeOpts.ptr(), k, (long) key.length, v, (long) value.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure(PUT_FAILED, t);
 		}
 	}
 
@@ -180,7 +184,7 @@ final class RocksDBWriteOperationsBindings {
 			MH_PUT.invokeExact(db.dbPtr(), writeOpts.ptr(), key, key.byteSize(), val, val.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure(PUT_FAILED, t);
 		}
 	}
 
@@ -192,7 +196,7 @@ final class RocksDBWriteOperationsBindings {
 			MH_PUT.invokeExact(db.dbPtr(), writeOpts.ptr(), key, key.byteSize(), val, val.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure(PUT_FAILED, t);
 		}
 	}
 
@@ -238,7 +242,7 @@ final class RocksDBWriteOperationsBindings {
 			MH_DELETE.invokeExact(db.dbPtr(), writeOpts.ptr(), k, (long) key.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_FAILED, t);
 		}
 	}
 
@@ -249,7 +253,7 @@ final class RocksDBWriteOperationsBindings {
 			MH_DELETE.invokeExact(db.dbPtr(), writeOpts.ptr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_FAILED, t);
 		}
 	}
 
@@ -311,7 +315,7 @@ final class RocksDBWriteOperationsBindings {
 					NativeCalls.toNative(arena, endKey), (long) endKey.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("deleteRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_RANGE_FAILED, t);
 		}
 	}
 
@@ -325,7 +329,7 @@ final class RocksDBWriteOperationsBindings {
 					MemorySegment.ofBuffer(endKey), (long) endKey.remaining(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("deleteRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_RANGE_FAILED, t);
 		}
 	}
 
@@ -338,7 +342,7 @@ final class RocksDBWriteOperationsBindings {
 					startKey, startKey.byteSize(), endKey, endKey.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("deleteRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_RANGE_FAILED, t);
 		}
 	}
 
@@ -430,7 +434,7 @@ final class RocksDBWriteOperationsBindings {
 					NativeCalls.toNative(arena, value), (long) value.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure(PUT_FAILED, t);
 		}
 	}
 
@@ -442,7 +446,7 @@ final class RocksDBWriteOperationsBindings {
 			MH_PUT_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(), key, key.byteSize(), val, val.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("put failed", t);
+			throw NativeCalls.wrapInvokeFailure(PUT_FAILED, t);
 		}
 	}
 
@@ -491,7 +495,7 @@ final class RocksDBWriteOperationsBindings {
 					NativeCalls.toNative(arena, key), (long) key.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_FAILED, t);
 		}
 	}
 
@@ -503,7 +507,7 @@ final class RocksDBWriteOperationsBindings {
 			MH_DELETE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_FAILED, t);
 		}
 	}
 
@@ -518,7 +522,7 @@ final class RocksDBWriteOperationsBindings {
 					NativeCalls.toNative(arena, endKey), (long) endKey.length, err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("deleteRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_RANGE_FAILED, t);
 		}
 	}
 
@@ -533,7 +537,7 @@ final class RocksDBWriteOperationsBindings {
 					MemorySegment.ofBuffer(endKey), (long) endKey.remaining(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("deleteRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_RANGE_FAILED, t);
 		}
 	}
 
@@ -547,7 +551,7 @@ final class RocksDBWriteOperationsBindings {
 					startKey, startKey.byteSize(), endKey, endKey.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("deleteRange failed", t);
+			throw NativeCalls.wrapInvokeFailure(DELETE_RANGE_FAILED, t);
 		}
 	}
 
