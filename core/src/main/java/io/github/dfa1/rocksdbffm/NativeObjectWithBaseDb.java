@@ -47,7 +47,7 @@ abstract class NativeObjectWithBaseDb extends NativeObjectWithChildren {
 	protected final void tryCloseResource(MemorySegment ptr) throws Throwable {
 		try {
 			tryCloseBaseDb(baseDb);
-		} catch (Throwable t) {
+		} catch (Throwable _) {
 			// best-effort: still attempt to close the primary pointer below
 		}
 		tryClosePrimary(ptr);

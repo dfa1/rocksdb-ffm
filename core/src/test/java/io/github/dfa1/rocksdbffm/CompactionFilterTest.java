@@ -202,7 +202,7 @@ class CompactionFilterTest {
 		var filter = CompactionFilter.create("keep-all", keepAll);
 
 		// When
-		try (var opts = Options.newOptions().setCompactionFilter(filter)) {
+		try (var _ = Options.newOptions().setCompactionFilter(filter)) {
 
 			// Then
 			assertThatThrownBy(filter::ptr).isInstanceOf(IllegalStateException.class);

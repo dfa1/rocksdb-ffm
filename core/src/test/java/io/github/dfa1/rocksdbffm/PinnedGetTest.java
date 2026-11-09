@@ -67,7 +67,7 @@ class PinnedGetTest {
 				var result = db.get(key, MemorySegment::byteSize);
 
 				// Then
-				assertThat(result).isEqualTo(0L);
+				assertThat(result).isZero();
 			}
 		}
 	}

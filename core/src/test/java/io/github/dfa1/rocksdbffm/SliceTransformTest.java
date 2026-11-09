@@ -52,7 +52,7 @@ class SliceTransformTest {
 	void setPrefixExtractor_transferredTransform_closeIsSafeNoOp() {
 		// Given
 		var transform = SliceTransform.newFixedPrefix(4);
-		try (var opts = Options.newOptions().setPrefixExtractor(transform)) {
+		try (var _ = Options.newOptions().setPrefixExtractor(transform)) {
 
 			// When — ownership already transferred to opts; transform.ptr() is NULL, so
 			// transform.close() finds nothing to free (same guarantee as close_isIdempotent
@@ -70,7 +70,7 @@ class SliceTransformTest {
 		var transform = SliceTransform.newFixedPrefix(4);
 
 		// When
-		try (var opts = Options.newOptions().setPrefixExtractor(transform)) {
+		try (var _ = Options.newOptions().setPrefixExtractor(transform)) {
 
 			// Then
 			assertThatThrownBy(transform::ptr).isInstanceOf(IllegalStateException.class);

@@ -62,7 +62,7 @@ class SecondaryDBTest {
 
 	@Test
 	void tryCatchUpWithPrimary_seesNewWrites(
-			@TempDir Path primaryDir, @TempDir Path secondaryDir) throws Exception {
+			@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given — write initial data to primary and flush so secondary can read it
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var primary = RocksDB.openReadWrite(opts, primaryDir);

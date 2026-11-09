@@ -164,7 +164,7 @@ class CompactionFilterFactoryTest {
 		var factory = CompactionFilterFactory.create("no-op-factory", fn);
 
 		// When
-		try (var opts = Options.newOptions().setCompactionFilterFactory(factory)) {
+		try (var _ = Options.newOptions().setCompactionFilterFactory(factory)) {
 
 			// Then
 			assertThatThrownBy(factory::ptr).isInstanceOf(IllegalStateException.class);

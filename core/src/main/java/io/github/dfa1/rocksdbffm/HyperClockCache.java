@@ -96,7 +96,8 @@ public final class HyperClockCache extends Cache {
 			if (opts != null) {
 				try {
 					MH_OPTS_DESTROY.invokeExact(opts);
-				} catch (Throwable ignored) {
+				} catch (Throwable _) {
+					// best-effort: the cache (or the failure being propagated) is what matters
 				}
 			}
 		}

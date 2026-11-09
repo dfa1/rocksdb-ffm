@@ -155,7 +155,7 @@ class JfrEventNotifierTest {
 					}
 				}
 			};
-			try (var recording = startRecording(WRITE_STALL);
+			try (var _ = startRecording(WRITE_STALL);
 			     var opts = Options.newOptions().setCreateIfMissing(true)
 					     .setLevel0FileNumCompactionTrigger(2)
 					     .setLevel0SlowdownWritesTrigger(2)
@@ -315,7 +315,7 @@ class JfrEventNotifierTest {
 	}
 
 	@Test
-	void flush_withRecording_holdsPendingEventUntilCompleted(@TempDir Path dir) throws IOException {
+	void flush_withRecording_holdsPendingEventUntilCompleted(@TempDir Path dir) {
 		// Given — a second listener, registered after the JFR one and so called after it on the
 		// same thread, reads the notifier's state as the flush begins
 		var notifier = JfrEventNotifier.create();
@@ -326,7 +326,7 @@ class JfrEventNotifierTest {
 				pendingAtBegin.set(notifier.pendingFlushes());
 			}
 		};
-		try (var recording = startRecording(FLUSH);
+		try (var _ = startRecording(FLUSH);
 		     var opts = Options.newOptions().setCreateIfMissing(true)
 				     .addEventListener(notifier).addEventListener(probe);
 		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"))) {

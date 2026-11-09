@@ -172,6 +172,7 @@ final class EventNotifierBridge {
 	/// Called from [#SUBCOMPACTION_NOOP_STUB]. Deliberately does nothing: subcompaction events are
 	/// not exposed on [EventNotifier]. Must not throw.
 	private static void subcompactionNoopDispatch(MemorySegment state, MemorySegment info) {
+		// intentionally empty: db/c.cc invokes this callback without a null check
 	}
 
 	/// Called from [#EXTERNAL_FILE_INGESTED_STUB]. Must not throw.

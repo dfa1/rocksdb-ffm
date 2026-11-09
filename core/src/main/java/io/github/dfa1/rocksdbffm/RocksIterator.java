@@ -32,6 +32,9 @@ import java.util.stream.StreamSupport;
 /// ```
 public final class RocksIterator extends NativeObject {
 
+	private static final String SEEK_FAILED = "seek failed";
+	private static final String SEEK_FOR_PREV_FAILED = "seekForPrev failed";
+
 	/// `rocksdb_iterator_t* rocksdb_create_iterator(rocksdb_t* db, const rocksdb_readoptions_t* options);`
 	private static final MethodHandle MH_CREATE;
 	/// `void rocksdb_iter_destroy(rocksdb_iterator_t*);`
@@ -178,7 +181,7 @@ public final class RocksIterator extends NativeObject {
 		try (Arena arena = Arena.ofConfined()) {
 			MH_SEEK.invokeExact(ptr(), NativeCalls.toNative(arena, target), (long) target.length);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("seek failed", t);
+			throw NativeCalls.wrapInvokeFailure(SEEK_FAILED, t);
 		}
 	}
 
@@ -189,7 +192,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			MH_SEEK.invokeExact(ptr(), MemorySegment.ofBuffer(target), (long) target.remaining());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("seek failed", t);
+			throw NativeCalls.wrapInvokeFailure(SEEK_FAILED, t);
 		}
 	}
 
@@ -200,7 +203,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			MH_SEEK.invokeExact(ptr(), target, target.byteSize());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("seek failed", t);
+			throw NativeCalls.wrapInvokeFailure(SEEK_FAILED, t);
 		}
 	}
 
@@ -211,7 +214,7 @@ public final class RocksIterator extends NativeObject {
 		try (Arena arena = Arena.ofConfined()) {
 			MH_SEEK_FOR_PREV.invokeExact(ptr(), NativeCalls.toNative(arena, target), (long) target.length);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("seekForPrev failed", t);
+			throw NativeCalls.wrapInvokeFailure(SEEK_FOR_PREV_FAILED, t);
 		}
 	}
 
@@ -222,7 +225,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			MH_SEEK_FOR_PREV.invokeExact(ptr(), MemorySegment.ofBuffer(target), (long) target.remaining());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("seekForPrev failed", t);
+			throw NativeCalls.wrapInvokeFailure(SEEK_FOR_PREV_FAILED, t);
 		}
 	}
 
@@ -233,7 +236,7 @@ public final class RocksIterator extends NativeObject {
 		try {
 			MH_SEEK_FOR_PREV.invokeExact(ptr(), target, target.byteSize());
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("seekForPrev failed", t);
+			throw NativeCalls.wrapInvokeFailure(SEEK_FOR_PREV_FAILED, t);
 		}
 	}
 

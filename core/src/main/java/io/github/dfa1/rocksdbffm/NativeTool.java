@@ -199,37 +199,46 @@ public final class NativeTool {
 				}
 				Path file = staging.resolve(names[i]);
 				Files.write(file, contents[i]);
-				if ("ldb".equals(names[i]) || "sst_dump".equals(names[i])
-						|| "ldb.exe".equals(names[i]) || "sst_dump.exe".equals(names[i])) {
-					if (!file.toFile().setExecutable(true)) {
-						throw new UncheckedIOException(new IOException("Failed to mark " + file + " executable"));
-					}
+				if (isExecutable(names[i]) && !file.toFile().setExecutable(true)) {
+					throw new UncheckedIOException(new IOException("Failed to mark " + file + " executable"));
 				}
 			}
 			if (!windows) {
 				String soname = new String(contents[names.length - 1]).strip();
-				Path mainLib = staging.resolve(names[names.length - 2]);
-				try {
-					Files.createSymbolicLink(staging.resolve(soname), mainLib.getFileName());
-				} catch (FileAlreadyExistsException e) {
-					// soname happens to equal the already-extracted main library name; nothing to link.
-				}
+				linkSoname(staging, soname, staging.resolve(names[names.length - 2]));
 			}
-			try {
-				Files.move(staging, target, StandardCopyOption.ATOMIC_MOVE);
-			} catch (IOException e) {
-				// Another process already extracted (and may be executing from) the same
-				// content-addressed directory; its content is byte-for-byte identical by
-				// construction, so falling back to it is safe.
-				if (!Files.isDirectory(target)) {
-					throw e;
-				}
-			}
+			moveIntoPlace(staging, target);
 		} catch (IOException e) {
 			throw new UncheckedIOException("Failed to extract RocksDB tool binaries", e);
 		} finally {
 			if (staging != null) {
 				deleteQuietly(staging);
+			}
+		}
+	}
+
+	private static boolean isExecutable(String name) {
+		return "ldb".equals(name) || "sst_dump".equals(name)
+				|| "ldb.exe".equals(name) || "sst_dump.exe".equals(name);
+	}
+
+	private static void linkSoname(Path staging, String soname, Path mainLib) throws IOException {
+		try {
+			Files.createSymbolicLink(staging.resolve(soname), mainLib.getFileName());
+		} catch (FileAlreadyExistsException _) {
+			// soname happens to equal the already-extracted main library name; nothing to link.
+		}
+	}
+
+	private static void moveIntoPlace(Path staging, Path target) throws IOException {
+		try {
+			Files.move(staging, target, StandardCopyOption.ATOMIC_MOVE);
+		} catch (IOException e) {
+			// Another process already extracted (and may be executing from) the same
+			// content-addressed directory; its content is byte-for-byte identical by
+			// construction, so falling back to it is safe.
+			if (!Files.isDirectory(target)) {
+				throw e;
 			}
 		}
 	}
@@ -242,11 +251,11 @@ public final class NativeTool {
 			stream.sorted(Comparator.reverseOrder()).forEach(p -> {
 				try {
 					Files.deleteIfExists(p);
-				} catch (IOException ignored) {
+				} catch (IOException _) {
 					// best-effort cleanup of a staging directory
 				}
 			});
-		} catch (IOException ignored) {
+		} catch (IOException _) {
 			// best-effort cleanup of a staging directory
 		}
 	}

@@ -22,8 +22,7 @@ class PerfMetricTest {
 		}
 
 		// Then
-		assertThat(distinctValues).hasSize(metrics.length);
-		assertThat(distinctValues).allSatisfy(v -> assertThat(v).isNotNegative());
+		assertThat(distinctValues).hasSize(metrics.length).allSatisfy(v -> assertThat(v).isNotNegative());
 	}
 
 	@Test
