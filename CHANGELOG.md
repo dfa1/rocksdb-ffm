@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18] — 2026-11-09
+
+Correct `TickerType` and `PerfLevel` values, tiered SST storage, and CI checks that catch enum and prototype drift on RocksDB bumps.
+
 ### Added
 
 - `DbPath` and `Options.setDbPaths`/`setCfPaths`: tiered SST storage across several mount points ([#253](https://github.com/dfa1/rocksdb-ffm/pull/253), closes [#222](https://github.com/dfa1/rocksdb-ffm/issues/222))
@@ -16,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `TickerType` from 86 on read the wrong counter; `PerfLevel.ENABLE_TIME`/`ENABLE_TIME_EXCEPT_FOR_MUTEX` set a lower level ([#257](https://github.com/dfa1/rocksdb-ffm/pull/257))
 - Native build no longer reuses a library built from a different `rocksdb` commit or build script ([#257](https://github.com/dfa1/rocksdb-ffm/pull/257))
+- Native build falls back to `zlib.net/fossils` when the GitHub zlib download fails ([#258](https://github.com/dfa1/rocksdb-ffm/pull/258))
 
 ## [0.17] — 2026-11-08
 
@@ -392,7 +397,9 @@ Initial release. An FFM-based RocksDB binding built from scratch against `rocksd
 - All tests migrated to the `// Given / // When / // Then` + AssertJ convention. ([c8cfae5](https://github.com/dfa1/rocksdb-ffm/commit/c8cfae5))
 - Error handling centralized on `RocksDB.errHolder`/`checkError`; per-class `ThreadLocal` error pointers removed in favor of a shared `Arena`-based pattern. ([736c926](https://github.com/dfa1/rocksdb-ffm/commit/736c926))
 
-[Unreleased]: https://github.com/dfa1/rocksdb-ffm/compare/v0.16...HEAD
+[Unreleased]: https://github.com/dfa1/rocksdb-ffm/compare/v0.18...HEAD
+[0.18]: https://github.com/dfa1/rocksdb-ffm/compare/v0.17...v0.18
+[0.17]: https://github.com/dfa1/rocksdb-ffm/compare/v0.16...v0.17
 [0.16]: https://github.com/dfa1/rocksdb-ffm/compare/v0.15...v0.16
 [0.15]: https://github.com/dfa1/rocksdb-ffm/compare/v0.14...v0.15
 [0.14]: https://github.com/dfa1/rocksdb-ffm/compare/v0.13...v0.14
