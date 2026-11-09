@@ -95,7 +95,7 @@ public final class Checkpoint extends NativeObject {
 			MH_EXPORT.invokeExact(ptr(), dirSeg, logSizeForFlush.toBytes(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("Native call failed", t);
+			throw NativeCalls.wrapInvokeFailure("checkpoint exportTo failed", t);
 		}
 	}
 

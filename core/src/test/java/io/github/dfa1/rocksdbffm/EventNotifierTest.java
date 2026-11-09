@@ -400,9 +400,9 @@ class EventNotifierTest {
 			// When
 			db.ingestExternalFile(sstPath);
 			db.compactRange();
+			var result = db.get("aaa".getBytes());
 
 			// Then — no exception escaped any default callback and the ingested key is readable
-			var result = db.get("aaa".getBytes());
 			assertThat(result).isEqualTo("val1".getBytes());
 		}
 	}

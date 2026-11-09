@@ -33,7 +33,12 @@ class BackupInfoTest {
 		var b = new BackupInfo(BackupId.of(1), timestamp, MemorySize.ofBytes(50), 2L);
 		var c = new BackupInfo(BackupId.of(2), timestamp, MemorySize.ofBytes(50), 2L);
 
-		// When / Then
-		assertThat(a).isEqualTo(b).isNotEqualTo(c);
+		// When
+		var sameValue = a.equals(b);
+		var differentValue = a.equals(c);
+
+		// Then
+		assertThat(sameValue).isTrue();
+		assertThat(differentValue).isFalse();
 	}
 }

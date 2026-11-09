@@ -100,7 +100,7 @@ public final class RateLimiter extends NativeObject {
 	/// @throws NullPointerException     if `refillPeriod` is `null`
 	/// @throws IllegalArgumentException if `refillPeriod` is negative
 	public static RateLimiter create(MemorySize rateBytesPerSec, Duration refillPeriod, int fairness) {
-		requireNonNegative(refillPeriod);
+		requireValidRefillPeriod(refillPeriod);
 		try {
 			MemorySegment ptr = (MemorySegment) MH_CREATE.invokeExact(
 					rateBytesPerSec.toBytes(), refillPeriod.toNanos() / 1_000L, fairness);
@@ -123,7 +123,7 @@ public final class RateLimiter extends NativeObject {
 	/// @throws NullPointerException     if `refillPeriod` is `null`
 	/// @throws IllegalArgumentException if `refillPeriod` is negative
 	public static RateLimiter createAutoTuned(MemorySize rateBytesPerSec, Duration refillPeriod, int fairness) {
-		requireNonNegative(refillPeriod);
+		requireValidRefillPeriod(refillPeriod);
 		try {
 			MemorySegment ptr = (MemorySegment) MH_CREATE_AUTO_TUNED.invokeExact(
 					rateBytesPerSec.toBytes(), refillPeriod.toNanos() / 1_000L, fairness);
@@ -157,7 +157,7 @@ public final class RateLimiter extends NativeObject {
 	/// @throws IllegalArgumentException if `refillPeriod` is negative
 	public static RateLimiter createWithMode(MemorySize rateBytesPerSec, Duration refillPeriod,
 			int fairness, Mode mode, boolean autoTuned) {
-		requireNonNegative(refillPeriod);
+		requireValidRefillPeriod(refillPeriod);
 		try {
 			MemorySegment ptr = (MemorySegment) MH_CREATE_WITH_MODE.invokeExact(
 					rateBytesPerSec.toBytes(), refillPeriod.toNanos() / 1_000L, fairness,
@@ -173,7 +173,7 @@ public final class RateLimiter extends NativeObject {
 		MH_DESTROY.invokeExact(ptr);
 	}
 
-	private static void requireNonNegative(Duration refillPeriod) {
+	private static void requireValidRefillPeriod(Duration refillPeriod) {
 		Objects.requireNonNull(refillPeriod, "refillPeriod must not be null");
 		if (refillPeriod.isNegative()) {
 			throw new IllegalArgumentException("refillPeriod must not be negative: " + refillPeriod);

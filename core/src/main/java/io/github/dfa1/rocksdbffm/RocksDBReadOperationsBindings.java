@@ -17,8 +17,6 @@ import java.util.OptionalLong;
 /// [#131](https://github.com/dfa1/rocksdbffm/issues/131).
 final class RocksDBReadOperationsBindings {
 
-	private static final String GET_FAILED = "get failed";
-
 	/// `rocksdb_pinnable_handle_t* rocksdb_get_pinned_v2(rocksdb_t* db, const rocksdb_readoptions_t* options, const char* key, size_t keylen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED_V2;
 	/// `rocksdb_pinnable_handle_t* rocksdb_get_pinned_cf_v2(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char** errptr);`
@@ -148,7 +146,7 @@ final class RocksDBReadOperationsBindings {
 				return ph.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -172,7 +170,7 @@ final class RocksDBReadOperationsBindings {
 			value.position(value.position() + (int) valLen);
 			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -195,7 +193,7 @@ final class RocksDBReadOperationsBindings {
 			}
 			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -256,7 +254,7 @@ final class RocksDBReadOperationsBindings {
 				return ph.toByteArray(err);
 			}
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -281,7 +279,7 @@ final class RocksDBReadOperationsBindings {
 			value.position(value.position() + (int) valLen);
 			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("get failed", t);
 		}
 	}
 
@@ -305,7 +303,7 @@ final class RocksDBReadOperationsBindings {
 			}
 			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure(GET_FAILED, t);
+			throw NativeCalls.wrapInvokeFailure("get failed", t);
 		}
 	}
 
