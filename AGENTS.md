@@ -13,7 +13,9 @@ This project is heavily AI-driven. As an agent, your goal is to:
 - **Language:** Java 25+.
 - **Core API:** `java.lang.foreign` (Foreign Function & Memory API).
 - **Native Library:** RocksDB (C API via `include/rocksdb/c.h`), built from the `rocksdb/` git submodule (pinned to
-  v11.13.2).
+  v11.13.2). Bumping it: follow `.claude/skills/upgrade-rocksdb/SKILL.md` — enum values and `c.h` prototypes
+  drift silently between releases; `java scripts/CheckEnums.java` and `java scripts/CheckPrototypes.java`
+  (both in CI) catch them.
 - **Native Compiler:** `zig cc` / `zig c++` — used as a drop-in C/C++ compiler via
   `CC="zig cc" CXX="zig c++" PORTABLE=1 make shared_lib`. Zig bundles clang + libc++ for every target, enabling
   cross-compilation without a separate sysroot.

@@ -56,11 +56,23 @@ esac
 DEST_DIR="$OUTPUT_RESOURCES/native/$CLASSIFIER"
 mkdir -p "$DEST_DIR"
 
-# Skip if already built (CI cache or repeated local builds)
-if [ -f "$DEST_DIR/$LIB_NAME" ] && [ -f "$DEST_DIR/ldb" ]; then
-    echo "[build-rocksdb] $DEST_DIR/$LIB_NAME already exists, skipping build."
+# Skip if already built from this exact submodule commit (CI cache or repeated
+# local builds). Existence alone isn't enough: after a submodule bump a stale
+# library kept loading and tests silently ran against the previous RocksDB.
+# The stamp also covers this script, so a build flag or dependency change rebuilds.
+ROCKSDB_SHA="$(git -C "$ROCKSDB_DIR" rev-parse HEAD 2>/dev/null || echo unknown)-$(git hash-object "$0" 2>/dev/null || echo unknown)"
+if [ -f "$DEST_DIR/$LIB_NAME" ] && [ -f "$DEST_DIR/ldb" ] \
+    && [[ "$ROCKSDB_SHA" != *unknown* ]] \
+    && [ "$(cat "$DEST_DIR/rocksdb.sha" 2>/dev/null)" = "$ROCKSDB_SHA" ]; then
+    echo "[build-rocksdb] $DEST_DIR/$LIB_NAME already built from rocksdb $ROCKSDB_SHA, skipping build."
     exit 0
 fi
+if [[ "$ROCKSDB_SHA" == *unknown* ]]; then
+    echo "[build-rocksdb] WARNING: git unavailable, cannot tell which rocksdb the existing library was built from; rebuilding." >&2
+fi
+# Drop the old stamp first: a build that fails after copying the new library
+# must not leave the previous commit's stamp next to it.
+rm -f "$DEST_DIR/rocksdb.sha"
 
 # ---------------------------------------------------------------------------
 # Detect whether we are cross-compiling
@@ -322,4 +334,5 @@ cp "$ROCKSDB_DIR/$LIB_NAME" "$DEST_DIR/$LIB_NAME"
 cp "$ROCKSDB_DIR/ldb" "$ROCKSDB_DIR/sst_dump" "$ROCKSDB_DIR/$TOOLS_LIB" "$DEST_DIR/"
 chmod +x "$DEST_DIR/ldb" "$DEST_DIR/sst_dump"
 echo "$SONAME" > "$DEST_DIR/librocksdb.soname"
+echo "$ROCKSDB_SHA" > "$DEST_DIR/rocksdb.sha"
 echo "[build-rocksdb] Installed: $DEST_DIR/$LIB_NAME, ldb, sst_dump, $TOOLS_LIB"
