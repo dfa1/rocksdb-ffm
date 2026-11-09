@@ -366,8 +366,14 @@ EOF
             PLATFORM_CMAKE_FLAGS="-G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE='-O3 -DNDEBUG -frtti' -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=$CMAKE_PROCESSOR -DCMAKE_C_COMPILER='$CC_COMPILER' -DCMAKE_CXX_COMPILER='$CXX_COMPILER' $SNAPPY_ARG1 -DCMAKE_AR='$AR_WRAPPER' -DCMAKE_RANLIB='$RANLIB_WRAPPER'"
         # zlib: compiled directly, see build-rocksdb.sh (no -fPIC: clang
         # rejects it for Windows targets).
+        # Mirror fallback: see build-rocksdb.sh.
         ZLIB_VER="$(awk '/^ZLIB_VER /{print $3}' Makefile)"
-        make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_PREFIX="https://github.com/madler/zlib/releases/download/v$ZLIB_VER/zlib-"
+        ZLIB_OK=
+        for prefix in "https://github.com/madler/zlib/releases/download/v$ZLIB_VER/zlib-" "https://zlib.net/fossils/zlib-"; do
+            rm -f "zlib-$ZLIB_VER.tar.gz"
+            if make "zlib-$ZLIB_VER.tar.gz" ZLIB_DOWNLOAD_PREFIX="$prefix"; then ZLIB_OK=1; break; fi
+        done
+        [ -n "$ZLIB_OK" ] || { echo "[build-rocksdb-windows] zlib-$ZLIB_VER.tar.gz: every mirror failed" >&2; exit 1; }
         rm -rf "zlib-$ZLIB_VER" && tar xzf "zlib-$ZLIB_VER.tar.gz"
         cd "zlib-$ZLIB_VER"
         for src in adler32 compress crc32 deflate infback inffast inflate inftrees trees uncompr zutil; do
