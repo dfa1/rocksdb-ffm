@@ -3,8 +3,11 @@ package io.github.dfa1.rocksdbffm;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -130,6 +133,52 @@ class CheckpointTest {
 		// Then — snapshot still has the key
 		try (var snap = RocksDB.openReadOnly(cpDir)) {
 			assertThat(snap.get("k".getBytes())).isEqualTo("v".getBytes());
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// exportTo(Path) convenience overload (defaults to MemorySize.ZERO)
+	// -----------------------------------------------------------------------
+
+	@Test
+	void exportTo_withoutLogSize_flushesMemtableToSst(@TempDir Path dir) throws IOException {
+		// Given — the write stays in the memtable/WAL: no explicit flush
+		var cpDir = dir.resolve("checkpoint");
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"));
+		     var cp = Checkpoint.newCheckpoint(db)) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			cp.exportTo(cpDir);
+		}
+
+		// Then
+		var sstFiles = countFiles(cpDir, ".sst");
+		assertThat(sstFiles).isPositive();
+	}
+
+	@Test
+	void exportTo_withHugeLogSize_keepsDataInWal(@TempDir Path dir) throws IOException {
+		// Given — contrast case: a threshold the WAL never reaches, so nothing is flushed
+		var cpDir = dir.resolve("checkpoint");
+		try (var db = RocksDB.openReadWrite(dir.resolve("db"));
+		     var cp = Checkpoint.newCheckpoint(db)) {
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			cp.exportTo(cpDir, MemorySize.ofBytes(Long.MAX_VALUE));
+		}
+
+		// Then
+		var sstFiles = countFiles(cpDir, ".sst");
+		var walFiles = countFiles(cpDir, ".log");
+		assertThat(sstFiles).isZero();
+		assertThat(walFiles).isPositive();
+	}
+
+	private static long countFiles(Path dir, String suffix) throws IOException {
+		try (Stream<Path> files = Files.list(dir)) {
+			return files.filter(p -> p.getFileName().toString().endsWith(suffix)).count();
 		}
 	}
 
