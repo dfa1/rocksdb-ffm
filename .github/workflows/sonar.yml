@@ -45,7 +45,7 @@ jobs:
             native/linux-aarch64/src/main/resources/native
             native/windows-x86_64/src/main/resources/native
             native/windows-aarch64/src/main/resources/native
-          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt', 'rocksdb/Makefile', 'scripts/build-rocksdb.sh', 'scripts/build-rocksdb-windows.sh') }}-zig${{ env.ZIG_VERSION }}-ubuntu-latest-${{ runner.arch }}
+          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt', 'rocksdb/Makefile', 'rocksdb/include/rocksdb/version.h', 'scripts/build-rocksdb.sh', 'scripts/build-rocksdb-windows.sh') }}-zig${{ env.ZIG_VERSION }}-ubuntu-latest-${{ runner.arch }}
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v6

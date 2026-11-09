@@ -40,6 +40,19 @@ jobs:
         with:
           version: ${{ env.ZIG_VERSION }}
 
+      # RocksDB renumbers enums between releases (tickers inserted mid-list) and a
+      # stale Java mapping silently reads the wrong value — fail the submodule bump
+      # PR instead. Header-only, so one OS is enough.
+      - name: Check Java enums against RocksDB headers
+        if: matrix.os == 'ubuntu-latest'
+        run: java scripts/CheckEnums.java
+
+      # Same failure mode for functions: a changed c.h prototype keeps linking and
+      # corrupts memory. Checks every MH_ field's `/// prototype` comment.
+      - name: Check MH_ prototypes against c.h
+        if: matrix.os == 'ubuntu-latest'
+        run: java scripts/CheckPrototypes.java
+
       - name: Cache RocksDB native builds
         uses: actions/cache@v6
         with:
@@ -49,7 +62,7 @@ jobs:
             native/linux-aarch64/src/main/resources/native
             native/windows-x86_64/src/main/resources/native
             native/windows-aarch64/src/main/resources/native
-          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt', 'rocksdb/Makefile', 'scripts/build-rocksdb.sh', 'scripts/build-rocksdb-windows.sh') }}-zig${{ env.ZIG_VERSION }}-${{ matrix.os }}-${{ runner.arch }}
+          key: rocksdb-${{ hashFiles('rocksdb/CMakeLists.txt', 'rocksdb/Makefile', 'rocksdb/include/rocksdb/version.h','scripts/build-rocksdb.sh', 'scripts/build-rocksdb-windows.sh') }}-zig${{ env.ZIG_VERSION }}-${{ matrix.os }}-${{ runner.arch }}
 
       - name: Build and test
         run: mvn --batch-mode verify -Pall-natives

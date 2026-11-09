@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `DbPath` and `Options.setDbPaths`/`setCfPaths`: tiered SST storage across several mount points ([#253](https://github.com/dfa1/rocksdb-ffm/pull/253), closes [#222](https://github.com/dfa1/rocksdb-ffm/issues/222))
+- `scripts/CheckEnums.java`/`CheckPrototypes.java`, run in CI: fail when Java enums or `MH_` prototypes drift from the RocksDB headers ([#257](https://github.com/dfa1/rocksdb-ffm/pull/257))
 
 ### Fixed
 
 - `TickerType` from 86 on read the wrong counter; `PerfLevel.ENABLE_TIME`/`ENABLE_TIME_EXCEPT_FOR_MUTEX` set a lower level ([#257](https://github.com/dfa1/rocksdb-ffm/pull/257))
+- Native build no longer reuses a library built from a different `rocksdb` commit or build script ([#257](https://github.com/dfa1/rocksdb-ffm/pull/257))
 
 ## [0.17] — 2026-11-08
 
