@@ -26,10 +26,16 @@ static final Path JAVA = Path.of("core/src/main/java/io/github/dfa1/rocksdbffm")
 
 /// `nativeEnum` starting with `@` names the first enumerator of an anonymous `c.h` enum;
 /// `affixes` are stripped from both normalized names; `aliases` maps a Java name to its native one.
+/// A `bitmask` enum's zero value (no bits set) is an empty `EnumSet` in Java, not a constant.
 record Mapping(String javaFile, String javaEnum, String header, String nativeEnum, String qualifier,
-		List<String> affixes, Map<String, String> aliases) {
+		List<String> affixes, Map<String, String> aliases, boolean bitmask) {
 	Mapping(String javaFile, String javaEnum, String header, String nativeEnum, String qualifier) {
 		this(javaFile, javaEnum, header, nativeEnum, qualifier, List.of(), Map.of());
+	}
+
+	Mapping(String javaFile, String javaEnum, String header, String nativeEnum, String qualifier,
+			List<String> affixes, Map<String, String> aliases) {
+		this(javaFile, javaEnum, header, nativeEnum, qualifier, affixes, aliases, false);
 	}
 
 	String key() {
@@ -70,11 +76,16 @@ static final List<Mapping> ENUMS = List.of(
 				List.of("compactionstopstyle"), Map.of()),
 		new Mapping("RateLimiter", "Mode", "rate_limiter.h", "Mode", "rocksdb::RateLimiter::Mode::"),
 		new Mapping("WritePolicy", "WritePolicy", "utilities/transaction_db.h", "TxnDBWritePolicy", "rocksdb::"),
-		new Mapping("PerfMetric", "PerfMetric", "c.h", "@rocksdb_user_key_comparison_count", ""));
+		new Mapping("PerfMetric", "PerfMetric", "c.h", "@rocksdb_user_key_comparison_count", ""),
+		new Mapping("TraceFilter", "TraceFilter", "options.h", "TraceFilterType", "rocksdb::",
+				List.of("tracefilter"), Map.of(), true));
 
 /// Count/range markers rather than real values.
 static final Pattern SENTINEL = Pattern.compile(
 		"_ENUM_MAX$|^NUM_INFO_LOG_LEVELS$|^kNumOf|^kFirst|^kLast|^kCustom|^kOutOfBounds$|_total_metric_count$");
+
+/// An int or long literal, optionally shifted: `3`, `0x0A`, `0x1L << 2`.
+static final Pattern LITERAL = Pattern.compile("(-?(?:0x[0-9A-Fa-f]+|\\d+))[lL]?(?:\\s*<<\\s*(\\d+))?");
 
 static String stripComments(String text) {
 	return text.replaceAll("(?s)//[^\n]*|/\\*.*?\\*/", "");
@@ -114,25 +125,26 @@ static List<String> nativeNames(Mapping e) throws Exception {
 	return names;
 }
 
-static Map<String, Integer> javaValues(Mapping e) throws Exception {
+static Map<String, Long> javaValues(Mapping e) throws Exception {
 	String text = stripComments(Files.readString(JAVA.resolve(e.javaFile() + ".java")));
 	String block = body(text, find("\\benum\\s+" + e.javaEnum() + "\\s*\\{", text, e.key()).end() - 1);
-	Map<String, Integer> cases = new LinkedHashMap<>();
+	Map<String, Long> cases = new LinkedHashMap<>();
 	Matcher c = Pattern.compile("case\\s+(-?(?:0x[0-9A-Fa-f]+|\\d+))\\s*->\\s*([A-Z][A-Z0-9_]*)\\s*;").matcher(block);
 	while (c.find()) {
-		cases.put(c.group(2), Integer.decode(c.group(1)));
+		cases.put(c.group(2), Long.decode(c.group(1)));
 	}
-	Map<String, Integer> values = new LinkedHashMap<>();
+	Map<String, Long> values = new LinkedHashMap<>();
 	Matcher m = Pattern.compile("([A-Z][A-Z0-9_]*)\\s*(?:\\(([^)]*)\\))?\\s*(?:,|$)").matcher(block.split(";")[0].strip());
 	for (int ordinal = 0; m.find(); ordinal++) {
 		String name = m.group(1);
 		String arg = m.group(2) == null ? "" : m.group(2).strip();
+		Matcher literal = LITERAL.matcher(arg);
 		if (cases.containsKey(name)) {
 			values.put(name, cases.get(name));
-		} else if (arg.matches("-?(0x[0-9A-Fa-f]+|\\d+)")) {
-			values.put(name, Integer.decode(arg));
+		} else if (literal.matches()) {
+			values.put(name, Long.decode(literal.group(1)) << (literal.group(2) == null ? 0 : Integer.parseInt(literal.group(2))));
 		} else if (arg.isEmpty()) {
-			values.put(name, ordinal);
+			values.put(name, (long) ordinal);
 		} else {
 			throw new IllegalStateException(e.key() + "." + name + "(" + arg + "): not an int literal; add a case -> mapping or extend this script");
 		}
@@ -195,7 +207,7 @@ void main() throws Exception {
 	for (Mapping e : ENUMS) {
 		Map<String, Map.Entry<String, Long>> byName = new LinkedHashMap<>();
 		for (Map.Entry<String, Long> n : natives.getOrDefault(e.key(), List.of())) {
-			if (!SENTINEL.matcher(n.getKey()).find()) {
+			if (!SENTINEL.matcher(n.getKey()).find() && !(e.bitmask() && n.getValue() == 0)) {
 				byName.put(normalize(n.getKey(), e.affixes()), n);
 			}
 		}
