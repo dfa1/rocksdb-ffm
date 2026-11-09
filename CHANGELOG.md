@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `DbPath` and `Options.setDbPaths`/`setCfPaths`: tiered SST storage across several mount points ([#253](https://github.com/dfa1/rocksdb-ffm/pull/253), closes [#222](https://github.com/dfa1/rocksdb-ffm/issues/222))
 
+### Fixed
+
+- `TickerType` from 86 on read the wrong counter; `PerfLevel.ENABLE_TIME`/`ENABLE_TIME_EXCEPT_FOR_MUTEX` set a lower level ([#257](https://github.com/dfa1/rocksdb-ffm/pull/257))
+
 ## [0.17] — 2026-11-08
 
 Reopen a database with its saved options, hermetic bzip2, and a refreshed benchmark suite on the M5 Max.

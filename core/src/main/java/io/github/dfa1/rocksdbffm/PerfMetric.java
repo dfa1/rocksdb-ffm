@@ -161,7 +161,17 @@ public enum PerfMetric {
 	/// CPU time spent reading blocks, in nanoseconds.
 	BLOCK_READ_CPU_TIME(76),
 	/// Number of merge operations applied during point lookups.
-	INTERNAL_MERGE_POINT_LOOKUP_COUNT(77);
+	INTERNAL_MERGE_POINT_LOOKUP_COUNT(77),
+	/// Bytes read from storage for data blocks (part of [#BLOCK_READ_BYTE]).
+	DATA_BLOCK_READ_BYTE(78),
+	/// Bytes read from storage for index blocks (part of [#BLOCK_READ_BYTE]).
+	INDEX_BLOCK_READ_BYTE(79),
+	/// Bytes read from storage for filter blocks (part of [#BLOCK_READ_BYTE]).
+	FILTER_BLOCK_READ_BYTE(80),
+	/// Bytes read from storage for compression dictionary blocks (part of [#BLOCK_READ_BYTE]).
+	COMPRESSION_DICT_BLOCK_READ_BYTE(81),
+	/// Bytes read from storage for other metadata blocks (part of [#BLOCK_READ_BYTE]).
+	METADATA_BLOCK_READ_BYTE(82);
 
 	final int value;
 

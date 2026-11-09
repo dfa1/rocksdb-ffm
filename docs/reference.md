@@ -472,9 +472,9 @@ return `null` to run that compaction with no filter at all.
 | Area          | API                                                                                       |
 |:--------------|:-------------------------------------------------------------------------------------------|
 | Properties    | `getProperty(Property)` → `Optional<String>`, `getLongProperty(Property)` → `OptionalLong`; `Property` has 80 constants, each `Type.STRING` or `Type.NUMERIC` (`propertyName()`, `type()`) |
-| Statistics    | `Options.enableStatistics()`, `setStatisticsLevel(StatsLevel)`, `getStatisticsString()`, `getTickerCount(TickerType)` (235 tickers), `getHistogramData(HistogramType, StatisticsHistogramData)` (65 histograms) |
+| Statistics    | `Options.enableStatistics()`, `setStatisticsLevel(StatsLevel)`, `getStatisticsString()`, `getTickerCount(TickerType)` (267 tickers), `getHistogramData(HistogramType, StatisticsHistogramData)` (80 histograms) |
 | Histogram data| `StatisticsHistogramData.newStatisticsHistogramData()`; `getMedian`, `getP95`, `getP99`, `getAverage`, `getStdDev`, `getMin`, `getMax`, `getCount`, `getSum` |
-| Perf context  | `PerfContext.setPerfLevel(PerfLevel)`, `newPerfContext()` (resets), `currentPerfContext()` (does not reset), `metric(PerfMetric)` (78 metrics), `report(boolean excludeZeroCounters)`, `reset()` — thread-local |
+| Perf context  | `PerfContext.setPerfLevel(PerfLevel)`, `newPerfContext()` (resets), `currentPerfContext()` (does not reset), `metric(PerfMetric)` (83 metrics), `report(boolean excludeZeroCounters)`, `reset()` — thread-local |
 | Logging       | `Options.setInfoLog(Logger)`, `setInfoLogLevel(LogLevel)`                                  |
 | Event listeners| `Options.addEventListener(EventNotifier)` (callable repeatedly to register several); `EventNotifier` has 8 no-op default methods — `onFlushBegin`, `onFlushCompleted`, `onCompactionBegin`, `onCompactionCompleted`, `onExternalFileIngested`, `onBackgroundError`, `onStallConditionsChanged`, `onMemTableSealed`. Callbacks run on RocksDB background threads; the `*Info` arguments are zero-copy views valid only for the duration of the call — see [explanation.md#background-thread-callbacks](explanation.md#background-thread-callbacks) |
 | JFR events     | `Options.addEventListener(JfrEventNotifier.create())` (or `create(SstFileManager)` to add SST space fields): `rocksdbffm.Flush`/`Compaction`/`WriteStall` duration events, `MemTableSealed`/`BackgroundError`/`ExternalFileIngested` instant events, category `RocksDB`. One `isEnabled()` check per callback when no recording runs; use one instance per database |
@@ -506,12 +506,12 @@ return `null` to run that compaction with no filter at all.
 | `CompressionType`                   | `NO_COMPRESSION`, `SNAPPY`, `ZLIB`, `BZLIB2`, `LZ4`, `LZ4HC`, `XPRESS`, `ZSTD`                 |
 | `LogLevel`                          | `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL`, `HEADER`                                            |
 | `StatsLevel`                        | `DISABLE_ALL`, `EXCEPT_TICKERS`, `EXCEPT_HISTOGRAM_OR_TIMERS`, `EXCEPT_TIMERS`, `EXCEPT_DETAILED_TIMERS`, `EXCEPT_TIME_FOR_MUTEX`, `ALL` |
-| `PerfLevel`                         | `UNINITIALIZED`, `DISABLE`, `ENABLE_COUNT`, `ENABLE_TIME_EXCEPT_FOR_MUTEX`, `ENABLE_TIME`      |
+| `PerfLevel`                         | `UNINITIALIZED`, `DISABLE`, `ENABLE_COUNT`, `ENABLE_WAIT`, `ENABLE_TIME_EXCEPT_FOR_MUTEX`, `ENABLE_TIME_AND_CPU_TIME_EXCEPT_FOR_MUTEX`, `ENABLE_TIME` |
 | `PrepopulateBlobCache`              | `DISABLE`, `FLUSH_ONLY`                                                                        |
 | `Temperature`                       | `UNKNOWN`, `HOT`, `WARM`, `COOL`, `COLD`, `ICE` — storage-tier hint, no-op for the default `FileSystem` |
 | `RateLimiter.Mode`                  | `READS_ONLY`, `WRITES_ONLY`, `ALL_IO`                                                          |
 | `IOPriority`                        | `LOW`, `MID`, `HIGH`, `USER`, `TOTAL`                                                          |
-| `IOActivity`                        | `FLUSH`, `COMPACTION`, `DB_OPEN`, `GET`, `MULTI_GET`, `DB_ITERATOR`, `VERIFY_DB_CHECKSUM`, `VERIFY_FILE_CHECKSUMS`, `GET_ENTITY`, `MULTI_GET_ENTITY`, `GET_FILE_CHECKSUMS_FROM_CURRENT_MANIFEST`, `UNKNOWN` |
+| `IOActivity`                        | `FLUSH`, `COMPACTION`, `DB_OPEN`, `GET`, `MULTI_GET`, `DB_ITERATOR`, `VERIFY_DB_CHECKSUM`, `VERIFY_FILE_CHECKSUMS`, `GET_ENTITY`, `MULTI_GET_ENTITY`, `GET_FILE_CHECKSUMS_FROM_CURRENT_MANIFEST`, `LAZY_RESOLVE`, `UNKNOWN` |
 | `BlockBasedTableOptions.IndexType`  | Block-based index layout selection                                                             |
 | `FlushReason`                       | Why a flush ran: `MANUAL_FLUSH`, `WRITE_BUFFER_FULL`, `WAL_FULL`, `AUTO_COMPACTION`, `ERROR_RECOVERY`, … (16 constants) |
 | `CompactionReason`                  | Why a compaction ran: `MANUAL_COMPACTION`, `LEVEL_L0_FILES_NUM`, `TTL`, `BOTTOMMOST_FILES`, `PERIODIC_COMPACTION`, … (21 constants) |
