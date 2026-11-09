@@ -1,0 +1,38 @@
+name: Feature request / missing wrapper
+description: A RocksDB feature you need that rocksdbffm doesn't expose yet.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check [docs/c-api-gaps.md](https://github.com/dfa1/rocksdb-ffm/blob/main/docs/c-api-gaps.md) first: it lists what `rocksdb/c.h` exposes but isn't wrapped yet (Type A) and what has no C API at all (Type B, needs an upstream RocksDB PR).
+  - type: textarea
+    id: feature
+    attributes:
+      label: Feature
+      description: The RocksDB feature, and the `c.h` function(s) or C++ API it maps to, if you know.
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: What you are trying to do, and what you use today (rocksdbjni, a workaround, ...).
+    validations:
+      required: true
+  - type: dropdown
+    id: gap
+    attributes:
+      label: Listed in c-api-gaps.md?
+      options:
+        - "Yes, as Type A (C API exists, wrapper missing)"
+        - "Yes, as Type B (no C API)"
+        - "No / not sure"
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd like to implement this myself (see CONTRIBUTING.md)

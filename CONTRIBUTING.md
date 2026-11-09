@@ -4,6 +4,21 @@ Thanks for your interest. This guide covers everything needed to build, test, an
 Design rationale lives in [docs/explanation.md](docs/explanation.md); the full conventions agents and
 humans follow are in [AGENTS.md](AGENTS.md).
 
+Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md). Security issues go through
+[SECURITY.md](SECURITY.md), never a public issue.
+
+## Questions, issues, and where to start
+
+- **Questions and ideas:** [GitHub Discussions](https://github.com/dfa1/rocksdb-ffm/discussions)
+  (Q&A and Ideas categories).
+- **Bugs and missing wrappers:** open an issue from one of the templates. For a missing wrapper, check
+  [docs/c-api-gaps.md](docs/c-api-gaps.md) first.
+- **Looking for something to work on:** issues labeled
+  [`good first issue`](https://github.com/dfa1/rocksdb-ffm/labels/good%20first%20issue) are
+  self-contained and a good way to learn the codebase;
+  [`help wanted`](https://github.com/dfa1/rocksdb-ffm/labels/help%20wanted) marks work the maintainer
+  would welcome a contribution for. Comment on the issue before starting so nobody duplicates effort.
+
 ## Prerequisites
 
 - JDK 25+ (`java.lang.foreign` is final; no preview flags)
