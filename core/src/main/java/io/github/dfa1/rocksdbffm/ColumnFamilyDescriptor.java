@@ -1,6 +1,6 @@
 package io.github.dfa1.rocksdbffm;
 
-import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /// Describes a column family by name and optional per-family options.
 ///
@@ -12,29 +12,12 @@ import java.nio.charset.StandardCharsets;
 /// during the open or create call, so they only need to stay open until that call returns.
 public final class ColumnFamilyDescriptor {
 
-	private final byte[] name;
+	private final String name;
 	private final Options options;
 
-	private ColumnFamilyDescriptor(byte[] name, Options options) {
-		this.name = name;
+	private ColumnFamilyDescriptor(String name, Options options) {
+		this.name = Objects.requireNonNull(name, "name");
 		this.options = options;
-	}
-
-	/// Creates a descriptor with the given raw-byte name and no explicit options.
-	///
-	/// @param name column family name as raw bytes
-	/// @return a new descriptor
-	public static ColumnFamilyDescriptor of(byte[] name) {
-		return new ColumnFamilyDescriptor(name, null);
-	}
-
-	/// Creates a descriptor with the given raw-byte name and per-family options.
-	///
-	/// @param name    column family name as raw bytes
-	/// @param options per-column-family options; caller retains ownership
-	/// @return a new descriptor
-	public static ColumnFamilyDescriptor of(byte[] name, Options options) {
-		return new ColumnFamilyDescriptor(name, options);
 	}
 
 	/// Creates a descriptor with the given UTF-8 name and no explicit options.
@@ -42,7 +25,7 @@ public final class ColumnFamilyDescriptor {
 	/// @param name column family name as a UTF-8 string
 	/// @return a new descriptor
 	public static ColumnFamilyDescriptor of(String name) {
-		return new ColumnFamilyDescriptor(name.getBytes(StandardCharsets.UTF_8), null);
+		return new ColumnFamilyDescriptor(name, null);
 	}
 
 	/// Creates a descriptor with the given UTF-8 name and per-family options.
@@ -51,13 +34,13 @@ public final class ColumnFamilyDescriptor {
 	/// @param options per-column-family options; caller retains ownership
 	/// @return a new descriptor
 	public static ColumnFamilyDescriptor of(String name, Options options) {
-		return new ColumnFamilyDescriptor(name.getBytes(StandardCharsets.UTF_8), options);
+		return new ColumnFamilyDescriptor(name, options);
 	}
 
-	/// Returns the column family name as raw bytes.
+	/// Returns the column family name.
 	///
 	/// @return column family name
-	public byte[] name() {
+	public String name() {
 		return name;
 	}
 

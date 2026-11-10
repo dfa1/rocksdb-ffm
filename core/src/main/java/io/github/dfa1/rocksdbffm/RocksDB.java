@@ -750,7 +750,7 @@ public final class RocksDB {
 				try {
 					for (int i = 0; i < count; i++) {
 						String name = NativeCalls.toBorrowedJavaString(namesArr.getAtIndex(ValueLayout.ADDRESS, i));
-						descriptors.add(ColumnFamilyDescriptor.of(name.getBytes(StandardCharsets.UTF_8),
+						descriptors.add(ColumnFamilyDescriptor.of(name,
 								Options.copyOf(optionsArr.getAtIndex(ValueLayout.ADDRESS, i))));
 					}
 				} catch (Throwable t) {
@@ -812,7 +812,7 @@ public final class RocksDB {
 		for (int i = 0; i < n; i++) {
 			ColumnFamilyDescriptor desc = descriptors.get(i);
 			namesArr.setAtIndex(ValueLayout.ADDRESS, i,
-					arena.allocateFrom(new String(desc.name(), StandardCharsets.UTF_8)));
+					arena.allocateFrom(desc.name()));
 			Options cfOpts = desc.options();
 			if (cfOpts == null) {
 				cfOpts = Options.newOptions();
