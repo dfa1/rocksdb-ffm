@@ -7,8 +7,6 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 
@@ -667,14 +665,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param descriptor name and options for the new column family
 	/// @return handle to the newly created column family; caller must close it
 	public ColumnFamilyHandle createColumnFamily(ColumnFamilyDescriptor descriptor) {
-		List<Options> tempOptions = new ArrayList<>(1);
-		try (Arena arena = Arena.ofConfined()) {
+		// a null resource is skipped by try-with-resources: only the default Options is closed here
+		try (Arena arena = Arena.ofConfined();
+		     Options defaultOpts = descriptor.options() == null ? Options.newOptions() : null) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			Options cfOpts = descriptor.options();
-			if (cfOpts == null) {
-				cfOpts = Options.newOptions();
-				tempOptions.add(cfOpts);
-			}
+			Options cfOpts = defaultOpts != null ? defaultOpts : descriptor.options();
 			MemorySegment nameSeg = arena.allocateFrom(
 					new String(descriptor.name(), StandardCharsets.UTF_8));
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
@@ -683,10 +678,6 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 			return ColumnFamilyHandle.wrap(handle);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("createColumnFamily failed", t);
-		} finally {
-			for (Options o : tempOptions) {
-				o.close();
-			}
 		}
 	}
 

@@ -99,22 +99,27 @@ public final class LRUCache extends Cache {
 	///                     RocksDB choose automatically
 	/// @return a new [LRUCache]; caller must close it
 	public static LRUCache newLRUCache(MemorySize capacity, int numShardBits) {
-		MemorySegment opts = null;
-		try {
-			opts = (MemorySegment) MH_OPTS_CREATE.invokeExact();
-			MH_OPTS_SET_CAPACITY.invokeExact(opts, capacity.toBytes());
-			MH_OPTS_SET_NUM_SHARD_BITS.invokeExact(opts, numShardBits);
-			return new LRUCache((MemorySegment) MH_CREATE_OPTS.invokeExact(opts));
+		try (var opts = new LRUCacheOptions((MemorySegment) MH_OPTS_CREATE.invokeExact())) {
+			MH_OPTS_SET_CAPACITY.invokeExact(opts.ptr(), capacity.toBytes());
+			MH_OPTS_SET_NUM_SHARD_BITS.invokeExact(opts.ptr(), numShardBits);
+			return new LRUCache((MemorySegment) MH_CREATE_OPTS.invokeExact(opts.ptr()));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("LRUCache create failed", t);
-		} finally {
-			if (opts != null) {
-				try {
-					MH_OPTS_DESTROY.invokeExact(opts);
-				} catch (Throwable _) {
-					// best-effort: the cache (or the failure being propagated) is what matters
-				}
-			}
+		}
+	}
+
+	/// Scratch `rocksdb_lru_cache_options_t` used only inside [#newLRUCache(MemorySize, int)]:
+	/// `rocksdb_cache_create_lru_opts` copies it by value, so it is destroyed as soon as the cache
+	/// exists.
+	private static final class LRUCacheOptions extends NativeObject {
+
+		private LRUCacheOptions(MemorySegment ptr) {
+			super(ptr);
+		}
+
+		@Override
+		protected void tryClose(MemorySegment ptr) throws Throwable {
+			MH_OPTS_DESTROY.invokeExact(ptr);
 		}
 	}
 }

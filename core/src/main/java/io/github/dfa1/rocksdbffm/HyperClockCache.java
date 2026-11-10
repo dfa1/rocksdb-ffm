@@ -84,22 +84,27 @@ public final class HyperClockCache extends Cache {
 	/// @return a new [HyperClockCache]; caller must close it
 	public static HyperClockCache newHyperClockCache(
 			MemorySize capacity, MemorySize estimatedEntryCharge, int numShardBits) {
-		MemorySegment opts = null;
-		try {
-			opts = (MemorySegment) MH_OPTS_CREATE.invokeExact(
-					capacity.toBytes(), estimatedEntryCharge.toBytes());
-			MH_OPTS_SET_NUM_SHARD_BITS.invokeExact(opts, numShardBits);
-			return new HyperClockCache((MemorySegment) MH_CREATE_OPTS.invokeExact(opts));
+		try (var opts = new HyperClockCacheOptions((MemorySegment) MH_OPTS_CREATE.invokeExact(
+				capacity.toBytes(), estimatedEntryCharge.toBytes()))) {
+			MH_OPTS_SET_NUM_SHARD_BITS.invokeExact(opts.ptr(), numShardBits);
+			return new HyperClockCache((MemorySegment) MH_CREATE_OPTS.invokeExact(opts.ptr()));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("HyperClockCache create failed", t);
-		} finally {
-			if (opts != null) {
-				try {
-					MH_OPTS_DESTROY.invokeExact(opts);
-				} catch (Throwable _) {
-					// best-effort: the cache (or the failure being propagated) is what matters
-				}
-			}
+		}
+	}
+
+	/// Scratch `rocksdb_hyper_clock_cache_options_t` used only inside
+	/// [#newHyperClockCache(MemorySize, MemorySize, int)]: `rocksdb_cache_create_hyper_clock_opts`
+	/// copies it by value, so it is destroyed as soon as the cache exists.
+	private static final class HyperClockCacheOptions extends NativeObject {
+
+		private HyperClockCacheOptions(MemorySegment ptr) {
+			super(ptr);
+		}
+
+		@Override
+		protected void tryClose(MemorySegment ptr) throws Throwable {
+			MH_OPTS_DESTROY.invokeExact(ptr);
 		}
 	}
 }
