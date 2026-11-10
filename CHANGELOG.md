@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `SECURITY.md` (private vulnerability reporting), `CODE_OF_CONDUCT.md`, issue forms for bugs and missing wrappers, a pull request checklist, and GitHub Discussions for questions ([#261](https://github.com/dfa1/rocksdb-ffm/pull/261), closes [#255](https://github.com/dfa1/rocksdb-ffm/issues/255))
 
+### Changed
+
+- **Breaking:** `ColumnFamilyDescriptor.name()` returns `String`; the `of(byte[])`/`of(byte[], Options)` factories and `LoadedOptions.columnFamilyOptions(byte[])` are removed. The C API takes names as NUL-terminated strings, so the `byte[]` forms were only ever decoded as UTF-8
+
 ## [0.18] — 2026-11-09
 
 Correct `TickerType` and `PerfLevel` values, tiered SST storage, and CI checks that catch enum and prototype drift on RocksDB bumps.

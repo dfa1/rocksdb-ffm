@@ -6,7 +6,6 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.OptionalLong;
 
@@ -617,7 +616,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 		delete(writeOpts, key);
 	}
 
-	/// [#delete(ByteBuffer)] with explicit [WriteOptions].
+	/// [#delete(java.nio.ByteBuffer)] with explicit [WriteOptions].
 	///
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
 	/// @param key          direct [java.nio.ByteBuffer] containing the key to remove
@@ -674,10 +673,10 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 		}
 	}
 
-	private ColumnFamilyHandle createColumnFamily(byte[] name, Options cfOpts) {
+	private ColumnFamilyHandle createColumnFamily(String name, Options cfOpts) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment nameSeg = arena.allocateFrom(new String(name, StandardCharsets.UTF_8));
+			MemorySegment nameSeg = arena.allocateFrom(name);
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
 					ptr(), cfOpts.ptr(), nameSeg, err);
 			NativeCalls.checkError(err);

@@ -6,7 +6,6 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -395,10 +394,10 @@ final class RocksDBWriteOperationsBindings {
 		}
 	}
 
-	private static ColumnFamilyHandle createCf(RocksDBWriteOperations db, byte[] name, Options cfOpts) {
+	private static ColumnFamilyHandle createCf(RocksDBWriteOperations db, String name, Options cfOpts) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment nameSeg = arena.allocateFrom(new String(name, StandardCharsets.UTF_8));
+			MemorySegment nameSeg = arena.allocateFrom(name);
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
 					db.dbPtr(), cfOpts.ptr(), nameSeg, err);
 			NativeCalls.checkError(err);

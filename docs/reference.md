@@ -388,7 +388,7 @@ compaction, so close them promptly.
 
 | Type                     | Description                                                        |
 |:-------------------------|:-------------------------------------------------------------------|
-| `ColumnFamilyDescriptor` | `of(String)`, `of(byte[])`, `of(name, Options)`; `name()`, `nameAsString()` |
+| `ColumnFamilyDescriptor` | `of(String)`, `of(String, Options)`; `name()` |
 | `ColumnFamilyHandle`     | Live handle; `getId()`, `getName()`; `AutoCloseable`               |
 
 `createColumnFamily(ColumnFamilyDescriptor)` and `dropColumnFamily(handle)` exist on `ReadWriteDB`,

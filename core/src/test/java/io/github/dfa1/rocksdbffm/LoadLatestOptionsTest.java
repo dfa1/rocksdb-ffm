@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
@@ -35,11 +34,11 @@ class LoadLatestOptionsTest {
 		try (var loaded = RocksDB.loadLatestOptions(dir, false)) {
 
 			// Then
-			var names = loaded.columnFamilies().stream().map(d -> new String(d.name(), StandardCharsets.UTF_8)).toList();
+			var names = loaded.columnFamilies().stream().map(ColumnFamilyDescriptor::name).toList();
 			assertThat(names).containsExactlyInAnyOrder("default", "cf1");
 			var buffers = loaded.columnFamilies().stream()
 					.collect(java.util.stream.Collectors.toMap(
-							d -> new String(d.name(), StandardCharsets.UTF_8),
+							ColumnFamilyDescriptor::name,
 							d -> d.options().getWriteBufferSize()));
 			assertThat(buffers).containsEntry("default", MemorySize.ofMB(16)).containsEntry("cf1", MemorySize.ofMB(8));
 		}
@@ -149,7 +148,7 @@ class LoadLatestOptionsTest {
 		// When
 		try (var loaded = RocksDB.loadLatestOptions(dir, false)) {
 			var cf1Buffer = loaded.columnFamilyOptions("cf1").getWriteBufferSize();
-			var defaultBuffer = loaded.columnFamilyOptions("default".getBytes(StandardCharsets.UTF_8)).getWriteBufferSize();
+			var defaultBuffer = loaded.columnFamilyOptions("default").getWriteBufferSize();
 
 			// Then
 			assertThat(cf1Buffer).isEqualTo(MemorySize.ofMB(8));
