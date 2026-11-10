@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Breaking:** `ColumnFamilyDescriptor.name()` returns `String`; the `of(byte[])`/`of(byte[], Options)` factories and `LoadedOptions.columnFamilyOptions(byte[])` are removed. The C API takes names as NUL-terminated strings, so the `byte[]` forms were only ever decoded as UTF-8
+- **Breaking:** `ColumnFamilyDescriptor.name()` returns `String`; the `of(byte[])`/`of(byte[], Options)` factories and `LoadedOptions.columnFamilyOptions(byte[])` are removed. The C API takes names as NUL-terminated strings, so the `byte[]` forms were only ever decoded as UTF-8 ([#275](https://github.com/dfa1/rocksdb-ffm/pull/275))
 
 ## [0.18] — 2026-11-09
 
