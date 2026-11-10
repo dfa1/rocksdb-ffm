@@ -8,7 +8,6 @@ import java.lang.invoke.MethodHandle;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 /// FFM plumbing for [RocksDBWriteOperations]'s default methods. Kept out of [RocksDB] itself so
@@ -387,14 +386,11 @@ final class RocksDBWriteOperationsBindings {
 	}
 
 	static ColumnFamilyHandle createCf(RocksDBWriteOperations db, ColumnFamilyDescriptor descriptor) {
-		List<Options> tempOptions = new ArrayList<>(1);
-		try (Arena arena = Arena.ofConfined()) {
+		// a null resource is skipped by try-with-resources: only the default Options is closed here
+		try (Arena arena = Arena.ofConfined();
+		     Options defaultOpts = descriptor.options() == null ? Options.newOptions() : null) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			Options cfOpts = descriptor.options();
-			if (cfOpts == null) {
-				cfOpts = Options.newOptions();
-				tempOptions.add(cfOpts);
-			}
+			Options cfOpts = defaultOpts != null ? defaultOpts : descriptor.options();
 			MemorySegment nameSeg = arena.allocateFrom(
 					new String(descriptor.name(), StandardCharsets.UTF_8));
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
@@ -403,10 +399,6 @@ final class RocksDBWriteOperationsBindings {
 			return ColumnFamilyHandle.wrap(handle);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("createColumnFamily failed", t);
-		} finally {
-			for (Options o : tempOptions) {
-				o.close();
-			}
 		}
 	}
 

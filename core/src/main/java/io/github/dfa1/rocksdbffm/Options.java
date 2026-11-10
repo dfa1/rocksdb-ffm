@@ -22,6 +22,8 @@ import java.util.Objects;
 /// it can be closed immediately after that call.
 public final class Options extends NativeObject {
 
+	private static final System.Logger LOG = System.getLogger(Options.class.getName());
+
 	/// `rocksdb_options_t* rocksdb_options_create(void);`
 	private static final MethodHandle MH_CREATE;
 	/// `void rocksdb_options_destroy(rocksdb_options_t*);`
@@ -1482,6 +1484,8 @@ public final class Options extends NativeObject {
 		return array;
 	}
 
+	/// Runs from a `finally`, so it never throws — that would mask the exception being propagated —
+	/// and keeps destroying the remaining paths after a failure, logging it instead.
 	private static void destroyDbPaths(MemorySegment[] natives) {
 		for (MemorySegment nativePath : natives) {
 			if (nativePath == null) {
@@ -1490,7 +1494,7 @@ public final class Options extends NativeObject {
 			try {
 				MH_DBPATH_DESTROY.invokeExact(nativePath);
 			} catch (Throwable t) {
-				throw NativeCalls.wrapInvokeFailure("rocksdb_dbpath_destroy failed", t);
+				LOG.log(System.Logger.Level.ERROR, "rocksdb_dbpath_destroy failed", t);
 			}
 		}
 	}
