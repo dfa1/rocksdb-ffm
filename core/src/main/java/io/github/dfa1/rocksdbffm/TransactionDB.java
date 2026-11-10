@@ -665,13 +665,19 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param descriptor name and options for the new column family
 	/// @return handle to the newly created column family; caller must close it
 	public ColumnFamilyHandle createColumnFamily(ColumnFamilyDescriptor descriptor) {
-		// a null resource is skipped by try-with-resources: only the default Options is closed here
-		try (Arena arena = Arena.ofConfined();
-		     Options defaultOpts = descriptor.options() == null ? Options.newOptions() : null) {
+		Options cfOpts = descriptor.options();
+		if (cfOpts != null) {
+			return createColumnFamily(descriptor.name(), cfOpts);
+		}
+		try (Options defaults = Options.newOptions()) {
+			return createColumnFamily(descriptor.name(), defaults);
+		}
+	}
+
+	private ColumnFamilyHandle createColumnFamily(byte[] name, Options cfOpts) {
+		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			Options cfOpts = defaultOpts != null ? defaultOpts : descriptor.options();
-			MemorySegment nameSeg = arena.allocateFrom(
-					new String(descriptor.name(), StandardCharsets.UTF_8));
+			MemorySegment nameSeg = arena.allocateFrom(new String(name, StandardCharsets.UTF_8));
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
 					ptr(), cfOpts.ptr(), nameSeg, err);
 			NativeCalls.checkError(err);
