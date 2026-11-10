@@ -678,14 +678,17 @@ public final class RocksDB {
 			NativeCalls.checkError(err);
 
 			long count = lenSeg.get(ValueLayout.JAVA_LONG, 0);
-			List<byte[]> result = new ArrayList<>((int) count);
-			MemorySegment namesArr = namesPtr.reinterpret(ValueLayout.ADDRESS.byteSize() * count);
-			for (int i = 0; i < count; i++) {
-				MemorySegment namePtr = namesArr.getAtIndex(ValueLayout.ADDRESS, i);
-				result.add(NativeCalls.toBorrowedJavaString(namePtr).getBytes(StandardCharsets.UTF_8));
+			try {
+				List<byte[]> result = new ArrayList<>((int) count);
+				MemorySegment namesArr = namesPtr.reinterpret(ValueLayout.ADDRESS.byteSize() * count);
+				for (int i = 0; i < count; i++) {
+					MemorySegment namePtr = namesArr.getAtIndex(ValueLayout.ADDRESS, i);
+					result.add(NativeCalls.toBorrowedJavaString(namePtr).getBytes(StandardCharsets.UTF_8));
+				}
+				return result;
+			} finally {
+				MH_LIST_CF_DESTROY.invokeExact(namesPtr, count);
 			}
-			MH_LIST_CF_DESTROY.invokeExact(namesPtr, count);
-			return result;
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("listColumnFamilies failed", t);
 		}

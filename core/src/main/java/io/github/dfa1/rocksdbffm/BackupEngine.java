@@ -337,13 +337,8 @@ public final class BackupEngine extends NativeObject {
 	///
 	/// @return unmodifiable list of [BackupInfo] records, one per existing backup
 	public List<BackupInfo> getBackupInfo() {
-		MemorySegment infoPtr;
-		try {
-			infoPtr = (MemorySegment) MH_GET_BACKUP_INFO.invokeExact(ptr());
-		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("getBackupInfo failed", t);
-		}
-		try {
+		try (var info = new BackupEngineInfo((MemorySegment) MH_GET_BACKUP_INFO.invokeExact(ptr()))) {
+			MemorySegment infoPtr = info.ptr();
 			int count = (int) MH_INFO_COUNT.invokeExact(infoPtr);
 			List<BackupInfo> result = new ArrayList<>(count);
 			for (int i = 0; i < count; i++) {
@@ -356,17 +351,25 @@ public final class BackupEngine extends NativeObject {
 			return Collections.unmodifiableList(result);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("getBackupInfo failed", t);
-		} finally {
-			try {
-				MH_INFO_DESTROY.invokeExact(infoPtr);
-			} catch (Throwable _) {
-				// best-effort: the result (or the failure being propagated) is what matters
-			}
 		}
 	}
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
 		MH_CLOSE.invokeExact(ptr);
+	}
+
+	/// Owns the `rocksdb_backup_engine_info_t` snapshot [#getBackupInfo()] copies into
+	/// [BackupInfo] records; it never escapes that call.
+	private static final class BackupEngineInfo extends NativeObject {
+
+		private BackupEngineInfo(MemorySegment ptr) {
+			super(ptr);
+		}
+
+		@Override
+		protected void tryClose(MemorySegment ptr) throws Throwable {
+			MH_INFO_DESTROY.invokeExact(ptr);
+		}
 	}
 }
