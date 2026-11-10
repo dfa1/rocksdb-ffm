@@ -4,9 +4,10 @@ package io.github.dfa1.rocksdbffm;
 ///
 /// Integer values match the `rocksdb_*_compression` constants in `rocksdb/c.h`.
 ///
-/// `XPRESS` isn't linked into the bundled native library;
+/// `XPRESS` is only available in the Windows classifiers (it wraps the Windows
+/// compression API, which RocksDB doesn't implement on macOS/Linux).
 /// [Options#setCompression(CompressionType)] and [Options#setBlobCompressionType(CompressionType)]
-/// throw [UnsupportedOperationException] for that value.
+/// throw [UnsupportedOperationException] for unsupported values.
 ///
 /// ```
 /// try (Options opts = Options.newOptions().setCompression(CompressionType.LZ4)) { ... }
@@ -48,15 +49,15 @@ public enum CompressionType {
 		return value;
 	}
 
-	/// Whether this algorithm is linked into the bundled native library.
+	/// Whether this algorithm is supported by the bundled native on the current platform.
 	///
 	/// @return `true` if usable, `false` if setting it throws `UnsupportedOperationException`
-	boolean isSupported() {
-		return switch (this) {
-			case XPRESS -> false;
-			case NO_COMPRESSION, SNAPPY, ZLIB, BZLIB2, LZ4, LZ4HC, ZSTD -> true;
-		};
-	}
+   	boolean isSupported() {
+   		return switch (this) {
+   			case XPRESS -> NativeLibrary.classifier().startsWith("windows");
+   			case NO_COMPRESSION, SNAPPY, ZLIB, BZLIB2, LZ4, LZ4HC, ZSTD -> true;
+   		};
+   	}
 
 	static CompressionType fromValue(int value) {
 		return switch (value) {

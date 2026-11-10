@@ -797,10 +797,10 @@ public final class Options extends NativeObject {
 	///
 	/// @param type the compression algorithm to use
 	/// @return `this` for chaining
-	/// @throws UnsupportedOperationException if `type` isn't linked into the bundled native library
+	/// @throws UnsupportedOperationException if `type` isn't supported by the bundled native library on this platform
 	public Options setCompression(CompressionType type) {
 		if (!type.isSupported()) {
-			throw new UnsupportedOperationException(type + " compression is not linked into the bundled native library");
+			throw new UnsupportedOperationException(type + " compression is not supported by the bundled native library on this platform");
 		}
 		NativeFields.setInt(MH_SET_COMPRESSION, ptr(), type.getValue());
 		return this;
@@ -1192,10 +1192,10 @@ public final class Options extends NativeObject {
 	///
 	/// @param type the compression algorithm for blob values
 	/// @return `this` for chaining
-	/// @throws UnsupportedOperationException if `type` isn't linked into the bundled native library
+	/// @throws UnsupportedOperationException if `type` isn't supported by the bundled native library on this platform
 	public Options setBlobCompressionType(CompressionType type) {
 		if (!type.isSupported()) {
-			throw new UnsupportedOperationException(type + " compression is not linked into the bundled native library");
+			throw new UnsupportedOperationException(type + " compression is not supported by the bundled native library on this platform");
 		}
 		NativeFields.setInt(MH_SET_BLOB_COMPRESSION_TYPE, ptr(), type.getValue());
 		return this;
@@ -1940,10 +1940,10 @@ public final class Options extends NativeObject {
 	///
 	/// @param type the compression algorithm to use for the bottommost level
 	/// @return `this` for chaining
-	/// @throws UnsupportedOperationException if `type` isn't linked into the bundled native library
+	/// @throws UnsupportedOperationException if `type` isn't supported by the bundled native library on this platform
 	public Options setBottommostCompressionType(CompressionType type) {
 		if (!type.isSupported()) {
-			throw new UnsupportedOperationException(type + " compression is not linked into the bundled native library");
+			throw new UnsupportedOperationException(type + " compression is not supported by the bundled native library on this platform");
 		}
 		NativeFields.setInt(MH_SET_BOTTOMMOST_COMPRESSION, ptr(), type.getValue());
 		return this;

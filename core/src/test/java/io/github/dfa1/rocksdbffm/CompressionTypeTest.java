@@ -4,11 +4,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class CompressionTypeTest {
 
@@ -61,8 +64,9 @@ class CompressionTypeTest {
 	}
 
 	@ParameterizedTest
-	@EnumSource(value = CompressionType.class, names = {"ZSTD", "LZ4", "SNAPPY", "ZLIB"})
+	@EnumSource(value = CompressionType.class, names = {"ZSTD", "LZ4", "SNAPPY", "ZLIB", "XPRESS"})
 	void openDb_withHermeticCompression_writesAndReadsBack(CompressionType type, @TempDir Path dir) {
+		assumeTrue(type.isSupported(), type + " is not supported on this platform");
 		try (Options opts = Options.newOptions()
 				.setCreateIfMissing(true)
 				.setCompression(type);
@@ -76,9 +80,11 @@ class CompressionTypeTest {
 	// get/put succeeds either way. Comparing on-disk SST size against
 	// NO_COMPRESSION for deliberately repetitive data catches that failure mode.
 	@ParameterizedTest
-	@EnumSource(value = CompressionType.class, names = {"ZSTD", "LZ4", "SNAPPY", "ZLIB", "BZLIB2"})
+ 	@EnumSource(value = CompressionType.class, names = {"ZSTD", "LZ4", "SNAPPY", "ZLIB", "BZLIB2", "XPRESS"})
+
 	void openDb_withHermeticCompression_actuallyCompressesOnDisk(
 			CompressionType type, @TempDir Path noCompressionDir, @TempDir Path compressedDir) {
+		assumeTrue(type.isSupported(), type + " is not supported on this platform");
 		byte[] value = "a".repeat(64 * 1024).getBytes();
 
 		long uncompressedSize;
@@ -110,28 +116,26 @@ class CompressionTypeTest {
 		assertThat(compressedSize).isLessThan(uncompressedSize / 2);
 	}
 
-	// XPRESS is Windows-only and not linked into the bundled native library;
-	// setCompression/setBlobCompressionType reject it eagerly rather than letting
-	// RocksDB::Open fail later with an opaque native error.
-	@ParameterizedTest
-	@EnumSource(value = CompressionType.class, names = {"XPRESS"})
-	void setCompression_withUnsupportedType_throws(CompressionType type) {
-		try (Options opts = Options.newOptions()) {
+	// XPRESS wraps the Windows compression API, so it is rejected eagerly on every other
+    // platform rather than letting RocksDB::Open fail later with an opaque native error.
+   @DisabledOnOs(OS.WINDOWS)
+   void setCompression_withXpressOutsideWindows_throws() {
+           try (Options opts = Options.newOptions()) {
 
-			// Given / When / Then
-			assertThatThrownBy(() -> opts.setCompression(type))
-					.isInstanceOf(UnsupportedOperationException.class);
-		}
-	}
+                   // Given / When / Then
+                   assertThatThrownBy(() -> opts.setCompression(CompressionType.XPRESS))
+                                   .isInstanceOf(UnsupportedOperationException.class);
+           }
+   }
 
-	@ParameterizedTest
-	@EnumSource(value = CompressionType.class, names = {"XPRESS"})
-	void setBlobCompressionType_withUnsupportedType_throws(CompressionType type) {
-		try (Options opts = Options.newOptions()) {
+   @Test
+   @DisabledOnOs(OS.WINDOWS)
+   void setBlobCompressionType_withXpressOutsideWindows_throws() {
+           try (Options opts = Options.newOptions()) {
 
-			// Given / When / Then
-			assertThatThrownBy(() -> opts.setBlobCompressionType(type))
-					.isInstanceOf(UnsupportedOperationException.class);
-		}
-	}
+                   // Given / When / Then
+                   assertThatThrownBy(() -> opts.setBlobCompressionType(CompressionType.XPRESS))
+                                   .isInstanceOf(UnsupportedOperationException.class);
+           }
+   }
 }
