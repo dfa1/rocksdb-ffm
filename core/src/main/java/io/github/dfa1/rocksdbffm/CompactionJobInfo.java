@@ -5,6 +5,7 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.time.Duration;
 
 /// Read-only view of a compaction, passed to [EventNotifier#onCompactionBegin(CompactionJobInfo)]
 /// and [EventNotifier#onCompactionCompleted(CompactionJobInfo)].
@@ -237,8 +238,8 @@ public final class CompactionJobInfo {
 	/// Returns how long this compaction took to run.
 	///
 	/// @return the elapsed time
-	public java.time.Duration elapsed() {
-		return java.time.Duration.ofNanos(NativeFields.getLong(MH_ELAPSED_MICROS, ptr) * 1000);
+	public Duration elapsed() {
+		return Duration.ofNanos(NativeFields.getLong(MH_ELAPSED_MICROS, ptr) * 1000);
 	}
 
 	/// Returns the number of corrupt keys encountered while compacting.
