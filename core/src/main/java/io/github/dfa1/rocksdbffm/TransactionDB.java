@@ -6,6 +6,7 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.OptionalLong;
 
@@ -300,18 +301,18 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 
 	/// Zero-copy put: wraps the direct buffers' native memory without heap→native copy.
 	///
-	/// @param key   direct [java.nio.ByteBuffer] containing the key
-	/// @param value direct [java.nio.ByteBuffer] containing the value
-	public void put(java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the value
+	public void put(ByteBuffer key, ByteBuffer value) {
 		put(writeOpts, key, value);
 	}
 
 	/// [#put(ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
 	///
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
-	/// @param key          direct [java.nio.ByteBuffer] containing the key
-	/// @param value        direct [java.nio.ByteBuffer] containing the value
-	public void put(WriteOptions writeOptions, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+	/// @param key          direct [ByteBuffer] containing the key
+	/// @param value        direct [ByteBuffer] containing the value
+	public void put(WriteOptions writeOptions, ByteBuffer key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_PUT.invokeExact(ptr(), writeOptions.ptr(),
@@ -370,9 +371,9 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 
 	/// Zero-copy merge: wraps the direct buffers' native memory without heap→native copy.
 	///
-	/// @param key   direct [java.nio.ByteBuffer] containing the key
-	/// @param value direct [java.nio.ByteBuffer] containing the merge operand
-	public void merge(java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the merge operand
+	public void merge(ByteBuffer key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			merge(arena, writeOpts, MemorySegment.ofBuffer(key), MemorySegment.ofBuffer(value));
 		}
@@ -381,9 +382,9 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// [#merge(ByteBuffer, ByteBuffer)] with explicit [WriteOptions].
 	///
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
-	/// @param key          direct [java.nio.ByteBuffer] containing the key
-	/// @param value        direct [java.nio.ByteBuffer] containing the merge operand
-	public void merge(WriteOptions writeOptions, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+	/// @param key          direct [ByteBuffer] containing the key
+	/// @param value        direct [ByteBuffer] containing the merge operand
+	public void merge(WriteOptions writeOptions, ByteBuffer key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			merge(arena, writeOptions, MemorySegment.ofBuffer(key), MemorySegment.ofBuffer(value));
 		}
@@ -468,15 +469,15 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 		}
 	}
 
-	/// Single-copy get + direct output [java.nio.ByteBuffer], via PinnableSlice. Copies nothing
+	/// Single-copy get + direct output [ByteBuffer], via PinnableSlice. Copies nothing
 	/// into `value` when its remaining capacity is too small.
 	///
-	/// @param key   direct [java.nio.ByteBuffer] containing the key
-	/// @param value direct [java.nio.ByteBuffer] to write the value into
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	@CheckReturnValue
-	public CopyResult get(java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+	public CopyResult get(ByteBuffer key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
@@ -609,18 +610,18 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 		}
 	}
 
-	/// Zero-copy for direct [java.nio.ByteBuffer]s.
+	/// Zero-copy for direct [ByteBuffer]s.
 	///
-	/// @param key direct [java.nio.ByteBuffer] containing the key to remove
-	public void delete(java.nio.ByteBuffer key) {
+	/// @param key direct [ByteBuffer] containing the key to remove
+	public void delete(ByteBuffer key) {
 		delete(writeOpts, key);
 	}
 
-	/// [#delete(java.nio.ByteBuffer)] with explicit [WriteOptions].
+	/// [#delete(ByteBuffer)] with explicit [WriteOptions].
 	///
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
-	/// @param key          direct [java.nio.ByteBuffer] containing the key to remove
-	public void delete(WriteOptions writeOptions, java.nio.ByteBuffer key) {
+	/// @param key          direct [ByteBuffer] containing the key to remove
+	public void delete(WriteOptions writeOptions, ByteBuffer key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE.invokeExact(ptr(), writeOptions.ptr(),
@@ -724,12 +725,12 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 		}
 	}
 
-	/// Zero-copy put into `cf` for direct [java.nio.ByteBuffer]s.
+	/// Zero-copy put into `cf` for direct [ByteBuffer]s.
 	///
 	/// @param cf    target column family
-	/// @param key   direct [java.nio.ByteBuffer] containing the key
-	/// @param value direct [java.nio.ByteBuffer] containing the value
-	public void put(ColumnFamilyHandle cf, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the value
+	public void put(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
 		put(cf, writeOpts, key, value);
 	}
 
@@ -737,9 +738,9 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	///
 	/// @param cf           target column family
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
-	/// @param key          direct [java.nio.ByteBuffer] containing the key
-	/// @param value        direct [java.nio.ByteBuffer] containing the value
-	public void put(ColumnFamilyHandle cf, WriteOptions writeOptions, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+	/// @param key          direct [ByteBuffer] containing the key
+	/// @param value        direct [ByteBuffer] containing the value
+	public void put(ColumnFamilyHandle cf, WriteOptions writeOptions, ByteBuffer key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_PUT_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),
@@ -804,12 +805,12 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 		}
 	}
 
-	/// Zero-copy merge into `cf` for direct [java.nio.ByteBuffer]s.
+	/// Zero-copy merge into `cf` for direct [ByteBuffer]s.
 	///
 	/// @param cf    target column family
-	/// @param key   direct [java.nio.ByteBuffer] containing the key
-	/// @param value direct [java.nio.ByteBuffer] containing the merge operand
-	public void merge(ColumnFamilyHandle cf, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] containing the merge operand
+	public void merge(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			merge(arena, cf, writeOpts, MemorySegment.ofBuffer(key), MemorySegment.ofBuffer(value));
 		}
@@ -819,9 +820,9 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	///
 	/// @param cf           target column family
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
-	/// @param key          direct [java.nio.ByteBuffer] containing the key
-	/// @param value        direct [java.nio.ByteBuffer] containing the merge operand
-	public void merge(ColumnFamilyHandle cf, WriteOptions writeOptions, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+	/// @param key          direct [ByteBuffer] containing the key
+	/// @param value        direct [ByteBuffer] containing the merge operand
+	public void merge(ColumnFamilyHandle cf, WriteOptions writeOptions, ByteBuffer key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			merge(arena, cf, writeOptions, MemorySegment.ofBuffer(key), MemorySegment.ofBuffer(value));
 		}
@@ -899,16 +900,16 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 		}
 	}
 
-	/// Single-copy get from `cf` into a direct [java.nio.ByteBuffer], via PinnableSlice.
+	/// Single-copy get from `cf` into a direct [ByteBuffer], via PinnableSlice.
 	/// Copies nothing into `value` when its remaining capacity is too small.
 	///
 	/// @param cf    target column family
-	/// @param key   direct [java.nio.ByteBuffer] containing the key
-	/// @param value direct [java.nio.ByteBuffer] to write the value into
+	/// @param key   direct [ByteBuffer] containing the key
+	/// @param value direct [ByteBuffer] to write the value into
 	/// @return [CopyResult.Copied] if copied, [CopyResult.NotEnoughCapacity] if `value` is too
 	/// small, or [CopyResult.NotFound] if the key is absent
 	@CheckReturnValue
-	public CopyResult get(ColumnFamilyHandle cf, java.nio.ByteBuffer key, java.nio.ByteBuffer value) {
+	public CopyResult get(ColumnFamilyHandle cf, ByteBuffer key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
@@ -1008,11 +1009,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 		}
 	}
 
-	/// Zero-copy delete from `cf` for direct [java.nio.ByteBuffer]s.
+	/// Zero-copy delete from `cf` for direct [ByteBuffer]s.
 	///
 	/// @param cf  target column family
-	/// @param key direct [java.nio.ByteBuffer] containing the key to remove
-	public void delete(ColumnFamilyHandle cf, java.nio.ByteBuffer key) {
+	/// @param key direct [ByteBuffer] containing the key to remove
+	public void delete(ColumnFamilyHandle cf, ByteBuffer key) {
 		delete(cf, writeOpts, key);
 	}
 
@@ -1020,8 +1021,8 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	///
 	/// @param cf           target column family
 	/// @param writeOptions write options, e.g. to disable the WAL for this write
-	/// @param key          direct [java.nio.ByteBuffer] containing the key to remove
-	public void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, java.nio.ByteBuffer key) {
+	/// @param key          direct [ByteBuffer] containing the key to remove
+	public void delete(ColumnFamilyHandle cf, WriteOptions writeOptions, ByteBuffer key) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE_CF.invokeExact(ptr(), writeOptions.ptr(), cf.ptr(),

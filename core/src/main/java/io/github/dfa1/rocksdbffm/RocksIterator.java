@@ -388,7 +388,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// Both mappers run under the same scoped, zero-copy lifetime as [#key(Mapper)] and
 	/// [#value(Mapper)]: nothing stops a mapper from returning the underlying
-	/// [java.lang.foreign.MemorySegment] view itself rather than a copy, but that view is only
+	/// [MemorySegment] view itself rather than a copy, but that view is only
 	/// valid for the duration of the mapper call — retaining it past the call is the same
 	/// use-after-scope bug [#key(Mapper)] already documents, just reached through the stream
 	/// instead of a direct call.
