@@ -1,7 +1,5 @@
 package io.github.dfa1.rocksdbffm;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -45,25 +43,16 @@ public final class LoadedOptions implements AutoCloseable {
 	/// RocksDB cannot restore (merge operator, compaction filter, ...) can be set again before
 	/// the database is opened.
 	///
-	/// @param name column family name as raw bytes
-	/// @return the family's options; owned by this object, do not close
-	/// @throws NoSuchElementException if no column family has that name
-	public Options columnFamilyOptions(byte[] name) {
-		for (ColumnFamilyDescriptor descriptor : columnFamilies) {
-			if (Arrays.equals(descriptor.name(), name)) {
-				return descriptor.options();
-			}
-		}
-		throw new NoSuchElementException("no column family named " + new String(name, StandardCharsets.UTF_8));
-	}
-
-	/// Returns the options of the column family called `name`; see [#columnFamilyOptions(byte[])].
-	///
-	/// @param name column family name as a UTF-8 string
+	/// @param name column family name
 	/// @return the family's options; owned by this object, do not close
 	/// @throws NoSuchElementException if no column family has that name
 	public Options columnFamilyOptions(String name) {
-		return columnFamilyOptions(name.getBytes(StandardCharsets.UTF_8));
+		for (ColumnFamilyDescriptor descriptor : columnFamilies) {
+			if (descriptor.name().equals(name)) {
+				return descriptor.options();
+			}
+		}
+		throw new NoSuchElementException("no column family named " + name);
 	}
 
 	/// Closes [#dbOptions()] and every column family's options.
