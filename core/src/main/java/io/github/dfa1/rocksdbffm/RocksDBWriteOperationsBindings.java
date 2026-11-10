@@ -386,13 +386,19 @@ final class RocksDBWriteOperationsBindings {
 	}
 
 	static ColumnFamilyHandle createCf(RocksDBWriteOperations db, ColumnFamilyDescriptor descriptor) {
-		// a null resource is skipped by try-with-resources: only the default Options is closed here
-		try (Arena arena = Arena.ofConfined();
-		     Options defaultOpts = descriptor.options() == null ? Options.newOptions() : null) {
+		Options cfOpts = descriptor.options();
+		if (cfOpts != null) {
+			return createCf(db, descriptor.name(), cfOpts);
+		}
+		try (Options defaults = Options.newOptions()) {
+			return createCf(db, descriptor.name(), defaults);
+		}
+	}
+
+	private static ColumnFamilyHandle createCf(RocksDBWriteOperations db, byte[] name, Options cfOpts) {
+		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			Options cfOpts = defaultOpts != null ? defaultOpts : descriptor.options();
-			MemorySegment nameSeg = arena.allocateFrom(
-					new String(descriptor.name(), StandardCharsets.UTF_8));
+			MemorySegment nameSeg = arena.allocateFrom(new String(name, StandardCharsets.UTF_8));
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
 					db.dbPtr(), cfOpts.ptr(), nameSeg, err);
 			NativeCalls.checkError(err);
