@@ -479,6 +479,16 @@ fi
 # instead of the ~300KB dynamically-linked POSIX binaries. That also means no
 # `librocksdb_tools.dll`/SONAME-symlink dance is needed for Windows: the
 # tools carry no runtime dependency on `librocksdb.dll` at all.
+# 
+#
+# XPRESS is a Windows-only codec built on the OS compression API
+# (compressapi.h), so it needs no external sources. Three things are
+# needed under zig cc, none fixable in the pinned submodule:
+#  - RocksDB's CMake defines XPRESS only for MSVC builds (thirdparty.inc),
+#    so pass -DXPRESS ourselves.
+#  - RocksDB pins _WIN32_WINNT to Vista, but compressapi.h needs
+#    NTDDI_VERSION >= Windows 8, so define NTDDI_VERSION explicitly.
+#  - CreateCompressor & co. live in cabinet.dll, so link -lcabinet.
 # ---------------------------------------------------------------------------
 BUILD_DIR="$(mktemp -d)"
 trap 'rm -rf "$WRAPPER_DIR" "$BUILD_DIR"' EXIT
@@ -497,11 +507,13 @@ cmake -S "$ROCKSDB_DIR" -B "$BUILD_DIR" -G "$CMAKE_GENERATOR" \
     -DUSE_RTTI=ON \
     "${ZSTD_LZ4_CMAKE_ARGS[@]}" \
     -DWITH_LIBURING=OFF \
+    -DWITH_XPRESS=ON \
     -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -DWITH_BENCHMARK_TOOLS=OFF -DWITH_CORE_TOOLS=ON -DWITH_TRACE_TOOLS=OFF \
     -DFAIL_ON_WARNINGS=OFF \
     -DCMAKE_C_FLAGS=-Wno-nullability-completeness \
-    -DCMAKE_CXX_FLAGS=-Wno-nullability-completeness
-
+    -DCMAKE_CXX_FLAGS="-Wno-nullability-completeness -DXPRESS -DNTDDI_VERSION=0x06020000" \
+    -DCMAKE_CXX_STANDARD_LIBRARIES="-lcabinet"
+    
 cmake --build "$BUILD_DIR" --target rocksdb-shared --target ldb --target sst_dump -j"$JOBS"
 
 # ---------------------------------------------------------------------------

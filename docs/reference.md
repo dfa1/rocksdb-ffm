@@ -520,9 +520,10 @@ return `null` to run that compaction with no filter at all.
 | `WriteStallCondition`               | `NORMAL`, `DELAYED`, `STOPPED`                                                                 |
 | `Property`, `TickerType`, `HistogramType`, `PerfMetric` | Large enumerations; see the Javadoc for the full lists                     |
 
-`XPRESS` isn't linked into the bundled `librocksdb` (it is Windows-only) —
-`Options.setCompression`/`setBlobCompressionType` reject it eagerly with
-`UnsupportedOperationException` rather than deferring to a native failure at DB-open time.
+`XPRESS` is only available on Windows (it wraps the Windows compression API) and isn't
+linked into the macOS/Linux libraries — `Options.setCompression`/`setBlobCompressionType`
+reject it eagerly there with `UnsupportedOperationException` rather than deferring to a
+native failure at DB-open time.
 
 ## Feature status
 
