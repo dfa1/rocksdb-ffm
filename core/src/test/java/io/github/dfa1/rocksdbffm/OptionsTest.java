@@ -511,4 +511,69 @@ class OptionsTest {
 			assertThat(opts).isNotNull();
 		}
 	}
+
+	@Test
+	void maxSuccessiveMerges_defaultsToZero() {
+		// Given
+		try (var opts = Options.newOptions()) {
+
+			// When
+			var result = opts.getMaxSuccessiveMerges();
+
+			// Then
+			assertThat(result).isZero();
+		}
+	}
+
+	@Test
+	void setMaxSuccessiveMerges_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setMaxSuccessiveMerges(42)) {
+
+			// When
+			var result = opts.getMaxSuccessiveMerges();
+
+			// Then
+			assertThat(result).isEqualTo(42);
+		}
+	}
+
+	@Test
+	void setMaxSuccessiveMerges_rejectsNegative() {
+		// Given
+		try (var opts = Options.newOptions()) {
+
+			// When
+			var thrown = catchThrowable(() -> opts.setMaxSuccessiveMerges(-1));
+
+			// Then
+			assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+		}
+	}
+
+	@Test
+	void strictMaxSuccessiveMerges_defaultsToFalse() {
+		// Given
+		try (var opts = Options.newOptions()) {
+
+			// When
+			var result = opts.isStrictMaxSuccessiveMerges();
+
+			// Then
+			assertThat(result).isFalse();
+		}
+	}
+
+	@Test
+	void setStrictMaxSuccessiveMerges_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setStrictMaxSuccessiveMerges(true)) {
+
+			// When
+			var result = opts.isStrictMaxSuccessiveMerges();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
 }

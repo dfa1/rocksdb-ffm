@@ -36,6 +36,14 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_CREATE_IF_MISSING;
 	/// `unsigned char rocksdb_options_get_create_if_missing(rocksdb_options_t*);`
 	private static final MethodHandle MH_GET_CREATE_IF_MISSING;
+	/// `void rocksdb_options_set_max_successive_merges(rocksdb_options_t*, size_t);`
+	private static final MethodHandle MH_SET_MAX_SUCCESSIVE_MERGES;
+	/// `size_t rocksdb_options_get_max_successive_merges(rocksdb_options_t*);`
+	private static final MethodHandle MH_GET_MAX_SUCCESSIVE_MERGES;
+	/// `void rocksdb_options_set_strict_max_successive_merges(rocksdb_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_STRICT_MAX_SUCCESSIVE_MERGES;
+	/// `unsigned char rocksdb_options_get_strict_max_successive_merges(rocksdb_options_t* opt);`
+	private static final MethodHandle MH_GET_STRICT_MAX_SUCCESSIVE_MERGES;
 	/// `void rocksdb_options_set_block_based_table_factory(rocksdb_options_t* opt, rocksdb_block_based_table_options_t* table_options);`
 	private static final MethodHandle MH_SET_BLOCK_BASED_TABLE_FACTORY;
 	/// `void rocksdb_options_set_cuckoo_table_factory(rocksdb_options_t* opt, rocksdb_cuckoo_table_options_t* table_options);`
@@ -289,6 +297,17 @@ public final class Options extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
 		MH_GET_CREATE_IF_MISSING = NativeLibrary.lookup("rocksdb_options_get_create_if_missing",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+				MH_SET_MAX_SUCCESSIVE_MERGES = NativeLibrary.lookup("rocksdb_options_set_max_successive_merges",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_GET_MAX_SUCCESSIVE_MERGES = NativeLibrary.lookup("rocksdb_options_get_max_successive_merges",
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+
+		MH_SET_STRICT_MAX_SUCCESSIVE_MERGES = NativeLibrary.lookup("rocksdb_options_set_strict_max_successive_merges",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_STRICT_MAX_SUCCESSIVE_MERGES = NativeLibrary.lookup("rocksdb_options_get_strict_max_successive_merges",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
 		MH_SET_BLOCK_BASED_TABLE_FACTORY = NativeLibrary.lookup(
@@ -746,6 +765,55 @@ public final class Options extends NativeObject {
 	/// @return `true` if the DB is created on open when absent
 	public boolean getCreateIfMissing() {
 		return NativeFields.getBoolean(MH_GET_CREATE_IF_MISSING, ptr());
+	}
+
+	/// Maximum number of successive merge operands on a key in the memtable.
+	///
+	/// When a merge is added to the memtable and this limit is reached, RocksDB tries to
+	/// read the key's value; on success it inserts that value into the memtable in place of
+	/// the merge operand. The limit may be exceeded when staying under it would need a
+	/// filesystem read, unless [#setStrictMaxSuccessiveMerges] is enabled.
+	///
+	/// Independent of which merge operator is configured. Default: 0 (disabled).
+	///
+	/// @param count the maximum number of successive merge operands; must not be negative
+	/// @return `this` for chaining
+	/// @throws IllegalArgumentException if `count` is negative
+	public Options setMaxSuccessiveMerges(long count) {
+		if (count < 0) {
+			throw new IllegalArgumentException("count must not be negative: " + count);
+		}
+		NativeFields.setLong(MH_SET_MAX_SUCCESSIVE_MERGES, ptr(), count);
+		return this;
+	}
+
+	/// Returns the maximum number of successive merge operands on a key in the memtable.
+	///
+	/// @return the configured limit; `0` means disabled
+	public long getMaxSuccessiveMerges() {
+		return NativeFields.getLong(MH_GET_MAX_SUCCESSIVE_MERGES, ptr());
+	}
+
+	/// Whether filesystem reads are allowed to keep a key under the limit set by
+	/// [#setMaxSuccessiveMerges].
+	///
+	/// When `true`, merge writes can block the write path while waiting on filesystem reads.
+	/// RocksDB keeps this option as a temporary escape hatch in case disallowing filesystem
+	/// reads during merge writes causes problems. Default: `false`.
+	///
+	/// @param value `true` to allow filesystem reads to enforce the limit
+	/// @return `this` for chaining
+	public Options setStrictMaxSuccessiveMerges(boolean value) {
+		NativeFields.setBoolean(MH_SET_STRICT_MAX_SUCCESSIVE_MERGES, ptr(), value);
+		return this;
+	}
+
+	/// Returns whether filesystem reads are allowed to enforce the limit set by
+	/// [#setMaxSuccessiveMerges].
+	///
+	/// @return `true` if filesystem reads may be used to stay under the limit
+	public boolean isStrictMaxSuccessiveMerges() {
+		return NativeFields.getBoolean(MH_GET_STRICT_MAX_SUCCESSIVE_MERGES, ptr());
 	}
 
 	/// Enables statistics gathering for this DB.
