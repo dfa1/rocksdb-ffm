@@ -48,6 +48,14 @@ public final class WriteBufferManager extends NativeObject {
 	private static final MethodHandle MH_SET_BUFFER_SIZE;
 	/// `void rocksdb_write_buffer_manager_set_allow_stall(rocksdb_write_buffer_manager_t* wbm, bool new_allow_stall);`
 	private static final MethodHandle MH_SET_ALLOW_STALL;
+	/// `rocksdb_write_buffer_manager_t* rocksdb_write_buffer_manager_create_with_policy(size_t buffer_size, bool allow_stall, int flush_policy);`
+	private static final MethodHandle MH_CREATE_WITH_POLICY;
+	/// `rocksdb_write_buffer_manager_t* rocksdb_write_buffer_manager_create_with_cache_and_policy(size_t buffer_size, const rocksdb_cache_t* cache, bool allow_stall, int flush_policy);`
+	private static final MethodHandle MH_CREATE_WITH_CACHE_AND_POLICY;
+	/// `int rocksdb_write_buffer_manager_flush_policy(rocksdb_write_buffer_manager_t* wbm);`
+	private static final MethodHandle MH_FLUSH_POLICY;
+	/// `void rocksdb_write_buffer_manager_set_flush_policy(rocksdb_write_buffer_manager_t* wbm, int flush_policy);`
+	private static final MethodHandle MH_SET_FLUSH_POLICY;
 
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_write_buffer_manager_create",
@@ -87,6 +95,50 @@ public final class WriteBufferManager extends NativeObject {
 
 		MH_SET_ALLOW_STALL = NativeLibrary.lookup("rocksdb_write_buffer_manager_set_allow_stall",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_CREATE_WITH_POLICY = NativeLibrary.lookup("rocksdb_write_buffer_manager_create_with_policy",
+				FunctionDescriptor.of(ValueLayout.ADDRESS,
+						ValueLayout.JAVA_LONG,
+						ValueLayout.JAVA_BYTE,
+						ValueLayout.JAVA_INT));
+
+		MH_CREATE_WITH_CACHE_AND_POLICY = NativeLibrary.lookup("rocksdb_write_buffer_manager_create_with_cache_and_policy",
+				FunctionDescriptor.of(ValueLayout.ADDRESS,
+						ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS,
+						ValueLayout.JAVA_BYTE,
+						ValueLayout.JAVA_INT));
+
+		MH_FLUSH_POLICY = NativeLibrary.lookup("rocksdb_write_buffer_manager_flush_policy",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_FLUSH_POLICY = NativeLibrary.lookup("rocksdb_write_buffer_manager_set_flush_policy",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+	}
+
+	/// Policy choosing which memtable is flushed once the shared write-buffer budget is hit.
+	public enum FlushPolicy {
+		/// Flush the oldest mutable memtable; the historical default.
+		OLDEST(0),
+		/// Flush the largest mutable memtable of the current database.
+		LARGEST(1),
+		/// Flush the database that would reclaim the most memory among all databases sharing this manager.
+		LARGEST_ACROSS_DBS(2);
+
+		final int value;
+
+		FlushPolicy(int value) {
+			this.value = value;
+		}
+
+		static FlushPolicy fromValue(int value) {
+			return switch (value) {
+				case 0 -> OLDEST;
+				case 1 -> LARGEST;
+				case 2 -> LARGEST_ACROSS_DBS;
+				default -> throw new IllegalArgumentException("Unknown FlushPolicy value: " + value);
+			};
+		}
 	}
 
 	private WriteBufferManager(MemorySegment ptr) {
@@ -132,6 +184,46 @@ public final class WriteBufferManager extends NativeObject {
 		try {
 			MemorySegment ptr = (MemorySegment) MH_CREATE_WITH_CACHE.invokeExact(
 					bufferBytes.toBytes(), cache.ptr(), NativeCalls.toByte(allowStall));
+			return new WriteBufferManager(ptr);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("WriteBufferManager createWithCache failed", t);
+		}
+	}
+
+	/// Creates a write buffer manager with an explicit [FlushPolicy].
+	///
+	/// @param bufferBytes total memory budget for write buffers; [MemorySize#ZERO] for no limit
+	/// @param allowStall  whether to stall writes once memory usage exceeds `bufferBytes`
+	/// @param flushPolicy which memtable to flush once the budget is hit
+	/// @return a new [WriteBufferManager]; caller must close it
+	public static WriteBufferManager create(MemorySize bufferBytes, boolean allowStall, FlushPolicy flushPolicy) {
+		Objects.requireNonNull(bufferBytes, "bufferBytes must not be null");
+		Objects.requireNonNull(flushPolicy, "flushPolicy must not be null");
+		try {
+			MemorySegment ptr = (MemorySegment) MH_CREATE_WITH_POLICY.invokeExact(
+					bufferBytes.toBytes(), NativeCalls.toByte(allowStall), flushPolicy.value);
+			return new WriteBufferManager(ptr);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("WriteBufferManager create failed", t);
+		}
+	}
+
+	/// Creates a write buffer manager that also charges memtable memory to `cache`,
+	/// with an explicit [FlushPolicy].
+	///
+	/// @param bufferBytes total memory budget for write buffers; [MemorySize#ZERO] for no limit
+	/// @param cache       cache to charge memtable memory to (shared, ownership not transferred)
+	/// @param allowStall  whether to stall writes once memory usage exceeds `bufferBytes`
+	/// @param flushPolicy which memtable to flush once the budget is hit
+	/// @return a new [WriteBufferManager]; caller must close it
+	public static WriteBufferManager createWithCache(MemorySize bufferBytes, Cache cache, boolean allowStall,
+			FlushPolicy flushPolicy) {
+		Objects.requireNonNull(bufferBytes, "bufferBytes must not be null");
+		Objects.requireNonNull(cache, "cache must not be null");
+		Objects.requireNonNull(flushPolicy, "flushPolicy must not be null");
+		try {
+			MemorySegment ptr = (MemorySegment) MH_CREATE_WITH_CACHE_AND_POLICY.invokeExact(
+					bufferBytes.toBytes(), cache.ptr(), NativeCalls.toByte(allowStall), flushPolicy.value);
 			return new WriteBufferManager(ptr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("WriteBufferManager createWithCache failed", t);
@@ -202,6 +294,23 @@ public final class WriteBufferManager extends NativeObject {
 	/// @return `this` for chaining
 	public WriteBufferManager setAllowStall(boolean allowStall) {
 		NativeFields.setBoolean(MH_SET_ALLOW_STALL, ptr(), allowStall);
+		return this;
+	}
+
+	/// Returns the policy used to choose which memtable to flush once the budget is hit.
+	///
+	/// @return the current [FlushPolicy]
+	public FlushPolicy getFlushPolicy() {
+		return FlushPolicy.fromValue(NativeFields.getInt(MH_FLUSH_POLICY, ptr()));
+	}
+
+	/// Changes the flush policy of a live manager.
+	///
+	/// @param flushPolicy the new policy
+	/// @return `this` for chaining
+	public WriteBufferManager setFlushPolicy(FlushPolicy flushPolicy) {
+		Objects.requireNonNull(flushPolicy, "flushPolicy must not be null");
+		NativeFields.setInt(MH_SET_FLUSH_POLICY, ptr(), flushPolicy.value);
 		return this;
 	}
 

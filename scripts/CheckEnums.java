@@ -78,6 +78,8 @@ static final List<Mapping> ENUMS = List.of(
 		new Mapping("RateLimiter", "Mode", "rate_limiter.h", "Mode", "rocksdb::RateLimiter::Mode::"),
 		new Mapping("WritePolicy", "WritePolicy", "utilities/transaction_db.h", "TxnDBWritePolicy", "rocksdb::"),
 		new Mapping("PerfMetric", "PerfMetric", "c.h", "@rocksdb_user_key_comparison_count", ""),
+		new Mapping("WriteBufferManager", "FlushPolicy", "c.h", "@rocksdb_write_buffer_manager_flush_policy_oldest", "",
+                List.of("writebuffermanagerflushpolicy"), Map.of()),
 		new Mapping("TraceFilter", "TraceFilter", "options.h", "TraceFilterType", "rocksdb::",
 				List.of("tracefilter"), Map.of(), true));
 
