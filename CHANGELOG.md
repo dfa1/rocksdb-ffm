@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `Options.setTrackOptionsFileNumberInManifest`/`getTrackOptionsFileNumberInManifest`: experimental option (RocksDB v11.13) that durably records the OPTIONS file number in the MANIFEST so a crash can't leave a newer, uncommitted OPTIONS file as the "latest"; matters mostly for `RocksDB.loadLatestOptions` ([#278](https://github.com/dfa1/rocksdb-ffm/pull/278), closes [#265](https://github.com/dfa1/rocksdb-ffm/issues/265)) — thanks [@amalsaidov](https://github.com/amalsaidov)
 - `SECURITY.md` (private vulnerability reporting), `CODE_OF_CONDUCT.md`, issue forms for bugs and missing wrappers, a pull request checklist, and GitHub Discussions for questions ([#261](https://github.com/dfa1/rocksdb-ffm/pull/261), closes [#255](https://github.com/dfa1/rocksdb-ffm/issues/255))
 
 ### Changed
