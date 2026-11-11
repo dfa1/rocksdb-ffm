@@ -430,6 +430,7 @@ stay on `RocksDBWriteOperations`) is implemented by `ReadWriteDB`/`TtlDB`/`BlobD
 | `compactRange()`                                               | Entire keyspace, blocking                |
 | `compactRange(start, end)`                                     | All three tiers                          |
 | `compactRange(CompactOptions, byte[] start, byte[] end)`       | With level control                       |
+| `deleteFilesInRange(start, end)` / `deleteFilesInRange(cf, start, end)` | All three tiers; drops whole SST files entirely within the range, no rewrite |
 | `suggestCompactRange(start, end)`                              | Hint; returns immediately                |
 | `waitForCompact(WaitForCompactOptions)`                        | Wait for background compaction to settle |
 | `cancelAllBackgroundWork(boolean wait)`                        | Shutdown path                            |

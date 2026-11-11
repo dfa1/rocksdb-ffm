@@ -64,6 +64,68 @@ public interface RocksDBCompactionOperations {
 		RocksDBCompactionOperationsBindings.compactRangeOptBytes(this, opts, startKey, endKey);
 	}
 
+	/// Deletes whole SST files that fall entirely within `[startKey, endKey]` from the default
+	/// column family. Unlike [#compactRange(byte\[\], byte\[\])], nothing is rewritten: a file that
+	/// only partly overlaps the range is kept. A fast way to drop a large key range (e.g. a tenant)
+	/// when exactness isn't required. Pass `null` for either bound to indicate the beginning/end of
+	/// the key space.
+	///
+	/// @param startKey inclusive lower bound, or `null` for the start of the key space
+	/// @param endKey   inclusive upper bound, or `null` for the end of the key space
+	/// @throws RocksDBException on I/O error
+	default void deleteFilesInRange(byte[] startKey, byte[] endKey) {
+		RocksDBCompactionOperationsBindings.deleteFileInRangeBytes(this, startKey, endKey);
+	}
+
+	/// [ByteBuffer] overload of [#deleteFilesInRange(byte\[\], byte\[\])].
+	///
+	/// @param startKey direct [ByteBuffer] with inclusive lower bound, or `null` for the start of the key space
+	/// @param endKey   direct [ByteBuffer] with inclusive upper bound, or `null` for the end of the key space
+	/// @throws RocksDBException on I/O error
+	default void deleteFilesInRange(ByteBuffer startKey, ByteBuffer endKey) {
+		RocksDBCompactionOperationsBindings.deleteFileInRangeBuffer(this, startKey, endKey);
+	}
+
+	/// [MemorySegment] overload of [#deleteFilesInRange(byte\[\], byte\[\])].
+	///
+	/// @param startKey native segment with inclusive lower bound, or `null` for the start of the key space
+	/// @param endKey   native segment with inclusive upper bound, or `null` for the end of the key space
+	/// @throws RocksDBException on I/O error
+	default void deleteFilesInRange(MemorySegment startKey, MemorySegment endKey) {
+		RocksDBCompactionOperationsBindings.deleteFileInRangeSegment(this, startKey, endKey);
+	}
+
+	/// Deletes whole SST files that fall entirely within `[startKey, endKey]` from the given column
+	/// family. See [#deleteFilesInRange(byte\[\], byte\[\])].
+	///
+	/// @param cf       target column family
+	/// @param startKey inclusive lower bound, or `null` for the start of the key space
+	/// @param endKey   inclusive upper bound, or `null` for the end of the key space
+	/// @throws RocksDBException on I/O error
+	default void deleteFilesInRange(ColumnFamilyHandle cf, byte[] startKey, byte[] endKey) {
+		RocksDBCompactionOperationsBindings.deleteFileInRangeCfBytes(this, cf, startKey, endKey);
+	}
+
+	/// [ByteBuffer] overload of [#deleteFilesInRange(ColumnFamilyHandle, byte\[\], byte\[\])].
+	///
+	/// @param cf       target column family
+	/// @param startKey direct [ByteBuffer] with inclusive lower bound, or `null` for the start of the key space
+	/// @param endKey   direct [ByteBuffer] with inclusive upper bound, or `null` for the end of the key space
+	/// @throws RocksDBException on I/O error
+	default void deleteFilesInRange(ColumnFamilyHandle cf, ByteBuffer startKey, ByteBuffer endKey) {
+		RocksDBCompactionOperationsBindings.deleteFileInRangeCfBuffer(this, cf, startKey, endKey);
+	}
+
+	/// [MemorySegment] overload of [#deleteFilesInRange(ColumnFamilyHandle, byte\[\], byte\[\])].
+	///
+	/// @param cf       target column family
+	/// @param startKey native segment with inclusive lower bound, or `null` for the start of the key space
+	/// @param endKey   native segment with inclusive upper bound, or `null` for the end of the key space
+	/// @throws RocksDBException on I/O error
+	default void deleteFilesInRange(ColumnFamilyHandle cf, MemorySegment startKey, MemorySegment endKey) {
+		RocksDBCompactionOperationsBindings.deleteFileInRangeCfSegment(this, cf, startKey, endKey);
+	}
+
 	/// Hints that `[startKey, endKey]` may benefit from compaction, but does not block.
 	///
 	/// @param startKey inclusive lower bound

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `RocksDBCompactionOperations.deleteFilesInRange` (all three key tiers, with and without a `ColumnFamilyHandle`): drops whole SST files that fall entirely within a key range without rewriting, unlike `compactRange` ([#280](https://github.com/dfa1/rocksdb-ffm/pull/280), closes [#267](https://github.com/dfa1/rocksdb-ffm/issues/267)) — thanks [@amalsaidov](https://github.com/amalsaidov)
 - `SECURITY.md` (private vulnerability reporting), `CODE_OF_CONDUCT.md`, issue forms for bugs and missing wrappers, a pull request checklist, and GitHub Discussions for questions ([#261](https://github.com/dfa1/rocksdb-ffm/pull/261), closes [#255](https://github.com/dfa1/rocksdb-ffm/issues/255))
 
 ### Changed
