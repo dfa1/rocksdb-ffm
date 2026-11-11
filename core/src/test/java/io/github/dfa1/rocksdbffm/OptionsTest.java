@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import static org.assertj.core.api.Assertions.catchThrowable;
+
 class OptionsTest {
 
 	@Test
@@ -348,6 +350,71 @@ class OptionsTest {
 	// -----------------------------------------------------------------------
 	// Memtable tuning
 	// -----------------------------------------------------------------------
+
+	@Test
+    void setMemtableOpScanFlushTrigger_roundTrips() {
+            // Given
+            try (var opts = Options.newOptions().setMemtableOpScanFlushTrigger(1000)) {
+
+                    // When
+                    var result = opts.getMemtableOpScanFlushTrigger();
+
+                    // Then
+                    assertThat(result).isEqualTo(1000);
+            }
+    }
+
+    @Test
+    void memtableOpScanFlushTrigger_defaultsToZero() {
+            // Given
+            try (var opts = Options.newOptions()) {
+
+                    // When
+                    var result = opts.getMemtableOpScanFlushTrigger();
+
+                    // Then
+                    assertThat(result).isZero();
+            }
+    }
+
+    @Test
+    void setMemtableOpScanFlushTrigger_rejectsNegative() {
+            // Given
+            try (var opts = Options.newOptions()) {
+
+                    // When
+                    var thrown = catchThrowable(() -> opts.setMemtableOpScanFlushTrigger(-1));
+
+                    // Then
+                    assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+            }
+    }
+
+    @Test
+    void setMemtableAvgOpScanFlushTrigger_roundTrips() {
+            // Given
+            try (var opts = Options.newOptions().setMemtableAvgOpScanFlushTrigger(100)) {
+
+                    // When
+                    var result = opts.getMemtableAvgOpScanFlushTrigger();
+
+                    // Then
+                    assertThat(result).isEqualTo(100);
+            }
+    }
+
+    @Test
+    void setMemtableAvgOpScanFlushTrigger_rejectsNegative() {
+            // Given
+            try (var opts = Options.newOptions()) {
+
+                    // When
+                    var thrown = catchThrowable(() -> opts.setMemtableAvgOpScanFlushTrigger(-1));
+
+                    // Then
+                    assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+            }
+    }
 
 	@Test
 	void setMemtablePrefixBloomSizeRatio_roundTrips() {
