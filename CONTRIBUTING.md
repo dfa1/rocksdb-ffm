@@ -90,10 +90,10 @@ compile against `core`. The mapping is in [AGENTS.md](AGENTS.md#documentation).
 
 ## Changelog
 
-User-visible changes get a line under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md); the section is
-published as the GitHub release notes. Link the pull request that introduces the change, so readers can
-find the context, and the issue it closes if any. Contributions from outside the maintainer end with
-`— thanks [@your-handle](https://github.com/your-handle)`; the release notes show a bare `@your-handle`, which notifies the contributor when the release is published.
+Contributors do not edit [CHANGELOG.md](CHANGELOG.md); the maintainer adds the entry when merging. Entries go
+under `## [Unreleased]`, link the pull request (and the issue it closes, if any), and end with
+`— thanks [@handle](https://github.com/handle)` for outside contributions; the release notes show a bare
+`@handle`, which notifies the contributor when the release is published.
 
 ## Releasing
 
