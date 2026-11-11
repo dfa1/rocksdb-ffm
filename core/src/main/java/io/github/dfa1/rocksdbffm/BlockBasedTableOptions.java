@@ -271,6 +271,36 @@ public final class BlockBasedTableOptions extends NativeObject {
 		}
 	}
 
+	/// Whether blocks exploit the common prefix shared by adjacent keys, per `table.h`'s
+	/// `OptimizeKeyCommonPrefix`. Smaller index/data blocks and a faster `Seek`, and only takes
+	/// effect at `format_version` >= 8 with delta encoding on.
+	public enum OptimizeKeyCommonPrefix {
+		/// Never use the optimization.
+		DISABLED(0),
+		/// Use it only where it also enables the `Seek` speedup: `format_version` >= 8 with a
+		/// (reverse-)bytewise comparator. Left off for other comparators. Default.
+		IF_FAST_SEEK(1),
+		/// Use it for all comparators at `format_version` >= 8. (Reverse-)bytewise comparators get
+		/// the space savings plus the fast seek; other comparators get only the space savings,
+		/// read back via full-key reconstruction.
+		ENABLED(2);
+
+		final int value;
+
+		OptimizeKeyCommonPrefix(int value) {
+			this.value = value;
+		}
+
+		static OptimizeKeyCommonPrefix fromValue(int value) {
+			return switch (value) {
+				case 0 -> DISABLED;
+				case 1 -> IF_FAST_SEEK;
+				case 2 -> ENABLED;
+				default -> throw new IllegalArgumentException("Unknown OptimizeKeyCommonPrefix value: " + value);
+			};
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// Method handles
 	// -----------------------------------------------------------------------
@@ -373,6 +403,10 @@ public final class BlockBasedTableOptions extends NativeObject {
 	private static final MethodHandle MH_SET_DATA_BLOCK_INDEX_TYPE;
 	/// `int rocksdb_block_based_options_get_data_block_index_type(rocksdb_block_based_table_options_t* opt);`
 	private static final MethodHandle MH_GET_DATA_BLOCK_INDEX_TYPE;
+	/// `void rocksdb_block_based_options_set_optimize_key_common_prefix(rocksdb_block_based_table_options_t* opt, int v);`
+	private static final MethodHandle MH_SET_OPTIMIZE_KEY_COMMON_PREFIX;
+	/// `int rocksdb_block_based_options_get_optimize_key_common_prefix(rocksdb_block_based_table_options_t* opt);`
+	private static final MethodHandle MH_GET_OPTIMIZE_KEY_COMMON_PREFIX;
 	/// `void rocksdb_block_based_options_set_index_block_search_type(rocksdb_block_based_table_options_t* opt, int v);`
 	private static final MethodHandle MH_SET_INDEX_BLOCK_SEARCH_TYPE;
 	/// `int rocksdb_block_based_options_get_index_block_search_type(rocksdb_block_based_table_options_t* opt);`
@@ -606,6 +640,12 @@ public final class BlockBasedTableOptions extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
 		MH_GET_DATA_BLOCK_INDEX_TYPE = NativeLibrary.lookup("rocksdb_block_based_options_get_data_block_index_type",
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+		MH_SET_OPTIMIZE_KEY_COMMON_PREFIX = NativeLibrary.lookup("rocksdb_block_based_options_set_optimize_key_common_prefix",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+		MH_GET_OPTIMIZE_KEY_COMMON_PREFIX = NativeLibrary.lookup("rocksdb_block_based_options_get_optimize_key_common_prefix",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
 		MH_SET_INDEX_BLOCK_SEARCH_TYPE = NativeLibrary.lookup(
@@ -1198,6 +1238,25 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @return current data block index type
 	public DataBlockIndexType getDataBlockIndexType() {
 		return DataBlockIndexType.fromValue(NativeFields.getInt(MH_GET_DATA_BLOCK_INDEX_TYPE, ptr()));
+	}
+
+	/// Sets whether blocks exploit the common prefix shared by adjacent keys, for smaller
+	/// index/data blocks and a faster `Seek`. Only takes effect at `format_version` >= 8 with delta
+	/// encoding on, so the default already does the right thing for most callers. Default:
+	/// [OptimizeKeyCommonPrefix#IF_FAST_SEEK].
+	///
+	/// @param optimize key common-prefix optimization mode to use
+	/// @return `this` for chaining
+	public BlockBasedTableOptions setOptimizeKeyCommonPrefix(OptimizeKeyCommonPrefix optimize) {
+		NativeFields.setInt(MH_SET_OPTIMIZE_KEY_COMMON_PREFIX, ptr(), optimize.value);
+		return this;
+	}
+
+	/// Returns the configured key common-prefix optimization mode.
+	///
+	/// @return current key common-prefix optimization mode
+	public OptimizeKeyCommonPrefix getOptimizeKeyCommonPrefix() {
+		return OptimizeKeyCommonPrefix.fromValue(NativeFields.getInt(MH_GET_OPTIMIZE_KEY_COMMON_PREFIX, ptr()));
 	}
 
 	/// If true, index blocks are compressed like data blocks are, subject to

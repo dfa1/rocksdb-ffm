@@ -128,4 +128,23 @@ class BlockBasedTableOptionsEnumsTest {
 		assertThatThrownBy(() -> BlockBasedTableOptions.PrepopulateBlockCache.fromValue(value))
 				.isInstanceOf(IllegalArgumentException.class);
 	}
+
+	@ParameterizedTest
+	@CsvSource({
+			"0, DISABLED",
+			"1, IF_FAST_SEEK",
+			"2, ENABLED",
+	})
+	void optimizeKeyCommonPrefix_fromValue_mapsEveryKnownValue(int value, BlockBasedTableOptions.OptimizeKeyCommonPrefix expected) {
+		// Given / When / Then
+		assertThat(BlockBasedTableOptions.OptimizeKeyCommonPrefix.fromValue(value)).isEqualTo(expected);
+	}
+
+	@ParameterizedTest
+	@CsvSource({"-1", "3"})
+	void optimizeKeyCommonPrefix_fromValue_rejectsUnknownValue(int value) {
+		// Given / When / Then
+		assertThatThrownBy(() -> BlockBasedTableOptions.OptimizeKeyCommonPrefix.fromValue(value))
+				.isInstanceOf(IllegalArgumentException.class);
+	}
 }

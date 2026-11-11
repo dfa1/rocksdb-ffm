@@ -274,6 +274,7 @@ Per-call options:
 | `setIndexShortening`          | `BlockBasedTableOptions.IndexShorteningMode` |
 | `setIndexBlockSearchType`     | `BlockBasedTableOptions.IndexSearchType` |
 | `setDataBlockIndexType`       | `BlockBasedTableOptions.DataBlockIndexType` |
+| `setOptimizeKeyCommonPrefix`  | `BlockBasedTableOptions.OptimizeKeyCommonPrefix` |
 | `setEnableIndexCompression`   | `boolean`                            |
 | `setUniformCvThreshold`       | `double`                             |
 | `setChecksumType`             | `BlockBasedTableOptions.ChecksumType` |

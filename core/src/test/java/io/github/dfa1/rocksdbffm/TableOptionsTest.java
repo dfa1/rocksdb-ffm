@@ -637,6 +637,33 @@ class TableOptionsTest {
 	}
 
 	@Test
+	void optimizeKeyCommonPrefix_defaultsToIfFastSeek() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()) {
+
+			// When
+			var result = tbl.getOptimizeKeyCommonPrefix();
+
+			// Then
+			assertThat(result).isEqualTo(BlockBasedTableOptions.OptimizeKeyCommonPrefix.IF_FAST_SEEK);
+		}
+	}
+
+	@Test
+	void setOptimizeKeyCommonPrefix_roundTrips() {
+		// Given
+		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig()
+				     .setOptimizeKeyCommonPrefix(BlockBasedTableOptions.OptimizeKeyCommonPrefix.ENABLED)) {
+
+			// When
+			var result = tbl.getOptimizeKeyCommonPrefix();
+
+			// Then
+			assertThat(result).isEqualTo(BlockBasedTableOptions.OptimizeKeyCommonPrefix.ENABLED);
+		}
+	}
+
+	@Test
 	void setUniformCvThreshold_roundTrips() {
 		// Given
 		try (var tbl = BlockBasedTableOptions.newBlockBasedConfig().setUniformCvThreshold(0.2)) {
