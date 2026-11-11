@@ -164,6 +164,10 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY;
 	/// `unsigned char rocksdb_options_get_enforce_write_buffer_manager_during_recovery(rocksdb_options_t* opt);`
 	private static final MethodHandle MH_GET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY;
+	/// `void rocksdb_options_set_track_options_file_number_in_manifest(rocksdb_options_t* opt, unsigned char v);`
+	private static final MethodHandle MH_SET_TRACK_OPTIONS_FILE_NUMBER_IN_MANIFEST;
+	/// `unsigned char rocksdb_options_get_track_options_file_number_in_manifest(rocksdb_options_t* opt);`
+	private static final MethodHandle MH_GET_TRACK_OPTIONS_FILE_NUMBER_IN_MANIFEST;
 	/// `void rocksdb_options_set_num_levels(rocksdb_options_t*, int);`
 	private static final MethodHandle MH_SET_NUM_LEVELS;
 	/// `int rocksdb_options_get_num_levels(rocksdb_options_t*);`
@@ -478,6 +482,12 @@ public final class Options extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
 		MH_GET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY = NativeLibrary.lookup("rocksdb_options_get_enforce_write_buffer_manager_during_recovery",
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
+
+		MH_SET_TRACK_OPTIONS_FILE_NUMBER_IN_MANIFEST = NativeLibrary.lookup("rocksdb_options_set_track_options_file_number_in_manifest",
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
+
+		MH_GET_TRACK_OPTIONS_FILE_NUMBER_IN_MANIFEST = NativeLibrary.lookup("rocksdb_options_get_track_options_file_number_in_manifest",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
 		MH_SET_NUM_LEVELS = NativeLibrary.lookup("rocksdb_options_set_num_levels",
@@ -988,6 +998,28 @@ public final class Options extends NativeObject {
 	/// @return `true` if limits are enforced during recovery, `false` otherwise
 	public boolean getEnforceWriteBufferManagerDuringRecovery() {
 		return NativeFields.getBoolean(MH_GET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY, ptr());
+	}
+
+	/// Sets whether the OPTIONS file number is durably recorded in the MANIFEST.
+	///
+	/// **Experimental.** When enabled, RocksDB commits the number of the latest `OPTIONS-*` file to
+	/// the MANIFEST (and persists it in each OPTIONS file), so a crash cannot leave a newer,
+	/// uncommitted OPTIONS file looking like the latest one. This mostly matters for
+	/// [RocksDB#loadLatestOptions(java.nio.file.Path, boolean)], which otherwise picks the
+	/// highest-numbered OPTIONS file on disk. Default: `false`.
+	///
+	/// @param track whether to record the OPTIONS file number in the MANIFEST
+	/// @return `this` for chaining
+	public Options setTrackOptionsFileNumberInManifest(boolean track) {
+		NativeFields.setBoolean(MH_SET_TRACK_OPTIONS_FILE_NUMBER_IN_MANIFEST, ptr(), track);
+		return this;
+	}
+
+	/// Returns whether the OPTIONS file number is recorded in the MANIFEST.
+	///
+	/// @return `true` if the OPTIONS file number is tracked in the MANIFEST, `false` otherwise
+	public boolean getTrackOptionsFileNumberInManifest() {
+		return NativeFields.getBoolean(MH_GET_TRACK_OPTIONS_FILE_NUMBER_IN_MANIFEST, ptr());
 	}
 
 	/// Number of levels in the LSM tree for this column family. Default: 7.

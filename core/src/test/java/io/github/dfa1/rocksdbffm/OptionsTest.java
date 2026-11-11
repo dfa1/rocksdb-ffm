@@ -52,6 +52,32 @@ class OptionsTest {
 	}
 
 	@Test
+	void trackOptionsFileNumberInManifest_defaultsToFalse() {
+		// Given
+		try (var opts = Options.newOptions()) {
+
+			// When
+			var result = opts.getTrackOptionsFileNumberInManifest();
+
+			// Then
+			assertThat(result).isFalse();
+		}
+	}
+
+	@Test
+	void setTrackOptionsFileNumberInManifest_roundTrips() {
+		// Given
+		try (var opts = Options.newOptions().setTrackOptionsFileNumberInManifest(true)) {
+
+			// When
+			var result = opts.getTrackOptionsFileNumberInManifest();
+
+			// Then
+			assertThat(result).isTrue();
+		}
+	}
+
+	@Test
 	void setWriteBufferSize_roundTrips() {
 		// Given
 		try (var opts = Options.newOptions().setWriteBufferSize(MemorySize.ofKB(64))) {
