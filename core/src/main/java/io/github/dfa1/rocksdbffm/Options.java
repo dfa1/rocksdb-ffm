@@ -264,6 +264,14 @@ public final class Options extends NativeObject {
 	private static final MethodHandle MH_SET_BLOOM_LOCALITY;
 	/// `uint32_t rocksdb_options_get_bloom_locality(rocksdb_options_t*);`
 	private static final MethodHandle MH_GET_BLOOM_LOCALITY;
+	/// `void rocksdb_options_set_memtable_op_scan_flush_trigger(rocksdb_options_t*, uint32_t);`
+    private static final MethodHandle MH_SET_MEMTABLE_OP_SCAN_FLUSH_TRIGGER;
+    /// `uint32_t rocksdb_options_get_memtable_op_scan_flush_trigger(rocksdb_options_t*);`
+    private static final MethodHandle MH_GET_MEMTABLE_OP_SCAN_FLUSH_TRIGGER;
+    /// `void rocksdb_options_set_memtable_avg_op_scan_flush_trigger(rocksdb_options_t*, uint32_t);`
+    private static final MethodHandle MH_SET_MEMTABLE_AVG_OP_SCAN_FLUSH_TRIGGER;
+    /// `uint32_t rocksdb_options_get_memtable_avg_op_scan_flush_trigger(rocksdb_options_t*);`
+    private static final MethodHandle MH_GET_MEMTABLE_AVG_OP_SCAN_FLUSH_TRIGGER;
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
@@ -637,6 +645,18 @@ public final class Options extends NativeObject {
 
 		MH_SET_MEMTABLE_HUGE_PAGE_SIZE = NativeLibrary.lookup("rocksdb_options_set_memtable_huge_page_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_SET_MEMTABLE_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.lookup("rocksdb_options_set_memtable_op_scan_flush_trigger",
+                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+        MH_GET_MEMTABLE_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.lookup("rocksdb_options_get_memtable_op_scan_flush_trigger",
+                FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+
+        MH_SET_MEMTABLE_AVG_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.lookup("rocksdb_options_set_memtable_avg_op_scan_flush_trigger",
+                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
+        MH_GET_MEMTABLE_AVG_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.lookup("rocksdb_options_get_memtable_avg_op_scan_flush_trigger",
+                FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
 		MH_GET_MEMTABLE_HUGE_PAGE_SIZE = NativeLibrary.lookup("rocksdb_options_get_memtable_huge_page_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
@@ -2042,6 +2062,56 @@ public final class Options extends NativeObject {
 	public int getBloomLocality() {
 		return NativeFields.getInt(MH_GET_BLOOM_LOCALITY, ptr());
 	}
+
+	/// Forces a memtable flush once a single iterator operation (`SeekToFirst()`, `Seek()` or
+    /// `Next()`) scans this many invisible entries (tombstones or hidden puts) from the active
+    /// memtable. Reduces the cost of scanning through a large number of dead entries in range-scan-heavy
+    /// workloads. Only forward scans are covered, and tailing iterators are not affected yet.
+    /// Consider enabling deletion-triggered compaction alongside this option, to compact away
+    /// tombstones once the memtable is flushed. `0` disables the trigger. Default: 0.
+    ///
+    /// @param trigger number of invisible entries per operation that triggers a flush, or `0` to disable
+    /// @return `this` for chaining
+    /// @throws IllegalArgumentException if `trigger` is negative
+    public Options setMemtableOpScanFlushTrigger(int trigger) {
+            if (trigger < 0) {
+                    throw new IllegalArgumentException("memtableOpScanFlushTrigger must not be negative: " + trigger);
+            }
+            NativeFields.setInt(MH_SET_MEMTABLE_OP_SCAN_FLUSH_TRIGGER, ptr(), trigger);
+            return this;
+    }
+
+    /// Returns the configured per-operation scan flush trigger.
+    ///
+    /// @return invisible entries per operation that trigger a flush, or `0` if disabled
+    public int getMemtableOpScanFlushTrigger() {
+            return NativeFields.getInt(MH_GET_MEMTABLE_OP_SCAN_FLUSH_TRIGGER, ptr());
+    }
+
+    /// Like [#setMemtableOpScanFlushTrigger], but applied to the average number of invisible
+    /// entries scanned from the active memtable per `Next()` call between `Seek()`s (or until
+    /// the iterator is destroyed). Only takes effect once at least
+    /// [#setMemtableOpScanFlushTrigger] invisible entries have been scanned within the window,
+    /// so it is only effective when that option is also set. Should be set lower than
+    /// [#setMemtableOpScanFlushTrigger]. `0` disables the trigger. Default: 0.
+    ///
+    /// @param trigger average invisible entries per operation that triggers a flush, or `0` to disable
+    /// @return `this` for chaining
+    /// @throws IllegalArgumentException if `trigger` is negative
+    public Options setMemtableAvgOpScanFlushTrigger(int trigger) {
+            if (trigger < 0) {
+                    throw new IllegalArgumentException("memtableAvgOpScanFlushTrigger must not be negative: " + trigger);
+            }
+            NativeFields.setInt(MH_SET_MEMTABLE_AVG_OP_SCAN_FLUSH_TRIGGER, ptr(), trigger);
+            return this;
+    }
+
+    /// Returns the configured average-per-operation scan flush trigger.
+    ///
+    /// @return average invisible entries per operation that trigger a flush, or `0` if disabled
+    public int getMemtableAvgOpScanFlushTrigger() {
+            return NativeFields.getInt(MH_GET_MEMTABLE_AVG_OP_SCAN_FLUSH_TRIGGER, ptr());
+    }
 
 	// -----------------------------------------------------------------------
 	// Memtable factory
