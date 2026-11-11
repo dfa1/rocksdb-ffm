@@ -28,6 +28,10 @@ final class RocksDBCompactionOperationsBindings {
 	private static final MethodHandle MH_ENABLE_MANUAL_COMPACTION;
 	/// `void rocksdb_wait_for_compact(rocksdb_t* db, rocksdb_wait_for_compact_options_t* options, char** errptr);`
 	private static final MethodHandle MH_WAIT_FOR_COMPACT;
+	/// `void rocksdb_delete_file_in_range(rocksdb_t* db, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len, char** errptr);`
+	private static final MethodHandle MH_DELETE_FILE_IN_RANGE;
+	/// `void rocksdb_delete_file_in_range_cf(rocksdb_t* db, rocksdb_column_family_handle_t* column_family, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len, char** errptr);`
+	private static final MethodHandle MH_DELETE_FILE_IN_RANGE_CF;
 
 	static {
 		MH_COMPACT_RANGE = NativeLibrary.lookup("rocksdb_compact_range",
@@ -63,6 +67,20 @@ final class RocksDBCompactionOperationsBindings {
 
 		MH_WAIT_FOR_COMPACT = NativeLibrary.lookup("rocksdb_wait_for_compact",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+
+		MH_DELETE_FILE_IN_RANGE = NativeLibrary.lookup("rocksdb_delete_file_in_range",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS));
+
+		MH_DELETE_FILE_IN_RANGE_CF = NativeLibrary.lookup("rocksdb_delete_file_in_range_cf",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS));
 	}
 
 	private RocksDBCompactionOperationsBindings() {
@@ -173,6 +191,90 @@ final class RocksDBCompactionOperationsBindings {
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("waitForCompact failed", t);
+		}
+	}
+
+	static void deleteFileInRangeBytes(RocksDBCompactionOperations db, byte[] startKey, byte[] endKey) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MemorySegment s = startKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, startKey);
+			MemorySegment e = endKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, endKey);
+			MH_DELETE_FILE_IN_RANGE.invokeExact(db.dbPtr(),
+					s, startKey == null ? 0L : (long) startKey.length,
+					e, endKey == null ? 0L : (long) endKey.length, err);
+			NativeCalls.checkError(err);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("deleteFilesInRange failed", t);
+		}
+	}
+
+	static void deleteFileInRangeBuffer(RocksDBCompactionOperations db, ByteBuffer startKey, ByteBuffer endKey) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MemorySegment s = startKey == null ? MemorySegment.NULL : MemorySegment.ofBuffer(startKey);
+			MemorySegment e = endKey == null ? MemorySegment.NULL : MemorySegment.ofBuffer(endKey);
+			MH_DELETE_FILE_IN_RANGE.invokeExact(db.dbPtr(),
+					s, startKey == null ? 0L : (long) startKey.remaining(),
+					e, endKey == null ? 0L : (long) endKey.remaining(), err);
+			NativeCalls.checkError(err);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("deleteFilesInRange failed", t);
+		}
+	}
+
+	static void deleteFileInRangeSegment(RocksDBCompactionOperations db, MemorySegment startKey, MemorySegment endKey) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MemorySegment s = startKey == null ? MemorySegment.NULL : startKey;
+			MemorySegment e = endKey == null ? MemorySegment.NULL : endKey;
+			MH_DELETE_FILE_IN_RANGE.invokeExact(db.dbPtr(),
+					s, s == MemorySegment.NULL ? 0L : s.byteSize(),
+					e, e == MemorySegment.NULL ? 0L : e.byteSize(), err);
+			NativeCalls.checkError(err);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("deleteFilesInRange failed", t);
+		}
+	}
+
+	static void deleteFileInRangeCfBytes(RocksDBCompactionOperations db, ColumnFamilyHandle cf, byte[] startKey, byte[] endKey) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MemorySegment s = startKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, startKey);
+			MemorySegment e = endKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, endKey);
+			MH_DELETE_FILE_IN_RANGE_CF.invokeExact(db.dbPtr(), cf.ptr(),
+					s, startKey == null ? 0L : (long) startKey.length,
+					e, endKey == null ? 0L : (long) endKey.length, err);
+			NativeCalls.checkError(err);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("deleteFilesInRange failed", t);
+		}
+	}
+
+	static void deleteFileInRangeCfBuffer(RocksDBCompactionOperations db, ColumnFamilyHandle cf, ByteBuffer startKey, ByteBuffer endKey) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MemorySegment s = startKey == null ? MemorySegment.NULL : MemorySegment.ofBuffer(startKey);
+			MemorySegment e = endKey == null ? MemorySegment.NULL : MemorySegment.ofBuffer(endKey);
+			MH_DELETE_FILE_IN_RANGE_CF.invokeExact(db.dbPtr(), cf.ptr(),
+					s, startKey == null ? 0L : (long) startKey.remaining(),
+					e, endKey == null ? 0L : (long) endKey.remaining(), err);
+			NativeCalls.checkError(err);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("deleteFilesInRange failed", t);
+		}
+	}
+
+	static void deleteFileInRangeCfSegment(RocksDBCompactionOperations db, ColumnFamilyHandle cf, MemorySegment startKey, MemorySegment endKey) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MemorySegment s = startKey == null ? MemorySegment.NULL : startKey;
+			MemorySegment e = endKey == null ? MemorySegment.NULL : endKey;
+			MH_DELETE_FILE_IN_RANGE_CF.invokeExact(db.dbPtr(), cf.ptr(),
+					s, s == MemorySegment.NULL ? 0L : s.byteSize(),
+					e, e == MemorySegment.NULL ? 0L : e.byteSize(), err);
+			NativeCalls.checkError(err);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("deleteFilesInRange failed", t);
 		}
 	}
 }
