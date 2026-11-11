@@ -213,9 +213,10 @@ type (`ReadWriteDB`, `TtlDB`, …) or its capability interface, not on `RocksDB`
 - `SECURITY.md` supports the latest release only while pre-1.0; revisit its version table at 1.0
 - Questions go to GitHub Discussions (Q&A, Ideas), not issues: blank issues are disabled in `config.yml`
 - Java snippets in `docs/` must compile against `core` before being committed
-- `CHANGELOG.md` sections are published verbatim as the GitHub release notes (`publish.yml`). Every entry links the
-  pull request that introduced it (`[#NNN](https://github.com/dfa1/rocksdb-ffm/pull/NNN)`, plus the issue when there
-  is one), and an entry from an external contributor ends with `— thanks [@handle](https://github.com/handle)` (clickable in the file; `publish.yml` rewrites it to a bare
+- `CHANGELOG.md` sections are published verbatim as the GitHub release notes (`publish.yml`). **Do not edit it in a
+  contributor PR** — the maintainer adds the entry at merge time. Format: every entry links the pull request
+  (`[#NNN](https://github.com/dfa1/rocksdb-ffm/pull/NNN)`, plus the issue when there is one), and an entry from an
+  external contributor ends with `— thanks [@handle](https://github.com/handle)` (`publish.yml` rewrites it to a bare
   `@handle` in the release notes, where the mention notifies that person when the release is published)
 
 ## Code
