@@ -71,6 +71,7 @@ static final List<Mapping> ENUMS = List.of(
 				List.of("datablock"), Map.of()),
 		new Mapping("BlockBasedTableOptions", "IndexShorteningMode", "table.h", "IndexShorteningMode", "rocksdb::BlockBasedTableOptions::IndexShorteningMode::"),
 		new Mapping("BlockBasedTableOptions", "PrepopulateBlockCache", "table.h", "PrepopulateBlockCache", "rocksdb::BlockBasedTableOptions::PrepopulateBlockCache::"),
+		new Mapping("BlockBasedTableOptions", "OptimizeKeyCommonPrefix", "table.h", "OptimizeKeyCommonPrefix", "rocksdb::BlockBasedTableOptions::OptimizeKeyCommonPrefix::"),
 		new Mapping("PlainTableOptions", "EncodingType", "table.h", "EncodingType", "rocksdb::"),
 		new Mapping("UniversalCompactionOptions", "StopStyle", "universal_compaction.h", "CompactionStopStyle", "rocksdb::",
 				List.of("compactionstopstyle"), Map.of()),
