@@ -122,6 +122,89 @@ class WriteBufferManagerTest {
 	}
 
 	@Test
+	void flushPolicy_defaultsToOldest() {
+		// Given
+		try (var wbm = WriteBufferManager.create(MemorySize.ofMB(100), false)) {
+
+			// When
+			var policy = wbm.getFlushPolicy();
+
+			// Then
+			assertThat(policy).isEqualTo(WriteBufferManager.FlushPolicy.OLDEST);
+		}
+	}
+
+	@Test
+	void create_withPolicy_readsBackEachPolicy() {
+		for (var expected : WriteBufferManager.FlushPolicy.values()) {
+			// Given
+			try (var wbm = WriteBufferManager.create(MemorySize.ofMB(100), false, expected)) {
+
+				// When
+				var actual = wbm.getFlushPolicy();
+
+				// Then
+				assertThat(actual).isEqualTo(expected);
+			}
+		}
+	}
+
+	@Test
+	void createWithCache_withPolicy_readsBackEachPolicy() {
+		for (var expected : WriteBufferManager.FlushPolicy.values()) {
+			// Given
+			try (var cache = LRUCache.newLRUCache(MemorySize.ofMB(10));
+			     var wbm = WriteBufferManager.createWithCache(MemorySize.ofMB(100), cache, false, expected)) {
+
+				// When
+				var actual = wbm.getFlushPolicy();
+
+				// Then
+				assertThat(actual).isEqualTo(expected);
+				assertThat(wbm.costToCache()).isTrue();
+			}
+		}
+	}
+
+	@Test
+	void setFlushPolicy_changesPolicy() {
+		// Given
+		try (var wbm = WriteBufferManager.create(MemorySize.ofMB(100), false)) {
+
+			// When
+			wbm.setFlushPolicy(WriteBufferManager.FlushPolicy.LARGEST_ACROSS_DBS);
+			var actual = wbm.getFlushPolicy();
+
+			// Then
+			assertThat(actual).isEqualTo(WriteBufferManager.FlushPolicy.LARGEST_ACROSS_DBS);
+		}
+	}
+
+	@Test
+	void setFlushPolicy_returnsThisForChaining() {
+		// Given
+		try (var wbm = WriteBufferManager.create(MemorySize.ofMB(100), false)) {
+
+			// When
+			var result = wbm.setFlushPolicy(WriteBufferManager.FlushPolicy.LARGEST);
+
+			// Then
+			assertThat(result).isSameAs(wbm);
+		}
+	}
+
+	@Test
+	void create_withPolicy_rejectsNullPolicy() {
+		// Given — no policy
+
+		// When
+		var thrown = catchThrowable(() -> WriteBufferManager.create(MemorySize.ofMB(100), false, null));
+
+		// Then
+		assertThat(thrown).isInstanceOf(NullPointerException.class).hasMessageContaining("flushPolicy");
+	}
+
+	@Test
 	void memoryUsage_growsAfterPuts(@TempDir Path dir) {
 		// Given
 		try (var wbm = WriteBufferManager.create(MemorySize.ofMB(100), false);
