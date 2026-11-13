@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 class TtlDBTest {
@@ -126,6 +127,48 @@ class TtlDBTest {
 
 			// Then
 			assertThat(db.get("persistent".getBytes())).isEqualTo("yes".getBytes());
+		}
+	}
+
+	@Test
+	void openTtl_negativeTtl_isRejected(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true)) {
+
+			// When
+			var thrown = catchThrowable(() -> RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(-1)));
+
+			// Then
+			assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+		}
+	}
+
+	@Test
+	void openTtl_ttlTooLargeForNative_isRejected(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true)) {
+
+			// When
+			var thrown = catchThrowable(() -> RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(Integer.MAX_VALUE + 1L)));
+
+			// Then
+			assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+		}
+	}
+
+	@Test
+	void openTtl_perColumnFamilyTtlOutOfRange_isRejected(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true)) {
+			var handles = new ArrayList<ColumnFamilyHandle>();
+			var descriptors = List.of(ColumnFamilyDescriptor.of("default"));
+
+			// When
+			var thrown = catchThrowable(() -> RocksDB.openTtl(dbOpts, dir, descriptors,
+					List.of(Duration.ofSeconds(-1)), handles));
+
+			// Then
+			assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
 		}
 	}
 
