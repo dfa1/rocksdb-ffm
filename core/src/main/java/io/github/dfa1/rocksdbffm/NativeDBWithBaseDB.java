@@ -18,11 +18,11 @@ import java.lang.foreign.MemorySegment;
 /// cannot accidentally read it unchecked. The only access is [#dbPtr()], which calls [#ptr()]
 /// first and therefore throws [IllegalStateException] once this object is closed, the same way
 /// every other native call on this object already does.
-abstract class NativeObjectWithBaseDb extends NativeDB {
+abstract class NativeDBWithBaseDB extends NativeDB {
 
 	private final MemorySegment baseDb;
 
-	protected NativeObjectWithBaseDb(MemorySegment ptr, MemorySegment baseDb) {
+	protected NativeDBWithBaseDB(MemorySegment ptr, MemorySegment baseDb) {
 		super(ptr);
 		this.baseDb = baseDb;
 	}

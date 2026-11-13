@@ -5,7 +5,7 @@ import java.nio.file.Path;
 
 /// Shared tracing/replay operations for every wrapper around a plain `rocksdb_t*`, including
 /// [TransactionDB] (reached through its base DB pointer, see
-/// [NativeObjectWithBaseDb#dbPtr()]). Implemented directly, alongside [RocksDBReadOperations]
+/// [NativeDBWithBaseDB#dbPtr()]). Implemented directly, alongside [RocksDBReadOperations]
 /// and/or [RocksDBWriteOperations] where applicable, by the same set of types as
 /// [RocksDBMonitoringOperations]: `ReadWriteDB`, `TtlDB`, `OptimisticTransactionDB`,
 /// `ReadOnlyDB`, `SecondaryDB`, `TransactionDB`.

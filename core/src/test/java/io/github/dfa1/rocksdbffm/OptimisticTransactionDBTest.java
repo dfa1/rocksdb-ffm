@@ -1092,7 +1092,7 @@ class OptimisticTransactionDBTest {
 	@Test
 	void close_isIdempotent(@TempDir Path dir) {
 		// Given — an already-closed OptimisticTransactionDB; close() must have released both
-		// the primary pointer and the base DB pointer (NativeObjectWithBaseDb#tryCloseBaseDb)
+		// the primary pointer and the base DB pointer (NativeDBWithBaseDB#tryCloseBaseDb)
 		var opts = Options.newOptions().setCreateIfMissing(true);
 		var db = RocksDB.openOptimistic(opts, dir);
 		db.close();

@@ -128,7 +128,7 @@ their data-plane methods use directly instead of their own primary handle. A pri
 directly from within the class bypasses `NativeObject`'s closed-check entirely — nothing stops a
 method from touching a dangling pointer after `close()`, no matter what the field is named, since a
 private field is visible to every method in its own class. Renaming it doesn't help: the fix has to
-put the pointer somewhere the subclass genuinely cannot see it. `NativeObjectWithBaseDb` is that
+put the pointer somewhere the subclass genuinely cannot see it. `NativeDBWithBaseDB` is that
 place — a `NativeObject` subclass holding the base DB pointer as a private field of *its own*, with
 the only access being `dbPtr()`, which calls `ptr()` first and therefore throws
 `IllegalStateException` once the object is closed, exactly like every other native call already
@@ -139,7 +139,7 @@ The fourth hazard is a *borrowed pointer from a different object*. `Snapshot` ne
 DB's pointer to call `rocksdb_release_snapshot`, but doesn't own that pointer or control its
 lifetime — closing the DB before the snapshot leaves `Snapshot` holding a dangling reference to
 memory it never owned in the first place. This is not the same shape as the third hazard: there
-the second pointer belongs to the *same* object, so `NativeObjectWithBaseDb`'s guard (check
+the second pointer belongs to the *same* object, so `NativeDBWithBaseDB`'s guard (check
 `ptr()` before returning it) is enough. Here the pointer's owner is a *different* object whose
 lifetime `Snapshot` can't observe from the outside.
 
