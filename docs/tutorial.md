@@ -81,6 +81,7 @@ Replace `src/main/java/com/example/App.java` with:
 ```java
 package com.example;
 
+import io.github.dfa1.rocksdbffm.Options;
 import io.github.dfa1.rocksdbffm.RocksDB;
 
 import java.nio.file.Path;
