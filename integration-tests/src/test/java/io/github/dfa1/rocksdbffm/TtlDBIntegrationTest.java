@@ -34,7 +34,7 @@ class TtlDBIntegrationTest {
 		     var db = RocksDB.openTtl(opts, dir, ttl)) {
 
 			// Then
-			assertThat(db.getTtl()).isEqualTo(ttl);
+			assertThat(db.getTtl()).contains(ttl);
 		}
 	}
 
@@ -49,7 +49,7 @@ class TtlDBIntegrationTest {
 
 			// Then — key survives without any TTL pressure
 			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
-			assertThat(db.getTtl()).isEqualTo(Duration.ZERO);
+			assertThat(db.getTtl()).contains(Duration.ZERO);
 		}
 	}
 }

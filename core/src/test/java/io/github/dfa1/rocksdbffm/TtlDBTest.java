@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -173,6 +174,72 @@ class TtlDBTest {
 	}
 
 	@Test
+	void getTtl_perColumnFamilyOpen_isEmpty(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openTtl(dbOpts, dir, List.of(ColumnFamilyDescriptor.of("default")),
+				     List.of(Duration.ofSeconds(60)), new ArrayList<>())) {
+
+			// When
+			var ttl = db.getTtl();
+
+			// Then
+			assertThat(ttl).isEmpty();
+		}
+	}
+
+	@Test
+	void getColumnFamilyTtls_perColumnFamilyOpen_returnsEachFamilysTtl(@TempDir Path dir) {
+		// Given
+		var descriptors = List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("sessions"));
+		var ttls = List.of(Duration.ofHours(1), Duration.ofHours(24));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true);
+		     var seed = RocksDB.openReadWrite(dbOpts, dir)) {
+			seed.createColumnFamily(ColumnFamilyDescriptor.of("sessions"));
+		}
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openTtl(dbOpts, dir, descriptors, ttls, new ArrayList<>())) {
+
+			// When
+			var result = db.getColumnFamilyTtls();
+
+			// Then
+			assertThat(result).containsExactly(
+					Map.entry("default", Duration.ofHours(1)),
+					Map.entry("sessions", Duration.ofHours(24)));
+		}
+	}
+
+	@Test
+	void getColumnFamilyTtls_singleTtlOpen_isEmpty(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
+
+			// When
+			var result = db.getColumnFamilyTtls();
+
+			// Then
+			assertThat(result).isEmpty();
+		}
+	}
+
+	@Test
+	void openTtl_ttlsAndDescriptorsDifferInSize_isRejected(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true)) {
+			var descriptors = List.of(ColumnFamilyDescriptor.of("default"));
+
+			// When
+			var thrown = catchThrowable(() -> RocksDB.openTtl(dbOpts, dir, descriptors,
+					List.of(Duration.ofSeconds(60), Duration.ofSeconds(60)), new ArrayList<>()));
+
+			// Then
+			assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+		}
+	}
+
+	@Test
 	void getTtl_returnsConfiguredDuration(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
@@ -181,7 +248,7 @@ class TtlDBTest {
 			var ttl = db.getTtl();
 
 			// Then
-			assertThat(ttl).isEqualTo(Duration.ofSeconds(60));
+			assertThat(ttl).contains(Duration.ofSeconds(60));
 		}
 	}
 

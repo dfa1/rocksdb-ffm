@@ -96,7 +96,7 @@ Each type exposes only the operations that are valid for it — see
 | `TransactionDB`           |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   —    | ✅  |
 | `OptimisticTransactionDB` |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
 
-`SecondaryDB` adds `tryCatchUpWithPrimary()`. `TtlDB` adds `getTtl()`. `TransactionDB` and
+`SecondaryDB` adds `tryCatchUpWithPrimary()`. `TtlDB` adds `getTtl()` (the TTL passed to the single-TTL open) and `getColumnFamilyTtls()` (the per-family TTLs passed to the per-column-family open). `TransactionDB` and
 `OptimisticTransactionDB` add `beginTransaction(...)`.
 
 ## Key/value operations

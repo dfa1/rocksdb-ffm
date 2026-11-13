@@ -9,8 +9,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /// Entry point for opening RocksDB databases.
 ///
@@ -248,7 +252,7 @@ public final class RocksDB {
 			MemorySegment ptr = (MemorySegment) MH_OPEN_WITH_TTL.invokeExact(
 					options.ptr(), pathSeg, toTtlSeconds(ttl), err);
 			NativeCalls.checkError(err);
-			return new TtlDB(ptr, ttl);
+			return new TtlDB(ptr, Optional.of(ttl), Map.of());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openTtl failed", t);
 		}
@@ -568,13 +572,18 @@ public final class RocksDB {
 	/// @param descriptors column family descriptors (name + optional per-CF options)
 	/// @param ttls        per-column-family TTLs, index-aligned with `descriptors`
 	/// @param handles     output list; cleared and filled with one handle per descriptor
-	/// @throws IllegalArgumentException if any TTL is negative or longer than [Integer#MAX_VALUE] seconds
+	/// @throws IllegalArgumentException if `ttls` and `descriptors` differ in size, or any TTL is negative or
+	/// longer than [Integer#MAX_VALUE] seconds
 	/// @return an open [TtlDB] instance; caller must close it
 	public static TtlDB openTtl(Options options, Path path,
 	                            List<ColumnFamilyDescriptor> descriptors,
 	                            List<Duration> ttls,
 	                            List<ColumnFamilyHandle> handles) {
 		int n = descriptors.size();
+		if (ttls.size() != n) {
+			throw new IllegalArgumentException(
+					"ttls must have one entry per descriptor: " + ttls.size() + " ttls for " + n + " descriptors");
+		}
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
@@ -588,8 +597,11 @@ public final class RocksDB {
 					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, ttlsArr, err);
 			NativeCalls.checkError(err);
 			collectCfHandles(handlesArr, n, handles);
-			Duration globalTtl = ttls.isEmpty() ? Duration.ZERO : ttls.getFirst();
-			return new TtlDB(ptr, globalTtl);
+			var cfTtls = new LinkedHashMap<String, Duration>();
+			for (int i = 0; i < n; i++) {
+				cfTtls.put(descriptors.get(i).name(), ttls.get(i));
+			}
+			return new TtlDB(ptr, Optional.empty(), Collections.unmodifiableMap(cfTtls));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openTtl failed", t);
 		}
