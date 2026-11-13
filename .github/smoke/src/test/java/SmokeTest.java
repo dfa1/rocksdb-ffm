@@ -2,6 +2,7 @@
 // are resolved by ../pom.xml from -Drocksdbffm.version/-Drocksdbffm.classifier,
 // so the workflow can pin the released version and the matrix's native jar.
 
+import io.github.dfa1.rocksdbffm.Options;
 import io.github.dfa1.rocksdbffm.RocksDB;
 import io.github.dfa1.rocksdbffm.RocksIterator;
 import io.github.dfa1.rocksdbffm.Snapshot;
