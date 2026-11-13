@@ -23,7 +23,7 @@ import java.util.OptionalLong;
 ///     }
 /// }
 /// ```
-public final class TransactionDB extends NativeObjectWithBaseDb
+public final class TransactionDB extends NativeDBWithBaseDB
 		implements RocksDBCompactionOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
 
 	// -----------------------------------------------------------------------

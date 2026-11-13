@@ -1102,7 +1102,7 @@ class TransactionDBTest {
 	// Calling methods after close() must throw, not crash the JVM
 	// -----------------------------------------------------------------------
 	// dropColumnFamily/getProperty(ColumnFamilyHandle,...)/getLongProperty(ColumnFamilyHandle,...)
-	// operate on a second native pointer (the "base DB", see NativeObjectWithBaseDb) that would
+	// operate on a second native pointer (the "base DB", see NativeDBWithBaseDB) that would
 	// otherwise bypass NativeObject's own closed-check — verify each is guarded.
 
 	@Test
@@ -1150,7 +1150,7 @@ class TransactionDBTest {
 	@Test
 	void close_isIdempotent(@TempDir Path dir) {
 		// Given — an already-closed TransactionDB; close() must have released both the
-		// primary pointer and the base DB pointer (NativeObjectWithBaseDb#tryCloseBaseDb)
+		// primary pointer and the base DB pointer (NativeDBWithBaseDB#tryCloseBaseDb)
 		var db = openDb(dir);
 		db.close();
 

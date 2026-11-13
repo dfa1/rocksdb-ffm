@@ -6,7 +6,7 @@ import java.lang.foreign.MemorySegment;
 /// capability interfaces ([RocksDBReadOperations], [RocksDBWriteOperations], ...) operate on.
 ///
 /// For the types whose `rocksdb_t*` is their own [#ptr()] (everything but the transaction databases)
-/// that is the default here; [NativeObjectWithBaseDb] overrides it for the types that carry a separate
+/// that is the default here; [NativeDBWithBaseDB] overrides it for the types that carry a separate
 /// base pointer.
 abstract class NativeDB extends NativeObjectWithChildren {
 
