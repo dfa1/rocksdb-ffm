@@ -71,7 +71,7 @@ Column families are not a separate method name — every factory that supports t
 
 | Factory                                                                       | Column families? | Returns                   |
 |:------------------------------------------------------------------------------|:-----------------|:--------------------------|
-| `openReadWrite(Path)` / `(Options, Path)`                                      | yes               | `ReadWriteDB` (creates if missing) |
+| `openReadWrite(Path)` / `(Options, Path)`                                      | yes               | `ReadWriteDB`             |
 | `openReadOnly(Path)` / `(Options, Path)` / `(Options, Path, boolean errorIfWalFileExists)` | yes  | `ReadOnlyDB`  |
 | `openTtl(Path, Duration)` / `(Options, Path, Duration)`                        | yes               | `TtlDB`                   |
 | `openSecondary(Options, Path primary, Path secondary)`                         | yes               | `SecondaryDB`             |
@@ -220,7 +220,7 @@ same as `setTableFormatConfig`):
 | `setHashLinkListMemTableFactory`     | `long`                  |
 | `setVectorMemTableFactory`           | — (no parameters)       |
 
-Blob options (used with `RocksDB.openReadWrite`, each with a matching getter):
+Blob options (apply to any open variant, per column family via `ColumnFamilyDescriptor` options; each with a matching getter):
 
 | Method                         | Type                    |
 |:-------------------------------|:------------------------|
