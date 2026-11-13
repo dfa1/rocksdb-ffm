@@ -84,9 +84,7 @@ public final class OptimisticTransactionDB extends NativeObjectWithBaseDb
 	/// @param writeOptions write options for the transaction
 	/// @return a new [Transaction]; caller must close it
 	public Transaction beginTransaction(WriteOptions writeOptions) {
-		try (OptimisticTransactionOptions txnOpts = OptimisticTransactionOptions.newOptimisticTransactionOptions()) {
-			return beginTransaction(writeOptions, txnOpts);
-		}
+		return beginTransaction(writeOptions, OptimisticTransactionOptions.DEFAULTS);
 	}
 
 	/// Begins a new optimistic transaction using the supplied write options and

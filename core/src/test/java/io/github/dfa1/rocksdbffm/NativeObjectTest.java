@@ -11,6 +11,7 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 /// Covers [NativeObject] in isolation, without any real native pointer — the double-close
 /// idempotency and ownership-transfer contract described in `docs/explanation.md` is testable
@@ -160,5 +161,32 @@ class NativeObjectTest {
 
 		// Then
 		assertThatThrownBy(obj::ptr).isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	void close_onImmortalObject_isANoOpAndPtrKeepsWorking() {
+		// Given
+		TestNativeObject obj = new TestNativeObject(fakePtr(0x5678)).makeImmortal();
+
+		// When
+		obj.close();
+
+		// Then
+		assertThat(obj.tryCloseCount).hasValue(0);
+		assertThat(obj.ptr()).isEqualTo(fakePtr(0x5678));
+		assertThat(obj.isClosed()).isFalse();
+	}
+
+	@Test
+	void transferOwnership_onImmortalObject_throwsAndPtrKeepsWorking() {
+		// Given
+		TestNativeObject obj = new TestNativeObject(fakePtr(0x5678)).makeImmortal();
+
+		// When
+		var thrown = catchThrowable(obj::transferOwnership);
+
+		// Then
+		assertThat(thrown).isInstanceOf(IllegalStateException.class);
+		assertThat(obj.ptr()).isEqualTo(fakePtr(0x5678));
 	}
 }

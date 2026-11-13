@@ -401,4 +401,19 @@ class ColumnFamilyTest {
 			assertThat(prop).isPresent();
 		}
 	}
+
+	@Test
+	void createColumnFamily_withoutOptions_survivesAnAccidentalCloseOfTheSharedDefault(@TempDir Path dir) {
+		// Given
+		Options.DEFAULTS.close();
+
+		// When
+		try (var db = RocksDB.openReadWrite(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+			var name = cf.getName();
+
+			// Then
+			assertThat(name).isEqualTo("cf1");
+		}
+	}
 }

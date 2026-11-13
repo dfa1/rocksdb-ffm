@@ -189,6 +189,10 @@ public final class TransactionOptions extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 	}
 
+	/// Default options for [TransactionDB#beginTransaction(WriteOptions)]; immortal per
+	/// [NativeObject#makeImmortal()]: never closed, and `close()` on it is a no-op.
+	static final TransactionOptions DEFAULTS = newTransactionOptions().makeImmortal();
+
 	private TransactionOptions(MemorySegment ptr) {
 		super(ptr);
 	}

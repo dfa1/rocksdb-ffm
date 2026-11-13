@@ -154,6 +154,10 @@ public final class EnvOptions extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
+	/// Default file-I/O options for the `SstFileWriter`/tracing/[Replayer] overloads that take none; immortal per
+	/// [NativeObject#makeImmortal()]: never closed, and `close()` on it is a no-op.
+	static final EnvOptions DEFAULTS = newEnvOptions().makeImmortal();
+
 	private EnvOptions(MemorySegment ptr) {
 		super(ptr);
 	}

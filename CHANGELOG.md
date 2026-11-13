@@ -12,10 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `BlockBasedTableOptions.OptimizeKeyCommonPrefix` (`DISABLED`/`IF_FAST_SEEK`/`ENABLED`) and `setOptimizeKeyCommonPrefix`/`getOptimizeKeyCommonPrefix`: key common-prefix optimization (RocksDB v11.12) for smaller index/data blocks and a faster `Seek` ([#279](https://github.com/dfa1/rocksdb-ffm/pull/279), closes [#266](https://github.com/dfa1/rocksdb-ffm/issues/266)) — thanks [@amalsaidov](https://github.com/amalsaidov)
 - `SECURITY.md` (private vulnerability reporting), `CODE_OF_CONDUCT.md`, issue forms for bugs and missing wrappers, a pull request checklist, and GitHub Discussions for questions ([#261](https://github.com/dfa1/rocksdb-ffm/pull/261), closes [#255](https://github.com/dfa1/rocksdb-ffm/issues/255))
 - `Options.setMemtableOpScanFlushTrigger`/`getMemtableOpScanFlushTrigger` and `setMemtableAvgOpScanFlushTrigger`/`getMemtableAvgOpScanFlushTrigger`: force a memtable flush when range scans skip over many invisible entries ([#281](https://github.com/dfa1/rocksdb-ffm/pull/281), closes [#264](https://github.com/dfa1/rocksdb-ffm/issues/264))
+- `Options.setMaxSuccessiveMerges`/`getMaxSuccessiveMerges` and `setStrictMaxSuccessiveMerges`/`isStrictMaxSuccessiveMerges`: cap successive merge operands per key in the memtable ([#277](https://github.com/dfa1/rocksdb-ffm/pull/277), closes [#263](https://github.com/dfa1/rocksdb-ffm/issues/263)) — thanks [@Mohammadjavadfakhri](https://github.com/Mohammadjavadfakhri)
 
 ### Changed
 
 - **Breaking:** `ColumnFamilyDescriptor.name()` returns `String`; the `of(byte[])`/`of(byte[], Options)` factories and `LoadedOptions.columnFamilyOptions(byte[])` are removed. The C API takes names as NUL-terminated strings, so the `byte[]` forms were only ever decoded as UTF-8 ([#275](https://github.com/dfa1/rocksdb-ffm/pull/275))
+- `beginTransaction(WriteOptions)`, `ingestExternalFile(files)`, `newSstFileWriter(Options)`, the default-env tracing overloads, `Replayer.create(db, path)` and column families created without options reuse one immortal native default instead of creating and destroying options on every call ([#276](https://github.com/dfa1/rocksdb-ffm/pull/276))
 
 ## [0.18] — 2026-11-09
 

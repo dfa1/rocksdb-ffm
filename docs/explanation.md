@@ -111,6 +111,16 @@ consumed which pointer. Determining *which* calls transfer ownership is not gues
 off `db/c.cc` (does `rocksdb_block_based_options_destroy` delete the filter policy?), the C API
 docs, or how `rocksdbjni` handles the same object.
 
+The opposite case is an *immortal default*. When a convenience overload needs default options that
+the native call only reads or copies (`rocksdb_create_column_family` copies its options into a
+fresh `ColumnFamilyOptions`; `BeginTransaction` takes `TransactionOptions` by const reference), the
+library keeps one process-wide instance instead of creating and destroying one per call — e.g.
+`ColumnFamilyDescriptor.of(name)` carries `Options.DEFAULTS`, and `beginTransaction(WriteOptions)`
+passes `TransactionOptions.DEFAULTS`. `makeImmortal()` marks such an instance so its
+`close()` is a no-op: it lives for the whole JVM, and a stray `close()` cannot break every later
+caller. The same rule as for transfer applies in reverse: it is only safe after reading `db/c.cc`
+and confirming the call does not retain, mutate, or take ownership of the pointer.
+
 The third hazard is a *second owned pointer on the same object*. `TransactionDB` and
 `OptimisticTransactionDB` each hold a `rocksdb_t*` "base DB" handle (from
 `rocksdb_transactiondb_get_base_db` / `rocksdb_optimistictransactiondb_get_base_db`) that most of

@@ -23,6 +23,10 @@ public abstract class NativeObject implements AutoCloseable {
 
 	private final AtomicReference<MemorySegment> owningPointer;
 
+	/// Set once, by [#makeImmortal()], before the object is published through a
+	/// `static final` field; class initialization makes that write visible to every thread.
+	private volatile boolean immortal;
+
 	/// Initializes this wrapper with the given native pointer.
 	///
 	/// @param owningPointer the non-NULL native pointer this object now owns
@@ -56,6 +60,9 @@ public abstract class NativeObject implements AutoCloseable {
 
 	@Override
 	public final void close() {
+		if (immortal) {
+			return;
+		}
 		MemorySegment ptr = owningPointer.getAndSet(MemorySegment.NULL);
 		if (!MemorySegment.NULL.equals(ptr)) {
 			try {
@@ -68,6 +75,42 @@ public abstract class NativeObject implements AutoCloseable {
 			}
 		}
 	}
+
+
+	/// Called exactly once with the non-NULL pointer when this object is closed.
+	/// Implementations must release the native resource.
+	///
+	/// @param ptr the non-NULL native pointer to release
+	/// @throws Throwable if the native destroy call fails; [#close()] catches it, logs it, and
+	///                    does not rethrow, so the rest of a try-with-resources chain still closes
+	protected abstract void tryClose(MemorySegment ptr) throws Throwable;
+
+
+	/// Makes this object immortal: it lives for the whole JVM, [#close()] is a no-op, and [#ptr()] keeps working.
+	///
+	/// Many convenience overloads need a default options object only to hand it to a native call
+	/// (`beginTransaction(WriteOptions)`, `ColumnFamilyDescriptor.of(name)`, `ingestExternalFile(files)`, ...).
+	/// Creating and destroying one per call is a native allocation round-trip for nothing; keeping a single
+	/// immortal instance in a package-private `static final` field removes it. Making it immortal, rather than
+	/// merely never closing it, means a stray `close()` (a `try`-with-resources, a cleanup path) cannot
+	/// free the pointer out from under every later caller.
+	///
+	/// The native resource is intentionally never released; that is not a leak, because there is exactly
+	/// one instance per process. Only use it for a default that every native call it is passed to
+	/// merely reads or copies. Never for an object a native call retains, mutates or takes ownership of,
+	/// and verify that against `db/c.cc` first; [#transferOwnership()] on an immortal object throws
+	/// rather than silently breaking every other user. E.g. `rocksdb_create_column_family` copies its [Options]
+	/// into its own `ColumnFamilyOptions`. Not to be confused with [#transferOwnership()], where the
+	/// native side takes over the pointer, or with shared ownership, where both sides release independently.
+	///
+	/// @param <T> the wrapper type, inferred from the assignment target
+	/// @return this object, so it chains off the factory: `static final X DEFAULTS = newX().makeImmortal();`
+	@SuppressWarnings("unchecked")
+	<T extends NativeObject> T makeImmortal() {
+		this.immortal = true;
+		return (T) this;
+	}
+
 
 	///
 	/// To be invoked manually when this object does not have anymore the ownership of the pointer.
@@ -84,14 +127,9 @@ public abstract class NativeObject implements AutoCloseable {
 	/// already provides: the pointer is dropped and further use throws [IllegalStateException]
 	/// instead of double-freeing or touching freed memory.
 	void transferOwnership() {
+		if (immortal) {
+			throw new IllegalStateException("immortal object cannot transfer ownership: it is shared process-wide");
+		}
 		owningPointer.set(MemorySegment.NULL);
 	}
-
-	/// Called exactly once with the non-NULL pointer when this object is closed.
-	/// Implementations must release the native resource.
-	///
-	/// @param ptr the non-NULL native pointer to release
-	/// @throws Throwable if the native destroy call fails; [#close()] catches it, logs it, and
-	///                    does not rethrow, so the rest of a try-with-resources chain still closes
-	protected abstract void tryClose(MemorySegment ptr) throws Throwable;
 }

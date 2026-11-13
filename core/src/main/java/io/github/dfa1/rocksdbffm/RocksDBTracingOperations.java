@@ -26,9 +26,8 @@ public interface RocksDBTracingOperations {
 	MemorySegment dbPtr();
 
 	/// Starts capturing every read/write operation on this database to a trace file at
-	/// `tracePath`, using a temporary default [Env]/[EnvOptions] pair (closed before this
-	/// method returns -- RocksDB only needs them to open the trace file, not afterward). Call
-	/// [#endTrace()] to stop.
+	/// `tracePath`, using the default [Env] (`Env::Default()`) and default [EnvOptions] to open
+	/// the trace file. Call [#endTrace()] to stop.
 	///
 	/// @param traceOptions options controlling sampling rate, filter, and rollover size
 	/// @param tracePath    file to write the trace to; must not already exist
@@ -55,8 +54,8 @@ public interface RocksDBTracingOperations {
 	}
 
 	/// Starts capturing every file I/O operation (as opposed to [#startTrace], which captures
-	/// database-level reads/writes) to a trace file at `tracePath`, using a temporary default
-	/// [Env]/[EnvOptions] pair (closed before this method returns). Call [#endIoTrace()] to stop.
+	/// database-level reads/writes) to a trace file at `tracePath`, using the default
+	/// [Env]/[EnvOptions] pair. Call [#endIoTrace()] to stop.
 	///
 	/// @param traceOptions options controlling sampling rate, filter, and rollover size
 	/// @param tracePath    file to write the trace to; must not already exist
@@ -82,8 +81,8 @@ public interface RocksDBTracingOperations {
 	}
 
 	/// Starts capturing every block cache access (hit/miss, block type, caller, key) to a trace
-	/// file at `tracePath`, using [TraceOptions] and a temporary default [Env]/[EnvOptions] pair
-	/// (closed before this method returns). Call [#endBlockCacheTrace()] to stop.
+	/// file at `tracePath`, using [TraceOptions] and the default [Env]/[EnvOptions] pair. Call
+	/// [#endBlockCacheTrace()] to stop.
 	///
 	/// @param traceOptions options controlling sampling rate, filter, and rollover size
 	/// @param tracePath    file to write the trace to; must not already exist
@@ -105,8 +104,7 @@ public interface RocksDBTracingOperations {
 
 	/// [#startBlockCacheTrace(TraceOptions, Path)] using [BlockCacheTraceOptions] (sampling only)
 	/// and [BlockCacheTraceWriterOptions] (rollover size) instead of the shared [TraceOptions]
-	/// shape, using a temporary default [Env]/[EnvOptions] pair (closed before this method
-	/// returns).
+	/// shape, using the default [Env]/[EnvOptions] pair.
 	///
 	/// @param traceOptions  options controlling block cache access sampling rate
 	/// @param writerOptions options controlling the trace file's rollover size

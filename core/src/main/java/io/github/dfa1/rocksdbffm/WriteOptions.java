@@ -105,6 +105,11 @@ public final class WriteOptions extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 	}
 
+	/// RocksDB-default WriteOptions for the get/put overloads that take none; a native read/write call only reads
+	/// the struct, so one instance serves every open DB. Immortal per [NativeObject#makeImmortal()]:
+	/// never closed, and `close()` on it is a no-op.
+	static final WriteOptions DEFAULTS = newWriteOptions().makeImmortal();
+
 	private WriteOptions(MemorySegment ptr) {
 		super(ptr);
 	}

@@ -379,27 +379,15 @@ final class RocksDBWriteOperationsBindings {
 	}
 
 	static void ingestExternalFileWithDefaults(RocksDBWriteOperations db, List<Path> files) {
-		try (IngestExternalFileOptions opts = IngestExternalFileOptions.newIngestExternalFileOptions()) {
-			ingestExternalFile(db, files, opts);
-		}
+		ingestExternalFile(db, files, IngestExternalFileOptions.DEFAULTS);
 	}
 
 	static ColumnFamilyHandle createCf(RocksDBWriteOperations db, ColumnFamilyDescriptor descriptor) {
-		Options cfOpts = descriptor.options();
-		if (cfOpts != null) {
-			return createCf(db, descriptor.name(), cfOpts);
-		}
-		try (Options defaults = Options.newOptions()) {
-			return createCf(db, descriptor.name(), defaults);
-		}
-	}
-
-	private static ColumnFamilyHandle createCf(RocksDBWriteOperations db, String name, Options cfOpts) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment nameSeg = arena.allocateFrom(name);
+			MemorySegment nameSeg = arena.allocateFrom(descriptor.name());
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
-					db.dbPtr(), cfOpts.ptr(), nameSeg, err);
+					db.dbPtr(), descriptor.options().ptr(), nameSeg, err);
 			NativeCalls.checkError(err);
 			return ColumnFamilyHandle.wrap(handle);
 		} catch (Throwable t) {

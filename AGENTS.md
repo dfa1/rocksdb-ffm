@@ -40,6 +40,12 @@ Every class wrapping a native pointer **must** implement `AutoCloseable`.
 - **Transfer Marker:** Call `transferOwnership()` (package-private on `NativeObject`) inside the setter that takes
   ownership. It sets the held pointer to `MemorySegment.NULL`, which makes `close()` a no-op and any later `ptr()`
   throw `IllegalStateException`.
+- **Immortal defaults:** a default object that a native call only reads or copies (e.g. the `Options` behind
+  `ColumnFamilyDescriptor.of(name)`, `TransactionOptions` for `beginTransaction(WriteOptions)`) is a single
+  package-private `static final X DEFAULTS = newX().makeImmortal();` declared after the class's `MH_` static block, not
+  created and closed per call. `makeImmortal()` makes its `close()` a no-op while `ptr()` keeps working, so
+  an accidental `close()` can't break every later caller. Never use it for an object a native call retains,
+  mutates, or takes ownership of — verify against `db/c.cc` that the call copies (e.g. `ColumnFamilyOptions(opt->rep)`).
 
 ### 2. Data Types & Path Handling
 

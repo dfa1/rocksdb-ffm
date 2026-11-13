@@ -105,10 +105,8 @@ final class BackgroundUpcallThreads {
 	/// with no ordering guarantee, so a database still open here is one the application never
 	/// closed, and its queued background work was not going to survive the exit either way.
 	private static void drain() {
-		try (Env env = Env.defaultEnv()) {
-			env.setBackgroundThreads(0);
-			env.setHighPriorityBackgroundThreads(0);
-		}
+		Env.DEFAULTS.setBackgroundThreads(0);
+		Env.DEFAULTS.setHighPriorityBackgroundThreads(0);
 		awaitTermination(THREADS, DRAIN_TIMEOUT);
 	}
 

@@ -17,7 +17,7 @@ public final class ColumnFamilyDescriptor {
 
 	private ColumnFamilyDescriptor(String name, Options options) {
 		this.name = Objects.requireNonNull(name, "name");
-		this.options = options;
+		this.options = Objects.requireNonNull(options, "options");
 	}
 
 	/// Creates a descriptor with the given UTF-8 name and no explicit options.
@@ -25,7 +25,7 @@ public final class ColumnFamilyDescriptor {
 	/// @param name column family name as a UTF-8 string
 	/// @return a new descriptor
 	public static ColumnFamilyDescriptor of(String name) {
-		return new ColumnFamilyDescriptor(name, null);
+		return new ColumnFamilyDescriptor(name, Options.DEFAULTS);
 	}
 
 	/// Creates a descriptor with the given UTF-8 name and per-family options.
@@ -44,7 +44,8 @@ public final class ColumnFamilyDescriptor {
 		return name;
 	}
 
-	/// Returns the per-family options, or `null` if none were specified.
+	/// Returns the per-family options: the caller's, or the immortal [Options#DEFAULTS] when none
+	/// were specified. Never `null`.
 	Options options() {
 		return options;
 	}

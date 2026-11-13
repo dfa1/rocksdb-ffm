@@ -177,8 +177,8 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 
 	TransactionDB(MemorySegment ptr, MemorySegment baseDb) {
 		super(ptr, baseDb);
-		this.writeOpts = NativeCalls.DEFAULT_WRITE_OPTIONS;
-		this.readOpts = NativeCalls.DEFAULT_READ_OPTIONS;
+		this.writeOpts = WriteOptions.DEFAULTS;
+		this.readOpts = ReadOptions.DEFAULTS;
 	}
 
 	/// Returns the base `rocksdb_t*` pointer. Overridden only to widen visibility to `public`,
@@ -250,9 +250,7 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param writeOptions write options for the transaction
 	/// @return a new [Transaction]; caller must commit or rollback and close it
 	public Transaction beginTransaction(WriteOptions writeOptions) {
-		try (TransactionOptions txnOpts = TransactionOptions.newTransactionOptions()) {
-			return beginTransaction(writeOptions, txnOpts);
-		}
+		return beginTransaction(writeOptions, TransactionOptions.DEFAULTS);
 	}
 
 	/// Begins a new transaction using the supplied write options and transaction options.
@@ -665,21 +663,11 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 	/// @param descriptor name and options for the new column family
 	/// @return handle to the newly created column family; caller must close it
 	public ColumnFamilyHandle createColumnFamily(ColumnFamilyDescriptor descriptor) {
-		Options cfOpts = descriptor.options();
-		if (cfOpts != null) {
-			return createColumnFamily(descriptor.name(), cfOpts);
-		}
-		try (Options defaults = Options.newOptions()) {
-			return createColumnFamily(descriptor.name(), defaults);
-		}
-	}
-
-	private ColumnFamilyHandle createColumnFamily(String name, Options cfOpts) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment nameSeg = arena.allocateFrom(name);
+			MemorySegment nameSeg = arena.allocateFrom(descriptor.name());
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
-					ptr(), cfOpts.ptr(), nameSeg, err);
+					ptr(), descriptor.options().ptr(), nameSeg, err);
 			NativeCalls.checkError(err);
 			return ColumnFamilyHandle.wrap(handle);
 		} catch (Throwable t) {
