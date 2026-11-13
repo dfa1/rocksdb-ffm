@@ -213,6 +213,19 @@ public final class RocksDB {
 		return openReadWrite(Options.DEFAULTS, path);
 	}
 
+	/// Converts a TTL to the whole seconds native expects. Native treats a non-positive TTL as "never expire",
+	/// so a negative one is rejected rather than silently disabling expiry, and so is one that does not fit.
+	private static int toTtlSeconds(Duration ttl) {
+		if (ttl.isNegative()) {
+			throw new IllegalArgumentException("ttl must not be negative: " + ttl);
+		}
+		long seconds = ttl.toSeconds();
+		if (seconds > Integer.MAX_VALUE) {
+			throw new IllegalArgumentException("ttl exceeds " + Integer.MAX_VALUE + " seconds: " + ttl);
+		}
+		return (int) seconds;
+	}
+
 	/// Opens (or creates) a TTL-aware read-write database at `path`.
 	///
 	/// Keys are lazily expired during the next compaction that covers their
@@ -221,13 +234,14 @@ public final class RocksDB {
 	/// @param options the database options
 	/// @param path directory where the database files are stored
 	/// @param ttl time-to-live for keys; [Duration#ZERO] disables expiry
+	/// @throws IllegalArgumentException if `ttl` is negative or longer than [Integer#MAX_VALUE] seconds
 	/// @return a new [TtlDB] instance
 	public static TtlDB openTtl(Options options, Path path, Duration ttl) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
 			MemorySegment ptr = (MemorySegment) MH_OPEN_WITH_TTL.invokeExact(
-					options.ptr(), pathSeg, (int) ttl.toSeconds(), err);
+					options.ptr(), pathSeg, toTtlSeconds(ttl), err);
 			NativeCalls.checkError(err);
 			return new TtlDB(ptr, ttl);
 		} catch (Throwable t) {
@@ -240,6 +254,7 @@ public final class RocksDB {
 	///
 	/// @param path directory where the database files are stored
 	/// @param ttl time-to-live for keys; [Duration#ZERO] disables expiry
+	/// @throws IllegalArgumentException if `ttl` is negative or longer than [Integer#MAX_VALUE] seconds
 	/// @return a new [TtlDB] instance
 	public static TtlDB openTtl(Path path, Duration ttl) {
 		return openTtl(Options.DEFAULTS, path, ttl);
@@ -484,6 +499,7 @@ public final class RocksDB {
 	/// @param descriptors column family descriptors (name + optional per-CF options)
 	/// @param ttls        per-column-family TTLs, index-aligned with `descriptors`
 	/// @param handles     output list; cleared and filled with one handle per descriptor
+	/// @throws IllegalArgumentException if any TTL is negative or longer than [Integer#MAX_VALUE] seconds
 	/// @return an open [TtlDB] instance; caller must close it
 	public static TtlDB openTtl(Options options, Path path,
 	                            List<ColumnFamilyDescriptor> descriptors,
@@ -497,7 +513,7 @@ public final class RocksDB {
 			MemorySegment ttlsArr = arena.allocate(ValueLayout.JAVA_INT, n);
 			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors);
 			for (int i = 0; i < n; i++) {
-				ttlsArr.setAtIndex(ValueLayout.JAVA_INT, i, (int) ttls.get(i).toSeconds());
+				ttlsArr.setAtIndex(ValueLayout.JAVA_INT, i, toTtlSeconds(ttls.get(i)));
 			}
 			MemorySegment ptr = (MemorySegment) MH_OPEN_CF_WITH_TTL.invokeExact(
 					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, ttlsArr, err);
