@@ -176,7 +176,7 @@ of this section declines for the unrelated, broader close()-vs-any-method race.
 ## Only valid operations
 
 Each way of opening a database gets its own Java type, exposing only the operations that are
-meaningful for it: `ReadOnlyDB`, `SecondaryDB`, `TtlDB`, `BlobDB`, `TransactionDB`,
+meaningful for it: `ReadOnlyDB`, `SecondaryDB`, `TtlDB`, `TransactionDB`,
 `OptimisticTransactionDB`, `ReadWriteDB`.
 
 `rocksdbjni` uses a single `RocksDB` type for every open mode. Calling `put()` on a read-only

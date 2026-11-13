@@ -127,14 +127,14 @@ class BackgroundJobsTest {
 	}
 
 	// -----------------------------------------------------------------------
-	// BlobDB — cancelAllBackgroundWork / manual compaction / waitForCompact
+	// blob files — cancelAllBackgroundWork / manual compaction / waitForCompact
 	// (gained via RocksDBWriteOperations)
 	// -----------------------------------------------------------------------
 
 	@Test
 	void cancelAllBackgroundWork_blobDb_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -147,7 +147,7 @@ class BackgroundJobsTest {
 	@Test
 	void disableAndEnableManualCompaction_blobDb_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 
 			// When
 			assertThatNoException().isThrownBy(() -> {
@@ -162,7 +162,7 @@ class BackgroundJobsTest {
 	@Test
 	void waitForCompact_blobDb_defaultOptions_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var opts = WaitForCompactOptions.create()) {
 			db.put("k".getBytes(), "v".getBytes());
 

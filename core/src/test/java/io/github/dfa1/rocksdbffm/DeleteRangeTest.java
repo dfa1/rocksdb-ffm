@@ -221,13 +221,13 @@ class DeleteRangeTest {
 	}
 
 	// -----------------------------------------------------------------------
-	// BlobDB.deleteRange (gained via RocksDBWriteOperations)
+	// blob files.deleteRange (gained via RocksDBWriteOperations)
 	// -----------------------------------------------------------------------
 
 	@Test
 	void deleteRange_blobDb_removesKeysInRange(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());

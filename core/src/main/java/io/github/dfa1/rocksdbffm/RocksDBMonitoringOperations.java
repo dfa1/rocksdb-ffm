@@ -6,7 +6,7 @@ import java.util.List;
 /// Shared read-only inspection operations for every wrapper around a plain `rocksdb_t*`,
 /// including [TransactionDB] (reached through its base DB pointer, see
 /// [NativeObjectWithBaseDb#dbPtr()]). Implemented directly, alongside [RocksDBReadOperations],
-/// by every one of that interface's types (`ReadWriteDB`, `TtlDB`, `BlobDB`, `ReadOnlyDB`,
+/// by every one of that interface's types (`ReadWriteDB`, `TtlDB`, `ReadOnlyDB`,
 /// `SecondaryDB`, `OptimisticTransactionDB`); implemented on its own by `TransactionDB`, which
 /// implements neither `RocksDBReadOperations` nor `RocksDBWriteOperations`.
 ///

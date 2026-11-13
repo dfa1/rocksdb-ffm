@@ -12,7 +12,7 @@ import java.lang.invoke.MethodHandle;
 /// that was committed before the snapshot was taken.
 ///
 /// Obtain via [RocksDBReadOperations#getSnapshot()] (implemented by [ReadWriteDB],
-/// [ReadOnlyDB], [TtlDB], [BlobDB], [SecondaryDB], and [OptimisticTransactionDB]),
+/// [ReadOnlyDB], [TtlDB], [SecondaryDB], and [OptimisticTransactionDB]),
 /// [TransactionDB#getSnapshot()], or [Transaction#getSnapshot()]. Always close after use to
 /// release the underlying native snapshot. Closing the owning DB (or transaction) first is
 /// safe — the DB registers every snapshot it produces as a [NativeObjectWithChildren] child and

@@ -22,7 +22,6 @@ import java.util.Objects;
 /// | [#openReadOnly] | [ReadOnlyDB] |
 /// | [#openTtl] | [TtlDB] |
 /// | [#openSecondary] | [SecondaryDB] |
-/// | [#openBlob] | [BlobDB] |
 /// | [#openTransaction] | [TransactionDB] |
 /// | [#openOptimistic] | [OptimisticTransactionDB] |
 ///
@@ -178,10 +177,6 @@ public final class RocksDB {
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
-	/// Default options for [#openBlob(Path)]: blob files enabled, nothing else changed; immortal per
-	/// [NativeObject#makeImmortal()] since the open call copies it.
-	private static final Options BLOB_DEFAULTS = Options.newOptions().setEnableBlobFiles(true).makeImmortal();
-
 	private RocksDB() {
 		// no instances
 	}
@@ -248,38 +243,6 @@ public final class RocksDB {
 	/// @return a new [TtlDB] instance
 	public static TtlDB openTtl(Path path, Duration ttl) {
 		return openTtl(Options.DEFAULTS, path, ttl);
-	}
-
-	/// Opens (or creates) a blob-enabled read-write database at `path`.
-	///
-	/// BlobDB stores large values (≥ [Options#setMinBlobSize]) in separate blob files,
-	/// reducing write amplification for value-heavy workloads.
-	/// The caller is responsible for setting [Options#setEnableBlobFiles(boolean)] to `true`
-	/// and any other blob options before calling this method.
-	///
-	/// @param options the database options (must have blob files enabled)
-	/// @param path directory where the database files are stored
-	/// @return a new [BlobDB] instance
-	public static BlobDB openBlob(Options options, Path path) {
-		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment pathSeg = arena.allocateFrom(path.toString());
-			MemorySegment ptr = (MemorySegment) MH_OPEN.invokeExact(options.ptr(), pathSeg, err);
-			NativeCalls.checkError(err);
-			return new BlobDB(ptr);
-		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("openBlob failed", t);
-		}
-	}
-
-	/// Equivalent to `openBlob(options, path)` with `enableBlobFiles = true` and otherwise default options.
-	/// Fails if the database does not exist; to create it, pass options with
-	/// [Options#setCreateIfMissing(boolean)] set.
-	///
-	/// @param path directory where the database files are stored
-	/// @return a new [BlobDB] instance
-	public static BlobDB openBlob(Path path) {
-		return openBlob(BLOB_DEFAULTS, path);
 	}
 
 	// -----------------------------------------------------------------------
@@ -463,38 +426,6 @@ public final class RocksDB {
 			return new ReadWriteDB(ptr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openReadWrite failed", t);
-		}
-	}
-
-	/// Opens a blob-enabled read-write database at `path` with multiple column families.
-	///
-	/// The `handles` list is cleared and populated with one [ColumnFamilyHandle] per descriptor.
-	/// Blob file options (min blob size, blob compression, ...) are set per column family via
-	/// each descriptor's [Options], same as for [#openReadWrite(Options, Path, List, List)].
-	///
-	/// @param options the database options
-	/// @param path directory where the database files are stored
-	/// @param descriptors one descriptor per column family (must include `"default"`)
-	/// @param handles output list populated with one handle per descriptor
-	/// @return a new [BlobDB] instance
-	public static BlobDB openBlob(Options options, Path path,
-	                              List<ColumnFamilyDescriptor> descriptors,
-	                              List<ColumnFamilyHandle> handles) {
-		int n = descriptors.size();
-		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment pathSeg = arena.allocateFrom(path.toString());
-			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors);
-
-			MemorySegment ptr = (MemorySegment) MH_OPEN_CF.invokeExact(
-					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, err);
-			NativeCalls.checkError(err);
-
-			collectCfHandles(handlesArr, n, handles);
-			return new BlobDB(ptr);
-		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("openBlob failed", t);
 		}
 	}
 

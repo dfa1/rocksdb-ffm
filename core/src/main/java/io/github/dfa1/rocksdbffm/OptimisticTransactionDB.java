@@ -18,8 +18,8 @@ import java.lang.invoke.MethodHandle;
 /// methods come from [RocksDBReadOperations]/[RocksDBWriteOperations] — this class has no
 /// `MethodHandle`s of its own for them, unlike [TransactionDB], because there is no
 /// dedicated `rocksdb_optimistictransactiondb_*` C API for direct ops: they always go
-/// through the base `rocksdb_t*` ([#dbPtr()]), the same native calls [ReadWriteDB]/[TtlDB]/
-/// [BlobDB] already share via those interfaces.
+/// through the base `rocksdb_t*` ([#dbPtr()]), the same native calls [ReadWriteDB]/[TtlDB]
+/// already share via those interfaces.
 ///
 /// ```
 /// try (Options opts = Options.newOptions().setCreateIfMissing(true);

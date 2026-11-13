@@ -7,7 +7,7 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class BlobDBIntegrationTest {
+class BlobFilesIntegrationTest {
 
 	/// 64 KB value — large enough to be stored in a blob file regardless of the min-blob-size setting.
 	private static final byte[] VALUE_64KB = new byte[(int) MemorySize.ofKB(64).toBytes()];
@@ -19,7 +19,7 @@ class BlobDBIntegrationTest {
 				.setCreateIfMissing(true)
 				.setEnableBlobFiles(true)
 				.setMinBlobSize(MemorySize.ofBytes(0));
-		     var db = RocksDB.openBlob(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			// When
 			db.put("k".getBytes(), VALUE_64KB);
@@ -30,9 +30,9 @@ class BlobDBIntegrationTest {
 	}
 
 	@Test
-	void openBlob_convenienceFactory(@TempDir Path dir) {
+	void openWithBlobFiles_convenienceFactory(@TempDir Path dir) {
 		// Given — convenience overload sets createIfMissing=true and enableBlobFiles=true
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 
 			// When
 			db.put("hello".getBytes(), VALUE_64KB);
@@ -45,7 +45,7 @@ class BlobDBIntegrationTest {
 	@Test
 	void delete_removesKey(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), VALUE_64KB);
 
 			// When
@@ -90,7 +90,7 @@ class BlobDBIntegrationTest {
 			assertThat(blobGcForceThreshold).isEqualTo(Ratio.of(0.8));
 			assertThat(blobFileStartingLevel).isZero();
 
-			try (var db = RocksDB.openBlob(opts, dir)) {
+			try (var db = RocksDB.openReadWrite(opts, dir)) {
 				db.put("k".getBytes(), VALUE_64KB);
 				assertThat(db.get("k".getBytes())).isEqualTo(VALUE_64KB);
 			}
@@ -100,14 +100,14 @@ class BlobDBIntegrationTest {
 	@Test
 	void checkpoint_capturesSnapshot(@TempDir Path dir) {
 		// Given — minBlobSize larger than value so "snap" stays in SST (not a blob file),
-		// but blob files are still enabled. This exercises Checkpoint.newCheckpoint(BlobDB).
+		// but blob files are still enabled. This exercises Checkpoint.newCheckpoint(ReadWriteDB).
 		var dbDir = dir.resolve("db");
 		var checkpointDir = dir.resolve("checkpoint");
 		try (var opts = Options.newOptions()
 				.setCreateIfMissing(true)
 				.setEnableBlobFiles(true)
 				.setMinBlobSize(MemorySize.ofKB(64));
-		     var db = RocksDB.openBlob(opts, dbDir)) {
+		     var db = RocksDB.openReadWrite(opts, dbDir)) {
 			db.put("before".getBytes(), "snap".getBytes());
 
 			// When — take a checkpoint
@@ -132,7 +132,7 @@ class BlobDBIntegrationTest {
 				.setCreateIfMissing(true)
 				.setEnableBlobFiles(true)
 				.setMinBlobSize(MemorySize.ofBytes(0));
-		     var db = RocksDB.openBlob(opts, dir)) {
+		     var db = RocksDB.openReadWrite(opts, dir)) {
 
 			db.put("k".getBytes(), VALUE_64KB);
 			db.flush(FlushOptions.newFlushOptions());
