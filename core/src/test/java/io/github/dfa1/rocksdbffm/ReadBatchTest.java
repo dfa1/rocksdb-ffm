@@ -23,7 +23,7 @@ class ReadBatchTest {
 	@Test
 	void create_nonPositiveCapacity_throws(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 
 			// When / Then
 			assertThatThrownBy(() -> ReadBatch.create(db, 0)).isInstanceOf(IllegalArgumentException.class);
@@ -34,7 +34,7 @@ class ReadBatchTest {
 	@Test
 	void capacity_returnsConfiguredValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var batch = ReadBatch.create(db, 7)) {
 
 			// When
@@ -48,7 +48,7 @@ class ReadBatchTest {
 	@Test
 	void close_isIdempotent(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			var batch = ReadBatch.create(db, 2);
 			batch.close();
 
@@ -60,7 +60,7 @@ class ReadBatchTest {
 	@Test
 	void get_afterClose_throws(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     Arena arena = Arena.ofConfined()) {
 			var batch = ReadBatch.create(db, 2);
 			List<MemorySegment> keys = List.of(nativeKey(arena, "a"));
@@ -79,7 +79,7 @@ class ReadBatchTest {
 	@Test
 	void get_returnsValuesInOrderWithEmptyForNotFound(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     Arena arena = Arena.ofConfined();
 		     var batch = ReadBatch.create(db, 4)) {
 			db.put("a".getBytes(), "1".getBytes());
@@ -98,7 +98,7 @@ class ReadBatchTest {
 	@Test
 	void get_reusedAcrossCallsWithDifferentKeysAndSizes(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     Arena arena = Arena.ofConfined();
 		     var batch = ReadBatch.create(db, 3)) {
 			db.put("a".getBytes(), "1".getBytes());
@@ -122,7 +122,7 @@ class ReadBatchTest {
 	@Test
 	void get_exceedsCapacity_throws(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     Arena arena = Arena.ofConfined();
 		     var batch = ReadBatch.create(db, 2)) {
 
@@ -137,7 +137,7 @@ class ReadBatchTest {
 	@Test
 	void get_emptyKeyList_returnsEmptyList(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var batch = ReadBatch.create(db, 4)) {
 
 			// When
@@ -151,7 +151,7 @@ class ReadBatchTest {
 	@Test
 	void get_explicitColumnFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     Arena arena = Arena.ofConfined();
 		     var batch = ReadBatch.create(db, cf, 2)) {
@@ -169,7 +169,7 @@ class ReadBatchTest {
 	@Test
 	void get_explicitReadOptions_seesSnapshotState(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     Arena arena = Arena.ofConfined();
 		     var batch = ReadBatch.create(db, 1)) {
 			db.put("a".getBytes(), "1".getBytes());
@@ -195,7 +195,7 @@ class ReadBatchTest {
 	@Test
 	void get_byteArray_returnsValuesInOrderWithNullForNotFound(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var batch = ReadBatch.create(db, 3)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
@@ -214,7 +214,7 @@ class ReadBatchTest {
 	@Test
 	void get_byteArray_emptyKeyList_returnsEmptyList(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var batch = ReadBatch.create(db, 4)) {
 
 			// When
@@ -228,7 +228,7 @@ class ReadBatchTest {
 	@Test
 	void get_byteArray_explicitReadOptions_seesSnapshotState(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var batch = ReadBatch.create(db, 2)) {
 			db.put("a".getBytes(), "1".getBytes());
 
@@ -250,7 +250,7 @@ class ReadBatchTest {
 	@Test
 	void get_byteArray_explicitColumnFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var batch = ReadBatch.create(db, cf, 2)) {
 			db.put(cf, "x".getBytes(), "9".getBytes());
@@ -267,7 +267,7 @@ class ReadBatchTest {
 	@Test
 	void get_byteArray_exceedsCapacity_throws(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var batch = ReadBatch.create(db, 1)) {
 
 			// When / Then
@@ -283,7 +283,7 @@ class ReadBatchTest {
 	@Test
 	void get_byteBuffer_copiesFoundValuesAndAdvancesPosition(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var batch = ReadBatch.create(db, 2)) {
 			db.put("a".getBytes(), "1".getBytes());
 
@@ -306,7 +306,7 @@ class ReadBatchTest {
 	@Test
 	void get_byteBuffer_notEnoughCapacity_reportsRequiredLength(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var batch = ReadBatch.create(db, 1)) {
 			db.put("a".getBytes(), "toolong".getBytes());
 
@@ -321,7 +321,7 @@ class ReadBatchTest {
 	@Test
 	void get_byteBuffer_mismatchedSizes_throws(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var batch = ReadBatch.create(db, 2)) {
 
 			// When / Then
@@ -334,7 +334,7 @@ class ReadBatchTest {
 	@Test
 	void get_byteBuffer_explicitColumnFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var batch = ReadBatch.create(db, cf, 1)) {
 			db.put(cf, "x".getBytes(), "9".getBytes());

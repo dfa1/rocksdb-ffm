@@ -57,7 +57,8 @@ Import the BOM, then depend on `rocksdbffm-core` plus one native artifact per pl
 ```
 
 ```java
-try (var db = RocksDB.openReadWrite(Path.of("/tmp/demo-db"))) {
+try (var opts = Options.newOptions().setCreateIfMissing(true);
+     var db = RocksDB.openReadWrite(opts, Path.of("/tmp/demo-db"))) {
     db.put("user:1".getBytes(), "alice".getBytes());
     byte[] value = db.get("user:1".getBytes());   // null if absent
     db.delete("user:1".getBytes());

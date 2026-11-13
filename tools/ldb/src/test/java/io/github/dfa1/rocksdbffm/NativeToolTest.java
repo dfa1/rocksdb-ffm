@@ -19,7 +19,7 @@ class NativeToolTest {
 	@Test
 	void runInherited_returnsTheSubprocessExitCode(@TempDir Path dbDir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dbDir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbDir)) {
 			db.put("k".getBytes(), "v".getBytes());
 		}
 		Path toolDirectory = NativeTool.extractToolDirectory();

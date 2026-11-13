@@ -40,7 +40,7 @@ class ColumnFamilyTest {
 	@Test
 	void createColumnFamily_canPutAndGetInNewFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 
 			// When
@@ -54,7 +54,7 @@ class ColumnFamilyTest {
 	@Test
 	void createColumnFamily_isolatedFromDefaultFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put("key".getBytes(), "default-value".getBytes());
 			db.put(cf, "key".getBytes(), "cf-value".getBytes());
@@ -72,7 +72,7 @@ class ColumnFamilyTest {
 	@Test
 	void dropColumnFamily_removesFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("to-drop"));
 			db.put(cf, "key".getBytes(), "value".getBytes());
 
@@ -129,7 +129,7 @@ class ColumnFamilyTest {
 	@Test
 	void columnFamilyHandle_returnsCorrectName(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("my-cf"))) {
 
 			// When
@@ -165,7 +165,7 @@ class ColumnFamilyTest {
 	@Test
 	void delete_removesKeyFromColumnFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -184,7 +184,7 @@ class ColumnFamilyTest {
 	@Test
 	void deleteRange_removesKeyRangeFromColumnFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
@@ -207,7 +207,7 @@ class ColumnFamilyTest {
 	@Test
 	void keyMayExist_returnsTrueForPresentKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -222,7 +222,7 @@ class ColumnFamilyTest {
 	@Test
 	void keyMayExist_returnsFalseForAbsentKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 
 			// When
@@ -240,7 +240,7 @@ class ColumnFamilyTest {
 	@Test
 	void put_get_byteBuffer_overload(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
 			ByteBuffer val = ByteBuffer.allocateDirect(1).put((byte) 'v').flip();
@@ -259,7 +259,7 @@ class ColumnFamilyTest {
 	@Test
 	void get_byteBuffer_returnsNotEnoughCapacity_whenValueDoesNotFit(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
 			ByteBuffer val = ByteBuffer.allocateDirect(5).put("value".getBytes()).flip();
@@ -284,7 +284,7 @@ class ColumnFamilyTest {
 	@Test
 	void newIterator_scansKeysInColumnFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
@@ -306,7 +306,7 @@ class ColumnFamilyTest {
 	@Test
 	void newIterator_doesNotSeeKeysFromOtherFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put("default-key".getBytes(), "x".getBytes());
 			db.put(cf, "cf-key".getBytes(), "y".getBytes());
@@ -331,7 +331,7 @@ class ColumnFamilyTest {
 	@Test
 	void writeBatch_putAndDelete_inColumnFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var batch = WriteBatch.create()) {
 
@@ -350,7 +350,7 @@ class ColumnFamilyTest {
 	@Test
 	void writeBatch_deleteRange_inColumnFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var batch = WriteBatch.create()) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
@@ -375,7 +375,7 @@ class ColumnFamilyTest {
 	@Test
 	void flush_columnFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var flushOpts = FlushOptions.newFlushOptions().setWait(true)) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -391,7 +391,7 @@ class ColumnFamilyTest {
 	@Test
 	void getProperty_columnFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 
 			// When
@@ -408,7 +408,7 @@ class ColumnFamilyTest {
 		Options.DEFAULTS.close();
 
 		// When
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			var name = cf.getName();
 

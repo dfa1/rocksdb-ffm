@@ -30,7 +30,7 @@ class MergeTest {
 	@Test
 	void readWriteDb_merge_bytes_throwsWithoutMergeOperator(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			// When
 			var thrown = assertThatThrownBy(() -> db.merge("k".getBytes(), "v".getBytes()));
 
@@ -42,7 +42,7 @@ class MergeTest {
 	@Test
 	void readWriteDb_merge_byteBuffer_throwsWithoutMergeOperator(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
 			ByteBuffer value = ByteBuffer.allocateDirect(1).put((byte) 'v').flip();
 
@@ -57,7 +57,7 @@ class MergeTest {
 	@Test
 	void readWriteDb_merge_memorySegment_throwsWithoutMergeOperator(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir); var arena = Arena.ofConfined()) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir); var arena = Arena.ofConfined()) {
 			MemorySegment key = arena.allocateFrom("k");
 			MemorySegment value = arena.allocateFrom("v");
 
@@ -72,7 +72,7 @@ class MergeTest {
 	@Test
 	void readWriteDb_merge_withCallerArena_throwsWithoutMergeOperator(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir); var arena = Arena.ofConfined()) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir); var arena = Arena.ofConfined()) {
 			// When
 			var thrown = assertThatThrownBy(() -> db.merge(arena, "k".getBytes(), "v".getBytes()));
 
@@ -84,7 +84,7 @@ class MergeTest {
 	@Test
 	void readWriteDb_merge_columnFamily_throwsWithoutMergeOperator(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			// When
 			var thrown = assertThatThrownBy(() -> db.merge(cf, "k".getBytes(), "v".getBytes()));
@@ -101,7 +101,7 @@ class MergeTest {
 	@Test
 	void ttlDb_merge_throwsWithoutMergeOperator(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			// When
 			var thrown = assertThatThrownBy(() -> db.merge("k".getBytes(), "v".getBytes()));
 
@@ -117,7 +117,7 @@ class MergeTest {
 	@Test
 	void blobDb_merge_throwsWithoutMergeOperator(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openBlob(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
 			// When
 			var thrown = assertThatThrownBy(() -> db.merge("k".getBytes(), "v".getBytes()));
 
@@ -189,7 +189,7 @@ class MergeTest {
 	@Test
 	void writeBatch_merge_queuesWithoutError_thenWriteThrows(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var batch = WriteBatch.create()) {
 
 			// When — queuing itself must not throw

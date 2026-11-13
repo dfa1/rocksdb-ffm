@@ -32,7 +32,7 @@ class BlobDBIntegrationTest {
 	@Test
 	void openBlob_convenienceFactory(@TempDir Path dir) {
 		// Given — convenience overload sets createIfMissing=true and enableBlobFiles=true
-		try (var db = RocksDB.openBlob(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
 
 			// When
 			db.put("hello".getBytes(), VALUE_64KB);
@@ -45,7 +45,7 @@ class BlobDBIntegrationTest {
 	@Test
 	void delete_removesKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openBlob(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
 			db.put("k".getBytes(), VALUE_64KB);
 
 			// When

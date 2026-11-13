@@ -25,7 +25,7 @@ class TtlDBTest {
 	@Test
 	void openTtl_storesAndRetrievesValues(@TempDir Path dir) {
 		// Given / When
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// Then — key is readable immediately (TTL not yet elapsed)
@@ -52,7 +52,7 @@ class TtlDBTest {
 	@Test
 	void openTtl_zeroTtl_disablesExpiry(@TempDir Path dir) {
 		// Given — TTL=0 means no expiry
-		try (var db = RocksDB.openTtl(dir, Duration.ZERO)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ZERO)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// Then — key survives indefinitely
@@ -67,7 +67,7 @@ class TtlDBTest {
 	@Test
 	void openTtl_supportsDelete(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -81,7 +81,7 @@ class TtlDBTest {
 	@Test
 	void openTtl_supportsWriteBatch(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var batch = WriteBatch.create()) {
 
 			batch.put("k1".getBytes(), "v1".getBytes());
@@ -99,7 +99,7 @@ class TtlDBTest {
 	@Test
 	void openTtl_supportsIterator(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -117,12 +117,12 @@ class TtlDBTest {
 	@Test
 	void openTtl_surviveReopenWithSameTtl(@TempDir Path dir) {
 		// Given — write, close, reopen, verify data persists
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("persistent".getBytes(), "yes".getBytes());
 		}
 
 		// When
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 
 			// Then
 			assertThat(db.get("persistent".getBytes())).isEqualTo("yes".getBytes());
@@ -132,7 +132,7 @@ class TtlDBTest {
 	@Test
 	void getTtl_returnsConfiguredDuration(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 
 			// When
 			var ttl = db.getTtl();
@@ -149,7 +149,7 @@ class TtlDBTest {
 	@Test
 	void put_withArena_isVisibleViaGet(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     Arena arena = Arena.ofConfined()) {
 
 			// When
@@ -163,7 +163,7 @@ class TtlDBTest {
 	@Test
 	void put_byteBuffer_isVisibleViaGet(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			var key = ByteBuffer.allocateDirect(3);
 			key.put("key".getBytes()).flip();
 			var value = ByteBuffer.allocateDirect(5);
@@ -180,7 +180,7 @@ class TtlDBTest {
 	@Test
 	void put_memorySegment_isVisibleViaGet(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     Arena arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom("seg-k");
 			var value = arena.allocateFrom("seg-v");
@@ -196,7 +196,7 @@ class TtlDBTest {
 	@Test
 	void put_arena_memorySegment_isVisibleViaGet(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     Arena arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom("seg-k2");
 			var value = arena.allocateFrom("seg-v2");
@@ -216,7 +216,7 @@ class TtlDBTest {
 	@Test
 	void get_withReadOptions_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -231,7 +231,7 @@ class TtlDBTest {
 	@Test
 	void get_byteBuffer_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("key".getBytes(), "value".getBytes());
 			var key = ByteBuffer.allocateDirect(3);
 			key.put("key".getBytes()).flip();
@@ -248,7 +248,7 @@ class TtlDBTest {
 	@Test
 	void get_memorySegment_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     Arena arena = Arena.ofConfined()) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = arena.allocateFrom("k");
@@ -270,7 +270,7 @@ class TtlDBTest {
 	@Test
 	void delete_byteBuffer_removesKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = ByteBuffer.allocateDirect(1);
 			key.put("k".getBytes()).flip();
@@ -286,7 +286,7 @@ class TtlDBTest {
 	@Test
 	void delete_memorySegment_removesKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     Arena arena = Arena.ofConfined()) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = arena.allocateFrom("k");
@@ -306,7 +306,7 @@ class TtlDBTest {
 	@Test
 	void deleteRange_removesKeyRange(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -324,7 +324,7 @@ class TtlDBTest {
 	@Test
 	void deleteRange_byteBuffer_removesKeyRange(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			var start = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
@@ -342,7 +342,7 @@ class TtlDBTest {
 	@Test
 	void deleteRange_memorySegment_removesKeyRange(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     Arena arena = Arena.ofConfined()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
@@ -365,7 +365,7 @@ class TtlDBTest {
 	@Test
 	void write_withArena_appliesBatchAtomically(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var batch = WriteBatch.create();
 		     Arena arena = Arena.ofConfined()) {
 			batch.put("k1".getBytes(), "v1".getBytes());
@@ -387,7 +387,7 @@ class TtlDBTest {
 	@Test
 	void getSnapshot_isolatesReads(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("k".getBytes(), "v1".getBytes());
 
 			// When — take snapshot, then overwrite
@@ -411,7 +411,7 @@ class TtlDBTest {
 	@Test
 	void newIterator_withReadOptions(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put("x".getBytes(), "y".getBytes());
 
@@ -433,7 +433,7 @@ class TtlDBTest {
 	@Test
 	void flush_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var fo = FlushOptions.newFlushOptions().setWait(true)) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -448,7 +448,7 @@ class TtlDBTest {
 	@Test
 	void flushWal_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -466,7 +466,7 @@ class TtlDBTest {
 	@Test
 	void getProperty_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -480,7 +480,7 @@ class TtlDBTest {
 	@Test
 	void getLongProperty_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -498,7 +498,7 @@ class TtlDBTest {
 	@Test
 	void compactRange_noArgs_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -514,7 +514,7 @@ class TtlDBTest {
 	@Test
 	void compactRange_byteArray_fullRange(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("z".getBytes(), "2".getBytes());
 
@@ -530,7 +530,7 @@ class TtlDBTest {
 	@Test
 	void compactRange_byteBuffer(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			var start = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
@@ -547,7 +547,7 @@ class TtlDBTest {
 	@Test
 	void compactRange_memorySegment(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     Arena arena = Arena.ofConfined()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
@@ -565,7 +565,7 @@ class TtlDBTest {
 	@Test
 	void compactRange_withOptions_fullRange(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var compact = CompactOptions.newCompactOptions()
 					 .setExclusiveManualCompaction(false)
 					 .setBottommostLevelCompaction(true)) {
@@ -584,7 +584,7 @@ class TtlDBTest {
 	@Test
 	void suggestCompactRange_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("z".getBytes(), "2".getBytes());
 
@@ -603,7 +603,7 @@ class TtlDBTest {
 	@Test
 	void disableAndEnableFileDeletions_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When — disable, do some work, re-enable
@@ -637,7 +637,7 @@ class TtlDBTest {
 			writer.finish();
 		}
 
-		try (var db = RocksDB.openTtl(dbPath, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dbPath, Duration.ofSeconds(60))) {
 			// When
 			ThrowingCallable action = () -> db.ingestExternalFile(sstPath);
 
@@ -659,7 +659,7 @@ class TtlDBTest {
 			writer.finish();
 		}
 
-		try (var db = RocksDB.openTtl(dbPath, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dbPath, Duration.ofSeconds(60));
 		     var ingestOpts = IngestExternalFileOptions.newIngestExternalFileOptions().setMoveFiles(true)) {
 			// When
 			ThrowingCallable action = () -> db.ingestExternalFile(sstPath, ingestOpts);
@@ -672,7 +672,7 @@ class TtlDBTest {
 	@Test
 	void ingestExternalFile_emptyFileList_isNoOp(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var ingestOpts = IngestExternalFileOptions.newIngestExternalFileOptions()) {
 
 			// When
@@ -690,7 +690,7 @@ class TtlDBTest {
 	@Test
 	void createColumnFamily_canPutAndGetInNewFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 
 			// When
@@ -704,7 +704,7 @@ class TtlDBTest {
 	@Test
 	void dropColumnFamily_removesFamily(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("to-drop"));
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -727,7 +727,7 @@ class TtlDBTest {
 	@Test
 	void get_columnFamily_withReadOptions(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -743,7 +743,7 @@ class TtlDBTest {
 	@Test
 	void put_get_columnFamily_byteBuffer(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			var key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
 			var value = ByteBuffer.allocateDirect(1).put((byte) 'v').flip();
@@ -762,7 +762,7 @@ class TtlDBTest {
 	@Test
 	void put_get_columnFamily_memorySegment(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     Arena arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom("seg-k");
@@ -783,7 +783,7 @@ class TtlDBTest {
 	@Test
 	void delete_columnFamily_removesKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -798,7 +798,7 @@ class TtlDBTest {
 	@Test
 	void delete_columnFamily_byteBuffer_removesKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 			var key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
@@ -814,7 +814,7 @@ class TtlDBTest {
 	@Test
 	void delete_columnFamily_memorySegment_removesKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -835,7 +835,7 @@ class TtlDBTest {
 	@Test
 	void deleteRange_columnFamily_removesKeyRange(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
@@ -854,7 +854,7 @@ class TtlDBTest {
 	@Test
 	void deleteRange_columnFamily_byteBuffer_removesKeyRange(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
@@ -873,7 +873,7 @@ class TtlDBTest {
 	@Test
 	void deleteRange_columnFamily_memorySegment_removesKeyRange(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
@@ -897,7 +897,7 @@ class TtlDBTest {
 	@Test
 	void keyMayExist_columnFamily_returnsTrueForPresentKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -912,7 +912,7 @@ class TtlDBTest {
 	@Test
 	void keyMayExist_columnFamily_withReadOptions(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -928,7 +928,7 @@ class TtlDBTest {
 	@Test
 	void keyMayExist_columnFamily_byteBuffer(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 			var key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
@@ -944,7 +944,7 @@ class TtlDBTest {
 	@Test
 	void keyMayExist_columnFamily_memorySegment(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -965,7 +965,7 @@ class TtlDBTest {
 	@Test
 	void newIterator_columnFamily_scansKeys(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
@@ -986,7 +986,7 @@ class TtlDBTest {
 	@Test
 	void newIterator_columnFamily_withReadOptions(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put(cf, "x".getBytes(), "y".getBytes());
@@ -1009,7 +1009,7 @@ class TtlDBTest {
 	@Test
 	void flush_columnFamily_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var fo = FlushOptions.newFlushOptions().setWait(true)) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -1025,7 +1025,7 @@ class TtlDBTest {
 	@Test
 	void getProperty_columnFamily_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -1040,7 +1040,7 @@ class TtlDBTest {
 	@Test
 	void getLongProperty_columnFamily_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -1059,7 +1059,7 @@ class TtlDBTest {
 	@Test
 	void openTtl_withColumnFamilies_reopensWithPerCfTtl(@TempDir Path dir) {
 		// Given — create a DB with a custom CF, then close it
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 		}
@@ -1082,7 +1082,7 @@ class TtlDBTest {
 	@Test
 	void openTtl_withColumnFamilies_populatesHandlesInDescriptorOrder(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.createColumnFamily(ColumnFamilyDescriptor.of("cf1")).close();
 		}
 
@@ -1109,7 +1109,7 @@ class TtlDBTest {
 	@Test
 	void get_zeroCopy_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     Arena arena = Arena.ofConfined()) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = arena.allocateFrom("k").asSlice(0, 1);
@@ -1125,7 +1125,7 @@ class TtlDBTest {
 	@Test
 	void get_zeroCopy_returnsEmpty_whenKeyAbsent(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openTtl(dir, Duration.ofSeconds(60));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     Arena arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom("missing").asSlice(0, 7);
 

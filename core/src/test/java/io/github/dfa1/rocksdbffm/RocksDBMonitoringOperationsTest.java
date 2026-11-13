@@ -12,7 +12,7 @@ class RocksDBMonitoringOperationsTest {
     @Test
     void verifyChecksum_onValidDatabase_succeeds(@TempDir Path dir) {
         // Given
-        try (var db = RocksDB.openReadWrite(dir)) {
+        try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
             db.put("key".getBytes(), "value".getBytes());
 
             // When
@@ -28,7 +28,7 @@ class RocksDBMonitoringOperationsTest {
     void verifyChecksum_withReadOptions_onValidDatabase_succeeds(
             @TempDir Path dir) {
         // Given
-        try (var db = RocksDB.openReadWrite(dir);
+        try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
              var readOptions = ReadOptions.newReadOptions()) {
             db.put("key".getBytes(), "value".getBytes());
 

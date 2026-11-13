@@ -20,7 +20,7 @@ class LiveFileInfoTest {
 	@Test
 	void getLiveFiles_emptyDb_returnsEmptyList(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var files = db.getLiveFiles()) {
 
 			// When
@@ -34,7 +34,7 @@ class LiveFileInfoTest {
 	@Test
 	void get_negativeIndex_throws(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("k".getBytes(), "v".getBytes());
 			db.flush(fo);
@@ -50,7 +50,7 @@ class LiveFileInfoTest {
 	@Test
 	void get_indexEqualToSize_throws(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("k".getBytes(), "v".getBytes());
 			db.flush(fo);
@@ -67,7 +67,7 @@ class LiveFileInfoTest {
 	@Test
 	void sizeAndGet_remainUsableAfterLiveFilesClosed_onlyFieldAccessThrows(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("k".getBytes(), "v".getBytes());
 			db.flush(fo);
@@ -93,7 +93,7 @@ class LiveFileInfoTest {
 	@Test
 	void iterator_emptyDb_hasNoElements(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var files = db.getLiveFiles()) {
 
 			// When
@@ -108,7 +108,7 @@ class LiveFileInfoTest {
 	@Test
 	void getLiveFiles_iterate_visitsEveryFile(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.flush(fo);
@@ -140,7 +140,7 @@ class LiveFileInfoTest {
 	@Test
 	void getLiveFiles_afterFlush_returnsOneFileWithExpectedMetadata(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
@@ -173,7 +173,7 @@ class LiveFileInfoTest {
 		// Given — put+flush first so the delete lands in its own, separately flushed file
 		// (a delete in the same memtable as its own put would just drop the obsolete put
 		// during flush instead of producing a file with both an entry and a deletion)
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.flush(fo);
@@ -200,7 +200,7 @@ class LiveFileInfoTest {
 	@Test
 	void getLiveFiles_readOnlyDb_seesFilesWrittenBeforeOpen(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("k".getBytes(), "v".getBytes());
 			db.flush(fo);
@@ -219,7 +219,7 @@ class LiveFileInfoTest {
 	void liveFileInfo_afterOwnerClosed_throws(@TempDir Path dir) {
 		// Given
 		LiveFileInfo file;
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("k".getBytes(), "v".getBytes());
 			db.flush(fo);

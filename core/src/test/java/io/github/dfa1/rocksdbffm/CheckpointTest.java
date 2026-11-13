@@ -21,7 +21,7 @@ class CheckpointTest {
 	void exportTo_createsReadableSnapshot(@TempDir Path dir) {
 		// Given
 		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.openReadWrite(dir.resolve("db"))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -40,7 +40,7 @@ class CheckpointTest {
 	void snapshot_isIsolatedFromSubsequentWrites(@TempDir Path dir) {
 		// Given
 		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.openReadWrite(dir.resolve("db"))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"))) {
 			db.put("k".getBytes(), "before".getBytes());
 
 			try (var cp = Checkpoint.newCheckpoint(db)) {
@@ -67,7 +67,7 @@ class CheckpointTest {
 		var cp1Dir = dir.resolve("checkpoint-1");
 		var cp2Dir = dir.resolve("checkpoint-2");
 
-		try (var db = RocksDB.openReadWrite(dir.resolve("db"));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"));
 		     var cp = Checkpoint.newCheckpoint(db)) {
 
 			db.put("k".getBytes(), "v1".getBytes());
@@ -95,7 +95,7 @@ class CheckpointTest {
 	void snapshot_returnsNull_forKeyAbsentAtCheckpointTime(@TempDir Path dir) {
 		// Given
 		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.openReadWrite(dir.resolve("db"))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"))) {
 			// checkpoint taken before any write
 			try (var cp = Checkpoint.newCheckpoint(db)) {
 				cp.exportTo(cpDir);
@@ -119,7 +119,7 @@ class CheckpointTest {
 	void snapshot_preservesDeletedKey_thatWasDeletedAfterCheckpoint(@TempDir Path dir) {
 		// Given
 		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.openReadWrite(dir.resolve("db"))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (var cp = Checkpoint.newCheckpoint(db)) {
@@ -144,7 +144,7 @@ class CheckpointTest {
 	void exportTo_withoutLogSize_flushesMemtableToSst(@TempDir Path dir) throws IOException {
 		// Given — the write stays in the memtable/WAL: no explicit flush
 		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.openReadWrite(dir.resolve("db"));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"));
 		     var cp = Checkpoint.newCheckpoint(db)) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -161,7 +161,7 @@ class CheckpointTest {
 	void exportTo_withHugeLogSize_keepsDataInWal(@TempDir Path dir) throws IOException {
 		// Given — contrast case: a threshold the WAL never reaches, so nothing is flushed
 		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.openReadWrite(dir.resolve("db"));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"));
 		     var cp = Checkpoint.newCheckpoint(db)) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -190,7 +190,7 @@ class CheckpointTest {
 	void newCheckpoint_fromBlobDB_createsReadableSnapshot(@TempDir Path dir) {
 		// Given
 		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.openBlob(dir.resolve("db"))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir.resolve("db"))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -200,7 +200,7 @@ class CheckpointTest {
 		}
 
 		// Then — read-only open can't resolve blob values, reopen read-write instead
-		try (var snap = RocksDB.openReadWrite(cpDir)) {
+		try (Options snapOpts = Options.newOptions().setCreateIfMissing(true); var snap = RocksDB.openReadWrite(snapOpts, cpDir)) {
 			assertThat(snap.get("k".getBytes())).isEqualTo("v".getBytes());
 		}
 	}
@@ -209,7 +209,7 @@ class CheckpointTest {
 	void newCheckpoint_fromTtlDB_createsReadableSnapshot(@TempDir Path dir) {
 		// Given
 		var cpDir = dir.resolve("checkpoint");
-		try (var db = RocksDB.openTtl(dir.resolve("db"), Duration.ofSeconds(60))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir.resolve("db"), Duration.ofSeconds(60))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -220,7 +220,7 @@ class CheckpointTest {
 
 		// Then — reopen as a TTL DB too, so the trailing timestamp RocksDB stores
 		// alongside the value is stripped the same way the original write path did
-		try (var snap = RocksDB.openTtl(cpDir, Duration.ofSeconds(60))) {
+		try (Options snapOpts = Options.newOptions().setCreateIfMissing(true); var snap = RocksDB.openTtl(snapOpts, cpDir, Duration.ofSeconds(60))) {
 			assertThat(snap.get("k".getBytes())).isEqualTo("v".getBytes());
 		}
 	}
@@ -231,7 +231,7 @@ class CheckpointTest {
 		// read-only handle cannot trigger a flush of its own (no write access),
 		// so unflushed WAL data would otherwise be silently dropped from the export
 		var cpDir = dir.resolve("checkpoint");
-		try (var rw = RocksDB.openReadWrite(dir.resolve("db"));
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir.resolve("db"));
 		     var fo = FlushOptions.newFlushOptions()) {
 			rw.put("k".getBytes(), "v".getBytes());
 			rw.flush(fo);

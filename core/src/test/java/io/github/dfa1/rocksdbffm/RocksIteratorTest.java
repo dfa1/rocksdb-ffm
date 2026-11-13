@@ -24,7 +24,7 @@ class RocksIteratorTest {
 	@Test
 	void seekToFirst_iteratesAllKeysInOrder(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -46,7 +46,7 @@ class RocksIteratorTest {
 	@Test
 	void seekToLast_iteratesAllKeysInReverseOrder(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -72,7 +72,7 @@ class RocksIteratorTest {
 	@Test
 	void seek_positionsAtFirstKeyGreaterOrEqual(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
 			db.put("e".getBytes(), "5".getBytes());
@@ -92,7 +92,7 @@ class RocksIteratorTest {
 	@Test
 	void seek_exactMatch(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -110,7 +110,7 @@ class RocksIteratorTest {
 	@Test
 	void seek_pastLastKey_isInvalid(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 
 			// When
@@ -126,7 +126,7 @@ class RocksIteratorTest {
 	@Test
 	void seekForPrev_positionsAtLastKeyLessOrEqual(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
 			db.put("e".getBytes(), "5".getBytes());
@@ -145,7 +145,7 @@ class RocksIteratorTest {
 	@Test
 	void seekForPrev_atExactMatch_positionsAtTarget(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
 			db.put("e".getBytes(), "5".getBytes());
@@ -164,7 +164,7 @@ class RocksIteratorTest {
 	@Test
 	void seekForPrev_belowAllKeys_isInvalid(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("c".getBytes(), "3".getBytes());
 			db.put("e".getBytes(), "5".getBytes());
 
@@ -182,7 +182,7 @@ class RocksIteratorTest {
 	@Test
 	void seekForPrev_aboveAllKeys_positionsAtLastKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
 
@@ -200,7 +200,7 @@ class RocksIteratorTest {
 	@Test
 	void seekForPrev_withDirectByteBuffer(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
 
@@ -220,7 +220,7 @@ class RocksIteratorTest {
 	@Test
 	void seekForPrev_withMemorySegment(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var arena = Arena.ofConfined()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -244,7 +244,7 @@ class RocksIteratorTest {
 	@Test
 	void seek_withDirectByteBuffer(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -268,7 +268,7 @@ class RocksIteratorTest {
 	@Test
 	void key_value_byteBuffer_variant(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("hello".getBytes(), "world".getBytes());
 
 			try (RocksIterator it = db.newIterator()) {
@@ -303,7 +303,7 @@ class RocksIteratorTest {
 		// Given — a reused/pooled buffer, as a connection pool would hand back: still at its
 		// old limit (capacity) and carrying stale bytes past where the next copy will land,
 		// unlike a freshly allocated buffer which starts zeroed
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("hi".getBytes(), "ok".getBytes());
 
 			try (RocksIterator it = db.newIterator()) {
@@ -339,7 +339,7 @@ class RocksIteratorTest {
 	@Test
 	void key_value_byteBuffer_returnsNotEnoughCapacity_whenTooSmall(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("hello".getBytes(), "world".getBytes());
 
 			try (RocksIterator it = db.newIterator()) {
@@ -375,7 +375,7 @@ class RocksIteratorTest {
 	@Test
 	void seekToFirst_onEmptyDb_isInvalid(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 
 			// When
 			try (RocksIterator it = db.newIterator()) {
@@ -395,7 +395,7 @@ class RocksIteratorTest {
 	@Test
 	void newIterator_withReadOptions(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var readOptions = ReadOptions.newReadOptions()) {
 			db.put("x".getBytes(), "y".getBytes());
 
@@ -418,7 +418,7 @@ class RocksIteratorTest {
 	@Test
 	void error_returnsEmptyWhenNoError(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (RocksIterator it = db.newIterator()) {
@@ -436,7 +436,7 @@ class RocksIteratorTest {
 	@Test
 	void error_returnsEmptyAfterFullIteration(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -461,7 +461,7 @@ class RocksIteratorTest {
 	@Test
 	void refresh_notCalled_doesNotSeeWritesMadeAfterIteratorCreation(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 
 			try (RocksIterator it = db.newIterator()) {
@@ -479,7 +479,7 @@ class RocksIteratorTest {
 	@Test
 	void refresh_seesWritesMadeAfterIteratorCreation(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 
 			try (RocksIterator it = db.newIterator()) {
@@ -500,7 +500,7 @@ class RocksIteratorTest {
 	@Test
 	void refresh_seesDeletesMadeAfterIteratorCreation(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -522,7 +522,7 @@ class RocksIteratorTest {
 		// Given — matches Iterator::Refresh()'s documented contract (iterator_base.h):
 		// the iterator is invalidated by the call itself, independent of whether the DB
 		// changed or whether the previously-current key still exists.
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (RocksIterator it = db.newIterator()) {
@@ -550,7 +550,7 @@ class RocksIteratorTest {
 	@Test
 	void key_value_zeroCopy_returnsCurrentPosition(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (RocksIterator it = db.newIterator()) {
@@ -571,7 +571,7 @@ class RocksIteratorTest {
 	@Test
 	void key_zeroCopy_segmentUsedAfterReturn_throwsIllegalStateException(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (RocksIterator it = db.newIterator()) {
@@ -593,7 +593,7 @@ class RocksIteratorTest {
 	void key_zeroCopy_staysCorrectAcrossNavigation_insteadOfSilentlyGoingStale(@TempDir Path dir) {
 		// Given — the exact bug the scoped API prevents: a raw MemorySegment read held
 		// past next() would silently start reporting the new position's bytes with no error.
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -615,7 +615,7 @@ class RocksIteratorTest {
 	@Test
 	void key_zeroCopy_mapperReturnsNull_throwsNullPointerException(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (RocksIterator it = db.newIterator()) {
@@ -632,7 +632,7 @@ class RocksIteratorTest {
 	@Test
 	void value_zeroCopy_mapperReturnsNull_throwsNullPointerException(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (RocksIterator it = db.newIterator()) {
@@ -653,7 +653,9 @@ class RocksIteratorTest {
 	@Test
 	void closingDbFirst_closesStillOpenIteratorAutomatically(@TempDir Path dir) {
 		// Given — an iterator left open when its owning DB is closed
-		ReadWriteDB db = RocksDB.openReadWrite(dir);
+		Options opts = Options.newOptions().setCreateIfMissing(true);
+		ReadWriteDB db = RocksDB.openReadWrite(opts, dir);
+		opts.close();
 		db.put("k".getBytes(), "v".getBytes());
 		RocksIterator it = db.newIterator();
 		it.seekToFirst();
@@ -671,7 +673,7 @@ class RocksIteratorTest {
 	@Test
 	void closingIteratorFirst_unregistersFromOwningDb(@TempDir Path dir) {
 		// Given — the ordinary order: iterator closed before its owning DB
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			RocksIterator it = db.newIterator();
 			it.seekToFirst();
@@ -692,7 +694,7 @@ class RocksIteratorTest {
 	@Test
 	void stream_mapsAllEntriesInOrder(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -717,7 +719,7 @@ class RocksIteratorTest {
 	@Test
 	void stream_onEmptyDb_producesEmptyStream(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 
 			// When
 			List<KeyValue<String, String>> entries;
@@ -736,7 +738,7 @@ class RocksIteratorTest {
 	@Test
 	void stream_closingStream_doesNotCloseUnderlyingIterator(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			try (RocksIterator it = db.newIterator()) {
 				it.seekToFirst();
@@ -755,7 +757,7 @@ class RocksIteratorTest {
 	@Test
 	void stream_earlyTermination_leavesIteratorOpenAndPositioned(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -780,7 +782,7 @@ class RocksIteratorTest {
 	@Test
 	void stream_afterSeek_canBeRestreamedFromANewPosition(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -814,7 +816,7 @@ class RocksIteratorTest {
 	@Test
 	void stream_keyMapperReturnsNull_throwsNullPointerException(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When / Then
