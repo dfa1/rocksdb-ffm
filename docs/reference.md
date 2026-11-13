@@ -78,6 +78,9 @@ Column families are not a separate method name — every factory that supports t
 | `openTransaction(Options, TransactionDBOptions, Path)`                         | yes               | `TransactionDB`           |
 | `openOptimistic(Options, Path)`                                                | yes               | `OptimisticTransactionDB` |
 | `listColumnFamilies(Options, Path)`                                            | —                 | `List<byte[]>`            |
+
+The `Path`-only forms use default options, so they fail if the database does not exist. To create it, pass
+`Options` with `setCreateIfMissing(true)`.
 | `loadLatestOptions(Path, boolean ignoreUnknownOptions)` / `(…, Env, Cache)`    | —                 | `LoadedOptions`           |
 
 ## DB types
