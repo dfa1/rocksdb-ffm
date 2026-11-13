@@ -29,7 +29,7 @@ import java.util.Objects;
 /// method handles used by its own static factories. Every other capability (read, write,
 /// compaction, monitoring, tracing) has its own `MethodHandle`-holding companion class instead
 /// -- `RocksDBReadOperationsBindings`, `RocksDBWriteOperationsBindings`,
-/// `CompactionOperationsBindings`, `RocksDBMonitoringOperationsBindings`,
+/// `RocksDBCompactionOperationsBindings`, `RocksDBMonitoringOperationsBindings`,
 /// `RocksDBTracingOperationsBindings` -- and low-level shared plumbing (`errptr` handling,
 /// native string/byte marshaling, `close`/`free`) lives on [NativeCalls]. See
 /// [#131](https://github.com/dfa1/rocksdbffm/issues/131).

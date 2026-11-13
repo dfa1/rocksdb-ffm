@@ -144,8 +144,8 @@ null
 
 ## 5. Control how the database is opened
 
-The first example already passed `Options`; anything beyond "create if missing" goes through the same object,
-which is itself a native object and must be closed:
+Opening takes an `Options` object, as the first example did (`setCreateIfMissing(true)` is what creates the
+database). Everything else you tune goes on the same object, which is itself native and must be closed:
 
 ```java
 try (var options = Options.newOptions()
