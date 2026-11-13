@@ -94,9 +94,7 @@ public final class SstFileWriter extends NativeObject {
 	/// @param options DB options that control comparator and compression for the SST file
 	/// @return a new [SstFileWriter]; caller must close it
 	public static SstFileWriter newSstFileWriter(Options options) {
-		try (EnvOptions envOptions = EnvOptions.newEnvOptions()) {
-			return newSstFileWriter(options, envOptions);
-		}
+		return newSstFileWriter(options, EnvOptions.DEFAULTS);
 	}
 
 	/// Creates an SST file writer using the given DB options (comparator, compression, etc.)

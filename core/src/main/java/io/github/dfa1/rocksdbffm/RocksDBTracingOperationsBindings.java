@@ -83,12 +83,10 @@ final class RocksDBTracingOperationsBindings {
 	private RocksDBTracingOperationsBindings() {
 	}
 
-	/// [#startTrace(RocksDBTracingOperations, Env, EnvOptions, TraceOptions, Path)] using a
-	/// temporary default [Env]/[EnvOptions] pair, closed before this method returns.
+	/// [#startTrace(RocksDBTracingOperations, Env, EnvOptions, TraceOptions, Path)] using the
+	/// immortal default [Env]/[EnvOptions] pair.
 	static void startTrace(RocksDBTracingOperations db, TraceOptions traceOptions, Path tracePath) {
-		try (Env env = Env.defaultEnv(); EnvOptions envOptions = EnvOptions.newEnvOptions()) {
-			startTrace(db, env, envOptions, traceOptions, tracePath);
-		}
+		startTrace(db, Env.DEFAULTS, EnvOptions.DEFAULTS, traceOptions, tracePath);
 	}
 
 	static void startTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,
@@ -113,12 +111,10 @@ final class RocksDBTracingOperationsBindings {
 		}
 	}
 
-	/// [#startIoTrace(RocksDBTracingOperations, Env, EnvOptions, TraceOptions, Path)] using a
-	/// temporary default [Env]/[EnvOptions] pair, closed before this method returns.
+	/// [#startIoTrace(RocksDBTracingOperations, Env, EnvOptions, TraceOptions, Path)] using the
+	/// immortal default [Env]/[EnvOptions] pair.
 	static void startIoTrace(RocksDBTracingOperations db, TraceOptions traceOptions, Path tracePath) {
-		try (Env env = Env.defaultEnv(); EnvOptions envOptions = EnvOptions.newEnvOptions()) {
-			startIoTrace(db, env, envOptions, traceOptions, tracePath);
-		}
+		startIoTrace(db, Env.DEFAULTS, EnvOptions.DEFAULTS, traceOptions, tracePath);
 	}
 
 	static void startIoTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,
@@ -144,11 +140,9 @@ final class RocksDBTracingOperationsBindings {
 	}
 
 	/// [#startBlockCacheTrace(RocksDBTracingOperations, Env, EnvOptions, TraceOptions, Path)]
-	/// using a temporary default [Env]/[EnvOptions] pair, closed before this method returns.
+	/// using the immortal default [Env]/[EnvOptions] pair.
 	static void startBlockCacheTrace(RocksDBTracingOperations db, TraceOptions traceOptions, Path tracePath) {
-		try (Env env = Env.defaultEnv(); EnvOptions envOptions = EnvOptions.newEnvOptions()) {
-			startBlockCacheTrace(db, env, envOptions, traceOptions, tracePath);
-		}
+		startBlockCacheTrace(db, Env.DEFAULTS, EnvOptions.DEFAULTS, traceOptions, tracePath);
 	}
 
 	static void startBlockCacheTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,
@@ -165,13 +159,10 @@ final class RocksDBTracingOperationsBindings {
 	}
 
 	/// [#startBlockCacheTrace(RocksDBTracingOperations, Env, EnvOptions, BlockCacheTraceOptions,
-	/// BlockCacheTraceWriterOptions, Path)] using a temporary default [Env]/[EnvOptions] pair,
-	/// closed before this method returns.
+	/// BlockCacheTraceWriterOptions, Path)] using the immortal default [Env]/[EnvOptions] pair.
 	static void startBlockCacheTrace(RocksDBTracingOperations db, BlockCacheTraceOptions traceOptions,
 			BlockCacheTraceWriterOptions writerOptions, Path tracePath) {
-		try (Env env = Env.defaultEnv(); EnvOptions envOptions = EnvOptions.newEnvOptions()) {
-			startBlockCacheTrace(db, env, envOptions, traceOptions, writerOptions, tracePath);
-		}
+		startBlockCacheTrace(db, Env.DEFAULTS, EnvOptions.DEFAULTS, traceOptions, writerOptions, tracePath);
 	}
 
 	static void startBlockCacheTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,

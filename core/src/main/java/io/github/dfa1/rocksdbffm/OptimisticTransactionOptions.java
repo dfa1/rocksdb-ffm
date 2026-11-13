@@ -36,6 +36,10 @@ public final class OptimisticTransactionOptions extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 	}
 
+	/// Default options for [OptimisticTransactionDB#beginTransaction(WriteOptions)]; immortal per
+	/// [NativeObject#makeImmortal()]: never closed, and `close()` on it is a no-op.
+	static final OptimisticTransactionOptions DEFAULTS = newOptimisticTransactionOptions().makeImmortal();
+
 	private OptimisticTransactionOptions(MemorySegment ptr) {
 		super(ptr);
 	}

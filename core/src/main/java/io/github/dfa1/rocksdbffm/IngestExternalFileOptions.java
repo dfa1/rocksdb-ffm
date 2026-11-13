@@ -60,6 +60,10 @@ public final class IngestExternalFileOptions extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 	}
 
+	/// Default options for [RocksDBWriteOperations#ingestExternalFile(java.util.List)]; immortal per
+	/// [NativeObject#makeImmortal()]: never closed, and `close()` on it is a no-op.
+	static final IngestExternalFileOptions DEFAULTS = newIngestExternalFileOptions().makeImmortal();
+
 	private IngestExternalFileOptions(MemorySegment ptr) {
 		super(ptr);
 	}

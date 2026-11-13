@@ -117,7 +117,7 @@ public final class ReadBatch implements AutoCloseable {
 	/// @throws IllegalArgumentException if `keys.size()` exceeds [#capacity()]
 	/// @return one entry per key, in the same order, `null` where not found
 	public List<byte[]> get(List<byte[]> keys) {
-		return get(NativeCalls.DEFAULT_READ_OPTIONS, keys);
+		return get(ReadOptions.DEFAULTS, keys);
 	}
 
 	/// Reads `keys` in one batched native call, reusing this batch's preallocated bookkeeping
@@ -161,7 +161,7 @@ public final class ReadBatch implements AutoCloseable {
 	///                                  `keys.size()` exceeds [#capacity()]
 	/// @return one [CopyResult] per key, in the same order
 	public List<CopyResult> get(List<ByteBuffer> keys, List<ByteBuffer> values) {
-		return get(NativeCalls.DEFAULT_READ_OPTIONS, keys, values);
+		return get(ReadOptions.DEFAULTS, keys, values);
 	}
 
 	/// Reads `keys` into the corresponding pre-sized buffer in `values` (same index, same
@@ -232,7 +232,7 @@ public final class ReadBatch implements AutoCloseable {
 	/// @throws NullPointerException if `fn` returns `null` for any found key
 	/// @return one entry per key, in the same order, `null` where not found
 	public <R> List<R> get(List<MemorySegment> keys, Mapper<R> fn) {
-		return get(NativeCalls.DEFAULT_READ_OPTIONS, keys, fn);
+		return get(ReadOptions.DEFAULTS, keys, fn);
 	}
 
 	/// Reads `keys` in one batched native call, reusing this batch's preallocated arrays

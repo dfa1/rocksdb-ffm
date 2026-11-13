@@ -67,17 +67,14 @@ public final class Replayer extends NativeObject {
 		super(ptr);
 	}
 
-	/// Opens `tracePath` for replay against `db`'s default column family, using a temporary
-	/// default [Env]/[EnvOptions] pair (closed before this method returns -- RocksDB only needs
-	/// them to open the trace file, not afterward).
+	/// Opens `tracePath` for replay against `db`'s default column family, using the default
+	/// [Env] (`Env::Default()`) and default [EnvOptions] to open the trace file.
 	///
 	/// @param db        target database to replay operations against
 	/// @param tracePath trace file previously written by [RocksDBTracingOperations#startTrace]
 	/// @return a new [Replayer]; caller must close it
 	public static Replayer create(RocksDBWriteOperations db, Path tracePath) {
-		try (Env env = Env.defaultEnv(); EnvOptions envOptions = EnvOptions.newEnvOptions()) {
-			return create(db, List.of(), env, envOptions, tracePath);
-		}
+		return create(db, List.of(), Env.DEFAULTS, EnvOptions.DEFAULTS, tracePath);
 	}
 
 	/// [#create(RocksDBWriteOperations, Path)] against specific column families, with an

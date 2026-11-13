@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Breaking:** `ColumnFamilyDescriptor.name()` returns `String`; the `of(byte[])`/`of(byte[], Options)` factories and `LoadedOptions.columnFamilyOptions(byte[])` are removed. The C API takes names as NUL-terminated strings, so the `byte[]` forms were only ever decoded as UTF-8 ([#275](https://github.com/dfa1/rocksdb-ffm/pull/275))
+- `beginTransaction(WriteOptions)`, `ingestExternalFile(files)`, `newSstFileWriter(Options)`, the default-env tracing overloads, `Replayer.create(db, path)` and column families created without options reuse one immortal native default instead of creating and destroying options on every call ([#276](https://github.com/dfa1/rocksdb-ffm/pull/276))
 
 ## [0.18] — 2026-11-09
 

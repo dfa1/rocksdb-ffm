@@ -16,10 +16,6 @@ import java.util.Optional;
 /// [WriteBatch], every `*Options` class, and effectively every other wrapper in the package --
 /// so it lives in its own class rather than on any single capability interface's `Bindings`
 /// companion. See [#131](https://github.com/dfa1/rocksdbffm/issues/131).
-///
-/// [#DEFAULT_WRITE_OPTIONS]/[#DEFAULT_READ_OPTIONS] live here too: both
-/// [RocksDBReadOperationsBindings] and [RocksDBWriteOperationsBindings] need them, plus
-/// [TransactionDB] and [ReadBatch], which implement neither capability interface.
 final class NativeCalls {
 
 	/// `void rocksdb_close(rocksdb_t* db);`
@@ -35,12 +31,6 @@ final class NativeCalls {
 
 	private NativeCalls() {
 	}
-
-	// A get/put call only reads the options struct it's given, never mutates it, so one
-	// instance safely serves every open DB in the process. Never closed — closing it would
-	// break every other DB still using it, so no DB's tryClose may call close() on these.
-	static final WriteOptions DEFAULT_WRITE_OPTIONS = WriteOptions.newWriteOptions();
-	static final ReadOptions DEFAULT_READ_OPTIONS = ReadOptions.newReadOptions();
 
 	static void closeDb(MemorySegment db) throws Throwable {
 		MH_CLOSE.invokeExact(db);

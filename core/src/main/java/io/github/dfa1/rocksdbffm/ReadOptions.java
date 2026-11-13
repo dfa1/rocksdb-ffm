@@ -135,6 +135,11 @@ public final class ReadOptions extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
+	/// RocksDB-default ReadOptions for the get/put overloads that take none; a native read/write call only reads
+	/// the struct, so one instance serves every open DB. Immortal per [NativeObject#makeImmortal()]:
+	/// never closed, and `close()` on it is a no-op.
+	static final ReadOptions DEFAULTS = newReadOptions().makeImmortal();
+
 	// Backs iterate_lower_bound/iterate_upper_bound/request_id for the byte[] tier: the C API
 	// stores a raw Slice view over whatever pointer is passed to set_iterate_*_bound rather than
 	// copying it, so a copy made from a bound must outlive this ReadOptions, not just the setter

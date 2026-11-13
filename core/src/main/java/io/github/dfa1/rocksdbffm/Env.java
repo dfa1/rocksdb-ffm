@@ -58,6 +58,10 @@ public final class Env extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 	}
 
+	/// Wrapper around `Env::Default()` for the tracing/[Replayer] overloads that take no [Env]; immortal per
+	/// [NativeObject#makeImmortal()]: never closed, and `close()` on it is a no-op.
+	static final Env DEFAULTS = defaultEnv().makeImmortal();
+
 	private Env(MemorySegment ptr) {
 		super(ptr);
 	}

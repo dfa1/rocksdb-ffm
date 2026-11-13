@@ -687,6 +687,10 @@ public final class Options extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 	}
 
+	/// RocksDB-default options for a [ColumnFamilyDescriptor] created without any; immortal per
+	/// [NativeObject#makeImmortal()]: never closed, and `close()` on it is a no-op.
+	static final Options DEFAULTS = newOptions().makeImmortal();
+
 	private Options(MemorySegment ptr) {
 		super(ptr);
 	}
