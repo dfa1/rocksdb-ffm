@@ -18,7 +18,7 @@ import java.util.Optional;
 ///     byte[] value = db.get("key".getBytes());
 /// }
 /// ```
-public final class TtlDB extends NativeObjectWithChildren
+public final class TtlDB extends NativeDB
 		implements RocksDBReadOperations, RocksDBWriteOperations, RocksDBCompactionOperations, RocksDBMonitoringOperations,
 		RocksDBTracingOperations {
 
@@ -29,11 +29,6 @@ public final class TtlDB extends NativeObjectWithChildren
 		super(ptr);
 		this.ttl = ttl;
 		this.columnFamilyTtls = columnFamilyTtls;
-	}
-
-	@Override
-	public MemorySegment dbPtr() {
-		return ptr();
 	}
 
 	/// Returns the TTL passed when this database was opened with a single TTL, or empty when it was opened

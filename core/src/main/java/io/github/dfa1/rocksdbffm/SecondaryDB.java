@@ -26,7 +26,7 @@ import java.lang.invoke.MethodHandle;
 ///     byte[] value = secondary.get("key".getBytes());
 /// }
 /// ```
-public final class SecondaryDB extends NativeObjectWithChildren
+public final class SecondaryDB extends NativeDB
 		implements RocksDBReadOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
 
 	// -----------------------------------------------------------------------
@@ -43,11 +43,6 @@ public final class SecondaryDB extends NativeObjectWithChildren
 
 	SecondaryDB(MemorySegment ptr) {
 		super(ptr);
-	}
-
-	@Override
-	public MemorySegment dbPtr() {
-		return ptr();
 	}
 
 	// -----------------------------------------------------------------------

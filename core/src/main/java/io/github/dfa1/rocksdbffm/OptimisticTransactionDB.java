@@ -32,8 +32,7 @@ import java.lang.invoke.MethodHandle;
 /// }
 /// ```
 public final class OptimisticTransactionDB extends NativeObjectWithBaseDb
-		implements RocksDBReadOperations, RocksDBWriteOperations, RocksDBCompactionOperations, RocksDBMonitoringOperations,
-		RocksDBTracingOperations {
+		implements RocksDBReadOperations, RocksDBWriteOperations, RocksDBCompactionOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
 
 	// -----------------------------------------------------------------------
 	// Method handles unique to OptimisticTransactionDB
@@ -61,17 +60,6 @@ public final class OptimisticTransactionDB extends NativeObjectWithBaseDb
 
 	OptimisticTransactionDB(MemorySegment ptr, MemorySegment baseDb) {
 		super(ptr, baseDb);
-	}
-
-	/// Returns the base `rocksdb_t*` pointer. Overridden only to widen visibility to `public`,
-	/// satisfying [RocksDBReadOperations#dbPtr()]/[RocksDBWriteOperations#dbPtr()] — the guard
-	/// itself lives in [NativeObjectWithBaseDb#dbPtr()].
-	///
-	/// @return the base DB pointer
-	/// @throws IllegalStateException if this optimistic transaction DB has been closed
-	@Override
-	public MemorySegment dbPtr() {
-		return super.dbPtr();
 	}
 
 	// -----------------------------------------------------------------------

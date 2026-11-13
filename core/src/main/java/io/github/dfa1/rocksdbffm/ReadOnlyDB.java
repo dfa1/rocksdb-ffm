@@ -11,16 +11,11 @@ import java.lang.foreign.MemorySegment;
 ///     byte[] value = db.get("key".getBytes());
 /// }
 /// ```
-public final class ReadOnlyDB extends NativeObjectWithChildren
+public final class ReadOnlyDB extends NativeDB
 		implements RocksDBReadOperations, RocksDBMonitoringOperations, RocksDBTracingOperations {
 
 	ReadOnlyDB(MemorySegment ptr) {
 		super(ptr);
-	}
-
-	@Override
-	public MemorySegment dbPtr() {
-		return ptr();
 	}
 
 	// -----------------------------------------------------------------------
