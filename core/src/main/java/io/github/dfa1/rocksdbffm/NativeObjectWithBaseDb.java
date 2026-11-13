@@ -18,7 +18,7 @@ import java.lang.foreign.MemorySegment;
 /// cannot accidentally read it unchecked. The only access is [#dbPtr()], which calls [#ptr()]
 /// first and therefore throws [IllegalStateException] once this object is closed, the same way
 /// every other native call on this object already does.
-abstract class NativeObjectWithBaseDb extends NativeObjectWithChildren {
+abstract class NativeObjectWithBaseDb extends NativeDB {
 
 	private final MemorySegment baseDb;
 
@@ -28,17 +28,12 @@ abstract class NativeObjectWithBaseDb extends NativeObjectWithChildren {
 	}
 
 	/// Returns the base `rocksdb_t*` pointer, after checking (via [#ptr()]) that this object
-	/// has not been closed. `protected`, not `public`: most subclasses (e.g. [TransactionDB])
-	/// have no reason to expose the raw native pointer publicly. A subclass that implements
-	/// [RocksDBReadOperations]/[RocksDBWriteOperations] (currently only
-	/// [OptimisticTransactionDB]) must override this as `public final MemorySegment dbPtr() {
-	/// return super.dbPtr(); }` to satisfy those interfaces' `dbPtr()` contract — deliberately
-	/// not `final` here so that override is possible. Not abstract either: the guarded
-	/// implementation belongs here once, not duplicated per subclass.
+	/// has not been closed. The guarded implementation lives here once, not duplicated per subclass.
 	///
 	/// @return the base DB pointer
 	/// @throws IllegalStateException if this object has been closed
-	protected MemorySegment dbPtr() {
+	@Override
+	public final MemorySegment dbPtr() {
 		ptr();
 		return baseDb;
 	}

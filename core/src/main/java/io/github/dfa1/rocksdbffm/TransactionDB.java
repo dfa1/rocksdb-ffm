@@ -181,17 +181,6 @@ public final class TransactionDB extends NativeObjectWithBaseDb
 		this.readOpts = ReadOptions.DEFAULTS;
 	}
 
-	/// Returns the base `rocksdb_t*` pointer. Overridden only to widen visibility to `public`,
-	/// satisfying [RocksDBMonitoringOperations#dbPtr()] — the guard itself lives in
-	/// [NativeObjectWithBaseDb#dbPtr()].
-	///
-	/// @return the base DB pointer
-	/// @throws IllegalStateException if this transaction DB has been closed
-	@Override
-	public MemorySegment dbPtr() {
-		return super.dbPtr();
-	}
-
 	// -----------------------------------------------------------------------
 	// Flush
 	// -----------------------------------------------------------------------
