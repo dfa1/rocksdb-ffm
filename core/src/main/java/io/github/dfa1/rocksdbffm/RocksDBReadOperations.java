@@ -23,14 +23,7 @@ import java.util.OptionalLong;
 /// symbol to duplicate, so nothing stops it sharing that one surface even though it can't share
 /// this one. [OptimisticTransactionDB] has no such dedicated C API for direct ops — it always
 /// goes through the base `rocksdb_t*` — so it implements this interface directly instead.
-public interface RocksDBReadOperations {
-
-	/// Returns the native `rocksdb_t*` pointer to operate on. Equivalent to the
-	/// [NativeObject#ptr()] every implementor already has — a separate accessor only
-	/// because an interface cannot require a method from a specific superclass.
-	///
-	/// @return the native database pointer
-	MemorySegment dbPtr();
+public interface RocksDBReadOperations extends RocksDBOperations {
 
 	// -----------------------------------------------------------------------
 	// Get

@@ -1,6 +1,5 @@
 package io.github.dfa1.rocksdbffm;
 
-import java.lang.foreign.MemorySegment;
 import java.nio.file.Path;
 
 /// Shared tracing/replay operations for every wrapper around a plain `rocksdb_t*`, including
@@ -18,12 +17,7 @@ import java.nio.file.Path;
 /// [#startIoTrace]/[#endIoTrace] capture file I/O instead of database operations, and
 /// [#startBlockCacheTrace]/[#endBlockCacheTrace] capture block cache accesses (hit/miss, block
 /// type, caller) -- both are independent trace streams that can run alongside [#startTrace].
-public interface RocksDBTracingOperations {
-
-	/// Returns the native `rocksdb_t*` pointer to operate on.
-	///
-	/// @return the native database pointer
-	MemorySegment dbPtr();
+public interface RocksDBTracingOperations extends RocksDBOperations {
 
 	/// Starts capturing every read/write operation on this database to a trace file at
 	/// `tracePath`, using the default [Env] (`Env::Default()`) and default [EnvOptions] to open

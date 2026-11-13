@@ -14,12 +14,7 @@ import java.util.List;
 /// ([#getLiveFilesStorageInfo()]) — SST, WAL, MANIFEST, `CURRENT`, `OPTIONS`, blob files, and
 /// more, everything needed to reconstruct the database, not just SST. [#getApproximateSizes(List)]
 /// estimates the on-disk footprint of one or more key ranges without scanning them.
-public interface RocksDBMonitoringOperations {
-
-	/// Returns the native `rocksdb_t*` pointer to operate on.
-	///
-	/// @return the native database pointer
-	MemorySegment dbPtr();
+public interface RocksDBMonitoringOperations extends RocksDBOperations {
 
 	/// Captures metadata for every live SST file currently belonging to this database —
 	/// column family, level, size, key range, sequence number range, and entry/deletion

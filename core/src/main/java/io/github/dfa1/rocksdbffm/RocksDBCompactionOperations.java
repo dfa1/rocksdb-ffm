@@ -18,12 +18,7 @@ import java.nio.ByteBuffer;
 ///
 /// Every method here is a direct, zero-logic forward into the matching package-private
 /// [RocksDBCompactionOperationsBindings] helper — implementors only need to supply the native pointer.
-public interface RocksDBCompactionOperations {
-
-	/// Returns the native `rocksdb_t*` pointer to operate on.
-	///
-	/// @return the native database pointer
-	MemorySegment dbPtr();
+public interface RocksDBCompactionOperations extends RocksDBOperations {
 
 	/// Manually triggers compaction over the entire key space.
 	default void compactRange() {

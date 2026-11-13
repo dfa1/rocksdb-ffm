@@ -30,15 +30,7 @@ import java.util.List;
 /// out lets [TransactionDB] implement compaction control as well, something it couldn't do while
 /// these methods lived only on this write-only interface it doesn't implement. See
 /// [#131](https://github.com/dfa1/rocksdbffm/issues/131).
-public interface RocksDBWriteOperations {
-
-	/// Returns the native `rocksdb_t*` pointer to operate on. Redeclared from
-	/// [RocksDBReadOperations#dbPtr()] since this interface does not extend it; every
-	/// implementor also implements [RocksDBReadOperations] and provides a single override
-	/// satisfying both.
-	///
-	/// @return the native database pointer
-	MemorySegment dbPtr();
+public interface RocksDBWriteOperations extends RocksDBOperations {
 
 	// -----------------------------------------------------------------------
 	// Put
