@@ -59,7 +59,7 @@ public final class Checkpoint extends NativeObject {
 	/// The checkpoint object may be reused to export multiple snapshots.
 	/// Close it when done — this does not affect the database or any exported checkpoints.
 	///
-	/// Accepts any direct-DB type — [ReadWriteDB], [BlobDB], [TtlDB], [ReadOnlyDB],
+	/// Accepts any direct-DB type — [ReadWriteDB], [TtlDB], [ReadOnlyDB],
 	/// [SecondaryDB], and [OptimisticTransactionDB] all implement [RocksDBReadOperations].
 	/// A read-only or secondary handle works too: the native checkpoint call tolerates
 	/// `DisableFileDeletions` reporting "not supported" for those and proceeds anyway.

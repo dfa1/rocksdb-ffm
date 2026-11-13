@@ -688,7 +688,7 @@ try (var options = Options.newOptions()
 		.setBlobFileSize(MemorySize.ofMB(256))
 		.setBlobCompressionType(CompressionType.ZSTD)
 		.setEnableBlobGc(true);
-     var db = RocksDB.openBlob(options, dbPath)) {
+     var db = RocksDB.openReadWrite(options, dbPath)) {
 	db.put("k".getBytes(), largeValue);
 }
 ```

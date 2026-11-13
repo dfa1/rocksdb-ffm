@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class MergeTest {
 
 	// -----------------------------------------------------------------------
-	// ReadWriteDB
+	// blob files
 	// -----------------------------------------------------------------------
 
 	@Test
@@ -111,13 +111,13 @@ class MergeTest {
 	}
 
 	// -----------------------------------------------------------------------
-	// BlobDB
+	// blob files
 	// -----------------------------------------------------------------------
 
 	@Test
 	void blobDb_merge_throwsWithoutMergeOperator(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			// When
 			var thrown = assertThatThrownBy(() -> db.merge("k".getBytes(), "v".getBytes()));
 

@@ -243,14 +243,14 @@ class CompactionControlTest {
 	}
 
 	// -----------------------------------------------------------------------
-	// BlobDB — compactRange / suggestCompactRange / file deletions
+	// blob files — compactRange / suggestCompactRange / file deletions
 	// (gained via RocksDBWriteOperations)
 	// -----------------------------------------------------------------------
 
 	@Test
 	void compactRange_blobDb_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -266,7 +266,7 @@ class CompactionControlTest {
 	@Test
 	void suggestCompactRange_blobDb_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("z".getBytes(), "2".getBytes());
 
@@ -281,7 +281,7 @@ class CompactionControlTest {
 	@Test
 	void disableAndEnableFileDeletions_blobDb_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When — disable, do some work, re-enable

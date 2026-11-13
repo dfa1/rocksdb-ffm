@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 /// Shared compaction-control operations for every wrapper around a plain `rocksdb_t*`, including
 /// [TransactionDB] (reached through its base DB pointer, see
 /// [NativeObjectWithBaseDb#dbPtr()]). Implemented alongside [RocksDBWriteOperations] by
-/// `ReadWriteDB`/`TtlDB`/`BlobDB`/`OptimisticTransactionDB`.
+/// `ReadWriteDB`/`TtlDB`/`OptimisticTransactionDB`.
 ///
 /// A separate interface rather than folded into [RocksDBWriteOperations]: compaction control
 /// operates on the plain `rocksdb_t*` the same way tracing and monitoring do, and factoring it

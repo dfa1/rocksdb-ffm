@@ -207,7 +207,7 @@ public final class BackupEngine extends NativeObject {
 
 	/// Creates a new incremental backup of `db`.
 	///
-	/// Accepts any mutable direct-DB type — [ReadWriteDB], [BlobDB], [TtlDB], and
+	/// Accepts any mutable direct-DB type — [ReadWriteDB], [TtlDB], and
 	/// [OptimisticTransactionDB] all implement [RocksDBWriteOperations].
 	///
 	/// @param db the database to back up

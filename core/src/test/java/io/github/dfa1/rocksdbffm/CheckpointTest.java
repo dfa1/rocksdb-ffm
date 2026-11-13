@@ -187,10 +187,10 @@ class CheckpointTest {
 	// -----------------------------------------------------------------------
 
 	@Test
-	void newCheckpoint_fromBlobDB_createsReadableSnapshot(@TempDir Path dir) {
+	void newCheckpoint_fromBlobFiles_createsReadableSnapshot(@TempDir Path dir) {
 		// Given
 		var cpDir = dir.resolve("checkpoint");
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir.resolve("db"))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"))) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When

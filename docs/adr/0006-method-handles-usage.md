@@ -12,7 +12,7 @@
 `MH_PUT`/`MH_PUT_CF`/`MH_GET_PINNED`/`MH_DELETE_CF`/… fields and their own copy of the
 `try (Arena arena = ...) { errHolder → toNative → invokeExact → checkError } catch (Throwable
 t) { wrapInvokeFailure }` shape, once per tier (byte[]/`ByteBuffer`/`MemorySegment`) per
-CF-or-not. Six other DB types — `ReadWriteDB`, `TtlDB`, `BlobDB`, `ReadOnlyDB`, `SecondaryDB`,
+CF-or-not. Five other DB types — `ReadWriteDB`, `TtlDB`, `ReadOnlyDB`, `SecondaryDB`,
 `OptimisticTransactionDB` — share one Java body per operation instead, via
 `RocksDBReadOperations`/`RocksDBWriteOperations` default methods forwarding to package-private
 statics on `RocksDBReadOperationsBindings`/`RocksDBWriteOperationsBindings` (`putBytes`,

@@ -227,12 +227,12 @@ class BackupEngineIntegrationTest {
 		var restoreDir = dir.resolve("restore");
 		var value = new byte[(int) MemorySize.ofKB(64).toBytes()];
 
-		// Given — a BlobDB with a value large enough to land in a blob file
+		// Given — a ReadWriteDB with a value large enough to land in a blob file
 		try (var opts = Options.newOptions()
 				.setCreateIfMissing(true)
 				.setEnableBlobFiles(true)
 				.setMinBlobSize(MemorySize.ofBytes(0));
-		     var db = RocksDB.openBlob(opts, dbDir);
+		     var db = RocksDB.openReadWrite(opts, dbDir);
 		     var engine = BackupEngine.open(opts, backupDir)) {
 
 			db.put("k".getBytes(), value);
@@ -248,9 +248,9 @@ class BackupEngineIntegrationTest {
 			}
 		}
 
-		// Then — restored BlobDB contains the original value
+		// Then — restored ReadWriteDB contains the original value
 		try (var opts = Options.newOptions();
-		     var restored = RocksDB.openBlob(opts, restoreDir)) {
+		     var restored = RocksDB.openReadWrite(opts, restoreDir)) {
 			assertThat(restored.get("k".getBytes())).isEqualTo(value);
 		}
 	}

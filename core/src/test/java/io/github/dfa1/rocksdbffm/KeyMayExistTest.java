@@ -430,13 +430,13 @@ class KeyMayExistTest {
 	}
 
 	// -----------------------------------------------------------------------
-	// keyMayExist — BlobDB, ReadOnlyDB, SecondaryDB (gained via RocksDBReadOperations)
+	// keyMayExist — blob files, ReadOnlyDB, SecondaryDB (gained via RocksDBReadOperations)
 	// -----------------------------------------------------------------------
 
 	@Test
 	void keyMayExist_blobDb_returnsTrue_forPresentKey(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("hi".getBytes(), "there".getBytes());
 
 			// When

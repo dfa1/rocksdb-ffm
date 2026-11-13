@@ -74,7 +74,6 @@ Column families are not a separate method name — every factory that supports t
 | `openReadWrite(Path)` / `(Options, Path)`                                      | yes               | `ReadWriteDB` (creates if missing) |
 | `openReadOnly(Path)` / `(Options, Path)` / `(Options, Path, boolean errorIfWalFileExists)` | yes  | `ReadOnlyDB`  |
 | `openTtl(Path, Duration)` / `(Options, Path, Duration)`                        | yes               | `TtlDB`                   |
-| `openBlob(Path)` / `(Options, Path)`                                           | yes               | `BlobDB`                  |
 | `openSecondary(Options, Path primary, Path secondary)`                         | yes               | `SecondaryDB`             |
 | `openTransaction(Options, TransactionDBOptions, Path)`                         | yes               | `TransactionDB`           |
 | `openOptimistic(Options, Path)`                                                | yes               | `OptimisticTransactionDB` |
@@ -91,7 +90,6 @@ Each type exposes only the operations that are valid for it — see
 | `ReadWriteDB`             |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
 | `ReadOnlyDB`              |  —    |  ✅  |   ✅    |    ✅    |  —    |   —     |   —    | ✅  |
 | `TtlDB`                   |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
-| `BlobDB`                  |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
 | `SecondaryDB`             |  —    |  ✅  |   ✅    |    ✅    |  —    |   —     |   —    | ✅  |
 | `TransactionDB`           |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   —    | ✅  |
 | `OptimisticTransactionDB` |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
@@ -222,7 +220,7 @@ same as `setTableFormatConfig`):
 | `setHashLinkListMemTableFactory`     | `long`                  |
 | `setVectorMemTableFactory`           | — (no parameters)       |
 
-Blob options (used with `RocksDB.openBlob`, each with a matching getter):
+Blob options (used with `RocksDB.openReadWrite`, each with a matching getter):
 
 | Method                         | Type                    |
 |:-------------------------------|:------------------------|
@@ -393,7 +391,7 @@ compaction, so close them promptly.
 | `ColumnFamilyHandle`     | Live handle; `getId()`, `getName()`; `AutoCloseable`               |
 
 `createColumnFamily(ColumnFamilyDescriptor)` and `dropColumnFamily(handle)` exist on `ReadWriteDB`,
-`TtlDB`, `BlobDB`, `TransactionDB`, and `OptimisticTransactionDB`. Every read method
+`TtlDB`, `TransactionDB`, and `OptimisticTransactionDB`. Every read method
 (`get`/`keyMayExist`/`newIterator`/`getProperty`) has a first-argument `ColumnFamilyHandle`
 overload across all three access tiers on those five types plus `ReadOnlyDB`; write methods
 (`put`/`delete`/`deleteRange`/`flush`) add the same overload on the five writable types.
@@ -404,7 +402,7 @@ Reopening requires listing every existing column family, `default` included — 
 
 | Type                  | API                                                                                              |
 |:----------------------|:--------------------------------------------------------------------------------------------------|
-| `Checkpoint`          | `newCheckpoint(db)` for any `RocksDBReadOperations` implementor (`ReadWriteDB`/`BlobDB`/`TtlDB`/`ReadOnlyDB`/`SecondaryDB`/`OptimisticTransactionDB`); `exportTo(Path[, MemorySize logSizeForFlush])` |
+| `Checkpoint`          | `newCheckpoint(db)` for any `RocksDBReadOperations` implementor (`ReadWriteDB`/`TtlDB`/`ReadOnlyDB`/`SecondaryDB`/`OptimisticTransactionDB`); `exportTo(Path[, MemorySize logSizeForFlush])` |
 | `BackupEngine`        | `open(Options, Path)`, `open(BackupEngineOptions, Env)`; `createNewBackup(db[, boolean flushBeforeBackup])`, `getBackupInfo()`, `purgeOldBackups(int)`, `verifyBackup(BackupId)`, `restoreDbFromLatestBackup(...)`, `restoreDbFromBackup(BackupId, ...)` |
 | `BackupEngineOptions` | `create(Path)`; `setShareTableFiles`, `setSync`, `setDestroyOldData`, `setBackupLogFiles`, `setBackupRateLimit`, `setRestoreRateLimit`, `setMaxBackgroundOperations`, `setCallbackTriggerIntervalSize`, `setMaxValidBackupsToOpen`, `setShareFilesWithChecksumNaming`, `setEnv` |
 | `BackupInfo`          | Record: `backupId()`, `timestamp()` (epoch seconds), `size()` (`MemorySize`), `numberOfFiles()`   |
@@ -423,7 +421,7 @@ Reopening requires listing every existing column family, `default` included — 
 ## Compaction and background jobs
 
 `RocksDBCompactionOperations` (all rows below except `cancelAllBackgroundWork`/`flush*`, which
-stay on `RocksDBWriteOperations`) is implemented by `ReadWriteDB`/`TtlDB`/`BlobDB`/
+stay on `RocksDBWriteOperations`) is implemented by `ReadWriteDB`/`TtlDB`/
 `OptimisticTransactionDB` and, through its base-db pointer, `TransactionDB` too.
 
 | Method                                                        | Notes                                    |
