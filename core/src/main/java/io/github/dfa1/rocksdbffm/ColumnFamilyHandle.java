@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 /// Must be closed after use to release the native handle.
 ///
 /// ```
-/// try (var db = RocksDB.openReadWrite(path);
+/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, path);
 ///      var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 ///     db.put(cf, "key".getBytes(), "value".getBytes());
 /// }

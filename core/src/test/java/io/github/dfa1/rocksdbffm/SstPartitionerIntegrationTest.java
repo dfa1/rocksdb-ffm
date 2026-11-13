@@ -20,7 +20,7 @@ class SstPartitionerIntegrationTest {
 		// Given — a database with keys spread across 5 distinct 2-byte prefixes, compacted
 		// with no partitioner configured, so nothing stops compaction from merging every
 		// prefix into a single small output file
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			for (String prefix : PREFIXES) {
 				for (int i = 0; i < KEYS_PER_PREFIX; i++) {
 					String key = prefix + String.format("%04d", i);

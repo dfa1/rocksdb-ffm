@@ -23,7 +23,7 @@ class PinnedGetTest {
 	@Test
 	void pinnedGet_returnsValue_forExistingKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (Arena arena = Arena.ofConfined()) {
@@ -41,7 +41,7 @@ class PinnedGetTest {
 	@Test
 	void pinnedGet_returnsEmpty_forAbsentKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			try (Arena arena = Arena.ofConfined()) {
 				MemorySegment key = arena.allocateFrom("missing").asSlice(0, 7);
 
@@ -57,7 +57,7 @@ class PinnedGetTest {
 	@Test
 	void pinnedGet_emptyValue_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), new byte[0]);
 
 			try (Arena arena = Arena.ofConfined()) {
@@ -75,7 +75,7 @@ class PinnedGetTest {
 	@Test
 	void pinnedGet_mapperReturnsNull_throwsNullPointerException(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (Arena arena = Arena.ofConfined()) {
@@ -96,7 +96,7 @@ class PinnedGetTest {
 	@Test
 	void pinnedGet_segmentUsedAfterReturn_throwsIllegalStateException(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (Arena arena = Arena.ofConfined()) {
@@ -116,7 +116,7 @@ class PinnedGetTest {
 	@Test
 	void pinnedGet_segmentUsedFromAnotherThread_throwsWrongThreadException(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (Arena arena = Arena.ofConfined()) {
@@ -155,7 +155,7 @@ class PinnedGetTest {
 	@Test
 	void pinnedGet_readerThrows_propagatesAndCleansUp(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (Arena arena = Arena.ofConfined()) {
@@ -184,7 +184,7 @@ class PinnedGetTest {
 	@Test
 	void pinnedGet_manyIterations_doesNotLeakHandles(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (Arena arena = Arena.ofConfined()) {
@@ -207,7 +207,7 @@ class PinnedGetTest {
 	@Test
 	void pinnedGetCf_returnsValue_forExistingKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -226,7 +226,7 @@ class PinnedGetTest {
 	@Test
 	void pinnedGetCf_returnsEmpty_forAbsentKey(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 
 			try (Arena arena = Arena.ofConfined()) {
@@ -244,7 +244,7 @@ class PinnedGetTest {
 	@Test
 	void pinnedGetCf_isIsolatedFromDefaultFamily(@TempDir Path dir) {
 		// Given — same key written only into the non-default family
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 

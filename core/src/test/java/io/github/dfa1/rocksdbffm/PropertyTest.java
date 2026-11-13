@@ -18,7 +18,7 @@ class PropertyTest {
 	@Test
 	void getProperty_stats_isPresent(@TempDir Path dir) {
 		// Given / When
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			Optional<String> stats = db.getProperty(Property.STATS);
 
 			// Then
@@ -29,14 +29,14 @@ class PropertyTest {
 
 	@Test
 	void getProperty_levelStats_isPresent(@TempDir Path dir) {
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			assertThat(db.getProperty(Property.LEVEL_STATS)).isPresent();
 		}
 	}
 
 	@Test
 	void getProperty_numFilesAtLevelL0_isPresent(@TempDir Path dir) {
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			// Given
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -56,7 +56,7 @@ class PropertyTest {
 	@Test
 	void getLongProperty_estimateNumKeys_isPresent(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k1".getBytes(), "v1".getBytes());
 			db.put("k2".getBytes(), "v2".getBytes());
 
@@ -71,7 +71,7 @@ class PropertyTest {
 
 	@Test
 	void getLongProperty_numRunningFlushes_isPresent(@TempDir Path dir) {
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			OptionalLong flushes = db.getLongProperty(Property.NUM_RUNNING_FLUSHES);
 
 			assertThat(flushes).isPresent();
@@ -81,14 +81,14 @@ class PropertyTest {
 
 	@Test
 	void getLongProperty_numRunningCompactions_isPresent(@TempDir Path dir) {
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			assertThat(db.getLongProperty(Property.NUM_RUNNING_COMPACTIONS)).isPresent();
 		}
 	}
 
 	@Test
 	void getLongProperty_compactionAbortCount_isPresent(@TempDir Path dir) {
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			assertThat(db.getLongProperty(Property.COMPACTION_ABORT_COUNT)).isPresent();
 			assertThat(db.getLongProperty(Property.COMPACTION_ABORT_COUNT).getAsLong())
 					.isGreaterThanOrEqualTo(0);
@@ -98,7 +98,7 @@ class PropertyTest {
 	@Test
 	void getLongProperty_numSnapshots_incrementsWithSnapshot(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			long before = db.getLongProperty(Property.NUM_SNAPSHOTS).orElseThrow();
 
 			// When

@@ -21,7 +21,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_returnsStoredValue(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("k".getBytes(), "v".getBytes());
 		}
 
@@ -37,7 +37,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_returnsNull_whenKeyAbsent(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("seed".getBytes(), "val".getBytes());
 		}
 
@@ -54,7 +54,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_withReadOptions(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("k".getBytes(), "v".getBytes());
 		}
 
@@ -76,7 +76,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_byteBuffer_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("key".getBytes(), "value".getBytes());
 		}
 
@@ -100,7 +100,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_byteBuffer_returnsNotFound_whenKeyAbsent(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("seed".getBytes(), "val".getBytes());
 		}
 
@@ -120,7 +120,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_byteBuffer_returnsNotEnoughCapacity_whenValueDoesNotFit(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("key".getBytes(), "value".getBytes());
 		}
 
@@ -145,7 +145,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_memorySegment_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("key".getBytes(), "value".getBytes());
 		}
 
@@ -171,7 +171,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_zeroCopy_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("key".getBytes(), "value".getBytes());
 		}
 
@@ -190,7 +190,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_zeroCopy_returnsEmpty_whenKeyAbsent(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("seed".getBytes(), "val".getBytes());
 		}
 
@@ -209,7 +209,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_zeroCopy_fromColumnFamily(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir);
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir);
 		     var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			rw.put(cf, "key".getBytes(), "value".getBytes());
 		}
@@ -239,7 +239,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_columnFamily_returnsStoredValue(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 			rw.put(cf, "k".getBytes(), "v".getBytes());
 			cf.close();
@@ -264,7 +264,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_columnFamily_withReadOptions(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 			rw.put(cf, "k".getBytes(), "v".getBytes());
 			cf.close();
@@ -290,7 +290,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_columnFamily_byteBuffer_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 			rw.put(cf, "key".getBytes(), "value".getBytes());
 			cf.close();
@@ -318,7 +318,7 @@ class ReadOnlyDBTest {
 	@Test
 	void get_columnFamily_memorySegment_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 			rw.put(cf, "key".getBytes(), "value".getBytes());
 			cf.close();
@@ -352,7 +352,7 @@ class ReadOnlyDBTest {
 	@Test
 	void newIterator_columnFamily_scansKeys(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 			rw.put(cf, "a".getBytes(), "1".getBytes());
 			rw.put(cf, "b".getBytes(), "2".getBytes());
@@ -381,7 +381,7 @@ class ReadOnlyDBTest {
 	@Test
 	void newIterator_columnFamily_withReadOptions(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 			rw.put(cf, "x".getBytes(), "y".getBytes());
 			cf.close();
@@ -414,7 +414,7 @@ class ReadOnlyDBTest {
 	@Test
 	void getProperty_columnFamily_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 			rw.put(cf, "k".getBytes(), "v".getBytes());
 			cf.close();
@@ -439,7 +439,7 @@ class ReadOnlyDBTest {
 	@Test
 	void getLongProperty_columnFamily_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 			rw.put(cf, "k".getBytes(), "v".getBytes());
 			cf.close();
@@ -468,7 +468,7 @@ class ReadOnlyDBTest {
 	@Test
 	void newIterator_iteratesData(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("a".getBytes(), "1".getBytes());
 			rw.put("b".getBytes(), "2".getBytes());
 		}
@@ -492,7 +492,7 @@ class ReadOnlyDBTest {
 	@Test
 	void newIterator_withReadOptions(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("x".getBytes(), "y".getBytes());
 		}
 
@@ -517,7 +517,7 @@ class ReadOnlyDBTest {
 	@Test
 	void getSnapshot_allowsSnapshotRead(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("k".getBytes(), "v".getBytes());
 		}
 
@@ -540,7 +540,7 @@ class ReadOnlyDBTest {
 	@Test
 	void getLongProperty_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("k".getBytes(), "v".getBytes());
 		}
 
@@ -557,7 +557,7 @@ class ReadOnlyDBTest {
 	@Test
 	void getProperty_returnsValue(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("k".getBytes(), "v".getBytes());
 		}
 
@@ -578,7 +578,7 @@ class ReadOnlyDBTest {
 	@Test
 	void openReadOnly_errorIfWalFileExistsFalse_allowsOpenWithWal(@TempDir Path dir) {
 		// Given
-		try (var rw = RocksDB.openReadWrite(dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
 			rw.put("k".getBytes(), "v".getBytes());
 		}
 
@@ -599,7 +599,7 @@ class ReadOnlyDBTest {
 	@Test
 	void openReadOnly_columnFamilies_errorIfWalFileExistsFalse(@TempDir Path dir) {
 		// Given — create a DB with a custom CF, then close it
-		try (var rw = RocksDB.openReadWrite(dir);
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir);
 		     var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			rw.put(cf, "k".getBytes(), "v".getBytes());
 		}

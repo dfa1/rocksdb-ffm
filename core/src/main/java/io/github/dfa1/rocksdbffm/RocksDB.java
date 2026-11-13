@@ -178,6 +178,10 @@ public final class RocksDB {
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
+	/// Default options for [#openBlob(Path)]: blob files enabled, nothing else changed; immortal per
+	/// [NativeObject#makeImmortal()] since the open call copies it.
+	private static final Options BLOB_DEFAULTS = Options.newOptions().setEnableBlobFiles(true).makeImmortal();
+
 	private RocksDB() {
 		// no instances
 	}
@@ -205,14 +209,13 @@ public final class RocksDB {
 		}
 	}
 
-	/// Equivalent to `openReadWrite(options, path)` with `createIfMissing = true`.
+	/// Equivalent to `openReadWrite(options, path)` with default options. Fails if the database does not
+	/// exist; to create it, pass options with [Options#setCreateIfMissing(boolean)] set.
 	///
 	/// @param path directory where the database files are stored
 	/// @return a new [ReadWriteDB] instance
 	public static ReadWriteDB openReadWrite(Path path) {
-		try (Options opts = Options.newOptions().setCreateIfMissing(true)) {
-			return openReadWrite(opts, path);
-		}
+		return openReadWrite(Options.DEFAULTS, path);
 	}
 
 	/// Opens (or creates) a TTL-aware read-write database at `path`.
@@ -237,15 +240,14 @@ public final class RocksDB {
 		}
 	}
 
-	/// Equivalent to `openTtl(options, path, ttl)` with `createIfMissing = true`.
+	/// Equivalent to `openTtl(options, path, ttl)` with default options. Fails if the database does not
+	/// exist; to create it, pass options with [Options#setCreateIfMissing(boolean)] set.
 	///
 	/// @param path directory where the database files are stored
 	/// @param ttl time-to-live for keys; [Duration#ZERO] disables expiry
 	/// @return a new [TtlDB] instance
 	public static TtlDB openTtl(Path path, Duration ttl) {
-		try (Options opts = Options.newOptions().setCreateIfMissing(true)) {
-			return openTtl(opts, path, ttl);
-		}
+		return openTtl(Options.DEFAULTS, path, ttl);
 	}
 
 	/// Opens (or creates) a blob-enabled read-write database at `path`.
@@ -270,15 +272,14 @@ public final class RocksDB {
 		}
 	}
 
-	/// Equivalent to `openBlob(options, path)` with `createIfMissing = true`
-	/// and `enableBlobFiles = true`.
+	/// Equivalent to `openBlob(options, path)` with `enableBlobFiles = true` and otherwise default options.
+	/// Fails if the database does not exist; to create it, pass options with
+	/// [Options#setCreateIfMissing(boolean)] set.
 	///
 	/// @param path directory where the database files are stored
 	/// @return a new [BlobDB] instance
 	public static BlobDB openBlob(Path path) {
-		try (Options opts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true)) {
-			return openBlob(opts, path);
-		}
+		return openBlob(BLOB_DEFAULTS, path);
 	}
 
 	// -----------------------------------------------------------------------

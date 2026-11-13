@@ -20,7 +20,7 @@ import java.util.List;
 /// before rollout.
 ///
 /// ```
-/// try (var db = RocksDB.openReadWrite(candidatePath);
+/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, candidatePath);
 ///      var replayer = Replayer.create(db, tracePath)) {
 ///     replayer.prepare();
 ///     replayer.replay(ReplayOptions.newReplayOptions());

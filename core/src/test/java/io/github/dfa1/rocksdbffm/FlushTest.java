@@ -45,7 +45,7 @@ class FlushTest {
 	@Test
 	void flush_dataIsReadableAfterFlush(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var fo = FlushOptions.newFlushOptions().setWait(true)) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -60,7 +60,7 @@ class FlushTest {
 	@Test
 	void flush_multipleKeys(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var fo = FlushOptions.newFlushOptions()) {
 			for (int i = 0; i < 100; i++) {
 				db.put(("key" + i).getBytes(), ("val" + i).getBytes());
@@ -78,7 +78,7 @@ class FlushTest {
 	@Test
 	void flushWal_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When

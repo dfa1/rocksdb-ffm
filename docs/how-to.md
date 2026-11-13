@@ -164,7 +164,8 @@ try (var options = Options.newOptions();
 Create a column family on an open database:
 
 ```java
-try (var db = RocksDB.openReadWrite(dbPath);
+try (var opts = Options.newOptions().setCreateIfMissing(true);
+     var db = RocksDB.openReadWrite(opts, dbPath);
      var accounts = db.createColumnFamily(ColumnFamilyDescriptor.of("accounts"))) {
 	db.put(accounts, "alice".getBytes(), "100".getBytes());
 	byte[] balance = db.get(accounts, "alice".getBytes());
@@ -231,7 +232,8 @@ try (var base = Options.newOptions();
 A snapshot pins a sequence number; reads through it ignore everything written afterwards.
 
 ```java
-try (var db = RocksDB.openReadWrite(dbPath)) {
+try (var opts = Options.newOptions().setCreateIfMissing(true);
+     var db = RocksDB.openReadWrite(opts, dbPath)) {
 	db.put("k".getBytes(), "before".getBytes());
 
 	try (var snapshot = db.getSnapshot();
@@ -474,7 +476,8 @@ try (var options = Options.newOptions().setCreateIfMissing(true);
 `TtlDB` stamps each value with a write timestamp and drops expired entries during compaction.
 
 ```java
-try (var db = RocksDB.openTtl(dbPath, Duration.ofHours(24))) {
+try (var opts = Options.newOptions().setCreateIfMissing(true);
+     var db = RocksDB.openTtl(opts, dbPath, Duration.ofHours(24))) {
 	db.put("session:1".getBytes(), "...".getBytes());
 }
 ```
@@ -488,7 +491,8 @@ A checkpoint is a point-in-time directory of hard links — near-instant and che
 filesystem.
 
 ```java
-try (var db = RocksDB.openReadWrite(dbPath);
+try (var opts = Options.newOptions().setCreateIfMissing(true);
+     var db = RocksDB.openReadWrite(opts, dbPath);
      var checkpoint = Checkpoint.newCheckpoint(db)) {
 	checkpoint.exportTo(checkpointDir);   // directory must not already exist
 }
@@ -554,7 +558,8 @@ try (var options = Options.newOptions().setCreateIfMissing(true);
 	writer.finish();
 }
 
-try (var db = RocksDB.openReadWrite(dbPath)) {
+try (var opts = Options.newOptions().setCreateIfMissing(true);
+     var db = RocksDB.openReadWrite(opts, dbPath)) {
 	db.ingestExternalFile(sstPath);
 	// or db.ingestExternalFile(List.of(sst1, sst2));
 }
@@ -569,7 +574,8 @@ Useful for change-data-capture, replication, and auditing: read every batch writ
 sequence number.
 
 ```java
-try (var db = RocksDB.openReadWrite(dbPath)) {
+try (var opts = Options.newOptions().setCreateIfMissing(true);
+     var db = RocksDB.openReadWrite(opts, dbPath)) {
 	SequenceNumber from = db.getLatestSequenceNumber();
 
 	db.put("a".getBytes(), "1".getBytes());
@@ -597,14 +603,16 @@ database — useful for validating a config change or a new build against real t
 rollout, without a full A/B deployment.
 
 ```java
-try (var db = RocksDB.openReadWrite(dbPath);
+try (var opts = Options.newOptions().setCreateIfMissing(true);
+     var db = RocksDB.openReadWrite(opts, dbPath);
      var traceOptions = TraceOptions.newTraceOptions().setSamplingFrequency(1)) {
 	db.startTrace(traceOptions, tracePath);
 	// ... production workload runs while the trace is captured ...
 	db.endTrace();
 }
 
-try (var candidate = RocksDB.openReadWrite(candidatePath);
+try (var opts = Options.newOptions().setCreateIfMissing(true);
+     var candidate = RocksDB.openReadWrite(opts, candidatePath);
      var replayer = Replayer.create(candidate, tracePath);
      var replayOptions = ReplayOptions.newReplayOptions().setNumThreads(4)) {
 	replayer.prepare();
@@ -626,7 +634,8 @@ capture lower-level activity instead, useful when diagnosing I/O amplification o
 cache rather than replaying application traffic:
 
 ```java
-try (var db = RocksDB.openReadWrite(dbPath);
+try (var opts = Options.newOptions().setCreateIfMissing(true);
+     var db = RocksDB.openReadWrite(opts, dbPath);
      var traceOptions = TraceOptions.newTraceOptions()) {
 	// Every file read/write/open/close/etc.
 	db.startIoTrace(traceOptions, ioTracePath);
@@ -634,7 +643,8 @@ try (var db = RocksDB.openReadWrite(dbPath);
 	db.endIoTrace();
 }
 
-try (var db = RocksDB.openReadWrite(dbPath);
+try (var opts = Options.newOptions().setCreateIfMissing(true);
+     var db = RocksDB.openReadWrite(opts, dbPath);
      var traceOptions = BlockCacheTraceOptions.newBlockCacheTraceOptions().setSamplingFrequency(1);
      var writerOptions = BlockCacheTraceWriterOptions.newBlockCacheTraceWriterOptions()) {
 	// Every block cache hit/miss, with block type and calling code path.

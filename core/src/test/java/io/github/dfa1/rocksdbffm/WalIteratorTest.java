@@ -17,7 +17,7 @@ class WalIteratorTest {
 	@Test
 	void getLatestSequenceNumber_advancesAfterWrites(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			SequenceNumber before = db.getLatestSequenceNumber();
 
 			// When
@@ -32,7 +32,7 @@ class WalIteratorTest {
 	@Test
 	void getUpdatesSince_yieldsWrittenBatches(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
@@ -61,7 +61,7 @@ class WalIteratorTest {
 	@Test
 	void getUpdatesSince_batchContainsExpectedCount(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
 
 			WriteBatch batch = WriteBatch.create();
@@ -89,7 +89,7 @@ class WalIteratorTest {
 	@Test
 	void getUpdatesSince_emptyWhenNoWritesAfterSequence(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			SequenceNumber after = db.getLatestSequenceNumber();
 
@@ -116,7 +116,7 @@ class WalIteratorTest {
 		// batch to seek to, so isValid() is false from construction. RocksDB's C API
 		// (rocksdb_wal_iter_get_batch) would otherwise dereference a null internal
 		// pointer in this state and crash the JVM instead of raising a Java exception.
-		try (var db = RocksDB.openReadWrite(dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     WalIterator it = db.getUpdatesSince(SequenceNumber.of(0))) {
 
 			// When / Then
@@ -132,7 +132,7 @@ class WalIteratorTest {
 		// (1), never by looping on isValid() itself — if isValid() were broken to always
 		// return true, a loop keyed on it (like getUpdatesSince_emptyWhenNoWritesAfterSequence
 		// above) would just spin/crash forever instead of reaching a clean assertion failure.
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -155,7 +155,7 @@ class WalIteratorTest {
 		// Given — rocksdb_wal_iter_get_batch is only safe to call once per position; a second
 		// call before next() moves the iterator on segfaults inside RocksDB's own WriteBatch
 		// move-assignment instead of raising a Java exception
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
@@ -180,7 +180,7 @@ class WalIteratorTest {
 	@Test
 	void walIterator_isClosedSafely(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openReadWrite(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
 			db.put("k".getBytes(), "v".getBytes());
 			SequenceNumber start = SequenceNumber.of(0);
 			WalIterator it = db.getUpdatesSince(start);
@@ -201,7 +201,7 @@ class WalIteratorTest {
 	@Test
 	void getUpdatesSince_blobDb_yieldsWrittenBatches(@TempDir Path dir) {
 		// Given
-		try (var db = RocksDB.openBlob(dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openBlob(dbOpts, dir)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
