@@ -17,6 +17,7 @@ Shared immortal defaults, no implicit database creation, `BlobDB` folded into `R
 
 ### Added
 
+- `compactRange(ColumnFamilyHandle)` and `compactRange(handle, startKey, endKey)`: compact one column family, not only the default ([#310](https://github.com/dfa1/rocksdb-ffm/pull/310))
 - `BlockBasedTableOptions.OptimizeKeyCommonPrefix` (`DISABLED`/`IF_FAST_SEEK`/`ENABLED`) and `setOptimizeKeyCommonPrefix`/`getOptimizeKeyCommonPrefix`: key common-prefix optimization (RocksDB v11.12) for smaller index/data blocks and a faster `Seek` ([#279](https://github.com/dfa1/rocksdb-ffm/pull/279), closes [#266](https://github.com/dfa1/rocksdb-ffm/issues/266)) — thanks [@amalsaidov](https://github.com/amalsaidov)
 - `WriteBufferManager.FlushPolicy` (`OLDEST`/`LARGEST`/`LARGEST_ACROSS_DBS`), `create`/`createWithCache` overloads taking a policy, and `getFlushPolicy`/`setFlushPolicy`: choose which memtable is flushed once the shared write-buffer budget is hit (RocksDB v11.12) ([#283](https://github.com/dfa1/rocksdb-ffm/pull/283), closes [#268](https://github.com/dfa1/rocksdb-ffm/issues/268)) — thanks [@Mohammadjavadfakhri](https://github.com/Mohammadjavadfakhri)
 - `SECURITY.md` (private vulnerability reporting), `CODE_OF_CONDUCT.md`, issue forms for bugs and missing wrappers, a pull request checklist, and GitHub Discussions for questions ([#261](https://github.com/dfa1/rocksdb-ffm/pull/261), closes [#255](https://github.com/dfa1/rocksdb-ffm/issues/255))

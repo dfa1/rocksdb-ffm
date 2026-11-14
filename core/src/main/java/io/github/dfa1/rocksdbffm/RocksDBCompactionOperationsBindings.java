@@ -14,6 +14,8 @@ final class RocksDBCompactionOperationsBindings {
 
 	/// `void rocksdb_compact_range(rocksdb_t* db, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len);`
 	private static final MethodHandle MH_COMPACT_RANGE;
+	/// `void rocksdb_compact_range_cf(rocksdb_t* db, rocksdb_column_family_handle_t* column_family, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len);`
+	private static final MethodHandle MH_COMPACT_RANGE_CF;
 	/// `void rocksdb_compact_range_opt(rocksdb_t* db, rocksdb_compactoptions_t* opt, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len);`
 	private static final MethodHandle MH_COMPACT_RANGE_OPT;
 	/// `void rocksdb_suggest_compact_range(rocksdb_t* db, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len, char** errptr);`
@@ -33,6 +35,12 @@ final class RocksDBCompactionOperationsBindings {
 		MH_COMPACT_RANGE = NativeLibrary.lookup("rocksdb_compact_range",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+
+		MH_COMPACT_RANGE_CF = NativeLibrary.lookup("rocksdb_compact_range_cf",
+				FunctionDescriptor.ofVoid(
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
@@ -73,6 +81,18 @@ final class RocksDBCompactionOperationsBindings {
 			MemorySegment s = startKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, startKey);
 			MemorySegment e = endKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, endKey);
 			MH_COMPACT_RANGE.invokeExact(db.dbPtr(),
+					s, startKey == null ? 0L : (long) startKey.length,
+					e, endKey == null ? 0L : (long) endKey.length);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("compactRange failed", t);
+		}
+	}
+
+	static void compactRangeCfBytes(RocksDBCompactionOperations db, ColumnFamilyHandle cf, byte[] startKey, byte[] endKey) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment s = startKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, startKey);
+			MemorySegment e = endKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, endKey);
+			MH_COMPACT_RANGE_CF.invokeExact(db.dbPtr(), cf.ptr(),
 					s, startKey == null ? 0L : (long) startKey.length,
 					e, endKey == null ? 0L : (long) endKey.length);
 		} catch (Throwable t) {
