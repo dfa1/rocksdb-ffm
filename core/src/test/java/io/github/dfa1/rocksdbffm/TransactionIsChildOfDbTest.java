@@ -19,7 +19,8 @@ class TransactionIsChildOfDbTest {
 	private static final byte[] VALUE = "v".getBytes();
 
 	/// An open database of one transaction flavor, and how to begin a transaction on it.
-	record Opened(NativeDB db, Function<WriteOptions, Transaction> begin) {
+	record Opened(NativeDB db, Function<WriteOptions, Transaction> begin,
+	              Function<WriteOptions, Transaction> beginWithSnapshot) {
 	}
 
 	record Flavor(String name, Function<Path, Opened> open) {
@@ -36,13 +37,22 @@ class TransactionIsChildOfDbTest {
 					try (var opts = Options.newOptions().setCreateIfMissing(true);
 					     var txnOpts = TransactionDBOptions.newTransactionDBOptions()) {
 						var db = RocksDB.openTransaction(dir, opts, txnOpts);
-						return new Opened(db, db::beginTransaction);
+						return new Opened(db, db::beginTransaction, wo -> {
+							try (var snapshotOptions = TransactionOptions.newTransactionOptions().setSetSnapshot(true)) {
+								return db.beginTransaction(wo, snapshotOptions);
+							}
+						});
 					}
 				}),
 				new Flavor("OptimisticTransactionDB", dir -> {
 					try (var opts = Options.newOptions().setCreateIfMissing(true)) {
 						var db = RocksDB.openOptimistic(dir, opts);
-						return new Opened(db, db::beginTransaction);
+						return new Opened(db, db::beginTransaction, wo -> {
+							try (var snapshotOptions = OptimisticTransactionOptions.newOptimisticTransactionOptions()
+									.setSetSnapshot(true)) {
+								return db.beginTransaction(wo, snapshotOptions);
+							}
+						});
 					}
 				}));
 	}
@@ -181,6 +191,44 @@ class TransactionIsChildOfDbTest {
 			assertThat(thrown).isNull();
 			assertThat(catchThrowable(iterator::isValid)).isInstanceOf(IllegalStateException.class);
 			assertThat(catchThrowable(txn::commit)).isInstanceOf(IllegalStateException.class);
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("flavors")
+	void aTransactionsSnapshot_isReleasedWithTheTransaction(Flavor flavor, @TempDir Path dir) {
+		// Given — the snapshot is borrowed from the transaction, which owns the native snapshot behind it
+		var opened = flavor.open().apply(dir);
+		try (var wo = WriteOptions.newWriteOptions()) {
+			var txn = opened.beginWithSnapshot().apply(wo);
+			var snapshot = txn.getSnapshot();
+			assertThat(snapshot.sequenceNumber()).isNotNull();
+
+			// When
+			txn.close();
+
+			// Then — released first, so reading it throws instead of touching the transaction's freed snapshot
+			assertThat(catchThrowable(snapshot::sequenceNumber)).isInstanceOf(IllegalStateException.class);
+			opened.db().close();
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("flavors")
+	void closingTheDb_withATransactionSnapshotOpen_closesCleanly(Flavor flavor, @TempDir Path dir) {
+		// Given
+		var opened = flavor.open().apply(dir);
+		try (var wo = WriteOptions.newWriteOptions()) {
+			var txn = opened.beginWithSnapshot().apply(wo);
+			var snapshot = txn.getSnapshot();
+
+			// When
+			var thrown = catchThrowable(opened.db()::close);
+
+			// Then
+			assertThat(thrown).isNull();
+			assertThat(catchThrowable(snapshot::sequenceNumber)).isInstanceOf(IllegalStateException.class);
+			assertThat(catchThrowable(snapshot::close)).isNull();
 		}
 	}
 }

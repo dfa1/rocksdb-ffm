@@ -15,7 +15,8 @@ import java.nio.ByteBuffer;
 ///
 /// A transaction is a child of the database it was begun on: closing the database while a transaction is
 /// still open releases it first, discarding anything uncommitted, and the transaction then throws
-/// [IllegalStateException] on use. Its iterators are children of the transaction in turn, closed before it.
+/// [IllegalStateException] on use. Its iterators and its [#getSnapshot() snapshot], which borrow from it, are
+/// children of the transaction in turn, closed before it.
 /// Close transactions before their database anyway; this only makes forgetting safe.
 ///
 /// ```
@@ -889,7 +890,7 @@ public final class Transaction extends NativeObjectWithChildren {
 		}
 		try {
 			MemorySegment snapPtr = (MemorySegment) MH_GET_SNAPSHOT.invokeExact(ptr());
-			return new Snapshot(snapPtr); // released via rocksdb_free
+			return new Snapshot(this, snapPtr); // a child of this transaction; released via rocksdb_free
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("getSnapshot failed", t);
 		}

@@ -70,12 +70,18 @@ public final class Snapshot extends NativeObject {
 		owningDb.registerChild(this);
 	}
 
-	/// Creates a snapshot owned by a Transaction instance.
-	/// Released via `rocksdb_free` rather than `rocksdb_release_snapshot`.
-	Snapshot(MemorySegment ptr) {
+	/// Creates a snapshot borrowed from a [Transaction]: `rocksdb_transaction_get_snapshot` returns a malloc'd
+	/// wrapper around a snapshot the transaction itself owns. It is a child of that transaction, released
+	/// (via `rocksdb_free` rather than `rocksdb_release_snapshot`) before the transaction is destroyed, so it
+	/// can never read the transaction's freed snapshot.
+	///
+	/// @param owningTransaction the transaction the snapshot was taken from
+	/// @param ptr               the malloc'd `rocksdb_snapshot_t*` wrapper
+	Snapshot(Transaction owningTransaction, MemorySegment ptr) {
 		super(ptr);
-		this.owningDb = null;
+		this.owningDb = owningTransaction;
 		this.dbPtr = MemorySegment.NULL;
+		owningTransaction.registerChild(this);
 	}
 
 	/// Returns the sequence number at which this snapshot was taken.
@@ -88,7 +94,9 @@ public final class Snapshot extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
-		if (owningDb == null) {
+		if (MemorySegment.NULL.equals(dbPtr)) {
+			// Borrowed from a transaction: only the malloc'd wrapper is ours to free.
+			owningDb.unregisterChild(this);
 			NativeCalls.free(ptr);
 			return;
 		}
