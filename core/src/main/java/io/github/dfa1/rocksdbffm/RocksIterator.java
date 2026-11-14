@@ -14,12 +14,11 @@ import java.util.stream.StreamSupport;
 
 /// FFM wrapper for `rocksdb_iterator_t`.
 ///
-/// Always close after use. Closing the owning DB (or [TransactionDB]) first is safe when the
-/// iterator came from one of those — it registers itself as a [NativeObjectWithChildren] child
-/// of the DB that created it, the same way [Snapshot] does, so the DB closes any still-open
-/// iterator itself, synchronously, before destroying its own native handle. An iterator obtained
-/// from a [Transaction] (`Transaction.newIterator`) is not covered by this yet — `Transaction`
-/// is not a `NativeObjectWithChildren` — so close those before the transaction itself.
+/// Always close after use. Closing the owner first is safe: an iterator registers itself as a
+/// [NativeObjectWithChildren] child of the database that created it, or of the [Transaction] it
+/// came from (`Transaction.newIterator`), the same way [Snapshot] does, so the owner closes any
+/// still-open iterator itself, synchronously, before destroying its own native handle. A closed
+/// iterator throws [IllegalStateException] on use.
 ///
 /// ```
 /// try (RocksIterator it = db.newIterator()) {
@@ -109,10 +108,9 @@ public final class RocksIterator extends NativeObject {
 	private final Arena lenArena;
 	private final MemorySegment lenSegment;
 
-	/// The DB that produced this iterator, or `null` for a [Transaction]-owned iterator (see the
-	/// class-level doc — `Transaction` is not a [NativeObjectWithChildren] yet). Used in
+	/// The database or [Transaction] that produced this iterator. Used in
 	/// [#tryClose(MemorySegment)] only to unregister once closed on its own; registration itself
-	/// happens here, via [NativeObjectWithChildren#registerChild(NativeObject)].
+	/// happens in the constructor, via [NativeObjectWithChildren#registerChild(NativeObject)].
 	private final NativeObjectWithChildren owningDb;
 
 	/// Package-private: created via [#create].
