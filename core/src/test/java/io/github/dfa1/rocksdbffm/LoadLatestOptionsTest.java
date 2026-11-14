@@ -20,7 +20,7 @@ class LoadLatestOptionsTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true).setWriteBufferSize(defaultBuffer);
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cfOpts = Options.newOptions().setWriteBufferSize(cf1Buffer);
-		     var _ = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts))) {
+		     var _ = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts))) {
 			db.put("k".getBytes(), "v".getBytes());
 		}
 	}
@@ -35,12 +35,12 @@ class LoadLatestOptionsTest {
 
 			// Then
 			var names = loaded.columnFamilies().stream().map(ColumnFamilyDescriptor::name).toList();
-			assertThat(names).containsExactlyInAnyOrder("default", "cf1");
+			assertThat(names).containsExactlyInAnyOrder(ColumnFamilyName.DEFAULT, ColumnFamilyName.of("cf1"));
 			var buffers = loaded.columnFamilies().stream()
 					.collect(java.util.stream.Collectors.toMap(
 							ColumnFamilyDescriptor::name,
 							d -> d.options().getWriteBufferSize()));
-			assertThat(buffers).containsEntry("default", MemorySize.ofMB(16)).containsEntry("cf1", MemorySize.ofMB(8));
+			assertThat(buffers).containsEntry(ColumnFamilyName.DEFAULT, MemorySize.ofMB(16)).containsEntry(ColumnFamilyName.of("cf1"), MemorySize.ofMB(8));
 		}
 	}
 
@@ -147,8 +147,8 @@ class LoadLatestOptionsTest {
 
 		// When
 		try (var loaded = RocksDB.loadLatestOptions(dir, false)) {
-			var cf1Buffer = loaded.columnFamilyOptions("cf1").getWriteBufferSize();
-			var defaultBuffer = loaded.columnFamilyOptions("default").getWriteBufferSize();
+			var cf1Buffer = loaded.columnFamilyOptions(ColumnFamilyName.of("cf1")).getWriteBufferSize();
+			var defaultBuffer = loaded.columnFamilyOptions(ColumnFamilyName.DEFAULT).getWriteBufferSize();
 
 			// Then
 			assertThat(cf1Buffer).isEqualTo(MemorySize.ofMB(8));
@@ -163,7 +163,7 @@ class LoadLatestOptionsTest {
 
 		// When
 		try (var loaded = RocksDB.loadLatestOptions(dir, false)) {
-			var thrown = assertThatThrownBy(() -> loaded.columnFamilyOptions("nope"));
+			var thrown = assertThatThrownBy(() -> loaded.columnFamilyOptions(ColumnFamilyName.of("nope")));
 
 			// Then
 			thrown.isInstanceOf(java.util.NoSuchElementException.class).hasMessageContaining("nope");

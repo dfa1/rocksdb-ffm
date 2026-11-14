@@ -210,7 +210,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 
 			// When
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -225,7 +225,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -242,7 +242,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			var key = directBuffer("k");
 			var value = directBuffer("v");
 
@@ -262,7 +262,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 			var key = directBuffer("k");
 
@@ -279,7 +279,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     Arena arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom("seg-k");
 			var value = arena.allocateFrom("seg-v");
@@ -297,7 +297,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 			var key = arena.allocateFrom("k");
@@ -373,7 +373,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
 			db.put(cf, "c".getBytes(), "3".getBytes());
@@ -393,7 +393,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
 			var start = directBuffer("a");
@@ -413,7 +413,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
@@ -434,7 +434,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
 
@@ -456,7 +456,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put(cf, "x".getBytes(), "y".getBytes());
 
@@ -476,7 +476,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -493,7 +493,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
@@ -509,7 +509,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
@@ -525,7 +525,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir)) {
-			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("to-drop"));
+			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("to-drop")));
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
@@ -534,7 +534,7 @@ class OptimisticTransactionDBTest {
 
 			// Then — family list should only contain default
 			try (var listOpts = Options.newOptions()) {
-				List<byte[]> families = RocksDB.listColumnFamilies(listOpts, dir);
+				List<ColumnFamilyName> families = RocksDB.listColumnFamilies(listOpts, dir);
 				assertThat(families).hasSize(1);
 			}
 		}
@@ -549,7 +549,7 @@ class OptimisticTransactionDBTest {
 		// Given — create a DB with a custom CF, then close it
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 		}
 
@@ -557,7 +557,7 @@ class OptimisticTransactionDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var db = RocksDB.openOptimistic(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     handles)) {
 			var cf = handles.get(1);
 
@@ -801,7 +801,7 @@ class OptimisticTransactionDBTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openOptimistic(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 			var key = arena.allocateFrom("k").asSlice(0, 1);

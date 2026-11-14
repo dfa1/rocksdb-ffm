@@ -192,7 +192,7 @@ class LiveFileInfoTest {
 				// Then
 				assertThat(files.size()).isEqualTo(1);
 				LiveFileInfo file = files.get(0);
-				assertThat(file.columnFamilyName()).isEqualTo("default");
+				assertThat(file.columnFamilyName()).isEqualTo(ColumnFamilyName.DEFAULT);
 				assertThat(file.relativeFilename().toString()).endsWith(".sst");
 				assertThat(file.directory()).isEqualTo(dir);
 				assertThat(file.level()).isZero();

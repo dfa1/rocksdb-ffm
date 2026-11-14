@@ -137,6 +137,21 @@ final class NativeCalls {
 		return ptr.reinterpret(Long.MAX_VALUE).getString(0);
 	}
 
+	/// Copies the raw bytes of a NUL-terminated, non-owned `const char*` into a new array, without
+	/// decoding them. Unlike [#toBorrowedJavaString(MemorySegment)] this is lossless for bytes that
+	/// are not valid UTF-8, e.g. a column family name written by another binding.
+	///
+	/// @param ptr non-NULL native pointer to a borrowed, NUL-terminated string
+	/// @return the bytes before the terminating NUL
+	static byte[] toBorrowedBytes(MemorySegment ptr) {
+		MemorySegment all = ptr.reinterpret(Long.MAX_VALUE);
+		long len = 0;
+		while (all.get(ValueLayout.JAVA_BYTE, len) != 0) {
+			len++;
+		}
+		return all.asSlice(0, len).toArray(ValueLayout.JAVA_BYTE);
+	}
+
 	/// Decodes a borrowed, non-owned `const char*` + separate `size_t*` out-param pair as a
 	/// UTF-8 [String], without freeing `ptr`. Same ownership contract as
 	/// [#toByteArray(MemorySegment, long)]; use it for read-only accessors that hand back a view

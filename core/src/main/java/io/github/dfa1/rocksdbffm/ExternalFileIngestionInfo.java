@@ -44,11 +44,11 @@ public final class ExternalFileIngestionInfo {
 	/// Returns the name of the column family the file was ingested into.
 	///
 	/// @return the column family name
-	public String columnFamilyName() {
+	public ColumnFamilyName columnFamilyName() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment namePtr = (MemorySegment) MH_CF_NAME.invokeExact(ptr, sizeHolder);
-			return NativeCalls.toJavaString(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
+			return ColumnFamilyName.ofBytes(NativeCalls.toByteArray(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0)));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("ExternalFileIngestionInfo.columnFamilyName failed", t);
 		}

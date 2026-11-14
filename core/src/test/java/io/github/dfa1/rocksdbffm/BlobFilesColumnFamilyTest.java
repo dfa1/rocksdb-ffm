@@ -21,7 +21,7 @@ class BlobFilesColumnFamilyTest {
 	void openWithBlobFiles_withDescriptors_seesFamilyCreatedInAnEarlierOpen(@TempDir Path dir) {
 		// Given — create a blob DB with a non-default CF and write data
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "key".getBytes(), "value".getBytes());
 		}
 
@@ -29,7 +29,7 @@ class BlobFilesColumnFamilyTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(false).setEnableBlobFiles(true);
 		     var db = RocksDB.openReadWrite(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     handles)) {
 			// Then
 			assertThat(handles).hasSize(2);
@@ -42,7 +42,7 @@ class BlobFilesColumnFamilyTest {
 	void createColumnFamily_isolatedFromDefaultFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put("key".getBytes(), "default-value".getBytes());
 			db.put(cf, "key".getBytes(), "cf-value".getBytes());
 
@@ -60,7 +60,7 @@ class BlobFilesColumnFamilyTest {
 	void dropColumnFamily_removesFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
-			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("to-drop"));
+			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("to-drop")));
 			db.put(cf, "key".getBytes(), "value".getBytes());
 
 			// When
@@ -69,7 +69,7 @@ class BlobFilesColumnFamilyTest {
 
 			// Then
 			try (var opts = Options.newOptions()) {
-				List<byte[]> families = RocksDB.listColumnFamilies(opts, dir);
+				List<ColumnFamilyName> families = RocksDB.listColumnFamilies(opts, dir);
 				assertThat(families).hasSize(1);
 			}
 		}
@@ -79,7 +79,7 @@ class BlobFilesColumnFamilyTest {
 	void put_byteBuffer_and_memorySegment_inColumnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			ByteBuffer key = directBuffer("bbk");
 			ByteBuffer value = directBuffer("bbv");
 
@@ -97,7 +97,7 @@ class BlobFilesColumnFamilyTest {
 		// so it must be set on the new CF's own descriptor options.
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("counters", cfOpts))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("counters"), cfOpts))) {
 			byte[] one = ByteBuffer.allocate(Long.BYTES).putLong(1).array();
 
 			// When
@@ -114,7 +114,7 @@ class BlobFilesColumnFamilyTest {
 	void delete_removesKeyFromColumnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "key".getBytes(), "value".getBytes());
 
 			// When
@@ -129,7 +129,7 @@ class BlobFilesColumnFamilyTest {
 	void newIterator_doesNotSeeKeysFromOtherFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put("default-key".getBytes(), "x".getBytes());
 			db.put(cf, "cf-key".getBytes(), "y".getBytes());
 
@@ -150,7 +150,7 @@ class BlobFilesColumnFamilyTest {
 	void flush_columnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var flushOpts = FlushOptions.newFlushOptions().setWait(true)) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -166,7 +166,7 @@ class BlobFilesColumnFamilyTest {
 	void getProperty_columnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When

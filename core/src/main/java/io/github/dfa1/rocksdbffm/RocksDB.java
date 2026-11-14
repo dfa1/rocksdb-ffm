@@ -5,14 +5,10 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /// Entry point for opening RocksDB databases.
@@ -246,7 +242,7 @@ public final class RocksDB {
 			MemorySegment ptr = (MemorySegment) MH_OPEN_WITH_TTL.invokeExact(
 					options.ptr(), pathSeg, toTtlSeconds(ttl), err);
 			NativeCalls.checkError(err);
-			return new TtlDB(ptr, ttl, Map.of());
+			return new TtlDB(ptr, ttl);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openTtl failed", t);
 		}
@@ -527,11 +523,7 @@ public final class RocksDB {
 					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, ttlsArr, err);
 			NativeCalls.checkError(err);
 			collectCfHandles(handlesArr, n, handles);
-			var cfTtls = new LinkedHashMap<String, Duration>();
-			for (int i = 0; i < n; i++) {
-				cfTtls.put(descriptors.get(i).name(), ttls.get(i));
-			}
-			return new TtlDB(ptr, null, Collections.unmodifiableMap(cfTtls));
+			return new TtlDB(ptr, null);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openTtl failed", t);
 		}
@@ -603,7 +595,7 @@ public final class RocksDB {
 	/// @param options database-level options used to open the database metadata
 	/// @param path    path to the database directory
 	/// @return list of column family names as raw byte arrays
-	public static List<byte[]> listColumnFamilies(Options options, Path path) {
+	public static List<ColumnFamilyName> listColumnFamilies(Options options, Path path) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
@@ -615,11 +607,11 @@ public final class RocksDB {
 
 			long count = lenSeg.get(ValueLayout.JAVA_LONG, 0);
 			try {
-				List<byte[]> result = new ArrayList<>((int) count);
+				List<ColumnFamilyName> result = new ArrayList<>((int) count);
 				MemorySegment namesArr = namesPtr.reinterpret(ValueLayout.ADDRESS.byteSize() * count);
 				for (int i = 0; i < count; i++) {
 					MemorySegment namePtr = namesArr.getAtIndex(ValueLayout.ADDRESS, i);
-					result.add(NativeCalls.toBorrowedJavaString(namePtr).getBytes(StandardCharsets.UTF_8));
+					result.add(ColumnFamilyName.ofBytes(NativeCalls.toBorrowedBytes(namePtr)));
 				}
 				return result;
 			} finally {
@@ -685,7 +677,8 @@ public final class RocksDB {
 				Options dbOptions = Options.copyOf(nativeDbOptions);
 				try {
 					for (int i = 0; i < count; i++) {
-						String name = NativeCalls.toBorrowedJavaString(namesArr.getAtIndex(ValueLayout.ADDRESS, i));
+						ColumnFamilyName name = ColumnFamilyName.ofBytes(
+								NativeCalls.toBorrowedBytes(namesArr.getAtIndex(ValueLayout.ADDRESS, i)));
 						descriptors.add(ColumnFamilyDescriptor.of(name,
 								Options.copyOf(optionsArr.getAtIndex(ValueLayout.ADDRESS, i))));
 					}
@@ -744,7 +737,7 @@ public final class RocksDB {
 		for (int i = 0; i < n; i++) {
 			ColumnFamilyDescriptor desc = descriptors.get(i);
 			namesArr.setAtIndex(ValueLayout.ADDRESS, i,
-					arena.allocateFrom(desc.name()));
+					desc.name().toNative(arena));
 			optsArr.setAtIndex(ValueLayout.ADDRESS, i, desc.options().ptr());
 		}
 		requireNoNullEntries(namesArr, n, "column family names array");

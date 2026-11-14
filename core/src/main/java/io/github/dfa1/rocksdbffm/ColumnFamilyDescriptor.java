@@ -12,35 +12,35 @@ import java.util.Objects;
 /// during the open or create call, so they only need to stay open until that call returns.
 public final class ColumnFamilyDescriptor {
 
-	private final String name;
+	private final ColumnFamilyName name;
 	private final Options options;
 
-	private ColumnFamilyDescriptor(String name, Options options) {
+	private ColumnFamilyDescriptor(ColumnFamilyName name, Options options) {
 		this.name = Objects.requireNonNull(name, "name");
 		this.options = Objects.requireNonNull(options, "options");
 	}
 
-	/// Creates a descriptor with the given UTF-8 name and no explicit options.
+	/// Creates a descriptor with the given name and no explicit options.
 	///
-	/// @param name column family name as a UTF-8 string
+	/// @param name column family name
 	/// @return a new descriptor
-	public static ColumnFamilyDescriptor of(String name) {
+	public static ColumnFamilyDescriptor of(ColumnFamilyName name) {
 		return new ColumnFamilyDescriptor(name, Options.DEFAULTS);
 	}
 
-	/// Creates a descriptor with the given UTF-8 name and per-family options.
+	/// Creates a descriptor with the given name and per-family options.
 	///
-	/// @param name    column family name as a UTF-8 string
+	/// @param name    column family name
 	/// @param options per-column-family options; caller retains ownership
 	/// @return a new descriptor
-	public static ColumnFamilyDescriptor of(String name, Options options) {
+	public static ColumnFamilyDescriptor of(ColumnFamilyName name, Options options) {
 		return new ColumnFamilyDescriptor(name, options);
 	}
 
 	/// Returns the column family name.
 	///
 	/// @return column family name
-	public String name() {
+	public ColumnFamilyName name() {
 		return name;
 	}
 

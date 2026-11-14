@@ -208,7 +208,7 @@ class PinnedGetTest {
 	void pinnedGetCf_returnsValue_forExistingKey(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			try (Arena arena = Arena.ofConfined()) {
@@ -227,7 +227,7 @@ class PinnedGetTest {
 	void pinnedGetCf_returnsEmpty_forAbsentKey(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 
 			try (Arena arena = Arena.ofConfined()) {
 				MemorySegment key = arena.allocateFrom("missing").asSlice(0, 7);
@@ -245,7 +245,7 @@ class PinnedGetTest {
 	void pinnedGetCf_isIsolatedFromDefaultFamily(@TempDir Path dir) {
 		// Given — same key written only into the non-default family
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			try (Arena arena = Arena.ofConfined()) {
@@ -272,7 +272,7 @@ class PinnedGetTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openReadWrite(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default")), handles)) {
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT)), handles)) {
 			var defaultCf = handles.get(0);
 			db.put("k".getBytes(), "v".getBytes());
 

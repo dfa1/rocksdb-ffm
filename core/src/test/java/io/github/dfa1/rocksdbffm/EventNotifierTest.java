@@ -44,7 +44,7 @@ class EventNotifierTest {
 
 			@Override
 			public void onFlushCompleted(FlushJobInfo info) {
-				completedCfNames.add(info.columnFamilyName());
+				completedCfNames.add(info.columnFamilyName().toString());
 				completedReasons.add(info.flushReason());
 				completedFilePaths.add(info.filePath().toString());
 				completedCfIds.add(info.columnFamilyId());
@@ -97,7 +97,7 @@ class EventNotifierTest {
 		EventNotifier notifier = new EventNotifier() {
 			@Override
 			public void onMemTableSealed(MemTableInfo info) {
-				sealedCfNames.add(info.columnFamilyName());
+				sealedCfNames.add(info.columnFamilyName().toString());
 				firstSeqnos.add(info.firstSequenceNumber());
 				earliestSeqnos.add(info.earliestSequenceNumber());
 				numEntries.add(info.numEntries());
@@ -241,7 +241,7 @@ class EventNotifierTest {
 		EventNotifier notifier = new EventNotifier() {
 			@Override
 			public void onExternalFileIngested(ExternalFileIngestionInfo info) {
-				ingestedCfNames.add(info.columnFamilyName());
+				ingestedCfNames.add(info.columnFamilyName().toString());
 				externalFilePaths.add(info.externalFilePath());
 				internalFilePaths.add(info.internalFilePath());
 				globalSeqnos.add(info.globalSequenceNumber());
@@ -289,7 +289,7 @@ class EventNotifierTest {
 		EventNotifier notifier = new EventNotifier() {
 			@Override
 			public void onStallConditionsChanged(WriteStallInfo info) {
-				columnFamilyNames.add(info.columnFamilyName());
+				columnFamilyNames.add(info.columnFamilyName().toString());
 				currentConditions.add(info.current());
 				previousConditions.add(info.previous());
 				if (info.current() == WriteStallCondition.DELAYED) {

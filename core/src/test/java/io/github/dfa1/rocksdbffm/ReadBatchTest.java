@@ -153,7 +153,7 @@ class ReadBatchTest {
 	void get_explicitColumnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     Arena arena = Arena.ofConfined();
 		     var batch = ReadBatch.create(db, cf, 2)) {
 			db.put(cf, "x".getBytes(), "9".getBytes());
@@ -252,7 +252,7 @@ class ReadBatchTest {
 	void get_byteArray_explicitColumnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var batch = ReadBatch.create(db, cf, 2)) {
 			db.put(cf, "x".getBytes(), "9".getBytes());
 
@@ -353,7 +353,7 @@ class ReadBatchTest {
 	void get_byteBuffer_explicitColumnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var batch = ReadBatch.create(db, cf, 1)) {
 			db.put(cf, "x".getBytes(), "9".getBytes());
 			ByteBuffer value = ByteBuffer.allocateDirect(16);

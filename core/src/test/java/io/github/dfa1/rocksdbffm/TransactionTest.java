@@ -29,7 +29,7 @@ class TransactionTest {
 
 	private static TransactionDB openDbWithCf(Path path, List<ColumnFamilyHandle> handles) {
 		var db = openDb(path);
-		handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of("cf1")));
+		handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))));
 		return db;
 	}
 
@@ -495,7 +495,7 @@ class TransactionTest {
 		// Given
 		try (var db = openMergeDb(dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo);
 		     var arena = Arena.ofConfined()) {

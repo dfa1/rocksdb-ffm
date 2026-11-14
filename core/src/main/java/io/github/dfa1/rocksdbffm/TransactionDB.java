@@ -654,7 +654,7 @@ public final class TransactionDB extends NativeDBWithBaseDB
 	public ColumnFamilyHandle createColumnFamily(ColumnFamilyDescriptor descriptor) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment nameSeg = arena.allocateFrom(descriptor.name());
+			MemorySegment nameSeg = descriptor.name().toNative(arena);
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
 					ptr(), descriptor.options().ptr(), nameSeg, err);
 			NativeCalls.checkError(err);

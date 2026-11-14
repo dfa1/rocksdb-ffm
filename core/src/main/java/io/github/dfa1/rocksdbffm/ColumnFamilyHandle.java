@@ -5,7 +5,6 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
-import java.nio.charset.StandardCharsets;
 
 /// FFM wrapper for `rocksdb_column_family_handle_t`.
 ///
@@ -56,8 +55,8 @@ public final class ColumnFamilyHandle extends NativeObject {
 
 	/// Returns the name of this column family.
 	///
-	/// @return column family name as a UTF-8 string
-	public String getName() {
+	/// @return column family name
+	public ColumnFamilyName getName() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment lenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment namePtr = (MemorySegment) MH_GET_NAME.invokeExact(ptr(), lenSeg);
@@ -66,7 +65,7 @@ public final class ColumnFamilyHandle extends NativeObject {
 			// toByteArray() call sites in this codebase, this one owns the pointer and must free it.
 			byte[] bytes = NativeCalls.toByteArray(namePtr, nameLen);
 			NativeCalls.free(namePtr);
-			return new String(bytes, StandardCharsets.UTF_8);
+			return ColumnFamilyName.ofBytes(bytes);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("getName failed", t);
 		}

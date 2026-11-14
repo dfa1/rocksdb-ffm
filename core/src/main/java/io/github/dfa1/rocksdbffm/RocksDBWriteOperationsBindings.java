@@ -385,7 +385,7 @@ final class RocksDBWriteOperationsBindings {
 	static ColumnFamilyHandle createCf(RocksDBWriteOperations db, ColumnFamilyDescriptor descriptor) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment nameSeg = arena.allocateFrom(descriptor.name());
+			MemorySegment nameSeg = descriptor.name().toNative(arena);
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
 					db.dbPtr(), descriptor.options().ptr(), nameSeg, err);
 			NativeCalls.checkError(err);

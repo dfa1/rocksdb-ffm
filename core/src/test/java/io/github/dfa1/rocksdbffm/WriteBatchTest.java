@@ -86,7 +86,7 @@ class WriteBatchTest {
 	void put_columnFamily_byteBuffer_isVisibleAfterWrite(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var batch = WriteBatch.create()) {
 			var key = directBuffer("k");
 			var value = directBuffer("v");
@@ -104,7 +104,7 @@ class WriteBatchTest {
 	void put_columnFamily_memorySegment_isVisibleAfterWrite(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var batch = WriteBatch.create();
 		     var arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "k".getBytes());
@@ -127,7 +127,7 @@ class WriteBatchTest {
 	void delete_columnFamily_byteBuffer_removesKeyAfterWrite(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var batch = WriteBatch.create()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 			var key = directBuffer("k");
@@ -145,7 +145,7 @@ class WriteBatchTest {
 	void delete_columnFamily_memorySegment_removesKeyAfterWrite(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var batch = WriteBatch.create();
 		     var arena = Arena.ofConfined()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -168,7 +168,7 @@ class WriteBatchTest {
 	void deleteRange_columnFamily_byteBuffer_removesKeyRangeAfterWrite(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var batch = WriteBatch.create()) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
@@ -189,7 +189,7 @@ class WriteBatchTest {
 	void deleteRange_columnFamily_memorySegment_removesKeyRangeAfterWrite(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var batch = WriteBatch.create();
 		     var arena = Arena.ofConfined()) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
@@ -234,7 +234,7 @@ class WriteBatchTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true).setMergeOperator(MergeOperator.uint64Add());
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var batch = WriteBatch.create()) {
 			batch.merge(cf, "views".getBytes(), encodeUint64(1));
 			batch.merge(cf, "views".getBytes(), encodeUint64(4));
@@ -253,7 +253,7 @@ class WriteBatchTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true).setMergeOperator(MergeOperator.uint64Add());
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var batch = WriteBatch.create()) {
 			batch.merge(cf, directBuffer("views".getBytes()), directBuffer(encodeUint64(1)));
 			batch.merge(cf, directBuffer("views".getBytes()), directBuffer(encodeUint64(4)));
@@ -272,7 +272,7 @@ class WriteBatchTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true).setMergeOperator(MergeOperator.uint64Add());
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var batch = WriteBatch.create();
 		     var arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());

@@ -166,7 +166,7 @@ Create a column family on an open database:
 ```java
 try (var opts = Options.newOptions().setCreateIfMissing(true);
      var db = RocksDB.openReadWrite(opts, dbPath);
-     var accounts = db.createColumnFamily(ColumnFamilyDescriptor.of("accounts"))) {
+     var accounts = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("accounts")))) {
 	db.put(accounts, "alice".getBytes(), "100".getBytes());
 	byte[] balance = db.get(accounts, "alice".getBytes());
 }
@@ -179,8 +179,8 @@ or the open fails. Handles come back in the same order as the descriptors:
 List<ColumnFamilyHandle> handles = new ArrayList<>();
 try (var options = Options.newOptions();
      var db = RocksDB.openReadWrite(options, dbPath,
-		     List.of(ColumnFamilyDescriptor.of("default"),
-				     ColumnFamilyDescriptor.of("accounts")),
+		     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT),
+				     ColumnFamilyDescriptor.of(ColumnFamilyName.of("accounts"))),
 		     handles)) {
 	var accounts = handles.get(1);
 	db.put(accounts, "bob".getBytes(), "200".getBytes());
@@ -193,7 +193,7 @@ Not sure what exists on disk? Ask first:
 
 ```java
 try (var options = Options.newOptions()) {
-	List<byte[]> names = RocksDB.listColumnFamilies(options, dbPath);
+	List<ColumnFamilyName> names = RocksDB.listColumnFamilies(options, dbPath);
 }
 ```
 
@@ -489,17 +489,16 @@ A negative TTL, or one longer than `Integer.MAX_VALUE` seconds, is rejected with
 `db.getTtl()` returns the TTL you passed (RocksDB cannot report it), as an `Optional`.
 
 To give each column family its own TTL, pass one `Duration` per descriptor, in the same order. The lists
-must have the same size. `getTtl()` is then empty and `getColumnFamilyTtls()` returns the TTL of each family
-by name:
+must have the same size. `getTtl()` is then empty:
 
 ```java
-var descriptors = List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("sessions"));
+var descriptors = List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("sessions")));
 var ttls = List.of(Duration.ofHours(1), Duration.ofHours(24));
 var handles = new ArrayList<ColumnFamilyHandle>();
 
 try (var opts = Options.newOptions().setCreateIfMissing(true);
      var db = RocksDB.openTtl(opts, dbPath, descriptors, ttls, handles)) {
-	db.getColumnFamilyTtls();   // {default=PT1H, sessions=PT24H}
+	// default expires after 1 hour, sessions after 24 hours
 }
 ```
 

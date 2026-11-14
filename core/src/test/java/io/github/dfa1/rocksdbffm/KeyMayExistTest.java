@@ -170,7 +170,7 @@ class KeyMayExistTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openReadWrite(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("test")))) {
 
 			// When
 			var result = db.keyMayExist(cf, "ghost".getBytes());
@@ -185,7 +185,7 @@ class KeyMayExistTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openReadWrite(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("test")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
@@ -201,7 +201,7 @@ class KeyMayExistTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openReadWrite(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("test")));
 		     var snap = db.getSnapshot();
 		     var ro = ReadOptions.newReadOptions().setSnapshot(snap)) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -219,7 +219,7 @@ class KeyMayExistTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openReadWrite(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("test")))) {
 			ByteBuffer key = ByteBuffer.allocateDirect(5);
 			key.put("ghost".getBytes()).flip();
 
@@ -236,7 +236,7 @@ class KeyMayExistTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openReadWrite(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("test")))) {
 			db.put(cf, "hello".getBytes(), "world".getBytes());
 			ByteBuffer key = ByteBuffer.allocateDirect(5);
 			key.put("hello".getBytes()).flip();
@@ -254,7 +254,7 @@ class KeyMayExistTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openReadWrite(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("test")));
 		     Arena arena = Arena.ofConfined()) {
 			MemorySegment key = arena.allocateFrom("ghost").reinterpret(5);
 
@@ -271,7 +271,7 @@ class KeyMayExistTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openReadWrite(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("test")));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "hi".getBytes(), "there".getBytes());
 			MemorySegment key = arena.allocate(2);
@@ -365,7 +365,7 @@ class KeyMayExistTest {
 		// Given — same Bloom filter caveat as non-CF TtlDB variant
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60));
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("test")))) {
 
 			// When
 			var result = db.keyMayExist(cf, "ghost".getBytes());
@@ -380,7 +380,7 @@ class KeyMayExistTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60));
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("test")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
@@ -396,7 +396,7 @@ class KeyMayExistTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60));
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("test")))) {
 			db.put(cf, "hello".getBytes(), "world".getBytes());
 			ByteBuffer key = ByteBuffer.allocateDirect(5);
 			key.put("hello".getBytes()).flip();
@@ -414,7 +414,7 @@ class KeyMayExistTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openTtl(opts, dir, Duration.ofSeconds(60));
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("test"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("test")));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "hi".getBytes(), "there".getBytes());
 			MemorySegment key = arena.allocate(2);

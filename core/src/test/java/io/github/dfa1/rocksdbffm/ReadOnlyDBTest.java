@@ -210,14 +210,14 @@ class ReadOnlyDBTest {
 	void get_zeroCopy_fromColumnFamily(@TempDir Path dir) {
 		// Given
 		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir);
-		     var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			rw.put(cf, "key".getBytes(), "value".getBytes());
 		}
 
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")), handles);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))), handles);
 		     Arena arena = Arena.ofConfined()) {
 			var cf1 = handles.get(1);
 			var key = arena.allocateFrom("key").asSlice(0, 3);
@@ -240,7 +240,7 @@ class ReadOnlyDBTest {
 	void get_columnFamily_returnsStoredValue(@TempDir Path dir) {
 		// Given
 		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
-			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 			rw.put(cf, "k".getBytes(), "v".getBytes());
 			cf.close();
 		}
@@ -248,7 +248,7 @@ class ReadOnlyDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     handles)) {
 			var cf = handles.get(1);
 
@@ -265,7 +265,7 @@ class ReadOnlyDBTest {
 	void get_columnFamily_withReadOptions(@TempDir Path dir) {
 		// Given
 		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
-			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 			rw.put(cf, "k".getBytes(), "v".getBytes());
 			cf.close();
 		}
@@ -273,7 +273,7 @@ class ReadOnlyDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     handles);
 		     var readOpts = ReadOptions.newReadOptions()) {
 			var cf = handles.get(1);
@@ -291,7 +291,7 @@ class ReadOnlyDBTest {
 	void get_columnFamily_byteBuffer_returnsValue(@TempDir Path dir) {
 		// Given
 		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
-			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 			rw.put(cf, "key".getBytes(), "value".getBytes());
 			cf.close();
 		}
@@ -299,7 +299,7 @@ class ReadOnlyDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     handles)) {
 			var cf = handles.get(1);
 			var key = ByteBuffer.allocateDirect(3);
@@ -319,7 +319,7 @@ class ReadOnlyDBTest {
 	void get_columnFamily_memorySegment_returnsValue(@TempDir Path dir) {
 		// Given
 		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
-			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 			rw.put(cf, "key".getBytes(), "value".getBytes());
 			cf.close();
 		}
@@ -327,7 +327,7 @@ class ReadOnlyDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     handles);
 		     Arena arena = Arena.ofConfined()) {
 			var cf = handles.get(1);
@@ -353,7 +353,7 @@ class ReadOnlyDBTest {
 	void newIterator_columnFamily_scansKeys(@TempDir Path dir) {
 		// Given
 		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
-			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 			rw.put(cf, "a".getBytes(), "1".getBytes());
 			rw.put(cf, "b".getBytes(), "2".getBytes());
 			cf.close();
@@ -362,7 +362,7 @@ class ReadOnlyDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     handles)) {
 			var cf = handles.get(1);
 
@@ -382,7 +382,7 @@ class ReadOnlyDBTest {
 	void newIterator_columnFamily_withReadOptions(@TempDir Path dir) {
 		// Given
 		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
-			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 			rw.put(cf, "x".getBytes(), "y".getBytes());
 			cf.close();
 		}
@@ -390,7 +390,7 @@ class ReadOnlyDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     handles);
 		     var readOpts = ReadOptions.newReadOptions()) {
 			var cf = handles.get(1);
@@ -415,7 +415,7 @@ class ReadOnlyDBTest {
 	void getProperty_columnFamily_returnsValue(@TempDir Path dir) {
 		// Given
 		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
-			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 			rw.put(cf, "k".getBytes(), "v".getBytes());
 			cf.close();
 		}
@@ -423,7 +423,7 @@ class ReadOnlyDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     handles)) {
 			var cf = handles.get(1);
 
@@ -440,7 +440,7 @@ class ReadOnlyDBTest {
 	void getLongProperty_columnFamily_returnsValue(@TempDir Path dir) {
 		// Given
 		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
-			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+			var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 			rw.put(cf, "k".getBytes(), "v".getBytes());
 			cf.close();
 		}
@@ -448,7 +448,7 @@ class ReadOnlyDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     handles)) {
 			var cf = handles.get(1);
 
@@ -600,7 +600,7 @@ class ReadOnlyDBTest {
 	void openReadOnly_columnFamilies_errorIfWalFileExistsFalse(@TempDir Path dir) {
 		// Given — create a DB with a custom CF, then close it
 		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir);
-		     var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = rw.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			rw.put(cf, "k".getBytes(), "v".getBytes());
 		}
 
@@ -608,7 +608,7 @@ class ReadOnlyDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     handles, false)) {
 			var cf = handles.get(1);
 

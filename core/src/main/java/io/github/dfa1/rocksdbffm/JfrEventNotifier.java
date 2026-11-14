@@ -120,7 +120,7 @@ public final class JfrEventNotifier implements EventNotifier {
 		FlushEvent event = pending.event();
 		event.end();
 		if (event.shouldCommit()) {
-			event.columnFamily = info.columnFamilyName();
+			event.columnFamily = info.columnFamilyName().toString();
 			event.reason = nameOf(info::flushReason);
 			event.fileNumber = info.fileNumber();
 			event.triggeredWritesSlowdown = info.triggeredWritesSlowdown();
@@ -162,7 +162,7 @@ public final class JfrEventNotifier implements EventNotifier {
 		CompactionEvent event = pending.event();
 		event.end();
 		if (event.shouldCommit()) {
-			event.columnFamily = info.columnFamilyName();
+			event.columnFamily = info.columnFamilyName().toString();
 			event.reason = nameOf(info::compactionReason);
 			event.inputLevel = info.baseInputLevel();
 			event.outputLevel = info.outputLevel();
@@ -187,7 +187,7 @@ public final class JfrEventNotifier implements EventNotifier {
 	public void onExternalFileIngested(ExternalFileIngestionInfo info) {
 		var event = new ExternalFileIngestedEvent();
 		if (event.shouldCommit()) {
-			event.columnFamily = info.columnFamilyName();
+			event.columnFamily = info.columnFamilyName().toString();
 			event.externalFile = info.externalFilePath().toString();
 			event.internalFile = info.internalFilePath().toString();
 			event.globalSequenceNumber = info.globalSequenceNumber().toLong();
@@ -216,7 +216,7 @@ public final class JfrEventNotifier implements EventNotifier {
 	/// @param info the new and previous stall conditions
 	@Override
 	public void onStallConditionsChanged(WriteStallInfo info) {
-		recordStall(info.columnFamilyName(), info.previous(), info.current());
+		recordStall(info.columnFamilyName().toString(), info.previous(), info.current());
 	}
 
 	/// The state machine behind [#onStallConditionsChanged(WriteStallInfo)], split out so tests can
@@ -253,7 +253,7 @@ public final class JfrEventNotifier implements EventNotifier {
 	public void onMemTableSealed(MemTableInfo info) {
 		var event = new MemTableSealedEvent();
 		if (event.shouldCommit()) {
-			event.columnFamily = info.columnFamilyName();
+			event.columnFamily = info.columnFamilyName().toString();
 			event.entries = info.numEntries();
 			event.deletes = info.numDeletes();
 			event.commit();
