@@ -7,19 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19] — 2026-11-13
+
+Shared immortal defaults, no implicit database creation, `BlobDB` folded into `ReadWriteDB`, and a batch of new options from contributors.
+
 ### Added
 
 - `BlockBasedTableOptions.OptimizeKeyCommonPrefix` (`DISABLED`/`IF_FAST_SEEK`/`ENABLED`) and `setOptimizeKeyCommonPrefix`/`getOptimizeKeyCommonPrefix`: key common-prefix optimization (RocksDB v11.12) for smaller index/data blocks and a faster `Seek` ([#279](https://github.com/dfa1/rocksdb-ffm/pull/279), closes [#266](https://github.com/dfa1/rocksdb-ffm/issues/266)) — thanks [@amalsaidov](https://github.com/amalsaidov)
-
 - `WriteBufferManager.FlushPolicy` (`OLDEST`/`LARGEST`/`LARGEST_ACROSS_DBS`), `create`/`createWithCache` overloads taking a policy, and `getFlushPolicy`/`setFlushPolicy`: choose which memtable is flushed once the shared write-buffer budget is hit (RocksDB v11.12) ([#283](https://github.com/dfa1/rocksdb-ffm/pull/283), closes [#268](https://github.com/dfa1/rocksdb-ffm/issues/268)) — thanks [@Mohammadjavadfakhri](https://github.com/Mohammadjavadfakhri)
 - `SECURITY.md` (private vulnerability reporting), `CODE_OF_CONDUCT.md`, issue forms for bugs and missing wrappers, a pull request checklist, and GitHub Discussions for questions ([#261](https://github.com/dfa1/rocksdb-ffm/pull/261), closes [#255](https://github.com/dfa1/rocksdb-ffm/issues/255))
-- `Options.setMemtableOpScanFlushTrigger`/`getMemtableOpScanFlushTrigger` and `setMemtableAvgOpScanFlushTrigger`/`getMemtableAvgOpScanFlushTrigger`: force a memtable flush when range scans skip over many invisible entries ([#281](https://github.com/dfa1/rocksdb-ffm/pull/281), closes [#264](https://github.com/dfa1/rocksdb-ffm/issues/264))
+- `Options.setMemtableOpScanFlushTrigger`/`getMemtableOpScanFlushTrigger` and `setMemtableAvgOpScanFlushTrigger`/`getMemtableAvgOpScanFlushTrigger`: force a memtable flush when range scans skip over many invisible entries ([#281](https://github.com/dfa1/rocksdb-ffm/pull/281), closes [#264](https://github.com/dfa1/rocksdb-ffm/issues/264)) — thanks [@Mohammadjavadfakhri](https://github.com/Mohammadjavadfakhri)
 - `Options.setMaxSuccessiveMerges`/`getMaxSuccessiveMerges` and `setStrictMaxSuccessiveMerges`/`isStrictMaxSuccessiveMerges`: cap successive merge operands per key in the memtable ([#277](https://github.com/dfa1/rocksdb-ffm/pull/277), closes [#263](https://github.com/dfa1/rocksdb-ffm/issues/263)) — thanks [@Mohammadjavadfakhri](https://github.com/Mohammadjavadfakhri)
+- `CompressionType.XPRESS` now works in the Windows classifiers (it wraps the Windows compression API); other platforms still throw `UnsupportedOperationException` ([#273](https://github.com/dfa1/rocksdb-ffm/pull/273), closes [#118](https://github.com/dfa1/rocksdb-ffm/issues/118)) — thanks [@Mohammadjavadfakhri](https://github.com/Mohammadjavadfakhri)
 
 ### Changed
 
 - **Breaking:** `ColumnFamilyDescriptor.name()` returns `String`; the `of(byte[])`/`of(byte[], Options)` factories and `LoadedOptions.columnFamilyOptions(byte[])` are removed. The C API takes names as NUL-terminated strings, so the `byte[]` forms were only ever decoded as UTF-8 ([#275](https://github.com/dfa1/rocksdb-ffm/pull/275))
 - `beginTransaction(WriteOptions)`, `ingestExternalFile(files)`, `newSstFileWriter(Options)`, the default-env tracing overloads, `Replayer.create(db, path)` and column families created without options reuse one immortal native default instead of creating and destroying options on every call ([#276](https://github.com/dfa1/rocksdb-ffm/pull/276))
+- **Breaking:** `openReadWrite(Path)` and `openTtl(Path, Duration)` no longer create a missing database: they use default options and fail with "does not exist". Pass `Options` with `setCreateIfMissing(true)` to create it ([#286](https://github.com/dfa1/rocksdb-ffm/pull/286), closes [#285](https://github.com/dfa1/rocksdb-ffm/issues/285))
+- **Breaking:** `BlobDB` and `RocksDB.openBlob(...)` are removed. Blob files are an `Options` setting, so use `RocksDB.openReadWrite(options, path)` with `setEnableBlobFiles(true)` ([#288](https://github.com/dfa1/rocksdb-ffm/pull/288))
+- **Breaking:** `TtlDB.getTtl()` returns `Optional<Duration>`, empty for the per-column-family open; new `TtlDB.getColumnFamilyTtls()` returns each family's TTL by name ([#291](https://github.com/dfa1/rocksdb-ffm/pull/291), closes [#289](https://github.com/dfa1/rocksdb-ffm/issues/289))
+
+### Fixed
+
+- `openTtl` rejects a negative TTL, one over `Integer.MAX_VALUE` seconds, and per-column-family `ttls` that differ in size from `descriptors`, instead of silently wrapping or never expiring ([#291](https://github.com/dfa1/rocksdb-ffm/pull/291), closes [#289](https://github.com/dfa1/rocksdb-ffm/issues/289))
+
 
 ## [0.18] — 2026-11-09
 
