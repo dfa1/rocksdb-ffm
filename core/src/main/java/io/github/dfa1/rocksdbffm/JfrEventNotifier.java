@@ -41,7 +41,8 @@ import java.util.function.Supplier;
 /// column family. Nothing else in this library references
 /// `jdk.jfr`, so a runtime image without that module works as long as this class is never loaded.
 ///
-/// Use one instance per database: write stalls are tracked by column family name, which RocksDB's
+/// Use one instance per database: write stalls are tracked by column family name (compared as raw bytes, so
+/// two families whose display strings coincide stay apart), which RocksDB's
 /// callback does not qualify with a database. A flush, compaction or stall already in progress
 /// when a recording starts is not recorded.
 ///
@@ -53,7 +54,7 @@ public final class JfrEventNotifier implements EventNotifier {
 	private final SstFileManager sstFileManager;
 	private final Map<FlushSlot, PendingFlush> flushes = new ConcurrentHashMap<>();
 	private final Map<Long, PendingCompaction> compactions = new ConcurrentHashMap<>();
-	private final Map<String, OpenStall> stalls = new ConcurrentHashMap<>();
+	private final Map<ColumnFamilyName, OpenStall> stalls = new ConcurrentHashMap<>();
 
 	private JfrEventNotifier(SstFileManager sstFileManager) {
 		this.sstFileManager = sstFileManager;
@@ -216,12 +217,12 @@ public final class JfrEventNotifier implements EventNotifier {
 	/// @param info the new and previous stall conditions
 	@Override
 	public void onStallConditionsChanged(WriteStallInfo info) {
-		recordStall(info.columnFamilyName().toString(), info.previous(), info.current());
+		recordStall(info.columnFamilyName(), info.previous(), info.current());
 	}
 
 	/// The state machine behind [#onStallConditionsChanged(WriteStallInfo)], split out so tests can
 	/// drive it with transitions in any order.
-	void recordStall(String columnFamily, WriteStallCondition previous, WriteStallCondition current) {
+	void recordStall(ColumnFamilyName columnFamily, WriteStallCondition previous, WriteStallCondition current) {
 		var next = new WriteStallEvent();
 		if (stalls.isEmpty() && !next.isEnabled()) {
 			return;
@@ -239,7 +240,7 @@ public final class JfrEventNotifier implements EventNotifier {
 			if (current == WriteStallCondition.NORMAL || !next.isEnabled()) {
 				return null;
 			}
-			next.columnFamily = cf;
+			next.columnFamily = cf.toString();
 			next.condition = current.name();
 			next.begin();
 			return new OpenStall(current, next);

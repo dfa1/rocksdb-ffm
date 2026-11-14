@@ -177,15 +177,38 @@ class JfrEventNotifierTest {
 	}
 
 	@Test
+	void recordStall_familiesWhoseDisplayStringsCoincide_keepSeparateStalls(@TempDir Path dir) throws Exception {
+		// Given — two different non-UTF-8 names that both display as the replacement character
+		var first = ColumnFamilyName.ofBytes(new byte[]{(byte) 0xFF});
+		var second = ColumnFamilyName.ofBytes(new byte[]{(byte) 0xFE});
+		var notifier = JfrEventNotifier.create();
+		try (var recording = startRecording(WRITE_STALL)) {
+
+			// When
+			notifier.recordStall(first, WriteStallCondition.NORMAL, WriteStallCondition.DELAYED);
+			notifier.recordStall(second, WriteStallCondition.NORMAL, WriteStallCondition.DELAYED);
+			var openStalls = notifier.openStalls();
+			notifier.recordStall(first, WriteStallCondition.DELAYED, WriteStallCondition.NORMAL);
+			notifier.recordStall(second, WriteStallCondition.DELAYED, WriteStallCondition.NORMAL);
+			var events = stopAndRead(recording, dir);
+
+			// Then — one stall each, not one shared entry
+			assertThat(openStalls).isEqualTo(2);
+			assertThat(named(events, WRITE_STALL)).hasSize(2);
+			assertThat(notifier.openStalls()).isZero();
+		}
+	}
+
+	@Test
 	void recordStall_delayedThenNormal_recordsOneEventSpanningTheStall(@TempDir Path dir) throws Exception {
 		// Given
 		var notifier = JfrEventNotifier.create();
 		try (var recording = startRecording(WRITE_STALL)) {
-			notifier.recordStall("default", WriteStallCondition.NORMAL, WriteStallCondition.DELAYED);
+			notifier.recordStall(ColumnFamilyName.DEFAULT, WriteStallCondition.NORMAL, WriteStallCondition.DELAYED);
 			Thread.sleep(5);
 
 			// When
-			notifier.recordStall("default", WriteStallCondition.DELAYED, WriteStallCondition.NORMAL);
+			notifier.recordStall(ColumnFamilyName.DEFAULT, WriteStallCondition.DELAYED, WriteStallCondition.NORMAL);
 			var events = stopAndRead(recording, dir);
 
 			// Then
@@ -203,13 +226,13 @@ class JfrEventNotifierTest {
 		// Given
 		var notifier = JfrEventNotifier.create();
 		try (var recording = startRecording(WRITE_STALL)) {
-			notifier.recordStall("default", WriteStallCondition.NORMAL, WriteStallCondition.DELAYED);
+			notifier.recordStall(ColumnFamilyName.DEFAULT, WriteStallCondition.NORMAL, WriteStallCondition.DELAYED);
 			Thread.sleep(5);
-			notifier.recordStall("default", WriteStallCondition.DELAYED, WriteStallCondition.STOPPED);
+			notifier.recordStall(ColumnFamilyName.DEFAULT, WriteStallCondition.DELAYED, WriteStallCondition.STOPPED);
 			Thread.sleep(5);
 
 			// When
-			notifier.recordStall("default", WriteStallCondition.STOPPED, WriteStallCondition.NORMAL);
+			notifier.recordStall(ColumnFamilyName.DEFAULT, WriteStallCondition.STOPPED, WriteStallCondition.NORMAL);
 			var events = stopAndRead(recording, dir);
 
 			// Then
@@ -225,14 +248,14 @@ class JfrEventNotifierTest {
 		// Given — a DELAYED stall left open because its closing transition arrived before it
 		var notifier = JfrEventNotifier.create();
 		try (var recording = startRecording(WRITE_STALL)) {
-			notifier.recordStall("default", WriteStallCondition.NORMAL, WriteStallCondition.DELAYED);
+			notifier.recordStall(ColumnFamilyName.DEFAULT, WriteStallCondition.NORMAL, WriteStallCondition.DELAYED);
 			Thread.sleep(5);
 
 			// When — a later stall starts from NORMAL, which the open DELAYED one can't be the
 			// predecessor of, so it is dropped rather than committed as one long bogus span
-			notifier.recordStall("default", WriteStallCondition.NORMAL, WriteStallCondition.STOPPED);
+			notifier.recordStall(ColumnFamilyName.DEFAULT, WriteStallCondition.NORMAL, WriteStallCondition.STOPPED);
 			Thread.sleep(5);
-			notifier.recordStall("default", WriteStallCondition.STOPPED, WriteStallCondition.NORMAL);
+			notifier.recordStall(ColumnFamilyName.DEFAULT, WriteStallCondition.STOPPED, WriteStallCondition.NORMAL);
 			var events = stopAndRead(recording, dir);
 
 			// Then
