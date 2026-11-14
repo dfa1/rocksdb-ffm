@@ -200,8 +200,9 @@ Database (ReadWriteDB, TtlDB, TransactionDB, ...)
 ```
 
 Closing a node closes its whole subtree first, depth first, and only then frees its own pointer: a database close
-releases iterators and snapshots, then each transaction (iterators and snapshot first, then the transaction itself,
-which discards anything uncommitted), then the column family handles, then the database. A child closed on its own
+releases all its children, then its own pointer, and a transaction releases its iterators and snapshot before it is
+destroyed (which discards anything uncommitted). Siblings are released in no particular order; only a child always goes
+before its parent. A child closed on its own
 unregisters from its parent, so a long-lived database does not accumulate dead children. Once a database is closed,
 every object in its tree throws `IllegalStateException` instead of dereferencing freed memory.
 
