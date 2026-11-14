@@ -223,11 +223,12 @@ final class EventNotifierBridge {
 	/// Dispatches an event whose payload is a view over a pointer RocksDB owns only for the duration of the
 	/// callback. The view is built over a segment tied to an arena closed right after the call, so a listener
 	/// that retains the view gets an [IllegalStateException] from its accessors instead of a native read of freed
-	/// memory. A shared arena, so a read from another thread fails the same way.
+	/// memory (a read from another thread throws [WrongThreadException]). A confined arena, because closing a
+	/// shared one fails while another thread is inside a read, which would leave the view open.
 	private static <V> void dispatchView(MemorySegment state, MemorySegment info, Function<MemorySegment, V> view,
 			BiConsumer<EventNotifier, V> call, String method) {
 		dispatch(state, n -> {
-			try (Arena arena = Arena.ofShared()) {
+			try (Arena arena = Arena.ofConfined()) {
 				call.accept(n, view.apply(info.reinterpret(arena, null)));
 			}
 		}, method);
