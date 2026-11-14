@@ -104,18 +104,23 @@ public final class LiveFileInfo {
 		}
 	}
 
-	/// Returns the file name as RocksDB reports it, **with a leading slash**, e.g. `/000012.sst`.
+	/// Returns the file's path relative to [#directory()], e.g. `000012.sst`.
 	///
-	/// Because of the leading slash, `directory().resolve(name())` yields the absolute path
-	/// `/000012.sst` and drops the directory; use [#path()] instead.
+	/// RocksDB reports this name with a leading slash, which is stripped here so that
+	/// `directory().resolve(relativeFilename())` keeps the directory.
 	///
-	/// @return the file name, with a leading slash
-	public String name() {
+	/// @return the relative file path
+	public Path relativeFilename() {
 		try {
 			MemorySegment p = (MemorySegment) MH_NAME.invokeExact(owner.ptr(), index);
-			return NativeCalls.toBorrowedJavaString(p);
+			String name = NativeCalls.toBorrowedJavaString(p);
+			int start = 0;
+			while (start < name.length() && name.charAt(start) == '/') {
+				start++;
+			}
+			return Path.of(name.substring(start));
 		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("name failed", t);
+			throw NativeCalls.wrapInvokeFailure("relativeFilename failed", t);
 		}
 	}
 
@@ -131,17 +136,11 @@ public final class LiveFileInfo {
 		}
 	}
 
-	/// Returns the absolute path of this file: [#directory()] resolved against [#name()] with its
-	/// leading slash stripped.
+	/// Returns the path of this file: [#directory()] resolved against [#relativeFilename()].
 	///
 	/// @return the path of the file
 	public Path path() {
-		String name = name();
-		int start = 0;
-		while (start < name.length() && name.charAt(start) == '/') {
-			start++;
-		}
-		return directory().resolve(name.substring(start));
+		return directory().resolve(relativeFilename());
 	}
 
 	/// Returns the LSM level this file resides at.

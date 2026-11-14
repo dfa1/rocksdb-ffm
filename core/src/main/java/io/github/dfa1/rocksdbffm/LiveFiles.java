@@ -33,7 +33,7 @@ import java.util.NoSuchElementException;
 /// try (var db = RocksDB.openReadOnly(dbDir);
 ///      var files = db.getLiveFiles()) {
 ///     for (LiveFileInfo file : files) {
-///         System.out.println(file.name() + ": " + file.numberOfEntries() + " entries");
+///         System.out.println(file.relativeFilename() + ": " + file.numberOfEntries() + " entries");
 ///     }
 /// }
 /// ```

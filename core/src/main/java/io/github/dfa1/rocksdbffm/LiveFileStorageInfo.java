@@ -84,13 +84,13 @@ public final class LiveFileStorageInfo {
 		this.index = index;
 	}
 
-	/// Returns the file's name within its directory, e.g. `"000012.sst"` or `"CURRENT"`.
+	/// Returns the file's path relative to [#directory()], e.g. `000012.sst` or `CURRENT`.
 	///
-	/// @return the relative file name
-	public String relativeFilename() {
+	/// @return the relative file path
+	public Path relativeFilename() {
 		try {
 			MemorySegment p = (MemorySegment) MH_RELATIVE_FILENAME.invokeExact(owner.ptr(), (long) index);
-			return NativeCalls.toBorrowedJavaString(p);
+			return Path.of(NativeCalls.toBorrowedJavaString(p));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("relativeFilename failed", t);
 		}
