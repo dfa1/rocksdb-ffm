@@ -29,3 +29,4 @@ ADR is a point-in-time snapshot: context, the decision, and its known consequenc
 | [0006](0006-method-handles-usage.md) | How far to centralize MethodHandle call sites and their try/catch boilerplate | Proposed |
 | [0007](0007-critical-linker-option-study.md) | A systematic study of `Linker.Option.critical(false)` | Proposed |
 | [0008](0008-ldb-sst-dump-dynamic-linking.md) | Linking `ldb`/`sst_dump` dynamically against a zig-built `librocksdb.so` | Accepted |
+| [0009](0009-db-owned-column-family-handles.md) | The database owns its column family handles | Proposed |
