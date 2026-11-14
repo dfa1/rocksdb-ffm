@@ -6,6 +6,8 @@ import java.lang.foreign.MemorySegment;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -106,6 +108,26 @@ class NativeObjectTest {
 
 		// Then
 		assertThat(obj.tryCloseCount).hasValue(1);
+	}
+
+	@Test
+	void close_fromAnotherThreadWhileTryCloseWaitsOnThatThread_doesNotDeadlock() {
+		// Given: a tryClose that, like rocksdb_close draining a listener callback, waits for another thread that
+		// closes the same object
+		var nestedCloseReturned = new AtomicBoolean();
+		var obj = new NativeObject(fakePtr(0x1234)) {
+			@Override
+			protected void tryClose(MemorySegment ptr) throws Exception {
+				CompletableFuture.runAsync(this::close).get(5, TimeUnit.SECONDS);
+				nestedCloseReturned.set(true);
+			}
+		};
+
+		// When
+		obj.close();
+
+		// Then
+		assertThat(nestedCloseReturned).isTrue();
 	}
 
 	@Test
