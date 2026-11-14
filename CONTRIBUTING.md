@@ -93,8 +93,8 @@ compile against `core`. The mapping is in [AGENTS.md](AGENTS.md#documentation).
 
 Contributors do not edit [CHANGELOG.md](CHANGELOG.md); the maintainer adds the entry when merging. Entries go
 under `## [Unreleased]`, link the pull request (and the issue it closes, if any), and end with
-`— thanks [@handle](https://github.com/handle)` for outside contributions; the release notes show a bare
-`@handle`, which notifies the contributor when the release is published.
+`— thanks [@handle](https://github.com/handle)` for outside contributions; the release notes publish the section
+verbatim, so the link is there too.
 
 ## Releasing
 

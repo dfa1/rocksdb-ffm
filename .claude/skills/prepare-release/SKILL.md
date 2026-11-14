@@ -79,5 +79,5 @@ gh run watch                                   # publish.yml: Central deploy + G
 gh release view vX.Y                           # title "vX.Y — date", notes match the CHANGELOG section
 ```
 
-Contributor mentions must appear as bare `@handle` in the notes. If the workflow fails, fix and
+Contributor thanks must appear as explicit `[@handle](https://github.com/handle)` links in the notes (the section is published verbatim). If the workflow fails, fix and
 re-run it (it skips release creation if the release already exists); never move or delete the tag.
