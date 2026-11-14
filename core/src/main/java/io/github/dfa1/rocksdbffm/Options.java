@@ -1666,9 +1666,11 @@ public final class Options extends NativeObject {
 	/// Attaches a [CompactionFilter] that decides, per key-value pair, whether compaction keeps,
 	/// drops, or rewrites it.
 	///
-	/// Transfers ownership: `compactionFilter`'s `close()` becomes a no-op afterward.
+	/// Makes `compactionFilter` immortal: RocksDB keeps a raw pointer to it that nothing frees, and it has to
+	/// outlive every database using these options, so it is never released and its `close()` does nothing. It
+	/// can be attached to any number of options. Create it once and reuse it, see [CompactionFilter].
 	///
-	/// @param compactionFilter the compaction filter to attach; ownership is transferred
+	/// @param compactionFilter the compaction filter to attach; it stays valid for the life of the JVM
 	/// @return `this` for chaining
 	public Options setCompactionFilter(CompactionFilter compactionFilter) {
 		compactionFilter.applyTo(ptr());

@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /// Covers [CompactionFilter], attached via [Options#setCompactionFilter(CompactionFilter)]. Every
 /// test forces a full-range manual compaction (`compactRange()` flushes the memtable and rewrites
@@ -196,16 +195,57 @@ class CompactionFilterTest {
 	}
 
 	@Test
-	void setCompactionFilter_transferredFilter_ptrThrows() {
+	void setCompactionFilter_makesTheFilterImmortal_closeIsANoOpAndPtrStillWorks() {
 		// Given
 		CompactionFilter.FilterFn keepAll = (level, key, existingValue) -> CompactionFilter.FilterDecision.keep();
 		var filter = CompactionFilter.create("keep-all", keepAll);
-
-		// When
 		try (var _ = Options.newOptions().setCompactionFilter(filter)) {
 
+			// When
+			filter.close();
+
 			// Then
-			assertThatThrownBy(filter::ptr).isInstanceOf(IllegalStateException.class);
+			assertThat(filter.ptr()).isNotNull();
+		}
+	}
+
+	@Test
+	void oneFilter_attachedToTwoOptionsAndDatabases_filtersInBoth(@TempDir Path dir) {
+		// Given
+		CompactionFilter.FilterFn removeAll = (level, key, existingValue) -> CompactionFilter.FilterDecision.remove();
+		var filter = CompactionFilter.create("remove-all", removeAll);
+
+		// When
+		try (var first = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
+		     var second = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
+		     var firstDb = RocksDB.openReadWrite(dir.resolve("first"), first);
+		     var secondDb = RocksDB.openReadWrite(dir.resolve("second"), second)) {
+			firstDb.put(bytes("a"), bytes("1"));
+			secondDb.put(bytes("b"), bytes("2"));
+			firstDb.compactRange();
+			secondDb.compactRange();
+
+			// Then
+			assertThat(firstDb.get(bytes("a"))).isNull();
+			assertThat(secondDb.get(bytes("b"))).isNull();
+		}
+	}
+
+	@Test
+	void filter_keepsWorkingAfterItsOptionsAreClosed(@TempDir Path dir) {
+		// Given
+		CompactionFilter.FilterFn removeAll = (level, key, existingValue) -> CompactionFilter.FilterDecision.remove();
+		var filter = CompactionFilter.create("remove-all", removeAll);
+		var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
+		try (var db = RocksDB.openReadWrite(dir, opts)) {
+			db.put(bytes("a"), bytes("1"));
+			opts.close();
+
+			// When
+			db.compactRange();
+
+			// Then
+			assertThat(db.get(bytes("a"))).isNull();
 		}
 	}
 

@@ -46,6 +46,9 @@ Every class wrapping a native pointer **must** implement `AutoCloseable`.
   created and closed per call. `makeImmortal()` makes its `close()` a no-op while `ptr()` keeps working, so
   an accidental `close()` can't break every later caller. Never use it for an object a native call retains,
   mutates, or takes ownership of — verify against `db/c.cc` that the call copies (e.g. `ColumnFamilyOptions(opt->rep)`).
+  The one deliberate exception is `CompactionFilter`: `rocksdb_options_set_compaction_filter` keeps a raw pointer nothing
+  frees and the database outlives its options, so an attached filter is made immortal (one per process, created once and
+  reused) rather than risking a use after free.
 
 ### 2. Data Types & Path Handling
 
