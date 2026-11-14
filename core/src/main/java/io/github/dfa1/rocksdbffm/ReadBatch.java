@@ -140,7 +140,7 @@ public final class ReadBatch implements AutoCloseable {
 				writeKeySlot(i, NativeCalls.toNative(callArena, key), key.length);
 			}
 			NativeCalls.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
-			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
+			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.readPtr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collectBytes(n);
 		} catch (Throwable t) {
@@ -188,7 +188,7 @@ public final class ReadBatch implements AutoCloseable {
 				writeKeySlot(i, MemorySegment.ofBuffer(key), key.remaining());
 			}
 			NativeCalls.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
-			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
+			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.readPtr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collectBuffers(n, values);
 		} catch (Throwable t) {
@@ -257,7 +257,7 @@ public final class ReadBatch implements AutoCloseable {
 				writeKeySlot(i, key, key.byteSize());
 			}
 			NativeCalls.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
-			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
+			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.readPtr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collect(n, fn);
 		} catch (Throwable t) {

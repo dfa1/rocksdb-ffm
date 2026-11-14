@@ -194,6 +194,7 @@ Database (ReadWriteDB, TtlDB, TransactionDB, ...)
 ├── ColumnFamilyHandle     owned by the database; close() is a no-op
 ├── RocksIterator          closed by you, or by the database's close
 ├── Snapshot               closed by you, or by the database's close
+├── WalIterator, Checkpoint, Replayer
 └── Transaction            TransactionDB and OptimisticTransactionDB only
     ├── RocksIterator      from txn.newIterator(...)
     └── Snapshot           from txn.getSnapshot()
@@ -205,6 +206,11 @@ destroyed (which discards anything uncommitted). Siblings are released in no par
 before its parent. A child closed on its own
 unregisters from its parent, so a long-lived database does not accumulate dead children. Once a database is closed,
 every object in its tree throws `IllegalStateException` instead of dereferencing freed memory.
+
+A `RocksIterator` has a second parent, the `ReadOptions` it was created with (it keeps pointers to the iterate bounds), so
+closing the options also closes their iterators. Closing a `Snapshot` that is installed in a `ReadOptions` makes the
+next read through those options throw until another snapshot (or `null`) is set; a transaction's `commit`,
+`rollback` and `rollbackToSavePoint` close its iterators, which RocksDB invalidates.
 
 For callers that means: close what you open, innermost first, and you are fine; if you forget, closing the parent is
 safe. What the tree cannot make safe is a method running on another thread *while* its parent closes (the

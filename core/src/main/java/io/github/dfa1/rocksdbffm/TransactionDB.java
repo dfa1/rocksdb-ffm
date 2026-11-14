@@ -419,7 +419,7 @@ public final class TransactionDB extends NativeDBWithBaseDB
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
-					ptr(), readOptions.ptr(),
+					ptr(), readOptions.readPtr(),
 					NativeCalls.toNative(arena, key), (long) key.length, err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -442,7 +442,7 @@ public final class TransactionDB extends NativeDBWithBaseDB
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
-					ptr(), readOpts.ptr(),
+					ptr(), readOpts.readPtr(),
 					NativeCalls.toNative(arena, key), (long) key.length, err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -468,7 +468,7 @@ public final class TransactionDB extends NativeDBWithBaseDB
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
-					ptr(), readOpts.ptr(),
+					ptr(), readOpts.readPtr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -494,7 +494,7 @@ public final class TransactionDB extends NativeDBWithBaseDB
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
-					ptr(), readOpts.ptr(), key, key.byteSize(), err);
+					ptr(), readOpts.readPtr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;
@@ -525,7 +525,7 @@ public final class TransactionDB extends NativeDBWithBaseDB
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin;
 			try {
-				pin = (MemorySegment) MH_GET_PINNED.invokeExact(ptr(), readOpts.ptr(), key, key.byteSize(), err);
+				pin = (MemorySegment) MH_GET_PINNED.invokeExact(ptr(), readOpts.readPtr(), key, key.byteSize(), err);
 			} catch (Throwable t) {
 				throw NativeCalls.wrapInvokeFailure("get_pinned failed", t);
 			}
@@ -867,7 +867,7 @@ public final class TransactionDB extends NativeDBWithBaseDB
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
-					ptr(), readOptions.ptr(), cf.ptr(),
+					ptr(), readOptions.readPtr(), cf.ptr(),
 					NativeCalls.toNative(arena, key), (long) key.length, err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -894,7 +894,7 @@ public final class TransactionDB extends NativeDBWithBaseDB
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
-					ptr(), readOpts.ptr(), cf.ptr(),
+					ptr(), readOpts.readPtr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -921,7 +921,7 @@ public final class TransactionDB extends NativeDBWithBaseDB
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
-					ptr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
+					ptr(), readOpts.readPtr(), cf.ptr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;
@@ -948,7 +948,7 @@ public final class TransactionDB extends NativeDBWithBaseDB
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin;
 			try {
-				pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(ptr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
+				pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(ptr(), readOpts.readPtr(), cf.ptr(), key, key.byteSize(), err);
 			} catch (Throwable t) {
 				throw NativeCalls.wrapInvokeFailure("get_pinned failed", t);
 			}
@@ -1048,8 +1048,8 @@ public final class TransactionDB extends NativeDBWithBaseDB
 	public RocksIterator newIterator(ColumnFamilyHandle cf) {
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE_ITERATOR_CF.invokeExact(
-					ptr(), readOpts.ptr(), cf.ptr());
-			return RocksIterator.create(this, iterPtr);
+					ptr(), readOpts.readPtr(), cf.ptr());
+			return RocksIterator.create(this, readOpts, iterPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("newIterator failed", t);
 		}
@@ -1063,8 +1063,8 @@ public final class TransactionDB extends NativeDBWithBaseDB
 	public RocksIterator newIterator(ColumnFamilyHandle cf, ReadOptions readOptions) {
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE_ITERATOR_CF.invokeExact(
-					ptr(), readOptions.ptr(), cf.ptr());
-			return RocksIterator.create(this, iterPtr);
+					ptr(), readOptions.readPtr(), cf.ptr());
+			return RocksIterator.create(this, readOptions, iterPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("newIterator failed", t);
 		}

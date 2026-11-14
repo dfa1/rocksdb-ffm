@@ -137,7 +137,7 @@ final class RocksDBReadOperationsBindings {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment k = NativeCalls.toNative(arena, key);
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(
-					db.dbPtr(), readOpts.ptr(), k, (long) key.length, err);
+					db.dbPtr(), readOpts.readPtr(), k, (long) key.length, err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(handle)) {
 				return null;
@@ -157,7 +157,7 @@ final class RocksDBReadOperationsBindings {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
-			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db.dbPtr(), readOpts.ptr(), key, key.byteSize(),
+			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db.dbPtr(), readOpts.readPtr(), key, key.byteSize(),
 					MemorySegment.ofBuffer(value), (long) value.remaining(), valLenSeg, foundSeg, err);
 			NativeCalls.checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
@@ -181,7 +181,7 @@ final class RocksDBReadOperationsBindings {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
-			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db.dbPtr(), readOpts.ptr(), key, key.byteSize(),
+			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db.dbPtr(), readOpts.readPtr(), key, key.byteSize(),
 					value, value.byteSize(), valLenSeg, foundSeg, err);
 			NativeCalls.checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
@@ -202,7 +202,7 @@ final class RocksDBReadOperationsBindings {
 	static <R> R withPinned(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(db.dbPtr(), readOpts.ptr(), key, key.byteSize(), err);
+			MemorySegment handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(db.dbPtr(), readOpts.readPtr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(handle)) {
 				return null;
@@ -222,7 +222,7 @@ final class RocksDBReadOperationsBindings {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_CF_V2.invokeExact(
-					db.dbPtr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
+					db.dbPtr(), readOpts.readPtr(), cf.ptr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(handle)) {
 				return null;
@@ -245,7 +245,7 @@ final class RocksDBReadOperationsBindings {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment k = NativeCalls.toNative(arena, key);
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_CF_V2.invokeExact(
-					db.dbPtr(), readOpts.ptr(), cf.ptr(), k, (long) key.length, err);
+					db.dbPtr(), readOpts.readPtr(), cf.ptr(), k, (long) key.length, err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(handle)) {
 				return null;
@@ -266,7 +266,7 @@ final class RocksDBReadOperationsBindings {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
-			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db.dbPtr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(),
+			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db.dbPtr(), readOpts.readPtr(), cf.ptr(), key, key.byteSize(),
 					MemorySegment.ofBuffer(value), (long) value.remaining(), valLenSeg, foundSeg, err);
 			NativeCalls.checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
@@ -291,7 +291,7 @@ final class RocksDBReadOperationsBindings {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
-			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db.dbPtr(), readOpts.ptr(), cf.ptr(), key, key.byteSize(),
+			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db.dbPtr(), readOpts.readPtr(), cf.ptr(), key, key.byteSize(),
 					value, value.byteSize(), valLenSeg, foundSeg, err);
 			NativeCalls.checkError(err);
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
@@ -309,7 +309,7 @@ final class RocksDBReadOperationsBindings {
 
 	static boolean keyMayExistSegment(RocksDBReadOperations db, ReadOptions roOpts, MemorySegment key) {
 		try {
-			return NativeCalls.fromByte((byte) MH_KEY_MAY_EXIST.invokeExact(db.dbPtr(), roOpts.ptr(), key, key.byteSize(),
+			return NativeCalls.fromByte((byte) MH_KEY_MAY_EXIST.invokeExact(db.dbPtr(), roOpts.readPtr(), key, key.byteSize(),
 					MemorySegment.NULL, MemorySegment.NULL,
 					MemorySegment.NULL, 0L, MemorySegment.NULL));
 		} catch (Throwable t) {
@@ -328,7 +328,7 @@ final class RocksDBReadOperationsBindings {
 	static boolean keyMayExistCfSegment(RocksDBReadOperations db, ReadOptions roOpts,
 	                                    ColumnFamilyHandle cf, MemorySegment key) {
 		try {
-			return NativeCalls.fromByte((byte) MH_KEY_MAY_EXIST_CF.invokeExact(db.dbPtr(), roOpts.ptr(), cf.ptr(), key, key.byteSize(),
+			return NativeCalls.fromByte((byte) MH_KEY_MAY_EXIST_CF.invokeExact(db.dbPtr(), roOpts.readPtr(), cf.ptr(), key, key.byteSize(),
 					MemorySegment.NULL, MemorySegment.NULL,
 					MemorySegment.NULL, 0L, MemorySegment.NULL));
 		} catch (Throwable t) {
@@ -349,9 +349,9 @@ final class RocksDBReadOperationsBindings {
 	                                      ColumnFamilyHandle cf) {
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE_ITERATOR_CF.invokeExact(
-					db.dbPtr(), readOpts.ptr(), cf.ptr());
+					db.dbPtr(), readOpts.readPtr(), cf.ptr());
 			// Every implementor extends NativeObjectWithChildren (see RocksDBReadOperations#getSnapshot()).
-			return RocksIterator.create((NativeObjectWithChildren) db, iterPtr);
+			return RocksIterator.create((NativeObjectWithChildren) db, readOpts, iterPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("newIterator failed", t);
 		}
