@@ -10,6 +10,11 @@ import java.lang.invoke.MethodHandle;
 /// An Env encapsulates system interactions (file I/O, threading, time).
 /// Required to create an [SstFileManager].
 ///
+/// **Lifetime:** [Options#setEnv(Env)], [BackupEngineOptions#setEnv(Env)], [BackupEngine], tracing and
+/// [Replayer] keep a raw pointer to their [Env] that outlives the objects they were given it through, so an
+/// [Env] must never be freed while one could still use it. The default environment's singleton is never freed
+/// by `close()`, and [#memEnv()] is immortal, so using either is safe.
+///
 /// ```
 /// try (Env env = Env.defaultEnv();
 ///      SstFileManager sfm = SstFileManager.create(env)) {
@@ -82,10 +87,15 @@ public final class Env extends NativeObject {
 
 	/// Creates an in-memory environment useful for testing.
 	///
-	/// @return a new in-memory [Env]; caller must close it
+	/// Immortal: `close()` does nothing and the environment, with every file stored in it, lives for the whole JVM.
+	/// Options, backup engines, traces and databases keep a raw pointer to their environment, and the
+	/// environment of a database outlives the options it was opened with, so there is no point at which freeing
+	/// it would be safe. Create it once and reuse it; each call leaks the data of everything stored in it.
+	///
+	/// @return a new in-memory [Env], valid for the life of the JVM
 	public static Env memEnv() {
 		try {
-			return new Env((MemorySegment) MH_CREATE_MEM.invokeExact());
+			return new Env((MemorySegment) MH_CREATE_MEM.invokeExact()).makeImmortal();
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("Env.memEnv failed", t);
 		}

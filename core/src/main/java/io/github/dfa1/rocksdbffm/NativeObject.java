@@ -128,8 +128,10 @@ public abstract class NativeObject implements AutoCloseable {
 	/// merely never closing it, means a stray `close()` (a `try`-with-resources, a cleanup path) cannot
 	/// free the pointer out from under every later caller.
 	///
-	/// The native resource is intentionally never released; that is not a leak, because there is exactly
-	/// one instance per process. Only use it for a default that every native call it is passed to
+	/// The native resource is intentionally never released; for a default that is not a leak, because there is
+	/// exactly one instance per process. (Two deliberate exceptions are created by callers and so do leak once per
+	/// instance, which their javadoc says: an attached [CompactionFilter] and [Env#memEnv()]. A native holder keeps
+	/// a raw pointer to each that outlives everything able to release it.) Only use it for a default that every native call it is passed to
 	/// merely reads or copies. Never for an object a native call retains, mutates or takes ownership of,
 	/// and verify that against `db/c.cc` first; [#transferOwnership()] on an immortal object throws
 	/// rather than silently breaking every other user. E.g. `rocksdb_create_column_family` copies its [Options]

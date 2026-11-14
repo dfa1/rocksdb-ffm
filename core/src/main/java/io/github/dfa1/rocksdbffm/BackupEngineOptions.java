@@ -23,8 +23,9 @@ import java.nio.file.Path;
 ///
 /// ## Env lifecycle
 ///
-/// If [#setEnv(Env)] is called, the provided [Env] must remain open for the
-/// lifetime of any [BackupEngine] opened with these options.
+/// A [BackupEngine] keeps a raw pointer to the [Env] given to [#setEnv(Env)] for as long as it is open. That is safe
+/// because an [Env] is either the default environment, which `close()` never frees, or [Env#memEnv()], which is
+/// immortal.
 public final class BackupEngineOptions extends NativeObject {
 
 	/// `rocksdb_backup_engine_options_t* rocksdb_backup_engine_options_create(const char* backup_dir);`
@@ -201,8 +202,8 @@ public final class BackupEngineOptions extends NativeObject {
 
 	/// Sets the environment used for backup I/O.
 	///
-	/// The [Env] must remain open for the lifetime of any [BackupEngine]
-	/// opened with these options. No ownership transfer.
+	/// The [Env] is the default environment or an immortal [Env#memEnv()], so it stays valid for the lifetime of any
+	/// [BackupEngine] opened with these options.
 	///
 	/// @param env the environment to use for backup I/O
 	/// @return `this` for chaining

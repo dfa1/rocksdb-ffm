@@ -1455,8 +1455,9 @@ public final class Options extends NativeObject {
 
 	/// Sets the [Env] used for all file-system and threading operations.
 	///
-	/// The [Env] must remain open for the lifetime of the database.
-	/// No ownership transfer: both objects may be closed independently.
+	/// The database keeps a raw pointer to `env` until it closes, after these options may already be closed. That
+	/// is safe because an [Env] is either the default environment, which `close()` never frees, or
+	/// [Env#memEnv()], which is immortal.
 	///
 	/// @param env the environment to use
 	/// @return `this` for chaining

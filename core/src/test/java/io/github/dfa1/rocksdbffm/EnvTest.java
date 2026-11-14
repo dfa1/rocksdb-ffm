@@ -33,15 +33,15 @@ class EnvTest {
 	// -----------------------------------------------------------------------
 
 	@Test
-	void memEnv_createsAndCloses_doesNotThrow() {
-		// Given — no preconditions
+	void memEnv_closeIsANoOp_theEnvStaysUsable() {
+		// Given
+		var env = Env.memEnv();
 
-		// When / Then
-		assertThatNoException().isThrownBy(() -> {
-			try (var env = Env.memEnv()) {
-				assertThat(env).isNotNull();
-			}
-		});
+		// When
+		env.close();
+
+		// Then
+		assertThat(env.ptr()).isNotNull();
 	}
 
 	// -----------------------------------------------------------------------

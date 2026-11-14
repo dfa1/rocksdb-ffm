@@ -26,8 +26,8 @@ import java.lang.invoke.MethodHandle;
 ///
 /// [SstFileManager] uses shared ownership: passing it to
 /// [Options#setSstFileManager] does not transfer ownership — both objects
-/// may be closed independently. The [Env] passed to [#create(Env)] must
-/// remain open for the lifetime of the manager.
+/// may be closed independently. The [Env] passed to [#create(Env)] is the default environment or an immortal
+/// [Env#memEnv()], so it stays valid for the lifetime of the manager.
 public final class SstFileManager extends NativeObject {
 
 	/// `rocksdb_sst_file_manager_t* rocksdb_sst_file_manager_create(rocksdb_env_t* env);`
@@ -108,9 +108,10 @@ public final class SstFileManager extends NativeObject {
 
 	/// Creates an SST file manager using the provided environment.
 	///
-	/// The [Env] must remain open for the lifetime of this manager.
+	/// The [Env] is the default environment or an immortal [Env#memEnv()], so it stays valid for the lifetime of
+	/// this manager.
 	///
-	/// @param env the [Env] to use for file-system operations; must outlive this manager
+	/// @param env the [Env] to use for file-system operations
 	/// @return a new [SstFileManager]; caller must close it
 	public static SstFileManager create(Env env) {
 		try {
