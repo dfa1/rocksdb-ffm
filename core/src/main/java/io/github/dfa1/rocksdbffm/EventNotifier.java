@@ -13,6 +13,10 @@ package io.github.dfa1.rocksdbffm;
 /// must be thread-safe. A callback must not throw: an escaping exception is caught and logged,
 /// never propagated back into RocksDB or across the native boundary.
 ///
+/// A callback must not close a database: the close waits for the background thread the callback is
+/// running on, so it throws [IllegalStateException] instead of hanging. To shut down in response to an
+/// event (say [#onBackgroundError(BackgroundErrorReason, RocksDBException)]), hand the close to another thread.
+///
 /// The `*Info` parameters are zero-copy views into memory RocksDB owns for the duration of the
 /// call only — never retain one past the method that received it.
 ///

@@ -378,6 +378,37 @@ class EventNotifierTest {
 	}
 
 	@Test
+	void notifier_callbackThatClosesItsDatabase_throwsInsteadOfHanging(@TempDir Path dir) {
+		// Given -- rocksdb_close on the flush thread would wait for that same thread forever
+		var dbRef = new AtomicReference<ReadWriteDB>();
+		var thrown = new AtomicReference<Throwable>();
+		EventNotifier notifier = new EventNotifier() {
+			@Override
+			public void onFlushCompleted(FlushJobInfo info) {
+				try {
+					dbRef.get().close();
+				} catch (Throwable t) {
+					thrown.set(t);
+				}
+			}
+		};
+
+		try (var opts = Options.newOptions().setCreateIfMissing(true).addEventListener(notifier);
+		     var db = RocksDB.openReadWrite(dir, opts)) {
+			dbRef.set(db);
+			db.put("k".getBytes(), "v".getBytes());
+
+			// When
+			db.flush(FlushOptions.newFlushOptions());
+
+			// Then -- the close was refused and the database is still open
+			var result = db.get("k".getBytes());
+			assertThat(thrown.get()).isInstanceOf(IllegalStateException.class);
+			assertThat(result).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
 	void notifier_withNoOverrides_defaultCallbacksAreNoOpsAndDoNotThrow(@TempDir Path dir) {
 		// Given — a listener that overrides nothing, exercising every EventNotifier default
 		// method's no-op body (onFlushBegin/onFlushCompleted/onCompactionBegin/
