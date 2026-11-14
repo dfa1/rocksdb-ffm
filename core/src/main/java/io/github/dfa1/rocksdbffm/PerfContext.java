@@ -30,7 +30,13 @@ import java.lang.invoke.MethodHandle;
 ///
 /// The perf context is thread-local: [#newPerfContext()] wraps the context of the
 /// calling thread. Metrics accumulated on one thread are invisible to others.
-/// Always create, use, and close [PerfContext] on the same thread.
+/// Always create, use, and close [PerfContext] on the same thread: reading or resetting it from another
+/// thread throws [WrongThreadException].
+///
+/// **Virtual threads:** a virtual thread may move to a different carrier thread between two calls, and
+/// RocksDB's context belongs to the carrier, not the virtual thread, so the counters can then be another
+/// thread's. Measure from a platform thread, or keep the virtual thread pinned (for example inside a
+/// `synchronized` block) for the whole measurement window.
 ///
 /// ## Overhead
 ///
@@ -76,8 +82,22 @@ public final class PerfContext extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 
+	/// The thread whose perf context this wraps; the native object is a view of that thread's `thread_local`.
+	private final Thread owner = Thread.currentThread();
+
 	private PerfContext(MemorySegment ptr) {
 		super(ptr);
+	}
+
+	/// Returns [#ptr()] for a call that reads or resets the counters.
+	///
+	/// @return the native pointer
+	/// @throws WrongThreadException if called from a thread other than the one that created this object
+	private MemorySegment ownedPtr() {
+		if (Thread.currentThread() != owner) {
+			throw new WrongThreadException("PerfContext belongs to " + owner + ": its counters are thread-local");
+		}
+		return ptr();
 	}
 
 	// -----------------------------------------------------------------------
@@ -134,7 +154,7 @@ public final class PerfContext extends NativeObject {
 	/// Resets all counters and timers to zero on the calling thread.
 	public void reset() {
 		try {
-			MH_RESET.invokeExact(ptr());
+			MH_RESET.invokeExact(ownedPtr());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("reset failed", t);
 		}
@@ -146,7 +166,7 @@ public final class PerfContext extends NativeObject {
 	/// @return accumulated value for the metric
 	public long metric(PerfMetric metric) {
 		try {
-			return (long) MH_METRIC.invokeExact(ptr(), metric.value);
+			return (long) MH_METRIC.invokeExact(ownedPtr(), metric.value);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("metric failed", t);
 		}
@@ -159,7 +179,7 @@ public final class PerfContext extends NativeObject {
 	public String report(boolean excludeZeroCounters) {
 		MemorySegment strPtr;
 		try {
-			strPtr = (MemorySegment) MH_REPORT.invokeExact(ptr(),
+			strPtr = (MemorySegment) MH_REPORT.invokeExact(ownedPtr(),
 					NativeCalls.toByte(excludeZeroCounters));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("report failed", t);
