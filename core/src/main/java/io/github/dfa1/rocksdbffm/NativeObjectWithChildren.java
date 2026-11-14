@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /// own native destroy call — so a child's release call never runs against memory this object
 /// has already freed, whichever side closes first.
 ///
-/// [#registerChild(NativeObject)] is lock-free — see its doc for the TOCTOU race it closes
+/// [#registerChild(NativeObject)] is lock-free — see its doc for the TOCTOU race it narrows
 /// (issues/143): a child's native "create" call can succeed an instant before this object
 /// closes, racing its own constructor's `registerChild` call against the one-shot sweep. Rather
 /// than a lock around the check, `registerChild` inserts optimistically and validates
@@ -36,7 +36,12 @@ abstract class NativeObjectWithChildren extends NativeObject {
 	/// Registers `child` to be closed automatically before this object's own native resource is
 	/// destroyed, if `child` is not already closed by then.
 	///
-	/// Closes a TOCTOU race (issues/143): `child`'s underlying native "create" call can succeed
+	/// Best effort, not a guarantee: closing this object while another thread is still creating a child from it
+	/// is unsupported (see [NativeObject]), and if this object is destroyed before that native "create" call
+	/// runs, nothing here can help. What this does is turn the survivable half of that race from a later crash
+	/// into a leak plus an [IllegalStateException].
+	///
+	/// Narrows a TOCTOU race (issues/143): `child`'s underlying native "create" call can succeed
 	/// an instant before this object closes, so by the time `child`'s constructor reaches this
 	/// call, [#tryClose(MemorySegment)] may already have run its one-shot sweep. A naive
 	/// "check [NativeObject#isClosed()], then add" is itself racy -- the check and the add are
@@ -69,6 +74,10 @@ abstract class NativeObjectWithChildren extends NativeObject {
 	///
 	/// @param child the child resource to close alongside (and before) this object
 	final void registerChild(NativeObject child) {
+		if (isImmortal()) {
+			// Never swept, so tracking the child would only pin it for the life of the JVM.
+			return;
+		}
 		children.add(child);
 		if (isClosed() && children.remove(child)) {
 			child.transferOwnership();
@@ -108,9 +117,9 @@ abstract class NativeObjectWithChildren extends NativeObject {
 		// child.release() is safe to call whether or not the child was already closed by its own
 		// caller (NativeObject's release() is idempotent), and children is a ConcurrentHashMap-
 		// backed set, so a child unregistering itself mid-iteration does not throw
-		// ConcurrentModificationException. No children.clear() afterward: every child.close()
-		// call above already unregisters that child from `children` as part of its own
-		// tryClose (see Snapshot/RocksIterator), so a normal sweep already drains the set on its
+		// ConcurrentModificationException. No children.clear() afterward: every child.release()
+		// call above already unregisters that child from `children` (see NativeObject#release()),
+		// so a normal sweep already drains the set on its
 		// own; anything still present after this loop is exactly the registerChild-added-during-
 		// this-very-sweep stragglers described there, and registerChild's own recheck cleans
 		// those up (whether that happens before or after this method returns).

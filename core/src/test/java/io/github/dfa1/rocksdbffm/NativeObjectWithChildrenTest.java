@@ -285,6 +285,23 @@ class NativeObjectWithChildrenTest {
 	}
 
 	@Test
+	void borrowedFrom_twoParents_oneAlreadyClosed_abandonsTheChildAndLeavesNoEntryInTheOther() {
+		// Given
+		var alive = new TestParent(fakePtr(0x1));
+		var closed = new TestParent(fakePtr(0x2));
+		closed.close();
+		var child = new TestChild(fakePtr(0x3));
+
+		// When
+		child.borrowedFrom(alive, closed);
+
+		// Then
+		assertThat(child.isClosed()).isTrue();
+		assertThat(child.tryCloseCount.get()).isZero();
+		assertThat(alive.childCount()).isZero();
+	}
+
+	@Test
 	void borrowedFrom_anImmortalParent_isNotRegisteredWith() {
 		// Given
 		TestParent immortal = new TestParent(fakePtr(0x1)).makeImmortal();
