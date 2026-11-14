@@ -19,6 +19,9 @@ import java.util.Optional;
 /// instance — never constructed directly.
 public final class LiveFileStorageInfo {
 
+	private static final String CRC32C_FUNC_NAME = "FileChecksumCrc32c";
+	private static final long CRC32C_LENGTH = 4;
+
 	/// `const char* rocksdb_livefiles_storage_info_relative_filename(const rocksdb_livefiles_storage_info_t*, size_t index);`
 	private static final MethodHandle MH_RELATIVE_FILENAME;
 	/// `const char* rocksdb_livefiles_storage_info_directory(const rocksdb_livefiles_storage_info_t*, size_t index);`
@@ -151,15 +154,23 @@ public final class LiveFileStorageInfo {
 	}
 
 	/// Returns the file's checksum, or [Optional#empty()] if checksums were not requested (see
-	/// [LiveFilesStorageInfoOptions#setIncludeChecksumInfo]) or no checksum function is
-	/// configured for the database.
+	/// [LiveFilesStorageInfoOptions#setIncludeChecksumInfo]), no checksum function is configured
+	/// for the database, or the function is not supported.
+	///
+	/// The C API returns the checksum without its length, so only functions with a known fixed
+	/// width can be read losslessly. Today that is CRC32C (`"FileChecksumCrc32c"`, 4 bytes);
+	/// any other function yields [Optional#empty()] rather than a corrupted value.
 	///
 	/// @return the file checksum, or [Optional#empty()] if unavailable
-	public Optional<String> fileChecksum() {
+	public Optional<FileChecksum> fileChecksum() {
+		String funcName = fileChecksumFuncName();
+		if (!CRC32C_FUNC_NAME.equals(funcName)) {
+			return Optional.empty();
+		}
 		try {
 			MemorySegment p = (MemorySegment) MH_FILE_CHECKSUM.invokeExact(owner.ptr(), (long) index);
-			String checksum = NativeCalls.toBorrowedJavaString(p);
-			return checksum.isEmpty() ? Optional.empty() : Optional.of(checksum);
+			byte[] bytes = p.reinterpret(CRC32C_LENGTH).toArray(ValueLayout.JAVA_BYTE);
+			return Optional.of(new FileChecksum(bytes, funcName));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("fileChecksum failed", t);
 		}

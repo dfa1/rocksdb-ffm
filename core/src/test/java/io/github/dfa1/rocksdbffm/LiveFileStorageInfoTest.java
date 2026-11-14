@@ -226,7 +226,9 @@ class LiveFileStorageInfoTest {
 
                 // Then
                 assertThat(tableFile.fileChecksum()).isPresent();
-                assertThat(tableFile.fileChecksum().orElseThrow()).isNotEmpty();
+                assertThat(tableFile.fileChecksum().orElseThrow().toBytes()).hasSize(4);
+                assertThat(tableFile.fileChecksum().orElseThrow().functionName())
+                        .isEqualTo("FileChecksumCrc32c");
                 assertThat(tableFile.fileChecksumFuncName()).isNotEqualTo("Unknown");
             }
         }

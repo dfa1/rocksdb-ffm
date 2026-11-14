@@ -22,6 +22,7 @@ Shared immortal defaults, no implicit database creation, `BlobDB` folded into `R
 
 ### Changed
 
+- **Breaking:** `LiveFileStorageInfo.fileChecksum()` returns `Optional<FileChecksum>` (raw bytes + function name, hex `toString()`) instead of `Optional<String>`. The checksum is binary, so decoding it as a NUL-terminated UTF-8 string truncated it at the first `0x00` and mangled bytes `>= 0x80`. Only CRC32C is read (4 bytes, lossless); other functions yield empty until the C API exposes a length ([#305](https://github.com/dfa1/rocksdb-ffm/issues/305))
 - **Breaking:** `ColumnFamilyDescriptor.name()` returns `String`; the `of(byte[])`/`of(byte[], Options)` factories and `LoadedOptions.columnFamilyOptions(byte[])` are removed. The C API takes names as NUL-terminated strings, so the `byte[]` forms were only ever decoded as UTF-8 ([#275](https://github.com/dfa1/rocksdb-ffm/pull/275))
 - `beginTransaction(WriteOptions)`, `ingestExternalFile(files)`, `newSstFileWriter(Options)`, the default-env tracing overloads, `Replayer.create(db, path)` and column families created without options reuse one immortal native default instead of creating and destroying options on every call ([#276](https://github.com/dfa1/rocksdb-ffm/pull/276))
 - **Breaking:** `openReadWrite(Path)` and `openTtl(Path, Duration)` no longer create a missing database: they use default options and fail with "does not exist". Pass `Options` with `setCreateIfMissing(true)` to create it ([#286](https://github.com/dfa1/rocksdb-ffm/pull/286), closes [#285](https://github.com/dfa1/rocksdb-ffm/issues/285))
