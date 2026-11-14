@@ -14,7 +14,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 /// Entry point for opening RocksDB databases.
 ///
@@ -247,7 +246,7 @@ public final class RocksDB {
 			MemorySegment ptr = (MemorySegment) MH_OPEN_WITH_TTL.invokeExact(
 					options.ptr(), pathSeg, toTtlSeconds(ttl), err);
 			NativeCalls.checkError(err);
-			return new TtlDB(ptr, Optional.of(ttl), Map.of());
+			return new TtlDB(ptr, ttl, Map.of());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openTtl failed", t);
 		}
@@ -532,7 +531,7 @@ public final class RocksDB {
 			for (int i = 0; i < n; i++) {
 				cfTtls.put(descriptors.get(i).name(), ttls.get(i));
 			}
-			return new TtlDB(ptr, Optional.empty(), Collections.unmodifiableMap(cfTtls));
+			return new TtlDB(ptr, null, Collections.unmodifiableMap(cfTtls));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openTtl failed", t);
 		}

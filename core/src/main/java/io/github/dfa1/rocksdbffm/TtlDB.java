@@ -22,10 +22,10 @@ public final class TtlDB extends NativeDB
 		implements RocksDBReadOperations, RocksDBWriteOperations, RocksDBCompactionOperations, RocksDBMonitoringOperations,
 		RocksDBTracingOperations {
 
-	private final Optional<Duration> ttl;
+	private final Duration ttl; // null for a per-column-family open
 	private final Map<String, Duration> columnFamilyTtls;
 
-	TtlDB(MemorySegment ptr, Optional<Duration> ttl, Map<String, Duration> columnFamilyTtls) {
+	TtlDB(MemorySegment ptr, Duration ttl, Map<String, Duration> columnFamilyTtls) {
 		super(ptr);
 		this.ttl = ttl;
 		this.columnFamilyTtls = columnFamilyTtls;
@@ -37,7 +37,7 @@ public final class TtlDB extends NativeDB
 	///
 	/// @return the TTL passed at open, or empty for a per-column-family open
 	public Optional<Duration> getTtl() {
-		return ttl;
+		return Optional.ofNullable(ttl);
 	}
 
 	/// Returns the TTL of each column family, by name, as passed to the per-column-family open, in descriptor
