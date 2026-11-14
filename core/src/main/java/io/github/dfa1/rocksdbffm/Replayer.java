@@ -67,10 +67,27 @@ public final class Replayer extends NativeObject {
 	/// before the database is.
 	private final NativeObjectWithChildren owningDb;
 
-	private Replayer(NativeObjectWithChildren owningDb, MemorySegment ptr) {
+	/// The column families this replayer replays into. The native replayer keeps raw pointers to their handles, which
+	/// [NativeDB#forget(ColumnFamilyHandle)] frees when one is dropped.
+	private final List<ColumnFamilyHandle> columnFamilies;
+
+	private Replayer(NativeObjectWithChildren owningDb, List<ColumnFamilyHandle> columnFamilies, MemorySegment ptr) {
 		super(ptr);
 		this.owningDb = owningDb;
+		this.columnFamilies = columnFamilies;
 		owningDb.registerChild(this);
+	}
+
+	/// Returns [#ptr()] for a call that replays into the column families, after checking that none was dropped.
+	///
+	/// @return the native replayer pointer
+	/// @throws IllegalStateException if this replayer is closed or one of its column families was dropped
+	private MemorySegment openPtr() {
+		MemorySegment ptr = ptr();
+		for (ColumnFamilyHandle cf : columnFamilies) {
+			cf.ptr();
+		}
+		return ptr;
 	}
 
 	/// Opens `tracePath` for replay against `db`'s default column family, using the default
@@ -84,9 +101,10 @@ public final class Replayer extends NativeObject {
 	}
 
 	/// [#create(RocksDBWriteOperations, Path)] against specific column families, with an
-	/// explicit [Env]/[EnvOptions] pair (e.g. [Env#memEnv()] in tests). Both `cfs` and the
-	/// env/envOptions pair remain owned by the caller -- RocksDB only reads them while opening
-	/// the trace file and does not retain them afterward.
+	/// explicit [Env]/[EnvOptions] pair (e.g. [Env#memEnv()] in tests). The env/envOptions pair
+	/// remains owned by the caller -- RocksDB only reads it while opening the trace file. The
+	/// replayer does keep raw pointers to the `cfs` handles: dropping one of them makes
+	/// [#prepare()] and [#replay(ReplayOptions)] throw [IllegalStateException].
 	///
 	/// @param db         target database to replay operations against
 	/// @param tracePath  trace file previously written by [RocksDBTracingOperations#startTrace]
@@ -107,7 +125,7 @@ public final class Replayer extends NativeObject {
 			MemorySegment ptr = (MemorySegment) MH_CREATE.invokeExact(
 					db.dbPtr(), cfArr, (long) cfs.size(), env.ptr(), envOptions.ptr(), pathSeg, err);
 			NativeCalls.checkError(err);
-			return new Replayer((NativeObjectWithChildren) db, ptr);
+			return new Replayer((NativeObjectWithChildren) db, List.copyOf(cfs), ptr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("Replayer.create failed", t);
 		}
@@ -115,10 +133,12 @@ public final class Replayer extends NativeObject {
 
 	/// Reads and validates the trace file's header. Must be called once, before the first
 	/// [#replay(ReplayOptions)].
+	///
+	/// @throws IllegalStateException if this replayer is closed or one of its column families was dropped
 	public void prepare() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MH_PREPARE.invokeExact(ptr(), err);
+			MH_PREPARE.invokeExact(openPtr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("prepare failed", t);
@@ -138,10 +158,11 @@ public final class Replayer extends NativeObject {
 	/// according to `options`. Blocks until replay completes.
 	///
 	/// @param options concurrency and timing controls for playback
+	/// @throws IllegalStateException if this replayer is closed or one of its column families was dropped
 	public void replay(ReplayOptions options) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MH_REPLAY.invokeExact(ptr(), options.ptr(), err);
+			MH_REPLAY.invokeExact(openPtr(), options.ptr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("replay failed", t);
