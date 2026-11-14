@@ -323,6 +323,27 @@ class DbOwnedColumnFamilyHandlesTest {
 		}
 	}
 
+	@Test
+	void dropColumnFamily_withAnotherDbsHandle_leavesTheOtherDbsFamilyUsable(@TempDir Path dir, @TempDir Path otherDir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openReadWrite(dir, opts);
+		     var other = RocksDB.openReadWrite(otherDir, opts)) {
+			var foreign = other.createColumnFamily(ColumnFamilyDescriptor.of(CF1));
+			other.put(foreign, "k".getBytes(), "v".getBytes());
+
+			// When — rejected: the handle belongs to another database, which must never be asked to drop it
+			var thrown = catchThrowable(() -> db.dropColumnFamily(foreign));
+			var writeAfter = catchThrowable(() -> other.put(foreign, "k2".getBytes(), "v2".getBytes()));
+
+			// Then
+			assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+			assertThat(writeAfter).isNull();
+			assertThat(other.get(foreign, "k".getBytes())).isEqualTo("v".getBytes());
+			assertThat(other.get(foreign, "k2".getBytes())).isEqualTo("v2".getBytes());
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// concurrency
 	// -----------------------------------------------------------------------

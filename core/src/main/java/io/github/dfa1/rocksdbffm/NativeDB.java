@@ -82,6 +82,17 @@ abstract class NativeDB extends NativeObjectWithChildren {
 		return handle;
 	}
 
+	/// Checks that `handle` is one of this database's own column family handles, before anything native is done
+	/// with it: passing another database's handle to a native call acts on that other database.
+	///
+	/// @param handle a column family handle supplied by the caller
+	/// @throws IllegalArgumentException if `handle` does not belong to this database
+	final void requireOwns(ColumnFamilyHandle handle) {
+		if (columnFamilies.get().values().stream().noneMatch(h -> h == handle)) {
+			throw new IllegalArgumentException("column family handle does not belong to this database");
+		}
+	}
+
 	/// Releases a handle that was dropped natively; releasing it also unregisters it.
 	///
 	/// @param handle the handle of a column family this database just dropped
