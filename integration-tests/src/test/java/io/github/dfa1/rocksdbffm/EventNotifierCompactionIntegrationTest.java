@@ -64,7 +64,7 @@ class EventNotifierCompactionIntegrationTest {
 				     .setLevel0FileNumCompactionTrigger(2)
 				     .setTargetFileSizeBase(MemorySize.ofKB(64))
 				     .addEventListener(notifier);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When -- plain sequential writes; no manual flush() or compactRange() anywhere
 			for (int i = 0; i < KEY_COUNT; i++) {

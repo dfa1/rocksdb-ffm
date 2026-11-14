@@ -40,7 +40,7 @@ class ConcurrentStressIntegrationTest {
 		var failures = new ConcurrentLinkedQueue<Throwable>();
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
 			var latch = new CountDownLatch(THREAD_COUNT);
@@ -113,7 +113,7 @@ class ConcurrentStressIntegrationTest {
 		var failures = new ConcurrentLinkedQueue<Throwable>();
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			for (int i = 0; i < KEY_COUNT; i++) {
 				db.put(("key-" + i).getBytes(), "seed".getBytes());

@@ -42,7 +42,7 @@ class SmokeTest {
 
 	@Test
 	void byteArrayRoundTrip(@TempDir Path dir) {
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("key".getBytes(StandardCharsets.UTF_8), "value".getBytes(StandardCharsets.UTF_8));
 
 			byte[] value = db.get("key".getBytes(StandardCharsets.UTF_8));
@@ -55,7 +55,7 @@ class SmokeTest {
 
 	@Test
 	void byteBufferRoundTrip(@TempDir Path dir) {
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			ByteBuffer key = ByteBuffer.allocateDirect(3);
 			key.put("bbk".getBytes(StandardCharsets.UTF_8)).flip();
 			ByteBuffer value = ByteBuffer.allocateDirect(3);
@@ -77,7 +77,7 @@ class SmokeTest {
 
 	@Test
 	void zeroCopyMemorySegmentRoundTrip(@TempDir Path dir) {
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     Arena arena = Arena.ofConfined()) {
 			MemorySegment key = toNative(arena, "msk".getBytes(StandardCharsets.UTF_8));
 			MemorySegment value = toNative(arena, "msv".getBytes(StandardCharsets.UTF_8));
@@ -95,7 +95,7 @@ class SmokeTest {
 
 	@Test
 	void iteratorSeesAllPuts(@TempDir Path dir) {
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			for (int i = 0; i < 10; i++) {
 				db.put(("k" + i).getBytes(StandardCharsets.UTF_8), ("v" + i).getBytes(StandardCharsets.UTF_8));
 			}
@@ -112,7 +112,7 @@ class SmokeTest {
 
 	@Test
 	void snapshotIsolatesReads(@TempDir Path dir) {
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(StandardCharsets.UTF_8), "v1".getBytes(StandardCharsets.UTF_8));
 
 			try (Snapshot snapshot = db.getSnapshot()) {
@@ -131,7 +131,7 @@ class SmokeTest {
 
 	@Test
 	void writeBatchAppliesAtomically(@TempDir Path dir) {
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     WriteBatch batch = WriteBatch.create()) {
 			batch.put("a".getBytes(StandardCharsets.UTF_8), "1".getBytes(StandardCharsets.UTF_8));
 			batch.put("b".getBytes(StandardCharsets.UTF_8), "2".getBytes(StandardCharsets.UTF_8));
@@ -145,7 +145,7 @@ class SmokeTest {
 
 	@Test
 	void flushPersistsData(@TempDir Path dir) {
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var flushOptions = io.github.dfa1.rocksdbffm.FlushOptions.newFlushOptions().setWait(true)) {
 			db.put("k".getBytes(StandardCharsets.UTF_8), "v".getBytes(StandardCharsets.UTF_8));
 

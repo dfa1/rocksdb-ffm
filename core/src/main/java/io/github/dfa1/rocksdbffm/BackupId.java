@@ -7,7 +7,7 @@ package io.github.dfa1.rocksdbffm;
 /// confusion with Java's signed `int`.
 ///
 /// ```
-/// BackupEngine engine = BackupEngine.open(opts, backupPath);
+/// BackupEngine engine = BackupEngine.open(backupPath, opts);
 /// engine.createNewBackup(db);
 /// List<BackupInfo> infos = engine.getBackupInfo();
 /// BackupId latest = infos.getLast().backupId();

@@ -27,7 +27,7 @@ import java.util.List;
 /// ```
 /// try (var opts = Options.newOptions().setCreateIfMissing(true)
 ///             .setMergeOperator(MergeOperator.uint64Add());
-///      var db = RocksDB.openReadWrite(opts, dbPath)) {
+///      var db = RocksDB.openReadWrite(dbPath, opts)) {
 ///     db.merge("views".getBytes(), encode(1));
 ///     db.merge("views".getBytes(), encode(1));
 ///     long total = decode(db.get("views".getBytes()));   // 2

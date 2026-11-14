@@ -12,7 +12,7 @@ import java.lang.invoke.MethodHandle;
 /// Must be closed after use to release the native handle.
 ///
 /// ```
-/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, path);
+/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(path, dbOpts);
 ///      var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 ///     db.put(cf, "key".getBytes(), "value".getBytes());
 /// }

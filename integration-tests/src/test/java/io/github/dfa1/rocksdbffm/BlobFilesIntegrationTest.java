@@ -19,7 +19,7 @@ class BlobFilesIntegrationTest {
 				.setCreateIfMissing(true)
 				.setEnableBlobFiles(true)
 				.setMinBlobSize(MemorySize.ofBytes(0));
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When
 			db.put("k".getBytes(), VALUE_64KB);
@@ -32,7 +32,7 @@ class BlobFilesIntegrationTest {
 	@Test
 	void openWithBlobFiles_convenienceFactory(@TempDir Path dir) {
 		// Given — convenience overload sets createIfMissing=true and enableBlobFiles=true
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 
 			// When
 			db.put("hello".getBytes(), VALUE_64KB);
@@ -45,7 +45,7 @@ class BlobFilesIntegrationTest {
 	@Test
 	void delete_removesKey(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(), VALUE_64KB);
 
 			// When
@@ -90,7 +90,7 @@ class BlobFilesIntegrationTest {
 			assertThat(blobGcForceThreshold).isEqualTo(Ratio.of(0.8));
 			assertThat(blobFileStartingLevel).isZero();
 
-			try (var db = RocksDB.openReadWrite(opts, dir)) {
+			try (var db = RocksDB.openReadWrite(dir, opts)) {
 				db.put("k".getBytes(), VALUE_64KB);
 				assertThat(db.get("k".getBytes())).isEqualTo(VALUE_64KB);
 			}
@@ -107,7 +107,7 @@ class BlobFilesIntegrationTest {
 				.setCreateIfMissing(true)
 				.setEnableBlobFiles(true)
 				.setMinBlobSize(MemorySize.ofKB(64));
-		     var db = RocksDB.openReadWrite(opts, dbDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts)) {
 			db.put("before".getBytes(), "snap".getBytes());
 
 			// When — take a checkpoint
@@ -132,7 +132,7 @@ class BlobFilesIntegrationTest {
 				.setCreateIfMissing(true)
 				.setEnableBlobFiles(true)
 				.setMinBlobSize(MemorySize.ofBytes(0));
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			db.put("k".getBytes(), VALUE_64KB);
 			db.flush(FlushOptions.newFlushOptions());

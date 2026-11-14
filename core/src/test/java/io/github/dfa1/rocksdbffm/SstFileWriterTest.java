@@ -36,7 +36,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.ingestExternalFile(sstPath);
 
 			// Then
@@ -67,7 +67,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.ingestExternalFile(List.of(sst1, sst2));
 
 			// Then
@@ -92,7 +92,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts);
 		     var ingestOpts = IngestExternalFileOptions.newIngestExternalFileOptions().setMoveFiles(true)) {
 			db.ingestExternalFile(sstPath, ingestOpts);
 
@@ -115,7 +115,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.put("existing".getBytes(), "original".getBytes());
 			db.ingestExternalFile(sstPath);
 
@@ -163,7 +163,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.ingestExternalFile(sstPath);
 
 			// Then
@@ -188,7 +188,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.ingestExternalFile(sstPath);
 
 			// Then
@@ -206,7 +206,7 @@ class SstFileWriterTest {
 		Path sstPath = dir.resolve("data.sst");
 		Path dbPath = dir.resolve("db");
 
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.put("key".getBytes(), "value".getBytes());
 		}
 
@@ -218,7 +218,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.ingestExternalFile(sstPath);
 
 			// Then
@@ -232,7 +232,7 @@ class SstFileWriterTest {
 		Path sstPath = dir.resolve("data.sst");
 		Path dbPath = dir.resolve("db");
 
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.put("key".getBytes(), "value".getBytes());
 		}
 
@@ -245,7 +245,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.ingestExternalFile(sstPath);
 
 			// Then
@@ -259,7 +259,7 @@ class SstFileWriterTest {
 		Path sstPath = dir.resolve("data.sst");
 		Path dbPath = dir.resolve("db");
 
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.put("key".getBytes(), "value".getBytes());
 		}
 
@@ -273,7 +273,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.ingestExternalFile(sstPath);
 
 			// Then
@@ -291,7 +291,7 @@ class SstFileWriterTest {
 		Path sstPath = dir.resolve("data.sst");
 		Path dbPath = dir.resolve("db");
 
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -305,7 +305,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.ingestExternalFile(sstPath);
 
 			// Then — [a, c) is gone, c survives
@@ -321,7 +321,7 @@ class SstFileWriterTest {
 		Path sstPath = dir.resolve("data.sst");
 		Path dbPath = dir.resolve("db");
 
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 		}
@@ -336,7 +336,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.ingestExternalFile(sstPath);
 
 			// Then
@@ -351,7 +351,7 @@ class SstFileWriterTest {
 		Path sstPath = dir.resolve("data.sst");
 		Path dbPath = dir.resolve("db");
 
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 		}
@@ -367,7 +367,7 @@ class SstFileWriterTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.ingestExternalFile(sstPath);
 
 			// Then
@@ -417,7 +417,7 @@ class SstFileWriterTest {
 	@Test
 	void ingest_emptyFileList_isNoOp(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			// When
 			ThrowingCallable action = () -> db.ingestExternalFile(List.of());
 

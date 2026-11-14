@@ -20,7 +20,7 @@ class RocksDBTest {
 	@Test
 	void get_returnsStoredValue(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("hello".getBytes(), "world".getBytes());
 
 			// When
@@ -34,7 +34,7 @@ class RocksDBTest {
 	@Test
 	void get_returnsNull_whenKeyAbsent(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 
 			// When
 			var result = db.get("nonexistent".getBytes());
@@ -47,7 +47,7 @@ class RocksDBTest {
 	@Test
 	void get_returnsNull_afterDelete(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -61,7 +61,7 @@ class RocksDBTest {
 	@Test
 	void put_overwritesExistingKey(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(), "v1".getBytes());
 
 			// When
@@ -78,7 +78,7 @@ class RocksDBTest {
 		var key = new byte[]{0x00, 0x01, (byte) 0xFF};
 		var value = new byte[]{0x42, 0x00, 0x43};
 
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			// When
 			db.put(key, value);
 
@@ -94,7 +94,7 @@ class RocksDBTest {
 	@Test
 	void write_commitsBatchedPuts(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var batch = WriteBatch.create()) {
 
 			batch.put("k1".getBytes(), "v1".getBytes());
@@ -114,7 +114,7 @@ class RocksDBTest {
 	@Test
 	void write_commitsBatchedDeletes(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var batch = WriteBatch.create()) {
 
 			db.put("k1".getBytes(), "v1".getBytes());
@@ -134,7 +134,7 @@ class RocksDBTest {
 	@Test
 	void write_commitsBatchedPuts_byteBuffer(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var batch = WriteBatch.create()) {
 
 			var key = directBuffer("k1");
@@ -152,7 +152,7 @@ class RocksDBTest {
 	@Test
 	void write_commitsBatchedPuts_memorySegment(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var batch = WriteBatch.create();
 		     var arena = Arena.ofConfined()) {
 
@@ -171,7 +171,7 @@ class RocksDBTest {
 	@Test
 	void write_commitsBatchedDeletes_byteBuffer(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var batch = WriteBatch.create()) {
 
 			db.put("k1".getBytes(), "v1".getBytes());
@@ -189,7 +189,7 @@ class RocksDBTest {
 	@Test
 	void write_commitsBatchedDeletes_memorySegment(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var batch = WriteBatch.create();
 		     var arena = Arena.ofConfined()) {
 
@@ -208,7 +208,7 @@ class RocksDBTest {
 	@Test
 	void writeBatch_countReflectsQueuedOperations(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var batch = WriteBatch.create()) {
 
 			for (int i = 0; i < 50; i++) {
@@ -242,7 +242,7 @@ class RocksDBTest {
 
 		try (var opts = Options.newOptions().setCreateIfMissing(false)) {
 			// When
-			var thrown = assertThatThrownBy(() -> RocksDB.openReadWrite(opts, dbPath));
+			var thrown = assertThatThrownBy(() -> RocksDB.openReadWrite(dbPath, opts));
 
 			// Then
 			thrown.isInstanceOf(RocksDBException.class);
@@ -255,7 +255,7 @@ class RocksDBTest {
 		var dbPath = dir.resolve("newdb");
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbPath)) {
+		     var db = RocksDB.openReadWrite(dbPath, opts)) {
 
 			// When
 			db.put("k".getBytes(), "v".getBytes());
@@ -308,7 +308,7 @@ class RocksDBTest {
 	@Test
 	void openReadOnly_allowsReads(@TempDir Path dir) {
 		// Given
-		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(dir, rwOpts)) {
 			rw.put("k".getBytes(), "v".getBytes());
 		}
 
@@ -324,12 +324,12 @@ class RocksDBTest {
 	@Test
 	void openReadOnly_withExplicitOptions(@TempDir Path dir) {
 		// Given
-		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(rwOpts, dir)) {
+		try (Options rwOpts = Options.newOptions().setCreateIfMissing(true); var rw = RocksDB.openReadWrite(dir, rwOpts)) {
 			rw.put("hello".getBytes(), "world".getBytes());
 		}
 
 		try (var opts = Options.newOptions();
-		     var ro = RocksDB.openReadOnly(opts, dir)) {
+		     var ro = RocksDB.openReadOnly(dir, opts)) {
 
 			// When
 			var result = ro.get("hello".getBytes());

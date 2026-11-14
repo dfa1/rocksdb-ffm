@@ -38,7 +38,7 @@ class LoggerTest {
 			System.out.println(level + ": " + msg);
 		});
 		     var opts = Options.newOptions().setCreateIfMissing(true).setInfoLog(logger);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When — trigger at least one internal log message via a flush
 			db.put("k".getBytes(), "v".getBytes());
@@ -63,7 +63,7 @@ class LoggerTest {
 			throw new RuntimeException("boom from user callback");
 		});
 		     var opts = Options.newOptions().setCreateIfMissing(true).setInfoLog(logger);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When — opening the DB and writing triggers internal log events, which
 			// invoke the throwing callback from the native upcall dispatch
@@ -99,7 +99,7 @@ class LoggerTest {
 			logger.close(); // safe: RocksDB still holds a shared_ptr reference
 
 			// When
-			try (var db = RocksDB.openReadWrite(opts, dir)) {
+			try (var db = RocksDB.openReadWrite(dir, opts)) {
 				db.put("k".getBytes(), "v".getBytes());
 			}
 		}

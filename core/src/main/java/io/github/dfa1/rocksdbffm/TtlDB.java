@@ -16,7 +16,7 @@ import java.util.Optional;
 /// A [Duration#ZERO] TTL disables expiry entirely.
 ///
 /// ```
-/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, path, Duration.ofSeconds(60))) {
+/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(path, dbOpts, Duration.ofSeconds(60))) {
 ///     db.put("key".getBytes(), "value".getBytes());
 ///     byte[] value = db.get("key".getBytes());
 /// }

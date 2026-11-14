@@ -81,7 +81,7 @@ class ColumnFamilyNameTest {
 		// Given — a name another binding could have written: not valid UTF-8
 		var raw = ColumnFamilyName.ofBytes(new byte[]{'c', 'f', (byte) 0xFF, (byte) 0xFE});
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var _ = db.createColumnFamily(ColumnFamilyDescriptor.of(raw))) {
 			// created
 		}
@@ -89,14 +89,14 @@ class ColumnFamilyNameTest {
 		// When
 		List<ColumnFamilyName> listed;
 		try (var opts = Options.newOptions()) {
-			listed = RocksDB.listColumnFamilies(opts, dir);
+			listed = RocksDB.listColumnFamilies(dir, opts);
 		}
 
 		// Then — the listed name is byte-identical, so it can be passed straight back to open
 		assertThat(listed).containsExactlyInAnyOrder(ColumnFamilyName.DEFAULT, raw);
 		var descriptors = listed.stream().map(ColumnFamilyDescriptor::of).toList();
 		try (var opts = Options.newOptions();
-		     var _ = RocksDB.openReadWrite(opts, dir, descriptors)) {
+		     var _ = RocksDB.openReadWrite(dir, opts, descriptors)) {
 			// reopened without a name mismatch
 		}
 	}
@@ -268,7 +268,7 @@ class ColumnFamilyNameTest {
 		// Given
 		var raw = ColumnFamilyName.ofBytes(new byte[]{'x', (byte) 0xC3, (byte) 0x28});
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(raw))) {
 
 			// When
@@ -296,7 +296,7 @@ class ColumnFamilyNameTest {
 		// Given
 		var raw = ColumnFamilyName.ofBytes(new byte[]{'k', (byte) 0xFF});
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var _ = db.createColumnFamily(ColumnFamilyDescriptor.of(raw))) {
 			// created
 		}

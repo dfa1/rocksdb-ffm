@@ -53,7 +53,7 @@ class LiveFileStorageInfoTest {
 	@Test
 	void getLiveFilesStorageInfo_afterFlush_includesCoreFileTypes(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.flush(fo);
@@ -76,7 +76,7 @@ class LiveFileStorageInfoTest {
 	@Test
 	void path_pointsAtTheRealFile(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.flush(fo);
@@ -94,7 +94,7 @@ class LiveFileStorageInfoTest {
 	@Test
 	void getLiveFilesStorageInfo_tableFileEntry_hasExpectedMetadata(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.flush(fo);
@@ -118,7 +118,7 @@ class LiveFileStorageInfoTest {
 	@Test
 	void getLiveFilesStorageInfo_currentFileEntry_hasNoFileNumberButHasReplacementContents(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.flush(fo);
@@ -142,7 +142,7 @@ class LiveFileStorageInfoTest {
 		// Given — no checksum function configured on the DB, so requesting checksum info
 		// still leaves the checksum itself empty, but the func name reports "Unknown" rather
 		// than being left unset
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.flush(fo);
@@ -165,7 +165,7 @@ class LiveFileStorageInfoTest {
 	@Test
 	void get_negativeIndex_throws(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var info = db.getLiveFilesStorageInfo()) {
 
 			// When / Then
@@ -176,7 +176,7 @@ class LiveFileStorageInfoTest {
 	@Test
 	void get_indexEqualToSize_throws(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var info = db.getLiveFilesStorageInfo()) {
 			int size = info.size();
 
@@ -188,7 +188,7 @@ class LiveFileStorageInfoTest {
 	@Test
 	void iterator_exhausted_throwsNoSuchElement(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var info = db.getLiveFilesStorageInfo()) {
 			var it = info.iterator();
 			while (it.hasNext()) {
@@ -204,7 +204,7 @@ class LiveFileStorageInfoTest {
 	void liveFileStorageInfo_afterOwnerClosed_throws(@TempDir Path dir) {
 		// Given
 		LiveFileStorageInfo file;
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			try (var info = db.getLiveFilesStorageInfo()) {
 				file = info.get(0);
 			}
@@ -231,7 +231,7 @@ class LiveFileStorageInfoTest {
              var opts = Options.newOptions()
                      .setCreateIfMissing(true)
                      .setFileChecksumGenFactory(factory);
-             var db = RocksDB.openReadWrite(opts, dir);
+             var db = RocksDB.openReadWrite(dir, opts);
              var flushOptions = FlushOptions.newFlushOptions()) {
             db.put("a".getBytes(), "1".getBytes());
             db.flush(flushOptions);

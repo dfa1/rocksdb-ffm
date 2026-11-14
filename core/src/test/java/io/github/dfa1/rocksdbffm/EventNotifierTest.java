@@ -61,7 +61,7 @@ class EventNotifierTest {
 		};
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true).addEventListener(notifier);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -107,7 +107,7 @@ class EventNotifierTest {
 		};
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true).addEventListener(notifier);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -182,7 +182,7 @@ class EventNotifierTest {
 		};
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true).addEventListener(notifier);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			for (int i = 0; i < 2; i++) {
 				db.put(("k" + i).getBytes(), ("v" + i).getBytes());
 				db.flush(FlushOptions.newFlushOptions());
@@ -249,7 +249,7 @@ class EventNotifierTest {
 		};
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true).addEventListener(notifier);
-		     var db = RocksDB.openReadWrite(opts, dbPath)) {
+		     var db = RocksDB.openReadWrite(dbPath, opts)) {
 
 			// When
 			db.ingestExternalFile(sstPath);
@@ -304,7 +304,7 @@ class EventNotifierTest {
 				     .setLevel0SlowdownWritesTrigger(1)
 				     .setLevel0StopWritesTrigger(999_999)
 				     .addEventListener(notifier);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -339,7 +339,7 @@ class EventNotifierTest {
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.addEventListener(first).addEventListener(second);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -363,7 +363,7 @@ class EventNotifierTest {
 		};
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true).addEventListener(notifier);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -393,7 +393,7 @@ class EventNotifierTest {
 		}
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true).addEventListener(notifier);
-		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"))) {
+		     var db = RocksDB.openReadWrite(dir.resolve("db"), opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 			db.flush(FlushOptions.newFlushOptions());
 

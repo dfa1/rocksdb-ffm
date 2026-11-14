@@ -14,7 +14,7 @@ class OptimisticTransactionDBIntegrationTest {
 	void commit_makesChangesVisible(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo)) {
 
@@ -32,7 +32,7 @@ class OptimisticTransactionDBIntegrationTest {
 	void rollback_discardsChanges(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo)) {
 
@@ -50,7 +50,7 @@ class OptimisticTransactionDBIntegrationTest {
 	void conflictingCommit_throwsOnSecondTransaction(@TempDir Path dir) {
 		// Given — two transactions read and write the same key
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn1 = db.beginTransaction(wo);
 		     var txn2 = db.beginTransaction(wo)) {

@@ -37,34 +37,34 @@ class DbOwnedColumnFamilyHandlesTest {
 		return Stream.of(
 				new Opener("ReadWriteDB", dir -> {
 					try (var opts = Options.newOptions()) {
-						return RocksDB.openReadWrite(opts, dir, BOTH);
+						return RocksDB.openReadWrite(dir, opts, BOTH);
 					}
 				}),
 				new Opener("ReadOnlyDB", dir -> {
 					try (var opts = Options.newOptions()) {
-						return RocksDB.openReadOnly(opts, dir, BOTH);
+						return RocksDB.openReadOnly(dir, opts, BOTH);
 					}
 				}),
 				new Opener("SecondaryDB", dir -> {
 					try (var opts = Options.newOptions()) {
-						return RocksDB.openSecondary(opts, dir, secondaryDir(dir), BOTH);
+						return RocksDB.openSecondary(dir, secondaryDir(dir), opts, BOTH);
 					}
 				}),
 				new Opener("TtlDB", dir -> {
 					try (var opts = Options.newOptions()) {
-						return RocksDB.openTtl(opts, dir, List.of(
+						return RocksDB.openTtl(dir, opts, List.of(
 								BOTH.get(0).withTtl(java.time.Duration.ZERO),
 								BOTH.get(1).withTtl(java.time.Duration.ofHours(1))));
 					}
 				}),
 				new Opener("TransactionDB", dir -> {
 					try (var opts = Options.newOptions(); var txnOpts = TransactionDBOptions.newTransactionDBOptions()) {
-						return RocksDB.openTransaction(opts, txnOpts, dir, BOTH);
+						return RocksDB.openTransaction(dir, opts, txnOpts, BOTH);
 					}
 				}),
 				new Opener("OptimisticTransactionDB", dir -> {
 					try (var opts = Options.newOptions()) {
-						return RocksDB.openOptimistic(opts, dir, BOTH);
+						return RocksDB.openOptimistic(dir, opts, BOTH);
 					}
 				}));
 	}
@@ -80,7 +80,7 @@ class DbOwnedColumnFamilyHandlesTest {
 	/// Creates a database at `dir` holding `default` and `cf1`.
 	private static void prepare(Path dir) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(CF1))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 		}
@@ -211,7 +211,7 @@ class DbOwnedColumnFamilyHandlesTest {
 	void singlePathOpen_exposesTheDefaultFamily(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When
 			var families = db.getColumnFamilies();
@@ -226,7 +226,7 @@ class DbOwnedColumnFamilyHandlesTest {
 	void singlePathOpen_defaultHandleWorksWithTheColumnFamilyOverloads(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			var cf = db.getColumnFamily(ColumnFamilyName.DEFAULT);
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -246,7 +246,7 @@ class DbOwnedColumnFamilyHandlesTest {
 	void createColumnFamily_registersTheHandle_afterTheOpenedOnes(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When
 			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(CF1));
@@ -261,7 +261,7 @@ class DbOwnedColumnFamilyHandlesTest {
 	void createdHandle_isReleasedWithTheDb(@TempDir Path dir) {
 		// Given
 		var opts = Options.newOptions().setCreateIfMissing(true);
-		var db = RocksDB.openReadWrite(opts, dir);
+		var db = RocksDB.openReadWrite(dir, opts);
 		var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(CF1));
 
 		// When
@@ -276,7 +276,7 @@ class DbOwnedColumnFamilyHandlesTest {
 	void dropColumnFamily_removesTheEntry_andReleasesTheHandle(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(CF1));
 
 			// When
@@ -293,7 +293,7 @@ class DbOwnedColumnFamilyHandlesTest {
 	void dropColumnFamily_ofTheDefaultFamily_failsAndKeepsTheEntry(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			var defaultCf = db.getColumnFamily(ColumnFamilyName.DEFAULT);
 
 			// When
@@ -310,8 +310,8 @@ class DbOwnedColumnFamilyHandlesTest {
 	void dropColumnFamily_withAnotherDbsHandle_isRejected(@TempDir Path dir, @TempDir Path otherDir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir);
-		     var other = RocksDB.openReadWrite(opts, otherDir)) {
+		     var db = RocksDB.openReadWrite(dir, opts);
+		     var other = RocksDB.openReadWrite(otherDir, opts)) {
 			var foreign = other.createColumnFamily(ColumnFamilyDescriptor.of(CF1));
 
 			// When
@@ -332,7 +332,7 @@ class DbOwnedColumnFamilyHandlesTest {
 		// Given
 		var names = java.util.stream.IntStream.range(0, 16).mapToObj(i -> ColumnFamilyName.of("cf" + i)).toList();
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var executor = java.util.concurrent.Executors.newFixedThreadPool(8)) {
 
 			// When — families are created while other threads keep reading the registry
@@ -365,7 +365,7 @@ class DbOwnedColumnFamilyHandlesTest {
 
 		try (var opts = Options.newOptions()) {
 			// When
-			var thrown = catchThrowable(() -> RocksDB.openReadWrite(opts, dir, duplicated));
+			var thrown = catchThrowable(() -> RocksDB.openReadWrite(dir, opts, duplicated));
 
 			// Then
 			assertThat(thrown).isInstanceOf(RuntimeException.class).hasMessageContaining("duplicate column family name");
@@ -381,7 +381,7 @@ class DbOwnedColumnFamilyHandlesTest {
 		// Given
 		prepare(dir);
 		var opts = Options.newOptions();
-		var db = RocksDB.openReadWrite(opts, dir, BOTH);
+		var db = RocksDB.openReadWrite(dir, opts, BOTH);
 		var iterator = db.newIterator(db.getColumnFamily(CF1));
 		iterator.seekToFirst();
 
@@ -400,7 +400,7 @@ class DbOwnedColumnFamilyHandlesTest {
 		prepare(dir);
 		try (var opts = Options.newOptions();
 		     var txnOpts = TransactionDBOptions.newTransactionDBOptions();
-		     var db = RocksDB.openTransaction(opts, txnOpts, dir, BOTH);
+		     var db = RocksDB.openTransaction(dir, opts, txnOpts, BOTH);
 		     var wo = WriteOptions.newWriteOptions();
 		     var ro = ReadOptions.newReadOptions();
 		     var txn = db.beginTransaction(wo)) {
@@ -419,7 +419,7 @@ class DbOwnedColumnFamilyHandlesTest {
 	void readBatch_overTheDefaultFamily_usesTheRegisteredHandle(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("a".getBytes(), "1".getBytes());
 
 			// When

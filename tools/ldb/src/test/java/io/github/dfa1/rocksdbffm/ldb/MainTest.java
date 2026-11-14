@@ -16,7 +16,7 @@ class MainTest {
 	@Test
 	void run_returnsTheSubprocessExitCode(@TempDir Path dbDir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dbDir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbDir, dbOpts)) {
 			db.put("k".getBytes(), "v".getBytes());
 		}
 

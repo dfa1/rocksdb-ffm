@@ -87,7 +87,7 @@ class HyperClockCacheTest {
 					 .setCacheIndexAndFilterBlocks(true)
 					 .setFilterPolicy(filter);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			for (int i = 0; i < 100; i++) {
 				db.put(("key-" + i).getBytes(), ("val-" + i).getBytes());
 			}

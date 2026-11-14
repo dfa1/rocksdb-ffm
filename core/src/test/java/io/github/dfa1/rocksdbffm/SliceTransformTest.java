@@ -87,7 +87,7 @@ class SliceTransformTest {
 			transform.close();
 
 			// When
-			try (var db = RocksDB.openReadWrite(opts, dir)) {
+			try (var db = RocksDB.openReadWrite(dir, opts)) {
 				db.put("pre-key1".getBytes(), "value1".getBytes());
 				var hit = db.get("pre-key1".getBytes());
 
@@ -112,7 +112,7 @@ class SliceTransformTest {
 				     .setCreateIfMissing(true)
 				     .setPrefixExtractor(transform)
 				     .setTableFormatConfig(tbl);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("aaaa-1".getBytes(), "v1".getBytes());
 			db.put("aaaa-2".getBytes(), "v2".getBytes());
 			db.put("bbbb-1".getBytes(), "v3".getBytes());

@@ -21,7 +21,7 @@ class CompactionControlTest {
 	void compactRange_noArgs_doesNotThrow(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -42,7 +42,7 @@ class CompactionControlTest {
 	void compactRange_byteArray_fullRange(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("z".getBytes(), "2".getBytes());
 
@@ -59,7 +59,7 @@ class CompactionControlTest {
 	void compactRange_byteArray_nullBounds(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When — null means open-ended
@@ -78,7 +78,7 @@ class CompactionControlTest {
 	void compactRange_byteBuffer(@TempDir Path dir) {
 		// Given — ByteBuffer tier requires direct buffers
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -99,7 +99,7 @@ class CompactionControlTest {
 	void compactRange_byteBuffer_nullBounds(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -118,7 +118,7 @@ class CompactionControlTest {
 	void compactRange_withOptions_fullRange(@TempDir Path dir) {
 		// Given
 		try (var dbOpts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(dbOpts, dir);
+		     var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var compact = CompactOptions.newCompactOptions()
 					 .setExclusiveManualCompaction(false)
 					 .setBottommostLevelCompaction(true)) {
@@ -139,7 +139,7 @@ class CompactionControlTest {
 	void compactRange_withOptions_changeLevel(@TempDir Path dir) {
 		// Given
 		try (var dbOpts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(dbOpts, dir);
+		     var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var compact = CompactOptions.newCompactOptions()
 					 .setChangeLevel(true)
 					 .setTargetLevel(-1)) {  // -1 = bottommost
@@ -194,7 +194,7 @@ class CompactionControlTest {
 	void suggestCompactRange_doesNotThrow(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("z".getBytes(), "2".getBytes());
 
@@ -210,7 +210,7 @@ class CompactionControlTest {
 	void suggestCompactRange_nullBounds(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -229,7 +229,7 @@ class CompactionControlTest {
 	void disableAndEnableFileDeletions_doesNotThrow(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When — disable, do some work, re-enable
@@ -251,7 +251,7 @@ class CompactionControlTest {
 	@Test
 	void compactRange_blobDb_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -267,7 +267,7 @@ class CompactionControlTest {
 	@Test
 	void suggestCompactRange_blobDb_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("z".getBytes(), "2".getBytes());
 
@@ -282,7 +282,7 @@ class CompactionControlTest {
 	@Test
 	void disableAndEnableFileDeletions_blobDb_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When — disable, do some work, re-enable

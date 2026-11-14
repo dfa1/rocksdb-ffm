@@ -14,7 +14,7 @@ import java.nio.file.Path;
 /// database that can be opened read-only without any recovery.
 ///
 /// ```
-/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 ///      var cp = Checkpoint.newCheckpoint(db)) {
 ///     cp.exportTo(checkpointDir1);
 ///     db.put("k".getBytes(), "v2".getBytes());

@@ -40,7 +40,7 @@ class TtlExpiryIntegrationTest {
 	void databaseTtl_expiresTheDefaultFamily_butNotAFreshKey(@TempDir Path dir) throws InterruptedException {
 		// Given — a database-level TTL of one second
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTtl(opts, dir, ONE_SECOND);
+		     var db = RocksDB.openTtl(dir, opts, ONE_SECOND);
 		     var flushOptions = FlushOptions.newFlushOptions()) {
 			var cf = db.getColumnFamily(ColumnFamilyName.DEFAULT);
 			db.put(KEY, VALUE);
@@ -62,7 +62,7 @@ class TtlExpiryIntegrationTest {
 	void expiredKey_isStillReadableUntilACompactionRuns(@TempDir Path dir) throws InterruptedException {
 		// Given — a key written with a one second TTL, long past its TTL, in the memtable and then in a file
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTtl(opts, dir, ONE_SECOND);
+		     var db = RocksDB.openTtl(dir, opts, ONE_SECOND);
 		     var flushOptions = FlushOptions.newFlushOptions()) {
 			db.put(KEY, VALUE);
 			Thread.sleep(PAST_THE_TTL_MS);
@@ -85,7 +85,7 @@ class TtlExpiryIntegrationTest {
 	void databaseTtl_zero_neverExpires(@TempDir Path dir) throws InterruptedException {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTtl(opts, dir, Duration.ZERO)) {
+		     var db = RocksDB.openTtl(dir, opts, Duration.ZERO)) {
 			db.put(KEY, VALUE);
 
 			// When
@@ -100,7 +100,7 @@ class TtlExpiryIntegrationTest {
 	void perFamilyTtl_eachFamilyFollowsItsOwnTtl(@TempDir Path dir) throws InterruptedException {
 		// Given — a database without a TTL of its own, and three families: 1 second, 1 hour, and none
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTtl(opts, dir, Duration.ZERO)) {
+		     var db = RocksDB.openTtl(dir, opts, Duration.ZERO)) {
 			var shortCf = db.createColumnFamily(ColumnFamilyDescriptor.of(SHORT).withTtl(ONE_SECOND));
 			var longCf = db.createColumnFamily(ColumnFamilyDescriptor.of(LONG).withTtl(ONE_HOUR));
 			var neverCf = db.createColumnFamily(ColumnFamilyDescriptor.of(NEVER));
@@ -133,7 +133,7 @@ class TtlExpiryIntegrationTest {
 	void familyCreatedWithoutTtl_doesNotInheritTheDatabaseTtl(@TempDir Path dir) throws InterruptedException {
 		// Given — a database-level TTL of one second, a family created without a TTL, one created with 1 hour
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTtl(opts, dir, ONE_SECOND)) {
+		     var db = RocksDB.openTtl(dir, opts, ONE_SECOND)) {
 			var plain = db.createColumnFamily(ColumnFamilyDescriptor.of(NEVER));
 			var longCf = db.createColumnFamily(ColumnFamilyDescriptor.of(LONG).withTtl(ONE_HOUR));
 			var defaultCf = db.getColumnFamily(ColumnFamilyName.DEFAULT);
@@ -161,7 +161,7 @@ class TtlExpiryIntegrationTest {
 	void familyCreatedWithTtl_expiresEvenWhenTheDatabaseTtlIsLonger(@TempDir Path dir) throws InterruptedException {
 		// Given — a database-level TTL of one hour, a family created with one second
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTtl(opts, dir, ONE_HOUR)) {
+		     var db = RocksDB.openTtl(dir, opts, ONE_HOUR)) {
 			var shortCf = db.createColumnFamily(ColumnFamilyDescriptor.of(SHORT).withTtl(ONE_SECOND));
 			var defaultCf = db.getColumnFamily(ColumnFamilyName.DEFAULT);
 			db.put(shortCf, KEY, VALUE);
@@ -186,7 +186,7 @@ class TtlExpiryIntegrationTest {
 	void perFamilyOpen_appliesTheTtlsGivenOnTheDescriptors(@TempDir Path dir) throws InterruptedException {
 		// Given — the families exist (created through a TtlDB, so their values carry timestamps)
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTtl(opts, dir, Duration.ZERO)) {
+		     var db = RocksDB.openTtl(dir, opts, Duration.ZERO)) {
 			db.createColumnFamily(ColumnFamilyDescriptor.of(SHORT));
 			db.createColumnFamily(ColumnFamilyDescriptor.of(LONG));
 			db.createColumnFamily(ColumnFamilyDescriptor.of(NEVER));
@@ -194,7 +194,7 @@ class TtlExpiryIntegrationTest {
 
 		// When — reopened with one TTL per family: 1 second, 1 hour, and none (default: 1 second)
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.openTtl(opts, dir, List.of(
+		     var db = RocksDB.openTtl(dir, opts, List.of(
 				     ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT).withTtl(ONE_SECOND),
 				     ColumnFamilyDescriptor.of(SHORT).withTtl(ONE_SECOND),
 				     ColumnFamilyDescriptor.of(LONG).withTtl(ONE_HOUR),

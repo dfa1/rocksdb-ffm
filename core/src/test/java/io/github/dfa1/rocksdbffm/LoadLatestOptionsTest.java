@@ -18,7 +18,7 @@ class LoadLatestOptionsTest {
 
 	private void createDb(MemorySize defaultBuffer, MemorySize cf1Buffer) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true).setWriteBufferSize(defaultBuffer);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var cfOpts = Options.newOptions().setWriteBufferSize(cf1Buffer);
 		     var _ = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts))) {
 			db.put("k".getBytes(), "v".getBytes());
@@ -51,7 +51,7 @@ class LoadLatestOptionsTest {
 
 		// When
 		try (var loaded = RocksDB.loadLatestOptions(dir, false);
-		     var db = RocksDB.openReadWrite(loaded.dbOptions(), dir, loaded.columnFamilies())) {
+		     var db = RocksDB.openReadWrite(dir, loaded.dbOptions(), loaded.columnFamilies())) {
 			var value = db.get("k".getBytes());
 
 			// Then

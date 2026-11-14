@@ -15,7 +15,7 @@ class ReadWriteDBIntegrationTest {
 	void putGetDelete(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When
 			db.put("k1".getBytes(), "v1".getBytes());
@@ -38,7 +38,7 @@ class ReadWriteDBIntegrationTest {
 	void writeBatch_appliesAtomically(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var batch = WriteBatch.create()) {
 
 			// When
@@ -57,7 +57,7 @@ class ReadWriteDBIntegrationTest {
 	void iterator_scansKeysInOrder(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("c".getBytes(), "3".getBytes());

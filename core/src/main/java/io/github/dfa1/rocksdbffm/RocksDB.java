@@ -191,10 +191,10 @@ public final class RocksDB {
 	/// Use [Options#setCreateIfMissing(boolean)] to control behavior when
 	/// the path does not exist.
 	///
-	/// @param options the database options
 	/// @param path directory where the database files are stored
+	/// @param options the database options
 	/// @return a new [ReadWriteDB] instance
-	public static ReadWriteDB openReadWrite(Options options, Path path) {
+	public static ReadWriteDB openReadWrite(Path path, Options options) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
@@ -206,13 +206,13 @@ public final class RocksDB {
 		}
 	}
 
-	/// Equivalent to `openReadWrite(options, path)` with default options. Fails if the database does not
+	/// Equivalent to `openReadWrite(path, options)` with default options. Fails if the database does not
 	/// exist; to create it, pass options with [Options#setCreateIfMissing(boolean)] set.
 	///
 	/// @param path directory where the database files are stored
 	/// @return a new [ReadWriteDB] instance
 	public static ReadWriteDB openReadWrite(Path path) {
-		return openReadWrite(Options.DEFAULTS, path);
+		return openReadWrite(path, Options.DEFAULTS);
 	}
 
 	/// Opens (or creates) a TTL-aware read-write database at `path`.
@@ -220,12 +220,12 @@ public final class RocksDB {
 	/// Keys are lazily expired during the next compaction that covers their
 	/// range. A `ttl` of [Duration#ZERO] disables expiry entirely.
 	///
-	/// @param options the database options
 	/// @param path directory where the database files are stored
+	/// @param options the database options
 	/// @param ttl time-to-live for keys; [Duration#ZERO] disables expiry
 	/// @return a new [TtlDB] instance
 	/// @throws IllegalArgumentException if `ttl` is negative or longer than [Integer#MAX_VALUE] seconds
-	public static TtlDB openTtl(Options options, Path path, Duration ttl) {
+	public static TtlDB openTtl(Path path, Options options, Duration ttl) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
@@ -238,7 +238,7 @@ public final class RocksDB {
 		}
 	}
 
-	/// Equivalent to `openTtl(options, path, ttl)` with default options. Fails if the database does not
+	/// Equivalent to `openTtl(path, options, ttl)` with default options. Fails if the database does not
 	/// exist; to create it, pass options with [Options#setCreateIfMissing(boolean)] set.
 	///
 	/// @param path directory where the database files are stored
@@ -246,7 +246,7 @@ public final class RocksDB {
 	/// @return a new [TtlDB] instance
 	/// @throws IllegalArgumentException if `ttl` is negative or longer than [Integer#MAX_VALUE] seconds
 	public static TtlDB openTtl(Path path, Duration ttl) {
-		return openTtl(Options.DEFAULTS, path, ttl);
+		return openTtl(path, Options.DEFAULTS, ttl);
 	}
 
 	// -----------------------------------------------------------------------
@@ -255,11 +255,11 @@ public final class RocksDB {
 
 	/// Opens the database at `path` in read-only mode.
 	///
-	/// @param options the database options
 	/// @param path directory where the database files are stored
+	/// @param options the database options
 	/// @param errorIfWalFileExists if `true`, fails when unrecovered WAL files are present
 	/// @return a new [ReadOnlyDB] instance
-	public static ReadOnlyDB openReadOnly(Options options, Path path, boolean errorIfWalFileExists) {
+	public static ReadOnlyDB openReadOnly(Path path, Options options, boolean errorIfWalFileExists) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
@@ -272,13 +272,13 @@ public final class RocksDB {
 		}
 	}
 
-	/// Equivalent to `openReadOnly(options, path, false)`.
+	/// Equivalent to `openReadOnly(path, options, false)`.
 	///
-	/// @param options the database options
 	/// @param path directory where the database files are stored
+	/// @param options the database options
 	/// @return a new [ReadOnlyDB] instance
-	public static ReadOnlyDB openReadOnly(Options options, Path path) {
-		return openReadOnly(options, path, false);
+	public static ReadOnlyDB openReadOnly(Path path, Options options) {
+		return openReadOnly(path, options, false);
 	}
 
 	/// Opens the database at `path` in read-only mode with default options.
@@ -286,7 +286,7 @@ public final class RocksDB {
 	/// @param path directory where the database files are stored
 	/// @return a new [ReadOnlyDB] instance
 	public static ReadOnlyDB openReadOnly(Path path) {
-		return openReadOnly(Options.DEFAULTS, path, false);
+		return openReadOnly(path, Options.DEFAULTS, false);
 	}
 
 	// -----------------------------------------------------------------------
@@ -295,11 +295,11 @@ public final class RocksDB {
 
 	/// Opens a secondary (read-only replica) instance of the database at `primaryPath`.
 	///
-	/// @param options the database options
 	/// @param primaryPath directory of the primary database
 	/// @param secondaryPath a dedicated directory for this secondary's own MANIFEST/WAL tails
+	/// @param options the database options
 	/// @return a new [SecondaryDB] instance
-	public static SecondaryDB openSecondary(Options options, Path primaryPath, Path secondaryPath) {
+	public static SecondaryDB openSecondary(Path primaryPath, Path secondaryPath, Options options) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment primary = arena.allocateFrom(primaryPath.toString());
@@ -321,14 +321,16 @@ public final class RocksDB {
 	/// instance — unlike a handle obtained from the primary or any other `rocksdb_t*`, safe to pass
 	/// to this instance's column-family-scoped reads.
 	///
-	/// @param options      the database options
 	/// @param primaryPath   directory of the primary database
 	/// @param secondaryPath a dedicated directory for this secondary's own MANIFEST/WAL tails
+	/// @param options      the database options
 	/// @param descriptors   one descriptor per column family (must include [ColumnFamilyName#DEFAULT])
 	/// @return a new [SecondaryDB] instance
 	/// @throws IllegalArgumentException if two descriptors share a name, or one carries a TTL (only
-	///                                  [#openTtl(Options, Path, List)] accepts that)
-	public static SecondaryDB openSecondary(Options options, Path primaryPath, Path secondaryPath,
+	///                                  [#openTtl(Path, Options, List)] accepts that)
+	public static SecondaryDB openSecondary(Path primaryPath,
+	                                        Path secondaryPath,
+	                                        Options options,
 	                                        List<ColumnFamilyDescriptor> descriptors) {
 		int n = descriptors.size();
 		try (Arena arena = Arena.ofConfined()) {
@@ -354,11 +356,11 @@ public final class RocksDB {
 
 	/// Opens a [TransactionDB] (pessimistic / locking transactions) at `path`.
 	///
+	/// @param path directory where the database files are stored
 	/// @param options the database options
 	/// @param txnDbOptions the transaction DB options
-	/// @param path directory where the database files are stored
 	/// @return a new [TransactionDB] instance
-	public static TransactionDB openTransaction(Options options, TransactionDBOptions txnDbOptions, Path path) {
+	public static TransactionDB openTransaction(Path path, Options options, TransactionDBOptions txnDbOptions) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
@@ -376,10 +378,10 @@ public final class RocksDB {
 
 	/// Opens an [OptimisticTransactionDB] (conflict-detection-at-commit) at `path`.
 	///
-	/// @param options the database options
 	/// @param path directory where the database files are stored
+	/// @param options the database options
 	/// @return a new [OptimisticTransactionDB] instance
-	public static OptimisticTransactionDB openOptimistic(Options options, Path path) {
+	public static OptimisticTransactionDB openOptimistic(Path path, Options options) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
@@ -406,13 +408,14 @@ public final class RocksDB {
 	/// database owns one [ColumnFamilyHandle] per descriptor and releases them when it is closed;
 	/// look them up with `getColumnFamily(ColumnFamilyName)` on the returned database.
 	///
-	/// @param options the database options
 	/// @param path directory where the database files are stored
+	/// @param options the database options
 	/// @param descriptors one descriptor per column family (must include [ColumnFamilyName#DEFAULT])
 	/// @return a new [ReadWriteDB] instance
 	/// @throws IllegalArgumentException if two descriptors share a name, or one carries a TTL (only
-	///                                  [#openTtl(Options, Path, List)] accepts that)
-	public static ReadWriteDB openReadWrite(Options options, Path path,
+	///                                  [#openTtl(Path, Options, List)] accepts that)
+	public static ReadWriteDB openReadWrite(Path path,
+	                                        Options options,
 	                                        List<ColumnFamilyDescriptor> descriptors) {
 		int n = descriptors.size();
 		try (Arena arena = Arena.ofConfined()) {
@@ -436,27 +439,29 @@ public final class RocksDB {
 	/// The handles are owned by the returned database; look them up with
 	/// `getColumnFamily(ColumnFamilyName)` on the returned database.
 	///
-	/// @param options the database options
 	/// @param path directory where the database files are stored
+	/// @param options the database options
 	/// @param descriptors one descriptor per column family (must include [ColumnFamilyName#DEFAULT])
 	/// @return a new [ReadOnlyDB] instance
 	/// @throws IllegalArgumentException if two descriptors share a name, or one carries a TTL (only
-	///                                  [#openTtl(Options, Path, List)] accepts that)
-	public static ReadOnlyDB openReadOnly(Options options, Path path,
+	///                                  [#openTtl(Path, Options, List)] accepts that)
+	public static ReadOnlyDB openReadOnly(Path path,
+	                                      Options options,
 	                                      List<ColumnFamilyDescriptor> descriptors) {
-		return openReadOnly(options, path, descriptors, false);
+		return openReadOnly(path, options, descriptors, false);
 	}
 
 	/// Opens a read-only database at `path` with multiple column families.
 	///
-	/// @param options the database options
 	/// @param path directory where the database files are stored
+	/// @param options the database options
 	/// @param descriptors one descriptor per column family (must include [ColumnFamilyName#DEFAULT])
 	/// @param errorIfWalFileExists if `true`, fails when unrecovered WAL files are present
 	/// @return a new [ReadOnlyDB] instance
 	/// @throws IllegalArgumentException if two descriptors share a name, or one carries a TTL (only
-	///                                  [#openTtl(Options, Path, List)] accepts that)
-	public static ReadOnlyDB openReadOnly(Options options, Path path,
+	///                                  [#openTtl(Path, Options, List)] accepts that)
+	public static ReadOnlyDB openReadOnly(Path path,
+	                                      Options options,
 	                                      List<ColumnFamilyDescriptor> descriptors,
 	                                      boolean errorIfWalFileExists) {
 		int n = descriptors.size();
@@ -481,13 +486,13 @@ public final class RocksDB {
 	/// without one never expires its keys, the same as [Duration#ZERO]. The handles are owned by the
 	/// returned database; look them up with `getColumnFamily(ColumnFamilyName)` on it.
 	///
-	/// @param options     database-level options
 	/// @param path        path to the database directory
+	/// @param options     database-level options
 	/// @param descriptors one descriptor per column family (must include [ColumnFamilyName#DEFAULT]), each
 	///                    optionally carrying its TTL
 	/// @return an open [TtlDB] instance; caller must close it
 	/// @throws IllegalArgumentException if two descriptors share a name
-	public static TtlDB openTtl(Options options, Path path, List<ColumnFamilyDescriptor> descriptors) {
+	public static TtlDB openTtl(Path path, Options options, List<ColumnFamilyDescriptor> descriptors) {
 		int n = descriptors.size();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
@@ -512,16 +517,16 @@ public final class RocksDB {
 	/// The handles are owned by the returned database; look them up with
 	/// `getColumnFamily(ColumnFamilyName)` on the returned database.
 	///
+	/// @param path          path to the database directory
 	/// @param options       database-level options
 	/// @param txnDbOptions  transaction database options
-	/// @param path          path to the database directory
 	/// @param descriptors   one descriptor per column family (must include [ColumnFamilyName#DEFAULT])
 	/// @return an open [TransactionDB] instance; caller must close it
 	/// @throws IllegalArgumentException if two descriptors share a name, or one carries a TTL (only
-	///                                  [#openTtl(Options, Path, List)] accepts that)
-	public static TransactionDB openTransaction(Options options,
+	///                                  [#openTtl(Path, Options, List)] accepts that)
+	public static TransactionDB openTransaction(Path path,
+	                                            Options options,
 	                                            TransactionDBOptions txnDbOptions,
-	                                            Path path,
 	                                            List<ColumnFamilyDescriptor> descriptors) {
 		int n = descriptors.size();
 		try (Arena arena = Arena.ofConfined()) {
@@ -544,13 +549,14 @@ public final class RocksDB {
 	/// The handles are owned by the returned database; look them up with
 	/// `getColumnFamily(ColumnFamilyName)` on the returned database.
 	///
-	/// @param options     database-level options
 	/// @param path        path to the database directory
+	/// @param options     database-level options
 	/// @param descriptors one descriptor per column family (must include [ColumnFamilyName#DEFAULT])
 	/// @return an open [OptimisticTransactionDB] instance; caller must close it
 	/// @throws IllegalArgumentException if two descriptors share a name, or one carries a TTL (only
-	///                                  [#openTtl(Options, Path, List)] accepts that)
-	public static OptimisticTransactionDB openOptimistic(Options options, Path path,
+	///                                  [#openTtl(Path, Options, List)] accepts that)
+	public static OptimisticTransactionDB openOptimistic(Path path,
+	                                                     Options options,
 	                                                     List<ColumnFamilyDescriptor> descriptors) {
 		int n = descriptors.size();
 		try (Arena arena = Arena.ofConfined()) {
@@ -575,10 +581,10 @@ public final class RocksDB {
 	/// ones it was created with. To reopen a database as it was configured, use
 	/// [#loadLatestOptions(Path, boolean)], whose descriptors carry each family's saved options.
 	///
-	/// @param options database-level options used to open the database metadata
 	/// @param path    path to the database directory
+	/// @param options database-level options used to open the database metadata
 	/// @return the column family names, including [ColumnFamilyName#DEFAULT]
-	public static List<ColumnFamilyName> listColumnFamilies(Options options, Path path) {
+	public static List<ColumnFamilyName> listColumnFamilies(Path path, Options options) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
@@ -745,7 +751,7 @@ public final class RocksDB {
 	///
 	/// @param db the freshly opened database
 	/// @param <T> the database type
-	/// @return `db`
+	/// @return `db` aa
 	private static <T extends NativeDB> T withDefaultColumnFamily(T db) {
 		try {
 			db.adopt(ColumnFamilyName.DEFAULT, ColumnFamilyHandle.defaultHandle(db.dbPtr()));

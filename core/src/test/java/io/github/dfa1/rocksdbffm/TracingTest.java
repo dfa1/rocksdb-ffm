@@ -16,16 +16,16 @@ class TracingTest {
 	void startTrace_and_replay_reproducesWritesOnTargetDb(@TempDir Path dir) {
 		// Given
 		var tracePath = dir.resolve("trace.log");
-		try (Options sourceOpts = Options.newOptions().setCreateIfMissing(true); var source = RocksDB.openReadWrite(sourceOpts, dir.resolve("source"));
+		try (Options sourceOpts = Options.newOptions().setCreateIfMissing(true); var source = RocksDB.openReadWrite(dir.resolve("source"), sourceOpts);
 		     var traceOptions = TraceOptions.newTraceOptions()) {
-			source.startTrace(traceOptions, tracePath);
+			source.startTrace(tracePath, traceOptions);
 			source.put("k1".getBytes(), "v1".getBytes());
 			source.put("k2".getBytes(), "v2".getBytes());
 			source.endTrace();
 		}
 
 		// When
-		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(targetOpts, dir.resolve("target"));
+		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(dir.resolve("target"), targetOpts);
 		     var replayer = Replayer.create(target, tracePath);
 		     var replayOptions = ReplayOptions.newReplayOptions()) {
 			replayer.prepare();
@@ -33,7 +33,7 @@ class TracingTest {
 		}
 
 		// Then
-		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(targetOpts, dir.resolve("target"))) {
+		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(dir.resolve("target"), targetOpts)) {
 			assertThat(target.get("k1".getBytes())).isEqualTo("v1".getBytes());
 			assertThat(target.get("k2".getBytes())).isEqualTo("v2".getBytes());
 		}
@@ -43,14 +43,14 @@ class TracingTest {
 	void getHeaderTimestamp_returnsNonNullInstant(@TempDir Path dir) {
 		// Given
 		var tracePath = dir.resolve("trace.log");
-		try (Options sourceOpts = Options.newOptions().setCreateIfMissing(true); var source = RocksDB.openReadWrite(sourceOpts, dir.resolve("source"));
+		try (Options sourceOpts = Options.newOptions().setCreateIfMissing(true); var source = RocksDB.openReadWrite(dir.resolve("source"), sourceOpts);
 		     var traceOptions = TraceOptions.newTraceOptions()) {
-			source.startTrace(traceOptions, tracePath);
+			source.startTrace(tracePath, traceOptions);
 			source.put("k".getBytes(), "v".getBytes());
 			source.endTrace();
 		}
 
-		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(targetOpts, dir.resolve("target"));
+		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(dir.resolve("target"), targetOpts);
 		     var replayer = Replayer.create(target, tracePath)) {
 			replayer.prepare();
 
@@ -66,24 +66,24 @@ class TracingTest {
 	void startTrace_withExplicitEnvAndEnvOptions_capturesTrace(@TempDir Path dir) {
 		// Given
 		var tracePath = dir.resolve("trace.log");
-		try (Options sourceOpts = Options.newOptions().setCreateIfMissing(true); var source = RocksDB.openReadWrite(sourceOpts, dir.resolve("source"));
+		try (Options sourceOpts = Options.newOptions().setCreateIfMissing(true); var source = RocksDB.openReadWrite(dir.resolve("source"), sourceOpts);
 		     var env = Env.defaultEnv();
 		     var envOptions = EnvOptions.newEnvOptions();
 		     var traceOptions = TraceOptions.newTraceOptions()) {
 			// When
-			source.startTrace(env, envOptions, traceOptions, tracePath);
+			source.startTrace(tracePath, env, envOptions, traceOptions);
 			source.put("k".getBytes(), "v".getBytes());
 			source.endTrace();
 		}
 
 		// Then
-		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(targetOpts, dir.resolve("target"));
+		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(dir.resolve("target"), targetOpts);
 		     var replayer = Replayer.create(target, tracePath);
 		     var replayOptions = ReplayOptions.newReplayOptions()) {
 			replayer.prepare();
 			replayer.replay(replayOptions);
 		}
-		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(targetOpts, dir.resolve("target"))) {
+		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(dir.resolve("target"), targetOpts)) {
 			assertThat(target.get("k".getBytes())).isEqualTo("v".getBytes());
 		}
 	}
@@ -94,18 +94,18 @@ class TracingTest {
 		// single-element list is enough to exercise that marshaling instead of the empty-list
 		// default column family path every other test in this class uses.
 		var tracePath = dir.resolve("trace.log");
-		try (Options sourceOpts = Options.newOptions().setCreateIfMissing(true); var source = RocksDB.openReadWrite(sourceOpts, dir.resolve("source"));
+		try (Options sourceOpts = Options.newOptions().setCreateIfMissing(true); var source = RocksDB.openReadWrite(dir.resolve("source"), sourceOpts);
 		     var traceOptions = TraceOptions.newTraceOptions()) {
-			source.startTrace(traceOptions, tracePath);
+			source.startTrace(tracePath, traceOptions);
 			source.put("k".getBytes(), "v".getBytes());
 			source.endTrace();
 		}
 
-		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(targetOpts, dir.resolve("target"));
+		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(dir.resolve("target"), targetOpts);
 		     var cf = target.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var env = Env.defaultEnv();
 		     var envOptions = EnvOptions.newEnvOptions();
-		     var replayer = Replayer.create(target, List.of(cf), env, envOptions, tracePath)) {
+		     var replayer = Replayer.create(target, tracePath, List.of(cf), env, envOptions)) {
 
 			// When
 			replayer.prepare();
@@ -120,11 +120,11 @@ class TracingTest {
 	void startIoTrace_and_endIoTrace_writeANonEmptyTraceFile(@TempDir Path dir) throws IOException {
 		// Given
 		var tracePath = dir.resolve("io-trace.log");
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir.resolve("db"), dbOpts);
 		     var traceOptions = TraceOptions.newTraceOptions()) {
 
 			// When
-			db.startIoTrace(traceOptions, tracePath);
+			db.startIoTrace(tracePath, traceOptions);
 			db.put("k".getBytes(), "v".getBytes());
 			db.endIoTrace();
 		}
@@ -137,13 +137,13 @@ class TracingTest {
 	void startIoTrace_withExplicitEnvAndEnvOptions_writesANonEmptyTraceFile(@TempDir Path dir) throws IOException {
 		// Given
 		var tracePath = dir.resolve("io-trace.log");
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir.resolve("db"), dbOpts);
 		     var env = Env.defaultEnv();
 		     var envOptions = EnvOptions.newEnvOptions();
 		     var traceOptions = TraceOptions.newTraceOptions()) {
 
 			// When
-			db.startIoTrace(env, envOptions, traceOptions, tracePath);
+			db.startIoTrace(tracePath, env, envOptions, traceOptions);
 			db.put("k".getBytes(), "v".getBytes());
 			db.endIoTrace();
 		}
@@ -156,12 +156,12 @@ class TracingTest {
 	void startBlockCacheTrace_withTraceOptions_writesANonEmptyTraceFile(@TempDir Path dir) throws IOException {
 		// Given
 		var tracePath = dir.resolve("block-cache-trace.log");
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir.resolve("db"), dbOpts);
 		     var traceOptions = TraceOptions.newTraceOptions()) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
-			db.startBlockCacheTrace(traceOptions, tracePath);
+			db.startBlockCacheTrace(tracePath, traceOptions);
 			db.get("k".getBytes());
 			db.endBlockCacheTrace();
 		}
@@ -175,14 +175,14 @@ class TracingTest {
 			throws IOException {
 		// Given
 		var tracePath = dir.resolve("block-cache-trace.log");
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir.resolve("db"), dbOpts);
 		     var env = Env.defaultEnv();
 		     var envOptions = EnvOptions.newEnvOptions();
 		     var traceOptions = TraceOptions.newTraceOptions()) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
-			db.startBlockCacheTrace(env, envOptions, traceOptions, tracePath);
+			db.startBlockCacheTrace(tracePath, env, envOptions, traceOptions);
 			db.get("k".getBytes());
 			db.endBlockCacheTrace();
 		}
@@ -196,13 +196,13 @@ class TracingTest {
 			throws IOException {
 		// Given
 		var tracePath = dir.resolve("block-cache-trace.log");
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir.resolve("db"), dbOpts);
 		     var traceOptions = BlockCacheTraceOptions.newBlockCacheTraceOptions();
 		     var writerOptions = BlockCacheTraceWriterOptions.newBlockCacheTraceWriterOptions()) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
-			db.startBlockCacheTrace(traceOptions, writerOptions, tracePath);
+			db.startBlockCacheTrace(tracePath, traceOptions, writerOptions);
 			db.get("k".getBytes());
 			db.endBlockCacheTrace();
 		}
@@ -216,7 +216,7 @@ class TracingTest {
 			throws IOException {
 		// Given
 		var tracePath = dir.resolve("block-cache-trace.log");
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir.resolve("db"), dbOpts);
 		     var env = Env.defaultEnv();
 		     var envOptions = EnvOptions.newEnvOptions();
 		     var traceOptions = BlockCacheTraceOptions.newBlockCacheTraceOptions();
@@ -224,7 +224,7 @@ class TracingTest {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
-			db.startBlockCacheTrace(env, envOptions, traceOptions, writerOptions, tracePath);
+			db.startBlockCacheTrace(tracePath, env, envOptions, traceOptions, writerOptions);
 			db.get("k".getBytes());
 			db.endBlockCacheTrace();
 		}

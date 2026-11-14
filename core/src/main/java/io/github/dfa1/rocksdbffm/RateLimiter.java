@@ -16,7 +16,7 @@ import java.util.Objects;
 ///      var opts = Options.newOptions()
 ///          .setCreateIfMissing(true)
 ///          .setRateLimiter(limiter)) {
-///     var db = RocksDB.openReadWrite(opts, path);
+///     var db = RocksDB.openReadWrite(path, opts);
 /// }
 /// ```
 ///

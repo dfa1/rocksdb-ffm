@@ -27,7 +27,7 @@ import java.lang.invoke.MethodType;
 ///                 ? null // don't filter manual/on-demand compactions
 ///                 : CompactionFilter.create("ttl-filter", dropExpired));
 ///      var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilterFactory(factory);
-///      var db = RocksDB.openReadWrite(opts, dbPath)) {
+///      var db = RocksDB.openReadWrite(dbPath, opts)) {
 ///     db.compactRange();
 /// }
 /// ```

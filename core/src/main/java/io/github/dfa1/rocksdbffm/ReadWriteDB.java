@@ -7,7 +7,7 @@ import java.lang.foreign.MemorySegment;
 /// Obtain via [RocksDB#openReadWrite] or [RocksDB#openTtl].
 ///
 /// ```
-/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, path)) {
+/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(path, dbOpts)) {
 ///     db.put("key".getBytes(), "value".getBytes());
 ///     byte[] value = db.get("key".getBytes());
 /// }

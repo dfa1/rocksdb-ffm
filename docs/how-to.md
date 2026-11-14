@@ -154,7 +154,7 @@ Pass `errorIfWalFileExists = true` to refuse opening when the primary left an un
 
 ```java
 try (var options = Options.newOptions();
-     var db = RocksDB.openReadOnly(options, dbPath, true)) {
+     var db = RocksDB.openReadOnly(dbPath, options, true)) {
 	// ...
 }
 ```
@@ -165,7 +165,7 @@ Create a column family on an open database:
 
 ```java
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openReadWrite(opts, dbPath);
+     var db = RocksDB.openReadWrite(dbPath, opts);
      var accounts = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("accounts")))) {
 	db.put(accounts, "alice".getBytes(), "100".getBytes());
 	byte[] balance = db.get(accounts, "alice".getBytes());
@@ -178,7 +178,7 @@ name; there is nothing to close:
 
 ```java
 try (var options = Options.newOptions();
-     var db = RocksDB.openReadWrite(options, dbPath,
+     var db = RocksDB.openReadWrite(dbPath, options,
 		     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT),
 				     ColumnFamilyDescriptor.of(ColumnFamilyName.of("accounts"))))) {
 	var accounts = db.getColumnFamily(ColumnFamilyName.of("accounts"));
@@ -192,7 +192,7 @@ Not sure what exists on disk? Ask first:
 
 ```java
 try (var options = Options.newOptions()) {
-	List<ColumnFamilyName> names = RocksDB.listColumnFamilies(options, dbPath);
+	List<ColumnFamilyName> names = RocksDB.listColumnFamilies(dbPath, options);
 }
 ```
 
@@ -216,7 +216,7 @@ reopen with them:
 
 ```java
 try (var loaded = RocksDB.loadLatestOptions(dbPath, false);
-     var db = RocksDB.openReadWrite(loaded.dbOptions(), dbPath, loaded.columnFamilies())) {
+     var db = RocksDB.openReadWrite(dbPath, loaded.dbOptions(), loaded.columnFamilies())) {
 	// ...
 }
 ```
@@ -240,7 +240,7 @@ A snapshot pins a sequence number; reads through it ignore everything written af
 
 ```java
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openReadWrite(opts, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, opts)) {
 	db.put("k".getBytes(), "before".getBytes());
 
 	try (var snapshot = db.getSnapshot();
@@ -303,7 +303,7 @@ try (var filter = FilterPolicy.newBloom(10);
              .setCreateIfMissing(true)
              .setPrefixExtractor(transform) // required for prefix-mode filtering/iteration to apply
              .setTableFormatConfig(tbl);
-     var db = RocksDB.openReadWrite(opts, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, opts)) {
     ...
 }
 ```
@@ -364,7 +364,7 @@ on the native side.
 ```java
 try (var opts = Options.newOptions().setCreateIfMissing(true)
             .setMergeOperator(MergeOperator.uint64Add());
-     var db = RocksDB.openReadWrite(opts, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, opts)) {
 
 	db.merge("page-views".getBytes(), encodeUint64(1));
 	db.merge("page-views".getBytes(), encodeUint64(1));
@@ -400,7 +400,7 @@ MergeOperator.FullMergeFn keepMax = (key, existingValue, operands) -> {
 
 try (var opts = Options.newOptions().setCreateIfMissing(true)
             .setMergeOperator(MergeOperator.custom("numeric-max", keepMax));
-     var db = RocksDB.openReadWrite(opts, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, opts)) {
 
 	db.merge("high-score".getBytes(), "17".getBytes());
 	db.merge("high-score".getBytes(), "42".getBytes());
@@ -427,7 +427,7 @@ different kinds of merge semantics (a counter vs. a max-tracker) in separate col
 ```java
 try (var options = Options.newOptions().setCreateIfMissing(true);
      var txnDbOptions = TransactionDBOptions.newTransactionDBOptions();
-     var db = RocksDB.openTransaction(options, txnDbOptions, dbPath);
+     var db = RocksDB.openTransaction(dbPath, options, txnDbOptions);
      var writeOptions = WriteOptions.newWriteOptions();
      var txn = db.beginTransaction(writeOptions)) {
 
@@ -465,7 +465,7 @@ Prefer it when contention is rare.
 
 ```java
 try (var options = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openOptimistic(options, dbPath);
+     var db = RocksDB.openOptimistic(dbPath, options);
      var writeOptions = WriteOptions.newWriteOptions();
      var txn = db.beginTransaction(writeOptions)) {
 
@@ -484,7 +484,7 @@ try (var options = Options.newOptions().setCreateIfMissing(true);
 
 ```java
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openTtl(opts, dbPath, Duration.ofHours(24))) {
+     var db = RocksDB.openTtl(dbPath, opts, Duration.ofHours(24))) {
 	db.put("session:1".getBytes(), "...".getBytes());
 }
 ```
@@ -504,7 +504,7 @@ var families = List.of(
 		ColumnFamilyDescriptor.of(ColumnFamilyName.of("sessions")).withTtl(Duration.ofHours(24)));
 
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openTtl(opts, dbPath, families)) {
+     var db = RocksDB.openTtl(dbPath, opts, families)) {
 	// default expires after 1 hour, sessions after 24 hours
 	db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cache")).withTtl(Duration.ofMinutes(10)));
 }
@@ -521,7 +521,7 @@ filesystem.
 
 ```java
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openReadWrite(opts, dbPath);
+     var db = RocksDB.openReadWrite(dbPath, opts);
      var checkpoint = Checkpoint.newCheckpoint(db)) {
 	checkpoint.exportTo(checkpointDir);   // directory must not already exist
 }
@@ -542,8 +542,8 @@ Backups are incremental across calls: unchanged SST files are shared, not recopi
 
 ```java
 try (var options = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openReadWrite(options, dbPath);
-     var engine = BackupEngine.open(options, backupDir)) {
+     var db = RocksDB.openReadWrite(dbPath, options);
+     var engine = BackupEngine.open(backupDir, options)) {
 
 	db.put("k".getBytes(), "v".getBytes());
 	engine.createNewBackup(db, true);      // true = flush the memtable first
@@ -561,7 +561,7 @@ Restoring writes into an empty directory:
 
 ```java
 try (var options = Options.newOptions();
-     var engine = BackupEngine.open(options, backupDir);
+     var engine = BackupEngine.open(backupDir, options);
      var restoreOptions = RestoreOptions.create()) {
 	engine.restoreDbFromLatestBackup(restoreDir, restoreOptions);
 	// or engine.restoreDbFromBackup(BackupId.of(2), restoreDir, restoreOptions);
@@ -588,7 +588,7 @@ try (var options = Options.newOptions().setCreateIfMissing(true);
 }
 
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openReadWrite(opts, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, opts)) {
 	db.ingestExternalFile(sstPath);
 	// or db.ingestExternalFile(List.of(sst1, sst2));
 }
@@ -604,7 +604,7 @@ sequence number.
 
 ```java
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openReadWrite(opts, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, opts)) {
 	SequenceNumber from = db.getLatestSequenceNumber();
 
 	db.put("a".getBytes(), "1".getBytes());
@@ -633,15 +633,15 @@ rollout, without a full A/B deployment.
 
 ```java
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openReadWrite(opts, dbPath);
+     var db = RocksDB.openReadWrite(dbPath, opts);
      var traceOptions = TraceOptions.newTraceOptions().setSamplingFrequency(1)) {
-	db.startTrace(traceOptions, tracePath);
+	db.startTrace(tracePath, traceOptions);
 	// ... production workload runs while the trace is captured ...
 	db.endTrace();
 }
 
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var candidate = RocksDB.openReadWrite(opts, candidatePath);
+     var candidate = RocksDB.openReadWrite(candidatePath, opts);
      var replayer = Replayer.create(candidate, tracePath);
      var replayOptions = ReplayOptions.newReplayOptions().setNumThreads(4)) {
 	replayer.prepare();
@@ -664,20 +664,20 @@ cache rather than replaying application traffic:
 
 ```java
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openReadWrite(opts, dbPath);
+     var db = RocksDB.openReadWrite(dbPath, opts);
      var traceOptions = TraceOptions.newTraceOptions()) {
 	// Every file read/write/open/close/etc.
-	db.startIoTrace(traceOptions, ioTracePath);
+	db.startIoTrace(ioTracePath, traceOptions);
 	// ... workload runs ...
 	db.endIoTrace();
 }
 
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openReadWrite(opts, dbPath);
+     var db = RocksDB.openReadWrite(dbPath, opts);
      var traceOptions = BlockCacheTraceOptions.newBlockCacheTraceOptions().setSamplingFrequency(1);
      var writerOptions = BlockCacheTraceWriterOptions.newBlockCacheTraceWriterOptions()) {
 	// Every block cache hit/miss, with block type and calling code path.
-	db.startBlockCacheTrace(traceOptions, writerOptions, blockCacheTracePath);
+	db.startBlockCacheTrace(blockCacheTracePath, traceOptions, writerOptions);
 	// ... workload runs ...
 	db.endBlockCacheTrace();
 }
@@ -696,7 +696,7 @@ A secondary opens the *same* directory as a running primary, read-only, and catc
 
 ```java
 try (var options = Options.newOptions();
-     var secondary = RocksDB.openSecondary(options, primaryPath, secondaryPath)) {
+     var secondary = RocksDB.openSecondary(primaryPath, secondaryPath, options)) {
 	secondary.tryCatchUpWithPrimary();
 	byte[] value = secondary.get("k".getBytes());
 }
@@ -717,7 +717,7 @@ try (var options = Options.newOptions()
 		.setBlobFileSize(MemorySize.ofMB(256))
 		.setBlobCompressionType(CompressionType.ZSTD)
 		.setEnableBlobGc(true);
-     var db = RocksDB.openReadWrite(options, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, options)) {
 	db.put("k".getBytes(), largeValue);
 }
 ```
@@ -737,7 +737,7 @@ try (var cache = LRUCache.newLRUCache(MemorySize.ofMB(512));
      var options = Options.newOptions()
 		     .setCreateIfMissing(true)
 		     .setTableFormatConfig(tableConfig);
-     var db = RocksDB.openReadWrite(options, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, options)) {
 	// ...
 }
 ```
@@ -758,7 +758,7 @@ try (var rateLimiter = RateLimiter.create(MemorySize.ofMB(10));   // 10 MB/s
      var options = Options.newOptions()
 		     .setCreateIfMissing(true)
 		     .setRateLimiter(rateLimiter);
-     var db = RocksDB.openReadWrite(options, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, options)) {
 	// ...
 }
 ```
@@ -776,7 +776,7 @@ try (var env = Env.defaultEnv();
      var options = Options.newOptions()
 		     .setCreateIfMissing(true)
 		     .setSstFileManager(sstFileManager);
-     var db = RocksDB.openReadWrite(options, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, options)) {
 
 	if (sstFileManager.isMaxAllowedSpaceReached()) {
 		// writes are now failing with RocksDBException
@@ -798,7 +798,7 @@ try (var options = Options.newOptions()
 		.setDbPaths(List.of(
 				DbPath.of(Path.of("/mnt/nvme/db"), MemorySize.ofGB(100)),
 				DbPath.of(Path.of("/mnt/hdd/db"), MemorySize.ofGB(2000))));
-     var db = RocksDB.openReadWrite(options, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, options)) {
 	// ...
 }
 ```
@@ -823,7 +823,7 @@ try (var options = Options.newOptions()
 		.setCreateIfMissing(true)
 		.enableStatistics()
 		.setStatisticsLevel(StatsLevel.ALL);
-     var db = RocksDB.openReadWrite(options, dbPath);
+     var db = RocksDB.openReadWrite(dbPath, options);
      var histogram = StatisticsHistogramData.newStatisticsHistogramData()) {
 
 	db.get("k".getBytes());
@@ -934,7 +934,7 @@ try (var logger = Logger.newCallbackLogger(LogLevel.INFO,
 		     .setCreateIfMissing(true)
 		     .setInfoLog(logger)
 		     .setInfoLogLevel(LogLevel.INFO);
-     var db = RocksDB.openReadWrite(options, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, options)) {
 	// ...
 }
 ```
@@ -967,7 +967,7 @@ EventNotifier notifier = new EventNotifier() {
 try (var options = Options.newOptions()
 		.setCreateIfMissing(true)
 		.addEventListener(notifier);
-     var db = RocksDB.openReadWrite(options, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, options)) {
 	// ...
 }
 ```
@@ -1026,7 +1026,7 @@ try (var partitioner = SstPartitionerFactory.newFixedPrefix(4);
      var options = Options.newOptions()
 		     .setCreateIfMissing(true)
 		     .setSstPartitionerFactory(partitioner);
-     var db = RocksDB.openReadWrite(options, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, options)) {
 	// ... writes ...
 	db.compactRange();
 }

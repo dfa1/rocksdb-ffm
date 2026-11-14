@@ -37,7 +37,7 @@ class StatisticsHistogramDataTest {
 				.setCreateIfMissing(true)
 				.enableStatistics()
 				.setStatisticsLevel(StatsLevel.ALL);
-		     ReadWriteDB db = RocksDB.openReadWrite(options, tempDir)) {
+		     ReadWriteDB db = RocksDB.openReadWrite(tempDir, options)) {
 
 			for (int i = 0; i < 200; i++) {
 				db.put(("key-" + i).getBytes(), ("value-" + i).getBytes());

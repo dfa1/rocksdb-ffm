@@ -22,7 +22,7 @@ class BlobFilesTest {
 	@Test
 	void put_get_roundtrip(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 
 			// When
 			db.put("key".getBytes(), "value".getBytes());
@@ -35,7 +35,7 @@ class BlobFilesTest {
 	@Test
 	void put_withArena_isVisibleViaGet(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     Arena arena = Arena.ofConfined()) {
 
 			// When
@@ -49,7 +49,7 @@ class BlobFilesTest {
 	@Test
 	void get_withReadOptions_returnsValue(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -64,7 +64,7 @@ class BlobFilesTest {
 	@Test
 	void delete_removesKey(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -82,7 +82,7 @@ class BlobFilesTest {
 	@Test
 	void put_get_memorySegment_roundtrip(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     Arena arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom("seg-k");
 			var value = arena.allocateFrom("seg-v");
@@ -98,7 +98,7 @@ class BlobFilesTest {
 	@Test
 	void get_memorySegment_returnsValue(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     Arena arena = Arena.ofConfined()) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = arena.allocateFrom("k");
@@ -116,7 +116,7 @@ class BlobFilesTest {
 	@Test
 	void delete_memorySegment_removesKey(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     Arena arena = Arena.ofConfined()) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = arena.allocateFrom("k");
@@ -136,7 +136,7 @@ class BlobFilesTest {
 	@Test
 	void delete_byteBuffer_removesKey(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = ByteBuffer.allocateDirect(1);
 			key.put("k".getBytes()).flip();
@@ -156,7 +156,7 @@ class BlobFilesTest {
 	@Test
 	void write_appliesBatchAtomically(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var batch = WriteBatch.create()) {
 			batch.put("k1".getBytes(), "v1".getBytes());
 			batch.put("k2".getBytes(), "v2".getBytes());
@@ -173,7 +173,7 @@ class BlobFilesTest {
 	@Test
 	void write_arena_appliesBatchAtomically(@TempDir Path dir) {
 		// Given — gained via RocksDBWriteOperations
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var batch = WriteBatch.create();
 		     Arena arena = Arena.ofConfined()) {
 			batch.put("k1".getBytes(), "v1".getBytes());
@@ -195,7 +195,7 @@ class BlobFilesTest {
 	@Test
 	void getSnapshot_isolatesReads(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(), "v1".getBytes());
 
 			// When — take snapshot, then overwrite
@@ -219,7 +219,7 @@ class BlobFilesTest {
 	@Test
 	void newIterator_iteratesData(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -237,7 +237,7 @@ class BlobFilesTest {
 	@Test
 	void newIterator_withReadOptions(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put("x".getBytes(), "y".getBytes());
 
@@ -259,7 +259,7 @@ class BlobFilesTest {
 	@Test
 	void flush_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var fo = FlushOptions.newFlushOptions().setWait(true)) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -274,7 +274,7 @@ class BlobFilesTest {
 	@Test
 	void flushWal_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -292,7 +292,7 @@ class BlobFilesTest {
 	@Test
 	void getProperty_blobStats_returnsValue(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -306,7 +306,7 @@ class BlobFilesTest {
 	@Test
 	void getLongProperty_numBlobFiles_returnsValue(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -336,7 +336,7 @@ class BlobFilesTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dbPath);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbPath, dbOpts);
 		     var ingestOpts = IngestExternalFileOptions.newIngestExternalFileOptions()) {
 			db.ingestExternalFile(List.of(sstPath), ingestOpts);
 
@@ -349,7 +349,7 @@ class BlobFilesTest {
 	@Test
 	void ingestExternalFile_emptyFileList_isNoOp(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var ingestOpts = IngestExternalFileOptions.newIngestExternalFileOptions()) {
 
 			// When
@@ -374,7 +374,7 @@ class BlobFilesTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dbPath)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbPath, dbOpts)) {
 			db.ingestExternalFile(sstPath);
 
 			// Then
@@ -389,7 +389,7 @@ class BlobFilesTest {
 	@Test
 	void get_byteBuffer_returnsValue(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("key".getBytes(), "value".getBytes());
 
 			var key = ByteBuffer.allocateDirect(3);
@@ -411,7 +411,7 @@ class BlobFilesTest {
 	@Test
 	void get_byteBuffer_returnsNotFound_whenKeyAbsent(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("seed".getBytes(), "val".getBytes());
 
 			var key = ByteBuffer.allocateDirect(7);
@@ -429,7 +429,7 @@ class BlobFilesTest {
 	@Test
 	void get_byteBuffer_returnsNotEnoughCapacity_whenValueDoesNotFit(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("key".getBytes(), "value".getBytes());
 
 			var key = ByteBuffer.allocateDirect(3);
@@ -452,7 +452,7 @@ class BlobFilesTest {
 	@Test
 	void get_zeroCopy_returnsValue(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     Arena arena = Arena.ofConfined()) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = arena.allocateFrom("k").asSlice(0, 1);
@@ -468,7 +468,7 @@ class BlobFilesTest {
 	@Test
 	void get_zeroCopy_returnsEmpty_whenKeyAbsent(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     Arena arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom("missing").asSlice(0, 7);
 

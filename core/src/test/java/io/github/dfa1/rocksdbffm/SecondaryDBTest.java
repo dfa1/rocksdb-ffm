@@ -23,13 +23,13 @@ class SecondaryDBTest {
 	void open_closesCleanly(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given — primary must exist before opening a secondary
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir)) {
+		     var primary = RocksDB.openReadWrite(primaryDir, opts)) {
 			primary.put("seed".getBytes(), "value".getBytes());
 		}
 
 		// When — secondary opens against an existing primary
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir)) {
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts)) {
 
 			// Then
 			assertThat(secondary).isNotNull();
@@ -44,12 +44,12 @@ class SecondaryDBTest {
 	void tryCatchUpWithPrimary_doesNotThrow(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir)) {
+		     var primary = RocksDB.openReadWrite(primaryDir, opts)) {
 			primary.put("k".getBytes(), "v".getBytes());
 		}
 
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir)) {
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts)) {
 
 			// When
 			ThrowingCallable action = secondary::tryCatchUpWithPrimary;
@@ -64,7 +64,7 @@ class SecondaryDBTest {
 			@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given — write initial data to primary and flush so secondary can read it
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir);
+		     var primary = RocksDB.openReadWrite(primaryDir, opts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			primary.put("k1".getBytes(), "v1".getBytes());
 			primary.flush(fo); // flush to SST so secondary can find it
@@ -72,14 +72,14 @@ class SecondaryDBTest {
 
 		// Open secondary, catch up, verify initial data
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir)) {
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts)) {
 
 			secondary.tryCatchUpWithPrimary();
 			assertThat(secondary.get("k1".getBytes())).isEqualTo("v1".getBytes());
 
 			// When — primary writes more data and flushes
 			try (var popts = Options.newOptions();
-			     var primary = RocksDB.openReadWrite(popts, primaryDir);
+			     var primary = RocksDB.openReadWrite(primaryDir, popts);
 			     var fo = FlushOptions.newFlushOptions()) {
 				primary.put("k2".getBytes(), "v2".getBytes());
 				primary.flush(fo);
@@ -99,12 +99,12 @@ class SecondaryDBTest {
 	void get_returnsNull_whenKeyMissing(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir)) {
+		     var primary = RocksDB.openReadWrite(primaryDir, opts)) {
 			primary.put("seed".getBytes(), "x".getBytes());
 		}
 
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir)) {
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts)) {
 			secondary.tryCatchUpWithPrimary();
 
 			// When
@@ -119,14 +119,14 @@ class SecondaryDBTest {
 	void get_withReadOptions(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given — write and flush
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir);
+		     var primary = RocksDB.openReadWrite(primaryDir, opts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			primary.put("k".getBytes(), "v".getBytes());
 			primary.flush(fo);
 		}
 
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir);
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts);
 		     var ro = ReadOptions.newReadOptions()) {
 			secondary.tryCatchUpWithPrimary();
 
@@ -142,14 +142,14 @@ class SecondaryDBTest {
 	void get_byteBuffer_returnsValue(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir);
+		     var primary = RocksDB.openReadWrite(primaryDir, opts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			primary.put("k".getBytes(), "v".getBytes());
 			primary.flush(fo);
 		}
 
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir)) {
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts)) {
 			secondary.tryCatchUpWithPrimary();
 
 			var key = ByteBuffer.allocateDirect(1);
@@ -172,14 +172,14 @@ class SecondaryDBTest {
 	void get_memorySegment_returnsValue(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir);
+		     var primary = RocksDB.openReadWrite(primaryDir, opts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			primary.put("k".getBytes(), "v".getBytes());
 			primary.flush(fo);
 		}
 
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir);
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts);
 		     Arena arena = Arena.ofConfined()) {
 			secondary.tryCatchUpWithPrimary();
 
@@ -203,7 +203,7 @@ class SecondaryDBTest {
 	void newIterator_iteratesData(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir);
+		     var primary = RocksDB.openReadWrite(primaryDir, opts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			primary.put("a".getBytes(), "1".getBytes());
 			primary.put("b".getBytes(), "2".getBytes());
@@ -211,7 +211,7 @@ class SecondaryDBTest {
 		}
 
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir)) {
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts)) {
 			secondary.tryCatchUpWithPrimary();
 
 			// When
@@ -232,14 +232,14 @@ class SecondaryDBTest {
 	void newIterator_withReadOptions(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir);
+		     var primary = RocksDB.openReadWrite(primaryDir, opts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			primary.put("x".getBytes(), "y".getBytes());
 			primary.flush(fo);
 		}
 
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir);
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts);
 		     var ro = ReadOptions.newReadOptions()) {
 			secondary.tryCatchUpWithPrimary();
 
@@ -259,14 +259,14 @@ class SecondaryDBTest {
 	void getSnapshot_allowsSnapshotRead(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given — write and flush so secondary can catch up
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir);
+		     var primary = RocksDB.openReadWrite(primaryDir, opts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			primary.put("k".getBytes(), "v".getBytes());
 			primary.flush(fo);
 		}
 
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir)) {
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts)) {
 			secondary.tryCatchUpWithPrimary();
 
 			// When — take a snapshot and read through it
@@ -287,14 +287,14 @@ class SecondaryDBTest {
 	void get_zeroCopy_returnsValue(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir);
+		     var primary = RocksDB.openReadWrite(primaryDir, opts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			primary.put("k".getBytes(), "v".getBytes());
 			primary.flush(fo);
 		}
 
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir);
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts);
 		     Arena arena = Arena.ofConfined()) {
 			secondary.tryCatchUpWithPrimary();
 			var key = arena.allocateFrom("k").asSlice(0, 1);
@@ -311,12 +311,12 @@ class SecondaryDBTest {
 	void get_zeroCopy_returnsEmpty_whenKeyAbsent(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir)) {
+		     var primary = RocksDB.openReadWrite(primaryDir, opts)) {
 			primary.put("seed".getBytes(), "val".getBytes());
 		}
 
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir);
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts);
 		     Arena arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom("missing").asSlice(0, 7);
 
@@ -336,14 +336,14 @@ class SecondaryDBTest {
 	void getLongProperty_returnsValue(@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir);
+		     var primary = RocksDB.openReadWrite(primaryDir, opts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			primary.put("k".getBytes(), "v".getBytes());
 			primary.flush(fo);
 		}
 
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir)) {
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts)) {
 			secondary.tryCatchUpWithPrimary();
 
 			assertThat(secondary.getLongProperty(Property.ESTIMATE_NUM_KEYS)).isPresent();
@@ -359,7 +359,7 @@ class SecondaryDBTest {
 			@TempDir Path primaryDir, @TempDir Path secondaryDir) {
 		// Given — primary creates a non-default column family and writes/flushes data into it
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var primary = RocksDB.openReadWrite(opts, primaryDir);
+		     var primary = RocksDB.openReadWrite(primaryDir, opts);
 		     var cf1 = primary.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var fo = FlushOptions.newFlushOptions()) {
 			primary.put(cf1, "k".getBytes(), "v".getBytes());
@@ -368,7 +368,7 @@ class SecondaryDBTest {
 
 		// When — the secondary opens the same column families and catches up
 		try (var opts = Options.newOptions();
-		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir,
+		     var secondary = RocksDB.openSecondary(primaryDir, secondaryDir, opts,
 				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))))) {
 			secondary.tryCatchUpWithPrimary();
 			var cf1 = secondary.getColumnFamily(ColumnFamilyName.of("cf1"));

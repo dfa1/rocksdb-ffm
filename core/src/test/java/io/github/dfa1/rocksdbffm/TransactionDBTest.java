@@ -24,7 +24,7 @@ class TransactionDBTest {
 	private static TransactionDB openDb(Path path) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions()) {
-			return RocksDB.openTransaction(opts, txnDbOpts, path);
+			return RocksDB.openTransaction(path, opts, txnDbOpts);
 		}
 	}
 
@@ -568,7 +568,7 @@ class TransactionDBTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
 		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions()) {
-			return RocksDB.openTransaction(opts, txnDbOpts, path);
+			return RocksDB.openTransaction(path, opts, txnDbOpts);
 		}
 	}
 
@@ -1029,7 +1029,7 @@ class TransactionDBTest {
 
 			// Then — family list should only contain default
 			try (var opts = Options.newOptions()) {
-				List<ColumnFamilyName> families = RocksDB.listColumnFamilies(opts, dir);
+				List<ColumnFamilyName> families = RocksDB.listColumnFamilies(dir, opts);
 				assertThat(families).containsExactly(ColumnFamilyName.DEFAULT);
 			}
 		}
@@ -1050,7 +1050,7 @@ class TransactionDBTest {
 		// When — reopen with both CFs via the CF-aware factory overload
 		try (var opts = Options.newOptions();
 		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
-		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir,
+		     var db = RocksDB.openTransaction(dir, opts, txnDbOpts,
 				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))))) {
 			var cf = db.getColumnFamily(ColumnFamilyName.of("cf1"));
 

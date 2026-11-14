@@ -64,6 +64,7 @@ Cloned without `--recurse-submodules`? Run `git submodule update --init --recurs
 - Only the C API (`rocksdb/c.h`) is bound. A missing wrapper is a Type A gap, a missing C function a
   Type B gap — see [docs/c-api-gaps.md](docs/c-api-gaps.md).
 - New features come in three tiers: `MemorySegment`, `ByteBuffer`, `byte[]`.
+- Open factories take the path first, then `Options`, then other options, descriptors, flags or a TTL (`openReadWrite(path, options, descriptors)`).
 - `MethodHandle`s are `private static final`, each with a `/// \`<c prototype>\`` comment copied from
   `c.h`. Errors go through `NativeCalls.errHolder`/`checkError`/`wrapInvokeFailure`.
 

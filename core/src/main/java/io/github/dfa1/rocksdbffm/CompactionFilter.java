@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 ///                                   : CompactionFilter.FilterDecision.keep();
 /// try (var filter = CompactionFilter.create("drop-expired", dropExpired);
 ///      var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
-///      var db = RocksDB.openReadWrite(opts, dbPath)) {
+///      var db = RocksDB.openReadWrite(dbPath, opts)) {
 ///     db.compactRange();
 /// }
 /// ```

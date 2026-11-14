@@ -20,7 +20,7 @@ class SstPartitionerIntegrationTest {
 		// Given — a database with keys spread across 5 distinct 2-byte prefixes, compacted
 		// with no partitioner configured, so nothing stops compaction from merging every
 		// prefix into a single small output file
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			for (String prefix : PREFIXES) {
 				for (int i = 0; i < KEYS_PER_PREFIX; i++) {
 					String key = prefix + String.format("%04d", i);
@@ -43,7 +43,7 @@ class SstPartitionerIntegrationTest {
 		int partitionedFileCount;
 		try (var partitioner = SstPartitionerFactory.newFixedPrefix(2);
 		     var opts = Options.newOptions().setSstPartitionerFactory(partitioner);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var compactOpts = CompactOptions.newCompactOptions().setBottommostLevelCompaction(true)) {
 			// bottommost-level compaction is forced: the baseline compaction already placed
 			// everything at the bottom level with nothing left to merge, so a plain

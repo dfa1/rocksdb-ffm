@@ -78,6 +78,11 @@ For every feature, provide three tiers of access:
 2. **`ByteBuffer` Version:** For compatibility with existing NIO-based clients.
 3. **`byte[]` Version:** Quick access for convenience (explicitly documented as slower).
 
+Open factories (`RocksDB.open*`, `listColumnFamilies`, `BackupEngine.open`) take the **path first**, then the
+`Options`, then any other options object, then the column family descriptors, then flags or a TTL:
+`openReadWrite(path)`, `openReadWrite(path, options)`, `openReadWrite(path, options, descriptors)`. The plain
+form is always a prefix of the longer ones.
+
 ## ⚡ FFM Performance & Patterns
 
 ### 1. Centralized Error Handling

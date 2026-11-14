@@ -17,7 +17,7 @@ class SstFileManagerTest {
 		try (var env = Env.defaultEnv();
 		     var sut = SstFileManager.create(env);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 			try (var flushOptions = FlushOptions.newFlushOptions().setWait(true)) {
@@ -40,7 +40,7 @@ class SstFileManagerTest {
 				     .setMaxAllowedSpaceUsage(MemorySize.ofGB(10))
 				     .setCompactionBufferSize(MemorySize.ofMB(512));
 		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When
 			db.put("k".getBytes(), "v".getBytes());
@@ -57,7 +57,7 @@ class SstFileManagerTest {
 		try (var env = Env.defaultEnv();
 		     var sut = SstFileManager.create(env).setMaxAllowedSpaceUsage(MemorySize.ZERO);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When
 			db.put("k".getBytes(), "v".getBytes());
@@ -133,7 +133,7 @@ class SstFileManagerTest {
 		try (var env = Env.defaultEnv();
 		     var sut = SstFileManager.create(env);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -156,7 +156,7 @@ class SstFileManagerTest {
 			sut.close();
 
 			// Then — Options (and the underlying shared_ptr) is still valid
-			try (var db = RocksDB.openReadWrite(opts, dir)) {
+			try (var db = RocksDB.openReadWrite(dir, opts)) {
 				db.put("k".getBytes(), "v".getBytes());
 				assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
 			}

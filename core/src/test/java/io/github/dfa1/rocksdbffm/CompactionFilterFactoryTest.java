@@ -28,7 +28,7 @@ class CompactionFilterFactoryTest {
 				(level, key, existingValue) -> CompactionFilter.FilterDecision.remove());
 		try (var factory = CompactionFilterFactory.create("remove-all-factory", removeAllFactory);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilterFactory(factory);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("a"), bytes("1"));
 			db.put(bytes("b"), bytes("2"));
 
@@ -47,7 +47,7 @@ class CompactionFilterFactoryTest {
 		CompactionFilterFactory.CreateFilterFn declineToFilter = context -> null;
 		try (var factory = CompactionFilterFactory.create("no-op-factory", declineToFilter);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilterFactory(factory);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("a"), bytes("1"));
 
 			// When
@@ -70,7 +70,7 @@ class CompactionFilterFactoryTest {
 		};
 		try (var factory = CompactionFilterFactory.create("counting-factory", countingFactory);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilterFactory(factory);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("a"), bytes("1"));
 
 			// When
@@ -92,7 +92,7 @@ class CompactionFilterFactoryTest {
 		};
 		try (var factory = CompactionFilterFactory.create("capturing-factory", capturingFactory);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilterFactory(factory);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("a"), bytes("1"));
 
 			// When — compactRange() is an explicit, client-requested (manual) compaction
@@ -113,7 +113,7 @@ class CompactionFilterFactoryTest {
 		};
 		try (var factory = CompactionFilterFactory.create("capturing-full-factory", capturingFactory);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilterFactory(factory);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("a"), bytes("1"));
 
 			// When — compactRange() with no bounds rewrites every file in the column family
@@ -132,7 +132,7 @@ class CompactionFilterFactoryTest {
 		};
 		try (var factory = CompactionFilterFactory.create("throwing-factory", throwingFactory);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilterFactory(factory);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("a"), bytes("1"));
 
 			// When

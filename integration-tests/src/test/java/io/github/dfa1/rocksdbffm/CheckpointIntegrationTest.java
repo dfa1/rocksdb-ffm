@@ -47,7 +47,7 @@ class CheckpointIntegrationTest {
 		checkpoint2Dir = sharedDir.resolve("checkpoint-2");
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts)) {
 
 			// Write the initial set of keys
 			try (var batch = WriteBatch.create()) {

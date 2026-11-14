@@ -17,7 +17,7 @@ class RateLimiterTest {
 		// Given
 		try (var sut = RateLimiter.create(MemorySize.ofMB(100));
 		     var opts = Options.newOptions().setCreateIfMissing(true).setRateLimiter(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When
 			db.put("k".getBytes(), "v".getBytes());
@@ -32,7 +32,7 @@ class RateLimiterTest {
 		// Given
 		try (var sut = RateLimiter.create(MemorySize.ofMB(100), Duration.ofMillis(50), 5);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setRateLimiter(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When / Then — DB opens successfully with the limiter attached
 			assertThat(db).isNotNull();
@@ -44,7 +44,7 @@ class RateLimiterTest {
 		// Given
 		try (var sut = RateLimiter.createAutoTuned(MemorySize.ofMB(100));
 		     var opts = Options.newOptions().setCreateIfMissing(true).setRateLimiter(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When / Then
 			assertThat(db).isNotNull();
@@ -56,7 +56,7 @@ class RateLimiterTest {
 		// Given
 		try (var sut = RateLimiter.createAutoTuned(MemorySize.ofMB(100), Duration.ofMillis(100), 10);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setRateLimiter(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When / Then
 			assertThat(db).isNotNull();
@@ -69,7 +69,7 @@ class RateLimiterTest {
 		try (var sut = RateLimiter.createWithMode(
 				MemorySize.ofMB(100), Duration.ofMillis(100), 10, RateLimiter.Mode.READS_ONLY, false);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setRateLimiter(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When / Then
 			assertThat(db).isNotNull();
@@ -82,7 +82,7 @@ class RateLimiterTest {
 		try (var sut = RateLimiter.createWithMode(
 				MemorySize.ofMB(100), Duration.ofMillis(100), 10, RateLimiter.Mode.ALL_IO, true);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setRateLimiter(sut);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When / Then
 			assertThat(db).isNotNull();

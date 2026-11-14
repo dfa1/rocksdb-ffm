@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 /// ```
 /// try (var opts = Options.newOptions().setCreateIfMissing(true)
 ///         .addEventListener(JfrEventNotifier.create());
-///      var db = RocksDB.openReadWrite(opts, dbPath)) {
+///      var db = RocksDB.openReadWrite(dbPath, opts)) {
 ///     ...
 /// }
 /// ```

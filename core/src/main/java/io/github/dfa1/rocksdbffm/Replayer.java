@@ -20,7 +20,7 @@ import java.util.List;
 /// before rollout.
 ///
 /// ```
-/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, candidatePath);
+/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(candidatePath, dbOpts);
 ///      var replayer = Replayer.create(db, tracePath)) {
 ///     replayer.prepare();
 ///     replayer.replay(ReplayOptions.newReplayOptions());
@@ -74,7 +74,7 @@ public final class Replayer extends NativeObject {
 	/// @param tracePath trace file previously written by [RocksDBTracingOperations#startTrace]
 	/// @return a new [Replayer]; caller must close it
 	public static Replayer create(RocksDBWriteOperations db, Path tracePath) {
-		return create(db, List.of(), Env.DEFAULTS, EnvOptions.DEFAULTS, tracePath);
+		return create(db, tracePath, List.of(), Env.DEFAULTS, EnvOptions.DEFAULTS);
 	}
 
 	/// [#create(RocksDBWriteOperations, Path)] against specific column families, with an
@@ -83,14 +83,14 @@ public final class Replayer extends NativeObject {
 	/// the trace file and does not retain them afterward.
 	///
 	/// @param db         target database to replay operations against
+	/// @param tracePath  trace file previously written by [RocksDBTracingOperations#startTrace]
 	/// @param cfs        column families to replay against; empty means the default column
 	///                   family only
 	/// @param env        environment used to open the trace file
 	/// @param envOptions file-I/O tuning for reading the trace file
-	/// @param tracePath  trace file previously written by [RocksDBTracingOperations#startTrace]
 	/// @return a new [Replayer]; caller must close it
-	public static Replayer create(RocksDBWriteOperations db, List<ColumnFamilyHandle> cfs, Env env,
-			EnvOptions envOptions, Path tracePath) {
+	public static Replayer create(RocksDBWriteOperations db, Path tracePath, List<ColumnFamilyHandle> cfs, Env env,
+			EnvOptions envOptions) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment cfArr = arena.allocate(ValueLayout.ADDRESS, cfs.size());

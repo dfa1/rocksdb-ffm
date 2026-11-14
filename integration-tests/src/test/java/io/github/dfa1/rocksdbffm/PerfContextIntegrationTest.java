@@ -26,7 +26,7 @@ class PerfContextIntegrationTest {
 	@Test
 	void getAccumulatesBlockCacheMetrics(@TempDir Path dir) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// Given — data flushed to SST so block cache is consulted on read
 			db.put("k".getBytes(), "v".getBytes());
@@ -47,7 +47,7 @@ class PerfContextIntegrationTest {
 	@Test
 	void writeAccumulatesWalAndMemtableMetrics(@TempDir Path dir) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var ctx = PerfContext.newPerfContext()) {
 
 			// When
@@ -63,7 +63,7 @@ class PerfContextIntegrationTest {
 	@Test
 	void resetClearsCounters(@TempDir Path dir) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var ctx = PerfContext.currentPerfContext()) {
 
 			// Given — accumulate some metrics
@@ -85,7 +85,7 @@ class PerfContextIntegrationTest {
 	@Test
 	void reportProducesNonEmptyString(@TempDir Path dir) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var ctx = PerfContext.newPerfContext()) {
 
 			// Given — some metrics accumulated
@@ -109,7 +109,7 @@ class PerfContextIntegrationTest {
 		PerfContext.setPerfLevel(PerfLevel.DISABLE);
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var ctx = PerfContext.newPerfContext()) {
 
 			// When
@@ -139,7 +139,7 @@ class PerfContextIntegrationTest {
 	@Test
 	void iteratorAccumulatesMetrics(@TempDir Path dir) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// Given — two keys flushed to SST
 			db.put("a".getBytes(), "1".getBytes());

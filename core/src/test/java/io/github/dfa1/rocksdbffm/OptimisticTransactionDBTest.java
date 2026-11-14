@@ -27,7 +27,7 @@ class OptimisticTransactionDBTest {
 	void open_createsDb(@TempDir Path dir) {
 		// Given / When / Then — no exception means success
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			assertThat(db).isNotNull();
 		}
 	}
@@ -40,7 +40,7 @@ class OptimisticTransactionDBTest {
 	void put_and_get_roundtrip(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 
 			// When
 			db.put("key".getBytes(), "value".getBytes());
@@ -54,7 +54,7 @@ class OptimisticTransactionDBTest {
 	void delete_removesKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -69,7 +69,7 @@ class OptimisticTransactionDBTest {
 	void get_returnsNull_whenKeyMissing(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 
 			// When
 			var result = db.get("missing".getBytes());
@@ -87,7 +87,7 @@ class OptimisticTransactionDBTest {
 	void put_and_get_byteBuffer(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 
 			var key = ByteBuffer.allocateDirect(3);
 			key.put("key".getBytes()).flip();
@@ -106,7 +106,7 @@ class OptimisticTransactionDBTest {
 	void get_byteBuffer_returnsValue(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			var key = ByteBuffer.allocateDirect(1);
@@ -127,7 +127,7 @@ class OptimisticTransactionDBTest {
 	void delete_byteBuffer_removesKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			var key = ByteBuffer.allocateDirect(1);
@@ -149,7 +149,7 @@ class OptimisticTransactionDBTest {
 	void put_and_get_memorySegment(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     Arena arena = Arena.ofConfined()) {
 
 			var key = arena.allocateFrom("seg-key");
@@ -167,7 +167,7 @@ class OptimisticTransactionDBTest {
 	void get_memorySegment_returnsValue(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     Arena arena = Arena.ofConfined()) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -187,7 +187,7 @@ class OptimisticTransactionDBTest {
 	void delete_memorySegment_removesKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     Arena arena = Arena.ofConfined()) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -209,7 +209,7 @@ class OptimisticTransactionDBTest {
 	void put_get_columnFamily(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 
 			// When
@@ -224,7 +224,7 @@ class OptimisticTransactionDBTest {
 	void get_columnFamily_withReadOptions(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -241,7 +241,7 @@ class OptimisticTransactionDBTest {
 	void put_get_columnFamily_byteBuffer(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			var key = directBuffer("k");
 			var value = directBuffer("v");
@@ -261,7 +261,7 @@ class OptimisticTransactionDBTest {
 	void delete_columnFamily_byteBuffer_removesKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 			var key = directBuffer("k");
@@ -278,7 +278,7 @@ class OptimisticTransactionDBTest {
 	void put_get_columnFamily_memorySegment(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     Arena arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom("seg-k");
@@ -296,7 +296,7 @@ class OptimisticTransactionDBTest {
 	void delete_columnFamily_memorySegment_removesKey(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -314,7 +314,7 @@ class OptimisticTransactionDBTest {
 	void deleteRange_removesKeyRange(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -333,7 +333,7 @@ class OptimisticTransactionDBTest {
 	void deleteRange_byteBuffer_removesKeyRange(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			var start = directBuffer("a");
@@ -352,7 +352,7 @@ class OptimisticTransactionDBTest {
 	void deleteRange_memorySegment_removesKeyRange(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     Arena arena = Arena.ofConfined()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
@@ -372,7 +372,7 @@ class OptimisticTransactionDBTest {
 	void deleteRange_columnFamily_removesKeyRange(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
@@ -392,7 +392,7 @@ class OptimisticTransactionDBTest {
 	void deleteRange_columnFamily_byteBuffer_removesKeyRange(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
@@ -412,7 +412,7 @@ class OptimisticTransactionDBTest {
 	void deleteRange_columnFamily_memorySegment_removesKeyRange(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
@@ -433,7 +433,7 @@ class OptimisticTransactionDBTest {
 	void newIterator_columnFamily_scansKeys(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
@@ -455,7 +455,7 @@ class OptimisticTransactionDBTest {
 	void newIterator_columnFamily_withReadOptions(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var ro = ReadOptions.newReadOptions()) {
 			db.put(cf, "x".getBytes(), "y".getBytes());
@@ -475,7 +475,7 @@ class OptimisticTransactionDBTest {
 	void flush_columnFamily_doesNotThrow(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -492,7 +492,7 @@ class OptimisticTransactionDBTest {
 	void getProperty_columnFamily_returnsValue(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -508,7 +508,7 @@ class OptimisticTransactionDBTest {
 	void getLongProperty_columnFamily_returnsValue(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -524,7 +524,7 @@ class OptimisticTransactionDBTest {
 	void dropColumnFamily_removesFamily(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("to-drop")));
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -534,7 +534,7 @@ class OptimisticTransactionDBTest {
 
 			// Then — family list should only contain default
 			try (var listOpts = Options.newOptions()) {
-				List<ColumnFamilyName> families = RocksDB.listColumnFamilies(listOpts, dir);
+				List<ColumnFamilyName> families = RocksDB.listColumnFamilies(dir, listOpts);
 				assertThat(families).hasSize(1);
 			}
 		}
@@ -548,14 +548,14 @@ class OptimisticTransactionDBTest {
 	void openOptimistic_withColumnFamilies_reopensExistingFamily(@TempDir Path dir) {
 		// Given — create a DB with a custom CF, then close it
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 		}
 
 		// When — reopen with both CFs via the CF-aware factory overload
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.openOptimistic(opts, dir,
+		     var db = RocksDB.openOptimistic(dir, opts,
 				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))))) {
 			var cf = db.getColumnFamily(ColumnFamilyName.of("cf1"));
 
@@ -572,7 +572,7 @@ class OptimisticTransactionDBTest {
 	void newIterator_iteratesData(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -595,7 +595,7 @@ class OptimisticTransactionDBTest {
 	void transaction_commit_persists(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var wo = WriteOptions.newWriteOptions()) {
 
 			// When
@@ -613,7 +613,7 @@ class OptimisticTransactionDBTest {
 	void transaction_rollback_discardsChanges(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var wo = WriteOptions.newWriteOptions()) {
 
 			// When
@@ -631,7 +631,7 @@ class OptimisticTransactionDBTest {
 	void transaction_get_seesUncommittedWrites(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var wo = WriteOptions.newWriteOptions()) {
 
 			// When — transaction can read its own uncommitted writes
@@ -651,7 +651,7 @@ class OptimisticTransactionDBTest {
 	void transaction_conflict_throwsOnCommit(@TempDir Path dir) {
 		// Given — two transactions read the same key; the first committer wins
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var wo = WriteOptions.newWriteOptions()) {
 
 			db.put("k".getBytes(), "original".getBytes());
@@ -690,7 +690,7 @@ class OptimisticTransactionDBTest {
 	void beginTransaction_withOptions_setSnapshot(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txnOpts = OptimisticTransactionOptions.newOptimisticTransactionOptions().setSetSnapshot(true)) {
 
@@ -716,7 +716,7 @@ class OptimisticTransactionDBTest {
 	void getSnapshot_isolatesReads(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 
 			db.put("k".getBytes(), "v1".getBytes());
 
@@ -743,7 +743,7 @@ class OptimisticTransactionDBTest {
 	void flush_doesNotThrow(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var fo = FlushOptions.newFlushOptions()) {
 
 			db.put("k".getBytes(), "v".getBytes());
@@ -764,7 +764,7 @@ class OptimisticTransactionDBTest {
 	void get_zeroCopy_returnsValue(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     Arena arena = Arena.ofConfined()) {
 			db.put("k".getBytes(), "v".getBytes());
 			var key = arena.allocateFrom("k").asSlice(0, 1);
@@ -781,7 +781,7 @@ class OptimisticTransactionDBTest {
 	void get_zeroCopy_returnsEmpty_whenKeyAbsent(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     Arena arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom("missing").asSlice(0, 7);
 
@@ -797,7 +797,7 @@ class OptimisticTransactionDBTest {
 	void get_zeroCopy_fromColumnFamily(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     Arena arena = Arena.ofConfined()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
@@ -819,7 +819,7 @@ class OptimisticTransactionDBTest {
 	void getLongProperty_returnsValue(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -842,7 +842,7 @@ class OptimisticTransactionDBTest {
 	void keyMayExist_returnsFalse_whenKeyAbsent(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 
 			// When
 			var result = db.keyMayExist("missing".getBytes());
@@ -856,7 +856,7 @@ class OptimisticTransactionDBTest {
 	void keyMayExist_returnsTrue_whenKeyPresent(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -871,7 +871,7 @@ class OptimisticTransactionDBTest {
 	void write_appliesBatchAtomically(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var batch = WriteBatch.create()) {
 			batch.put("a".getBytes(), "1".getBytes());
 			batch.put("b".getBytes(), "2".getBytes());
@@ -889,7 +889,7 @@ class OptimisticTransactionDBTest {
 	void cancelAllBackgroundWork_doesNotThrow(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 			ThrowingCallable action = () -> db.cancelAllBackgroundWork(false);
 
@@ -902,7 +902,7 @@ class OptimisticTransactionDBTest {
 	void disableAndEnableManualCompaction_doesNotThrow(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			ThrowingCallable action = () -> {
 				db.disableManualCompaction();
 				db.enableManualCompaction();
@@ -917,7 +917,7 @@ class OptimisticTransactionDBTest {
 	void waitForCompact_defaultOptions_doesNotThrow(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir);
+		     var db = RocksDB.openOptimistic(dir, opts);
 		     var waitOpts = WaitForCompactOptions.create()) {
 			db.put("k".getBytes(), "v".getBytes());
 			ThrowingCallable action = () -> db.waitForCompact(waitOpts);
@@ -931,7 +931,7 @@ class OptimisticTransactionDBTest {
 	void getLatestSequenceNumber_advancesAfterWrites(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			var before = db.getLatestSequenceNumber();
 
 			// When
@@ -947,7 +947,7 @@ class OptimisticTransactionDBTest {
 	void getUpdatesSince_yieldsWrittenBatch(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			var start = db.getLatestSequenceNumber();
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -971,7 +971,7 @@ class OptimisticTransactionDBTest {
 	void disableAndEnableFileDeletions_doesNotThrow(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 			ThrowingCallable action = () -> {
 				db.disableFileDeletions();
@@ -987,7 +987,7 @@ class OptimisticTransactionDBTest {
 	void compactRange_noArgs_doesNotThrow(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dir)) {
+		     var db = RocksDB.openOptimistic(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 			ThrowingCallable action = db::compactRange;
 
@@ -1010,7 +1010,7 @@ class OptimisticTransactionDBTest {
 		}
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openOptimistic(opts, dbPath)) {
+		     var db = RocksDB.openOptimistic(dbPath, opts)) {
 
 			// When
 			db.ingestExternalFile(sstPath);
@@ -1030,7 +1030,7 @@ class OptimisticTransactionDBTest {
 	void put_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
 		// Given
 		var opts = Options.newOptions().setCreateIfMissing(true);
-		var db = RocksDB.openOptimistic(opts, dir);
+		var db = RocksDB.openOptimistic(dir, opts);
 		db.close();
 		opts.close();
 
@@ -1045,7 +1045,7 @@ class OptimisticTransactionDBTest {
 	void get_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
 		// Given
 		var opts = Options.newOptions().setCreateIfMissing(true);
-		var db = RocksDB.openOptimistic(opts, dir);
+		var db = RocksDB.openOptimistic(dir, opts);
 		db.put("k".getBytes(), "v".getBytes());
 		db.close();
 		opts.close();
@@ -1061,7 +1061,7 @@ class OptimisticTransactionDBTest {
 	void getProperty_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
 		// Given
 		var opts = Options.newOptions().setCreateIfMissing(true);
-		var db = RocksDB.openOptimistic(opts, dir);
+		var db = RocksDB.openOptimistic(dir, opts);
 		db.close();
 		opts.close();
 
@@ -1076,7 +1076,7 @@ class OptimisticTransactionDBTest {
 	void newIterator_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
 		// Given
 		var opts = Options.newOptions().setCreateIfMissing(true);
-		var db = RocksDB.openOptimistic(opts, dir);
+		var db = RocksDB.openOptimistic(dir, opts);
 		db.close();
 		opts.close();
 
@@ -1092,7 +1092,7 @@ class OptimisticTransactionDBTest {
 		// Given — an already-closed OptimisticTransactionDB; close() must have released both
 		// the primary pointer and the base DB pointer (NativeDBWithBaseDB#tryCloseBaseDb)
 		var opts = Options.newOptions().setCreateIfMissing(true);
-		var db = RocksDB.openOptimistic(opts, dir);
+		var db = RocksDB.openOptimistic(dir, opts);
 		db.close();
 		opts.close();
 

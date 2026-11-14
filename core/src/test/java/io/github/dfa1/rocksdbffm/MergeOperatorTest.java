@@ -30,7 +30,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.merge("views".getBytes(), encodeUint64(1));
 			db.merge("views".getBytes(), encodeUint64(1));
 			db.merge("views".getBytes(), encodeUint64(3));
@@ -48,7 +48,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("views".getBytes(), encodeUint64(10));
 			db.merge("views".getBytes(), encodeUint64(5));
 
@@ -72,7 +72,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			ByteBuffer key = directBuffer("views");
 			db.merge(key.duplicate(), directBuffer(encodeUint64(1)));
 			db.merge(key.duplicate(), directBuffer(encodeUint64(4)));
@@ -90,7 +90,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
 			db.merge(key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(1)));
@@ -109,7 +109,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var arena = Arena.ofConfined()) {
 			db.merge(arena, "views".getBytes(), encodeUint64(1));
 			db.merge(arena, "views".getBytes(), encodeUint64(4));
@@ -127,7 +127,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
 			db.merge(arena, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(1)));
@@ -147,7 +147,7 @@ class MergeOperatorTest {
 		// Options, so it must also be set on the new CF's own descriptor options.
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts))) {
 			db.merge(cf, "views".getBytes(), encodeUint64(1));
@@ -167,7 +167,7 @@ class MergeOperatorTest {
 		// Options, so it must also be set on the new CF's own descriptor options.
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts))) {
 			ByteBuffer key = directBuffer("views");
@@ -188,7 +188,7 @@ class MergeOperatorTest {
 		// Options, so it must also be set on the new CF's own descriptor options.
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var arena = Arena.ofConfined()) {
@@ -214,7 +214,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions()) {
 			db.merge(arena, wo, "views".getBytes(), encodeUint64(1));
@@ -233,7 +233,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var wo = WriteOptions.newWriteOptions()) {
 			ByteBuffer key = directBuffer("views");
 			db.merge(wo, key.duplicate(), directBuffer(encodeUint64(1)));
@@ -252,7 +252,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions()) {
 			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
@@ -273,7 +273,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions()) {
 			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
@@ -295,7 +295,7 @@ class MergeOperatorTest {
 		// Options, so it must also be set on the new CF's own descriptor options.
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var wo = WriteOptions.newWriteOptions()) {
@@ -317,7 +317,7 @@ class MergeOperatorTest {
 		// Options, so it must also be set on the new CF's own descriptor options.
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var wo = WriteOptions.newWriteOptions()) {
@@ -340,7 +340,7 @@ class MergeOperatorTest {
 		// Options, so it must also be set on the new CF's own descriptor options.
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var arena = Arena.ofConfined();
@@ -389,7 +389,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.custom("string-max", STRING_MAX));
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.merge("high-score".getBytes(), "b".getBytes());
 			db.merge("high-score".getBytes(), "z".getBytes());
 			db.merge("high-score".getBytes(), "m".getBytes());
@@ -407,7 +407,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.custom("string-min", STRING_MIN));
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.merge("low-score".getBytes(), "b".getBytes());
 			db.merge("low-score".getBytes(), "z".getBytes());
 			db.merge("low-score".getBytes(), "m".getBytes());
@@ -425,7 +425,7 @@ class MergeOperatorTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.custom("string-max", STRING_MAX));
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("high-score".getBytes(), "z".getBytes());
 			db.merge("high-score".getBytes(), "a".getBytes());
 
@@ -447,7 +447,7 @@ class MergeOperatorTest {
 		};
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.custom("capturing", capturing));
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.merge("k".getBytes(), "1".getBytes());
 			db.merge("k".getBytes(), "2".getBytes());
 			db.merge("k".getBytes(), "3".getBytes());
@@ -469,7 +469,7 @@ class MergeOperatorTest {
 		};
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.custom("throwing", throwing));
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.merge("k".getBytes(), "v".getBytes());
 
 			// When
