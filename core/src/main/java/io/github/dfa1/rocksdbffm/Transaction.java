@@ -325,7 +325,7 @@ public final class Transaction extends NativeObjectWithChildren {
 			MemorySegment k = NativeCalls.toNative(arena, key);
 
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
-					ptr(), readOptions.ptr(), k, (long) key.length, err);
+					ptr(), readOptions.readPtr(), k, (long) key.length, err);
 
 			NativeCalls.checkError(err);
 
@@ -353,7 +353,7 @@ public final class Transaction extends NativeObjectWithChildren {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
-					ptr(), readOptions.ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
+					ptr(), readOptions.readPtr(), MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;
@@ -379,7 +379,7 @@ public final class Transaction extends NativeObjectWithChildren {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED.invokeExact(
-					ptr(), readOptions.ptr(), key, key.byteSize(), err);
+					ptr(), readOptions.readPtr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;
@@ -411,7 +411,7 @@ public final class Transaction extends NativeObjectWithChildren {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin;
 			try {
-				pin = (MemorySegment) MH_GET_PINNED.invokeExact(ptr(), readOptions.ptr(), key, key.byteSize(), err);
+				pin = (MemorySegment) MH_GET_PINNED.invokeExact(ptr(), readOptions.readPtr(), key, key.byteSize(), err);
 			} catch (Throwable t) {
 				throw NativeCalls.wrapInvokeFailure("get_pinned failed", t);
 			}
@@ -436,7 +436,7 @@ public final class Transaction extends NativeObjectWithChildren {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE.invokeExact(
-					ptr(), readOptions.ptr(), NativeCalls.toNative(arena, key), (long) key.length,
+					ptr(), readOptions.readPtr(), NativeCalls.toNative(arena, key), (long) key.length,
 					NativeCalls.toByte(exclusive), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -465,7 +465,7 @@ public final class Transaction extends NativeObjectWithChildren {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE.invokeExact(
-					ptr(), readOptions.ptr(), MemorySegment.ofBuffer(key), (long) key.remaining(),
+					ptr(), readOptions.readPtr(), MemorySegment.ofBuffer(key), (long) key.remaining(),
 					NativeCalls.toByte(exclusive), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -494,7 +494,7 @@ public final class Transaction extends NativeObjectWithChildren {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE.invokeExact(
-					ptr(), readOptions.ptr(), key, key.byteSize(),
+					ptr(), readOptions.readPtr(), key, key.byteSize(),
 					NativeCalls.toByte(exclusive), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -663,7 +663,7 @@ public final class Transaction extends NativeObjectWithChildren {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
-					ptr(), readOptions.ptr(), cf.ptr(),
+					ptr(), readOptions.readPtr(), cf.ptr(),
 					NativeCalls.toNative(arena, key), (long) key.length, err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -691,7 +691,7 @@ public final class Transaction extends NativeObjectWithChildren {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
-					ptr(), readOptions.ptr(), cf.ptr(),
+					ptr(), readOptions.readPtr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -719,7 +719,7 @@ public final class Transaction extends NativeObjectWithChildren {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
-					ptr(), readOptions.ptr(), cf.ptr(), key, key.byteSize(), err);
+					ptr(), readOptions.readPtr(), cf.ptr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
 				return CopyResult.NotFound.INSTANCE;
@@ -750,7 +750,7 @@ public final class Transaction extends NativeObjectWithChildren {
 			MemorySegment pin;
 			try {
 				pin = (MemorySegment) MH_GET_PINNED_CF.invokeExact(
-						ptr(), readOptions.ptr(), cf.ptr(), key, key.byteSize(), err);
+						ptr(), readOptions.readPtr(), cf.ptr(), key, key.byteSize(), err);
 			} catch (Throwable t) {
 				throw NativeCalls.wrapInvokeFailure("get_pinned failed", t);
 			}
@@ -776,7 +776,7 @@ public final class Transaction extends NativeObjectWithChildren {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE_CF.invokeExact(
-					ptr(), readOptions.ptr(), cf.ptr(), NativeCalls.toNative(arena, key), (long) key.length,
+					ptr(), readOptions.readPtr(), cf.ptr(), NativeCalls.toNative(arena, key), (long) key.length,
 					NativeCalls.toByte(exclusive), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -807,7 +807,7 @@ public final class Transaction extends NativeObjectWithChildren {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE_CF.invokeExact(
-					ptr(), readOptions.ptr(), cf.ptr(),
+					ptr(), readOptions.readPtr(), cf.ptr(),
 					MemorySegment.ofBuffer(key), (long) key.remaining(),
 					NativeCalls.toByte(exclusive), err);
 			NativeCalls.checkError(err);
@@ -839,7 +839,7 @@ public final class Transaction extends NativeObjectWithChildren {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pin = (MemorySegment) MH_GET_PINNED_FOR_UPDATE_CF.invokeExact(
-					ptr(), readOptions.ptr(), cf.ptr(), key, key.byteSize(),
+					ptr(), readOptions.readPtr(), cf.ptr(), key, key.byteSize(),
 					NativeCalls.toByte(exclusive), err);
 			NativeCalls.checkError(err);
 			if (MemorySegment.NULL.equals(pin)) {
@@ -861,9 +861,9 @@ public final class Transaction extends NativeObjectWithChildren {
 	public RocksIterator newIterator(ColumnFamilyHandle cf, ReadOptions readOptions) {
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE_ITERATOR_CF.invokeExact(
-					ptr(), readOptions.ptr(), cf.ptr());
+					ptr(), readOptions.readPtr(), cf.ptr());
 			// A child of this transaction, so it is released before the transaction is destroyed.
-			return RocksIterator.create(this, iterPtr);
+			return RocksIterator.create(this, readOptions, iterPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("newIterator failed", t);
 		}

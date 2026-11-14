@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 /// FFM wrapper for `rocksdb_readoptions_t`.
-public final class ReadOptions extends NativeObject {
+public final class ReadOptions extends NativeObjectWithChildren {
 
 	/// `rocksdb_readoptions_t* rocksdb_readoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -146,6 +146,13 @@ public final class ReadOptions extends NativeObject {
 	// call. Closed alongside the native pointer in tryClose.
 	private final Arena boundsArena;
 
+	/// The snapshot installed by [#setSnapshot(Snapshot)], which the native struct holds a raw pointer to.
+	private volatile Snapshot snapshot;
+
+	/// Set when [#snapshot] was released while installed; reads through these options then throw instead of
+	/// dereferencing the freed snapshot.
+	private volatile boolean snapshotReleased;
+
 	private ReadOptions(MemorySegment ptr) {
 		super(ptr);
 		this.boundsArena = Arena.ofConfined();
@@ -163,7 +170,8 @@ public final class ReadOptions extends NativeObject {
 	}
 
 	/// Pins reads to the given snapshot, providing a consistent point-in-time view.
-	/// The snapshot must remain open for the lifetime of these read options.
+	/// If the snapshot is closed while installed here, the next read through these options throws
+	/// [IllegalStateException] until another snapshot (or `null`) is set.
 	/// Pass `null` to clear a previously set snapshot.
 	///
 	/// @param snapshot the snapshot to use, or `null` to clear
@@ -172,6 +180,15 @@ public final class ReadOptions extends NativeObject {
 		try {
 			MemorySegment snapPtr = (snapshot == null) ? MemorySegment.NULL : snapshot.ptr();
 			MH_SET_SNAPSHOT.invokeExact(ptr(), snapPtr);
+			Snapshot previous = this.snapshot;
+			if (previous != null) {
+				previous.uninstall(this);
+			}
+			this.snapshot = snapshot;
+			this.snapshotReleased = false;
+			if (snapshot != null) {
+				snapshot.install(this);
+			}
 			return this;
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("readoptions setSnapshot failed", t);
@@ -488,8 +505,41 @@ public final class ReadOptions extends NativeObject {
 		}
 	}
 
+	/// The native pointer for a read call: [#ptr()], but throws if the installed snapshot was released.
+	///
+	/// @return the native `rocksdb_readoptions_t*`
+	/// @throws IllegalStateException if closed, or the installed snapshot was closed
+	MemorySegment readPtr() {
+		MemorySegment ptr = ptr();
+		if (snapshotReleased) {
+			throw new IllegalStateException("the snapshot set on these ReadOptions was closed: set another or null");
+		}
+		return ptr;
+	}
+
+	/// Called by `snapshot`'s release: unhooks the freed pointer from the native struct and poisons reads.
+	///
+	/// @param released the snapshot being released
+	void snapshotReleased(Snapshot released) {
+		if (snapshot != released) {
+			return;
+		}
+		snapshotReleased = true;
+		if (!isClosed()) {
+			try {
+				MH_SET_SNAPSHOT.invokeExact(ptr(), MemorySegment.NULL);
+			} catch (Throwable t) {
+				throw NativeCalls.wrapInvokeFailure("readoptions setSnapshot failed", t);
+			}
+		}
+	}
+
 	@Override
-	protected void tryClose(MemorySegment ptr) throws Throwable {
+	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
+		Snapshot installed = snapshot;
+		if (installed != null) {
+			installed.uninstall(this);
+		}
 		MH_DESTROY.invokeExact(ptr);
 		boundsArena.close();
 	}

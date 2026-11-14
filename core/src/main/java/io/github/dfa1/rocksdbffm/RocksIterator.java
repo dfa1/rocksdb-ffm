@@ -113,23 +113,32 @@ public final class RocksIterator extends NativeObject {
 	/// happens in the constructor, via [NativeObjectWithChildren#registerChild(NativeObject)].
 	private final NativeObjectWithChildren owningDb;
 
+	/// The options this iterator was created with, a second owner: the native iterator keeps raw pointers into
+	/// them (iterate bounds), so it is released before they are destroyed. `null` for the immortal defaults.
+	private final ReadOptions readOptions;
+
 	/// Package-private: created via [#create].
-	private RocksIterator(NativeObjectWithChildren owningDb, MemorySegment ptr) {
+	private RocksIterator(NativeObjectWithChildren owningDb, ReadOptions readOptions, MemorySegment ptr) {
 		super(ptr);
 		this.owningDb = owningDb;
+		// DEFAULTS is immortal and never swept, so registering would only add a pointless reference.
+		this.readOptions = readOptions == ReadOptions.DEFAULTS ? null : readOptions;
 		this.lenArena = Arena.ofConfined();
 		this.lenSegment = lenArena.allocate(ValueLayout.JAVA_LONG);
 		if (owningDb != null) {
 			owningDb.registerChild(this);
+		}
+		if (this.readOptions != null) {
+			this.readOptions.registerChild(this);
 		}
 	}
 
 	/// Package-private factory called by RocksDB.
 	static RocksIterator create(RocksDBReadOperations db, ReadOptions readOptions) {
 		try {
-			MemorySegment iterPtr = (MemorySegment) MH_CREATE.invokeExact(db.dbPtr(), readOptions.ptr());
+			MemorySegment iterPtr = (MemorySegment) MH_CREATE.invokeExact(db.dbPtr(), readOptions.readPtr());
 			// Every implementor extends NativeObjectWithChildren (see RocksDBReadOperations#getSnapshot()).
-			return new RocksIterator((NativeObjectWithChildren) db, iterPtr);
+			return new RocksIterator((NativeObjectWithChildren) db, readOptions, iterPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("iterator create failed", t);
 		}
@@ -137,8 +146,8 @@ public final class RocksIterator extends NativeObject {
 
 	/// Package-private factory for a pre-created iterator pointer scoped to a column family
 	/// (e.g. from `rocksdb_create_iterator_cf`), registered with `owningDb`.
-	static RocksIterator create(NativeObjectWithChildren owningDb, MemorySegment iterPtr) {
-		return new RocksIterator(owningDb, iterPtr);
+	static RocksIterator create(NativeObjectWithChildren owningDb, ReadOptions readOptions, MemorySegment iterPtr) {
+		return new RocksIterator(owningDb, readOptions, iterPtr);
 	}
 
 	// -----------------------------------------------------------------------
@@ -508,6 +517,9 @@ public final class RocksIterator extends NativeObject {
 		// registration prevents by destroying the iterator first.
 		if (owningDb != null) {
 			owningDb.unregisterChild(this);
+		}
+		if (readOptions != null) {
+			readOptions.unregisterChild(this);
 		}
 		MH_DESTROY.invokeExact(ptr);
 		lenArena.close();
