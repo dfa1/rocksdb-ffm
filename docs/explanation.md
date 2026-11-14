@@ -121,6 +121,12 @@ passes `TransactionOptions.DEFAULTS`. `makeImmortal()` marks such an instance so
 caller. The same rule as for transfer applies in reverse: it is only safe after reading `db/c.cc`
 and confirming the call does not retain, mutate, or take ownership of the pointer.
 
+Two objects are made immortal for a different reason: a native holder keeps a raw pointer that nothing
+ever frees or that outlives every Java object able to release it. An attached `CompactionFilter` (kept by
+`Options` as a raw pointer the database then copies) and `Env.memEnv()` (kept raw by `Options`, `BackupEngine`
+and traces, and deleted by `rocksdb_env_destroy`) cannot be released at any safe point, so they live for the whole JVM
+and each one created leaks. Create them once and reuse them.
+
 The third hazard is a *second owned pointer on the same object*. `TransactionDB` and
 `OptimisticTransactionDB` each hold a `rocksdb_t*` "base DB" handle (from
 `rocksdb_transactiondb_get_base_db` / `rocksdb_optimistictransactiondb_get_base_db`) that most of
