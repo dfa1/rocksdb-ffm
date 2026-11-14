@@ -39,6 +39,23 @@ public interface RocksDBCompactionOperations {
 		RocksDBCompactionOperationsBindings.compactRangeBytes(this, startKey, endKey);
 	}
 
+	/// Compacts the whole of column family `cf`, blocking until done. The per-family counterpart of
+	/// [#compactRange()]; slow path (`byte[]` bounds only).
+	///
+	/// @param cf the column family to compact
+	default void compactRange(ColumnFamilyHandle cf) {
+		RocksDBCompactionOperationsBindings.compactRangeCfBytes(this, cf, null, null);
+	}
+
+	/// Compacts the keys of `cf` in `[startKey, endKey]`, blocking until done. A `null` bound is open-ended.
+	///
+	/// @param cf       the column family to compact
+	/// @param startKey inclusive start of the range, or `null` for the start of the keyspace
+	/// @param endKey   inclusive end of the range, or `null` for the end of the keyspace
+	default void compactRange(ColumnFamilyHandle cf, byte[] startKey, byte[] endKey) {
+		RocksDBCompactionOperationsBindings.compactRangeCfBytes(this, cf, startKey, endKey);
+	}
+
 	/// [ByteBuffer] overload of [#compactRange(byte\[\], byte\[\])].
 	///
 	/// @param startKey direct [ByteBuffer] with inclusive lower bound

@@ -436,6 +436,7 @@ stay on `RocksDBWriteOperations`) is implemented by `ReadWriteDB`/`TtlDB`/
 |:---------------------------------------------------------------|:-----------------------------------------|
 | `compactRange()`                                               | Entire keyspace, blocking                |
 | `compactRange(start, end)`                                     | All three tiers                          |
+| `compactRange(ColumnFamilyHandle)` / `(handle, start, end)`    | One column family; `byte[]` bounds       |
 | `compactRange(CompactOptions, byte[] start, byte[] end)`       | With level control                       |
 | `suggestCompactRange(start, end)`                              | Hint; returns immediately                |
 | `waitForCompact(WaitForCompactOptions)`                        | Wait for background compaction to settle |

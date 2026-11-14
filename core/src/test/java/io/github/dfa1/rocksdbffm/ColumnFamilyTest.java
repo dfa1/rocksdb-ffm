@@ -408,4 +408,28 @@ class ColumnFamilyTest {
 			assertThat(name).isEqualTo(ColumnFamilyName.of("cf1"));
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// compactRange — column family overloads
+	// -----------------------------------------------------------------------
+
+	@Test
+	void compactRange_ofAColumnFamily_keepsItsData(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		     var flushOptions = FlushOptions.newFlushOptions()) {
+			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
+			db.put(cf, "a".getBytes(), "1".getBytes());
+			db.put(cf, "z".getBytes(), "2".getBytes());
+			db.flush(cf, flushOptions);
+
+			// When
+			db.compactRange(cf);
+			db.compactRange(cf, "a".getBytes(), "m".getBytes());
+
+			// Then
+			assertThat(db.get(cf, "a".getBytes())).isEqualTo("1".getBytes());
+			assertThat(db.get(cf, "z".getBytes())).isEqualTo("2".getBytes());
+		}
+	}
 }
