@@ -190,7 +190,8 @@ class CompactionFilterFactoryTest {
 			var thrown = catchThrowable(() -> retained.get().isManualCompaction());
 
 			// Then
-			assertThat(thrown).isInstanceOf(IllegalStateException.class);
+			// the context's arena is confined to the thread that ran the factory: another thread fails the thread check
+			assertThat(thrown).isInstanceOfAny(IllegalStateException.class, WrongThreadException.class);
 		}
 	}
 }
