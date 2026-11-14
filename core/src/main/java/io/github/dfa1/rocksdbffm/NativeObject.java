@@ -21,13 +21,13 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class NativeObject implements AutoCloseable {
 
 	private static final System.Logger LOG = System.getLogger(NativeObject.class.getName());
+	private static final NativeObjectWithChildren[] NO_PARENTS = new NativeObjectWithChildren[0];
 
 	private final AtomicReference<MemorySegment> owningPointer;
 
-	/// Set by [#makeImmortal()], which only ever runs once per object and before anything else can race with it.
+	/// Set by [#makeImmortal()] and never cleared. Usually set before the object is published (a `DEFAULTS` field),
+	/// but a [CompactionFilter] sets it on every attach, hence `volatile`.
 	private volatile boolean immortal;
-
-	private static final NativeObjectWithChildren[] NO_PARENTS = new NativeObjectWithChildren[0];
 
 	/// The objects this one borrows native memory from, set once by [#borrowedFrom(NativeObjectWithChildren...)];
 	/// [#release()] unregisters from them after the native release call. A plain field: it is assigned in full
@@ -92,30 +92,21 @@ public abstract class NativeObject implements AutoCloseable {
 	/// [#tryClose(MemorySegment)] reads is assigned, because registering makes this object visible to a concurrent
 	/// sweep by an owner.
 	///
-	/// An immortal owner (a shared `DEFAULTS` instance) is never swept, so registering would only add a
-	/// pointless reference and it is skipped.
+	/// An immortal owner (a shared `DEFAULTS` instance) is never swept, so its
+	/// [NativeObjectWithChildren#registerChild(NativeObject)] does nothing.
 	///
 	/// @param owners the objects whose native memory this one borrows
 	final void borrowedFrom(NativeObjectWithChildren... owners) {
-		int live = 0;
+		parents = owners;
 		for (NativeObjectWithChildren owner : owners) {
-			if (!owner.isImmortal()) {
-				live++;
-			}
-		}
-		if (live == 0) {
-			return;
-		}
-		NativeObjectWithChildren[] mine = new NativeObjectWithChildren[live];
-		int next = 0;
-		for (NativeObjectWithChildren owner : owners) {
-			if (!owner.isImmortal()) {
-				mine[next++] = owner;
-			}
-		}
-		parents = mine;
-		for (NativeObjectWithChildren owner : mine) {
 			owner.registerChild(this);
+		}
+		if (isClosed()) {
+			// An owner that was already closing abandoned this object: close() will never reach release(), so drop
+			// the registrations with the other owners here instead of leaving a dead entry until they close.
+			for (NativeObjectWithChildren owner : owners) {
+				owner.unregisterChild(this);
+			}
 		}
 	}
 
@@ -157,6 +148,10 @@ public abstract class NativeObject implements AutoCloseable {
 	/// Called exactly once with the non-NULL pointer when this object is closed.
 	/// Implementations must release the native resource.
 	///
+	/// Runs while [#release()] holds this object's monitor, so an implementation must never close, release or
+	/// lock another [NativeObject] that could be one of its owners: owners are locked before the objects that
+	/// borrow from them, and taking them in the other order here can deadlock against an owner's close.
+	///
 	/// @param ptr the non-NULL native pointer to release
 	/// @throws Throwable if the native destroy call fails; [#close()] catches it, logs it, and
 	///                    does not rethrow, so the rest of a try-with-resources chain still closes
@@ -189,7 +184,6 @@ public abstract class NativeObject implements AutoCloseable {
 		this.immortal = true;
 		return (T) this;
 	}
-
 
 	///
 	/// To be invoked manually when this object does not have anymore the ownership of the pointer.
