@@ -143,7 +143,9 @@ public final class ReadOptions extends NativeObjectWithChildren {
 	// Backs iterate_lower_bound/iterate_upper_bound/request_id for the byte[] tier: the C API
 	// stores a raw Slice view over whatever pointer is passed to set_iterate_*_bound rather than
 	// copying it, so a copy made from a bound must outlive this ReadOptions, not just the setter
-	// call. Closed alongside the native pointer in tryClose.
+	// call. Garbage-collected rather than closed, since a parent's close can release these options from any thread
+	// and a confined arena cannot be closed from there; every iterator created with them keeps this object, and so the
+	// arena, reachable.
 	private final Arena boundsArena;
 
 	/// The snapshot installed by [#setSnapshot(Snapshot)], which the native struct holds a raw pointer to. Reads
@@ -152,7 +154,7 @@ public final class ReadOptions extends NativeObjectWithChildren {
 
 	private ReadOptions(MemorySegment ptr) {
 		super(ptr);
-		this.boundsArena = Arena.ofConfined();
+		this.boundsArena = Arena.ofAuto();
 	}
 
 	/// Creates [ReadOptions] with RocksDB defaults.
@@ -510,6 +512,5 @@ public final class ReadOptions extends NativeObjectWithChildren {
 	@Override
 	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
 		MH_DESTROY.invokeExact(ptr);
-		boundsArena.close();
 	}
 }

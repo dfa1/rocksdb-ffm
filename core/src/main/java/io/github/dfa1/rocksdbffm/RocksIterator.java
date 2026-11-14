@@ -105,7 +105,6 @@ public final class RocksIterator extends NativeObject {
 	}
 
 	// Reused across all key/value calls to avoid per-call Arena allocation.
-	private final Arena lenArena;
 	private final MemorySegment lenSegment;
 
 	/// The database or [Transaction] that produced this iterator. Used in
@@ -123,8 +122,9 @@ public final class RocksIterator extends NativeObject {
 		this.owningDb = owningDb;
 		// DEFAULTS is immortal and never swept, so registering would only add a pointless reference.
 		this.readOptions = readOptions == ReadOptions.DEFAULTS ? null : readOptions;
-		this.lenArena = Arena.ofConfined();
-		this.lenSegment = lenArena.allocate(ValueLayout.JAVA_LONG);
+		// Garbage-collected: a parent's close releases this iterator from whichever thread closes the parent, and a
+		// confined arena cannot be closed from there.
+		this.lenSegment = Arena.ofAuto().allocate(ValueLayout.JAVA_LONG);
 		if (this.owningDb != null) {
 			owningDb.registerChild(this);
 		}
@@ -522,6 +522,5 @@ public final class RocksIterator extends NativeObject {
 			readOptions.unregisterChild(this);
 		}
 		MH_DESTROY.invokeExact(ptr);
-		lenArena.close();
 	}
 }
