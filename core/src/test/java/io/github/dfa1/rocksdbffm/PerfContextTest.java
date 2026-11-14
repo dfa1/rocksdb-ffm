@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -129,5 +130,27 @@ class PerfContextTest {
 
 		// Then — closing twice must not crash the JVM
 		assertThatCode(secondClose).doesNotThrowAnyException();
+	}
+
+	@Test
+	void usedFromAnotherThread_throwsWrongThreadException() throws InterruptedException {
+		// Given
+		try (var ctx = PerfContext.newPerfContext()) {
+			var thrown = new AtomicReference<Throwable>();
+			var other = new Thread(() -> {
+				try {
+					ctx.metric(PerfMetric.BLOCK_READ_COUNT);
+				} catch (Throwable t) {
+					thrown.set(t);
+				}
+			});
+
+			// When
+			other.start();
+			other.join();
+
+			// Then
+			assertThat(thrown.get()).isInstanceOf(WrongThreadException.class);
+		}
 	}
 }
