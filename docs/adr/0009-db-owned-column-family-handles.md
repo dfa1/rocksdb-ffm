@@ -72,7 +72,7 @@ Nobody uses the library in production yet, so this can be fixed once, without a 
   [explanation.md](../explanation.md). Keeping the handle until DB close would keep the dropped
   family's files on disk until then, so releasing on drop is the better trade; document it.
 - **`Transaction` is still not a child of `TransactionDB`**, so a transaction used after its DB
-  closes can still crash. Out of scope here; tracked separately.
+  closes can still crash. Out of scope here; tracked and fixed separately in #312.
 - The registry keys on names, never descriptors: a descriptor's `Options` are closed with
   `LoadedOptions`.
 - Registry mutations happen only after native success (create, drop), since they cannot be undone.

@@ -143,12 +143,6 @@ public final class RocksIterator extends NativeObject {
 		return new RocksIterator(owningDb, iterPtr);
 	}
 
-	/// Package-private factory for a pre-created iterator pointer with no owning
-	/// `NativeObjectWithChildren` to register with (currently only [Transaction]).
-	static RocksIterator create(MemorySegment iterPtr) {
-		return new RocksIterator(null, iterPtr);
-	}
-
 	// -----------------------------------------------------------------------
 	// Positioning
 	// -----------------------------------------------------------------------

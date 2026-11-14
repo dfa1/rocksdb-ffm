@@ -173,6 +173,10 @@ never double-free — whichever runs second is a no-op. No lock, no cost added t
 at all — a stronger result than the "lock around every native call site" trade the second paragraph
 of this section declines for the unrelated, broader close()-vs-any-method race.
 
+A `Transaction` follows the same pattern, one level
+deeper: it registers with the database it was begun on, and the iterators it creates register with the transaction, so a
+database close releases iterators, then transactions (anything uncommitted is discarded), then its own pointer.
+
 The fifth case is a child that is handed out *and kept* by its owner: a `ColumnFamilyHandle`. Destroying one after
 its database is closed is a use-after-free (its destructor locks the database's mutex), and the previous API pushed
 that ordering onto the caller through an output list. Now every database type (`NativeDB`) owns its handles in a

@@ -251,7 +251,7 @@ public final class TransactionDB extends NativeDBWithBaseDB
 		try {
 			MemorySegment txnPtr = (MemorySegment) MH_BEGIN.invokeExact(
 					ptr(), writeOptions.ptr(), txnOptions.ptr(), MemorySegment.NULL);
-			return new Transaction(txnPtr, txnOptions.getSetSnapshot());
+			return new Transaction(this, txnPtr, txnOptions.getSetSnapshot());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("beginTransaction failed", t);
 		}
