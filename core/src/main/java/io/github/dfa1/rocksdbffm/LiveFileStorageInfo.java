@@ -108,6 +108,13 @@ public final class LiveFileStorageInfo {
 		}
 	}
 
+	/// Returns the path of this file: [#directory()] resolved against [#relativeFilename()].
+	///
+	/// @return the path of the file
+	public Path path() {
+		return directory().resolve(relativeFilename());
+	}
+
 	/// Returns the file's id within the database, or `0` if the file has no number (e.g.
 	/// `CURRENT`).
 	///

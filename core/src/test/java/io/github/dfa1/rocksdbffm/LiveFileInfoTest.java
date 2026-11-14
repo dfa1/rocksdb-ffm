@@ -133,6 +133,46 @@ class LiveFileInfoTest {
 		}
 	}
 
+	@Test
+	void path_pointsAtTheRealFile(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		     var fo = FlushOptions.newFlushOptions()) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.flush(fo);
+
+			// When
+			try (var files = db.getLiveFiles()) {
+				Path result = files.get(0).path();
+
+				// Then
+				assertThat(result).startsWith(dir).isRegularFile();
+				assertThat(result.getFileName().toString()).endsWith(".sst");
+			}
+		}
+	}
+
+	@Test
+	void path_unlikeResolvingNameAgainstDirectory_keepsTheDirectory(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		     var fo = FlushOptions.newFlushOptions()) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.flush(fo);
+
+			// When
+			try (var files = db.getLiveFiles()) {
+				LiveFileInfo file = files.get(0);
+				Path naive = file.directory().resolve(file.name());
+
+				// Then
+				assertThat(file.name()).startsWith("/");
+				assertThat(naive).isNotEqualTo(file.path());
+				assertThat(file.path()).isEqualTo(dir.resolve(file.name().substring(1)));
+			}
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// LiveFileInfo accessors
 	// -----------------------------------------------------------------------

@@ -74,6 +74,24 @@ class LiveFileStorageInfoTest {
 	}
 
 	@Test
+	void path_pointsAtTheRealFile(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		     var fo = FlushOptions.newFlushOptions()) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.flush(fo);
+
+			// When
+			try (var info = db.getLiveFilesStorageInfo()) {
+				Path result = findFirst(info, FileType.TABLE_FILE).path();
+
+				// Then
+				assertThat(result).startsWith(dir).isRegularFile();
+			}
+		}
+	}
+
+	@Test
 	void getLiveFilesStorageInfo_tableFileEntry_hasExpectedMetadata(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
