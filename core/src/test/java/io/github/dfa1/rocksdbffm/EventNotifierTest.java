@@ -9,8 +9,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 /// Every test here exercises a real RocksDB background-thread callback (flush, compaction, or
 /// external-file ingestion), which permanently attaches a RocksDB background thread to the JVM.
@@ -404,6 +406,46 @@ class EventNotifierTest {
 
 			// Then — no exception escaped any default callback and the ingested key is readable
 			assertThat(result).isEqualTo("val1".getBytes());
+		}
+	}
+
+	@Test
+	void retainedPayloadView_readAfterTheCallback_throwsInsteadOfCrashing(@TempDir Path dir) {
+		// Given — a notifier that illegally keeps the views past the callback
+		AtomicReference<FlushJobInfo> flushInfo = new AtomicReference<>();
+		AtomicReference<MemTableInfo> memTableInfo = new AtomicReference<>();
+		EventNotifier notifier = new EventNotifier() {
+			@Override
+			public void onFlushCompleted(FlushJobInfo info) {
+				flushInfo.set(info);
+			}
+
+			@Override
+			public void onMemTableSealed(MemTableInfo info) {
+				memTableInfo.set(info);
+			}
+		};
+		try (var opts = Options.newOptions().setCreateIfMissing(true).addEventListener(notifier);
+		     var db = RocksDB.openReadWrite(dir, opts)) {
+			db.put("k".getBytes(), "v".getBytes());
+			db.flush(FlushOptions.newFlushOptions());
+
+			// When
+			var flushThrown = catchThrowable(() -> flushInfo.get().jobId());
+			var memTableThrown = catchThrowable(() -> memTableInfo.get().numEntries());
+			var otherThread = new AtomicReference<Throwable>();
+			var reader = new Thread(() -> otherThread.set(catchThrowable(() -> flushInfo.get().columnFamilyName())));
+			reader.start();
+			try {
+				reader.join();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+
+			// Then
+			assertThat(flushThrown).isInstanceOf(IllegalStateException.class);
+			assertThat(memTableThrown).isInstanceOf(IllegalStateException.class);
+			assertThat(otherThread.get()).isInstanceOf(IllegalStateException.class);
 		}
 	}
 }

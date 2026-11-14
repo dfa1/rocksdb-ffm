@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /// Covers [CompactionFilterFactory], attached via
@@ -168,6 +169,28 @@ class CompactionFilterFactoryTest {
 
 			// Then
 			assertThatThrownBy(factory::ptr).isInstanceOf(IllegalStateException.class);
+		}
+	}
+
+	@Test
+	void createCompactionFilter_contextRetainedPastTheCall_throwsInsteadOfCrashing(@TempDir Path dir) {
+		// Given
+		var retained = new AtomicReference<CompactionFilterContext>();
+		CompactionFilterFactory.CreateFilterFn retainingFactory = context -> {
+			retained.set(context);
+			return null;
+		};
+		try (var factory = CompactionFilterFactory.create("retaining-factory", retainingFactory);
+		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilterFactory(factory);
+		     var db = RocksDB.openReadWrite(dir, opts)) {
+			db.put(bytes("a"), bytes("1"));
+			db.compactRange();
+
+			// When
+			var thrown = catchThrowable(() -> retained.get().isManualCompaction());
+
+			// Then
+			assertThat(thrown).isInstanceOf(IllegalStateException.class);
 		}
 	}
 }

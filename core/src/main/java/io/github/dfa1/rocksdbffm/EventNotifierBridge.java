@@ -8,7 +8,9 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /// FFM plumbing behind [Options#addEventListener(EventNotifier)]. Wraps
 /// `rocksdb_eventlistener_create()`, whose 10 callbacks are dispatched to one Java
@@ -151,22 +153,22 @@ final class EventNotifierBridge {
 
 	/// Called from [#FLUSH_BEGIN_STUB]. Must not throw.
 	private static void flushBeginDispatch(MemorySegment state, MemorySegment db, MemorySegment info) {
-		dispatch(state, n -> n.onFlushBegin(new FlushJobInfo(info)), "onFlushBegin");
+		dispatchView(state, info, FlushJobInfo::new, EventNotifier::onFlushBegin, "onFlushBegin");
 	}
 
 	/// Called from [#FLUSH_COMPLETED_STUB]. Must not throw.
 	private static void flushCompletedDispatch(MemorySegment state, MemorySegment db, MemorySegment info) {
-		dispatch(state, n -> n.onFlushCompleted(new FlushJobInfo(info)), "onFlushCompleted");
+		dispatchView(state, info, FlushJobInfo::new, EventNotifier::onFlushCompleted, "onFlushCompleted");
 	}
 
 	/// Called from [#COMPACTION_BEGIN_STUB]. Must not throw.
 	private static void compactionBeginDispatch(MemorySegment state, MemorySegment db, MemorySegment info) {
-		dispatch(state, n -> n.onCompactionBegin(new CompactionJobInfo(info)), "onCompactionBegin");
+		dispatchView(state, info, CompactionJobInfo::new, EventNotifier::onCompactionBegin, "onCompactionBegin");
 	}
 
 	/// Called from [#COMPACTION_COMPLETED_STUB]. Must not throw.
 	private static void compactionCompletedDispatch(MemorySegment state, MemorySegment db, MemorySegment info) {
-		dispatch(state, n -> n.onCompactionCompleted(new CompactionJobInfo(info)), "onCompactionCompleted");
+		dispatchView(state, info, CompactionJobInfo::new, EventNotifier::onCompactionCompleted, "onCompactionCompleted");
 	}
 
 	/// Called from [#SUBCOMPACTION_NOOP_STUB]. Deliberately does nothing: subcompaction events are
@@ -177,17 +179,17 @@ final class EventNotifierBridge {
 
 	/// Called from [#EXTERNAL_FILE_INGESTED_STUB]. Must not throw.
 	private static void externalFileIngestedDispatch(MemorySegment state, MemorySegment db, MemorySegment info) {
-		dispatch(state, n -> n.onExternalFileIngested(new ExternalFileIngestionInfo(info)), "onExternalFileIngested");
+		dispatchView(state, info, ExternalFileIngestionInfo::new, EventNotifier::onExternalFileIngested, "onExternalFileIngested");
 	}
 
 	/// Called from [#STALL_CONDITIONS_CHANGED_STUB]. Must not throw.
 	private static void stallConditionsChangedDispatch(MemorySegment state, MemorySegment info) {
-		dispatch(state, n -> n.onStallConditionsChanged(new WriteStallInfo(info)), "onStallConditionsChanged");
+		dispatchView(state, info, WriteStallInfo::new, EventNotifier::onStallConditionsChanged, "onStallConditionsChanged");
 	}
 
 	/// Called from [#MEMTABLE_SEALED_STUB]. Must not throw.
 	private static void memTableSealedDispatch(MemorySegment state, MemorySegment info) {
-		dispatch(state, n -> n.onMemTableSealed(new MemTableInfo(info)), "onMemTableSealed");
+		dispatchView(state, info, MemTableInfo::new, EventNotifier::onMemTableSealed, "onMemTableSealed");
 	}
 
 	/// Called from [#BACKGROUND_ERROR_STUB]. Must not throw.
@@ -216,6 +218,19 @@ final class EventNotifierBridge {
 	/// transfers ownership immediately. Must not throw.
 	private static void destructorDispatch(MemorySegment state) {
 		REGISTRY.unregister(state);
+	}
+
+	/// Dispatches an event whose payload is a view over a pointer RocksDB owns only for the duration of the
+	/// callback. The view is built over a segment tied to an arena closed right after the call, so a listener
+	/// that retains the view gets an [IllegalStateException] from its accessors instead of a native read of freed
+	/// memory. A shared arena, so a read from another thread fails the same way.
+	private static <V> void dispatchView(MemorySegment state, MemorySegment info, Function<MemorySegment, V> view,
+			BiConsumer<EventNotifier, V> call, String method) {
+		dispatch(state, n -> {
+			try (Arena arena = Arena.ofShared()) {
+				call.accept(n, view.apply(info.reinterpret(arena, null)));
+			}
+		}, method);
 	}
 
 	private static void dispatch(MemorySegment state, Consumer<EventNotifier> call, String method) {

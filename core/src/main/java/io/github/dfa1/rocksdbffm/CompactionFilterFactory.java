@@ -165,7 +165,11 @@ public final class CompactionFilterFactory extends NativeObject {
 		BackgroundUpcallThreads.track();
 		try {
 			State s = REGISTRY.get(state);
-			CompactionFilter filter = s.fn().createCompactionFilter(new CompactionFilterContext(contextPtr));
+			CompactionFilter filter;
+			// Scoped to the call: a context retained past it throws instead of reading freed memory.
+			try (Arena arena = Arena.ofShared()) {
+				filter = s.fn().createCompactionFilter(new CompactionFilterContext(contextPtr.reinterpret(arena, null)));
+			}
 			if (filter == null) { // NOSONAR: java:S2583 — reachable; see CreateFilterFn's contract and
 				// CompactionFilterFactoryTest#create_returningNull_runsTheCompactionWithNoFilter
 				return MemorySegment.NULL;
