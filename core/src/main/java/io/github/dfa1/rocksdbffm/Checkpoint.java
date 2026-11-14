@@ -51,8 +51,13 @@ public final class Checkpoint extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 
-	private Checkpoint(MemorySegment ptr) {
+	/// The database this checkpoint object keeps a raw pointer to; released before the database is.
+	private final NativeObjectWithChildren owningDb;
+
+	private Checkpoint(NativeObjectWithChildren owningDb, MemorySegment ptr) {
 		super(ptr);
+		this.owningDb = owningDb;
+		owningDb.registerChild(this);
 	}
 
 	/// Creates a checkpoint object bound to `db`.
@@ -71,7 +76,7 @@ public final class Checkpoint extends NativeObject {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			var ptr = (MemorySegment) MH_CREATE.invokeExact(db.dbPtr(), err);
 			NativeCalls.checkError(err);
-			return new Checkpoint(ptr);
+			return new Checkpoint((NativeObjectWithChildren) db, ptr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("newCheckpoint failed", t);
 		}
@@ -109,6 +114,7 @@ public final class Checkpoint extends NativeObject {
 
 	@Override
 	public void tryClose(MemorySegment ptr) throws Throwable {
+		owningDb.unregisterChild(this);
 		MH_DESTROY.invokeExact(ptr);
 	}
 }
