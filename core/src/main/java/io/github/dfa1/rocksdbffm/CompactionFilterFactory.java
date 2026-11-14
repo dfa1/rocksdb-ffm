@@ -156,7 +156,9 @@ public final class CompactionFilterFactory extends NativeObject {
 		///
 		/// @param context describes why this compaction is running
 		/// @return a new [CompactionFilter] for RocksDB to use and destroy once this compaction
-		/// finishes, or `null` to run this compaction with no filter
+		/// finishes (never one already attached with [Options#setCompactionFilter(CompactionFilter)], which is
+		/// immortal and cannot be handed over: that compaction would run with no filter), or `null` to run this
+		/// compaction with no filter
 		CompactionFilter createCompactionFilter(CompactionFilterContext context);
 	}
 

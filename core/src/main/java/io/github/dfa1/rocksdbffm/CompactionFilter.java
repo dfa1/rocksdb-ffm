@@ -22,10 +22,17 @@ import java.util.concurrent.ConcurrentHashMap;
 /// a separate `FilterMergeOperand` method that `rocksdb_compactionfilter_create` does not expose;
 /// filter merge semantics inside the [MergeOperator] instead.
 ///
-/// **Thread safety:** this project has no wrapper for RocksDB's `CompactionFilterFactory` yet
-/// (see `docs/c-api-gaps.md`), so a filter attached via [Options#setCompactionFilter] is shared
-/// by every concurrent background compaction. `fn` must be thread-safe, exactly like
-/// [MergeOperator.FullMergeFn].
+/// **Lifetime:** a filter attached with [Options#setCompactionFilter(CompactionFilter)] is a process-lifetime
+/// object. RocksDB keeps a raw pointer to it and never frees it, and it must outlive every database that could
+/// compact with it, so once attached it is never released and `close()` does nothing. Create it once (for example
+/// in a `static final` field) and reuse it for every [Options] and database; creating a new one per [Options] leaks
+/// one filter, its callback and whatever the callback captures, each time. Filters made by a
+/// [CompactionFilterFactory] are different: RocksDB destroys each one when its compaction ends, so a factory must
+/// return a fresh filter, never one attached with `setCompactionFilter`.
+///
+/// **Thread safety:** a filter attached via [Options#setCompactionFilter] is shared by every concurrent background
+/// compaction, and by every database it is attached to. `fn` must be thread-safe, exactly like
+/// [MergeOperator.FullMergeFn]. For one filter per compaction use a [CompactionFilterFactory] instead.
 ///
 /// **Snapshot caveat:** RocksDB does not guarantee that an open snapshot keeps seeing data a
 /// compaction filter has dropped or rewritten — once a rewritten table file is installed, the
@@ -39,8 +46,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /// CompactionFilter.FilterFn dropExpired = (level, key, existingValue) ->
 ///         isExpired(existingValue) ? CompactionFilter.FilterDecision.remove()
 ///                                   : CompactionFilter.FilterDecision.keep();
-/// try (var filter = CompactionFilter.create("drop-expired", dropExpired);
-///      var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
+/// static final CompactionFilter DROP_EXPIRED = CompactionFilter.create("drop-expired", dropExpired);
+///
+/// try (var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(DROP_EXPIRED);
 ///      var db = RocksDB.openReadWrite(dbPath, opts)) {
 ///     db.compactRange();
 /// }
@@ -135,9 +143,9 @@ public final class CompactionFilter extends NativeObject {
 	}
 
 	// Registry: id (smuggled through the `state` pointer) -> Java-side filter function.
-	// Unregistered from destructorDispatch, not from tryClose: once ownership transfers to
-	// Options via applyTo, the native shared_ptr controls this object's real lifetime, which can
-	// outlive this Java wrapper (same rationale as MergeOperator.Custom).
+	// Unregistered from destructorDispatch, not from tryClose: nothing ever destroys an attached (immortal) filter,
+	// so this entry lives for the JVM; a filter closed before it is attached is destroyed by tryClose, which
+	// fires destructorDispatch (same rationale as MergeOperator.Custom).
 	private static final UpcallRegistry<State> REGISTRY = new UpcallRegistry<>();
 	private static final System.Logger LOG = System.getLogger(CompactionFilter.class.getName());
 
@@ -152,8 +160,8 @@ public final class CompactionFilter extends NativeObject {
 	///             column family's stored options on every open, so it must not change across runs
 	/// @param fn   decides the fate of each key-value pair; see [FilterFn] for the threading and
 	///             lifetime contract
-	/// @return a new compaction filter; caller must pass it to
-	/// [Options#setCompactionFilter(CompactionFilter)] or close it
+	/// @return a new compaction filter; pass it to [Options#setCompactionFilter(CompactionFilter)], which makes it
+	/// immortal, or close it if it is never attached
 	public static CompactionFilter create(String name, FilterFn fn) {
 		BackgroundUpcallThreads.installShutdownDrain();
 		MemorySegment nameSeg = Arena.global().allocateFrom(name);
@@ -179,6 +187,9 @@ public final class CompactionFilter extends NativeObject {
 	/// is silent: the compaction simply does nothing, and the caller has no way to detect it. Passing `false` here
 	/// is kept only for parity with the C API's setter; leave this at its `true` default.
 	///
+	/// Call it before attaching the filter: once attached, the filter is shared with running compactions on
+	/// every database using it, and changing it then is a data race.
+	///
 	/// @param ignoreSnapshots whether to apply this filter regardless of open snapshots
 	/// @return `this` for chaining
 	public CompactionFilter setIgnoreSnapshots(boolean ignoreSnapshots) {
@@ -190,10 +201,18 @@ public final class CompactionFilter extends NativeObject {
 		return this;
 	}
 
+	/// Attaches this filter to the options and makes it immortal.
+	///
+	/// `rocksdb_options_set_compaction_filter` stores a raw, non-owning pointer that nothing frees, and the
+	/// database, not the options, is what outlives compactions. So the filter must never be freed while any
+	/// database could still use it: it lives for the whole JVM, `close()` does nothing, and the same filter can
+	/// be attached to any number of options. See [NativeObject#makeImmortal()].
+	///
+	/// @param optionsPtr the `rocksdb_options_t*` to attach to
 	void applyTo(MemorySegment optionsPtr) {
 		try {
 			MH_SET_COMPACTION_FILTER.invokeExact(optionsPtr, ptr());
-			transferOwnership();
+			makeImmortal();
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("CompactionFilter.applyTo failed", t);
 		}
@@ -392,8 +411,8 @@ public final class CompactionFilter extends NativeObject {
 	}
 
 	/// Called from [#DESTRUCTOR_STUB] when RocksDB's internal `shared_ptr` refcount hits zero.
-	/// This is the only reliable unregistration point: ownership transfer via [#applyTo] means
-	/// [#tryClose(MemorySegment)] may never run for this instance. Also frees every scratch
+	/// This is the only reliable unregistration point, and it never runs for an attached filter, which is
+	/// immortal. Also frees every scratch
 	/// buffer [#scratchBuffer(State, byte[])] handed out — safe because no `Filter()` call can
 	/// still be in flight once RocksDB itself is destroying this filter. Must not throw.
 	private static void destructorDispatch(MemorySegment state) {
