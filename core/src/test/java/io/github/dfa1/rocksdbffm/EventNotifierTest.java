@@ -436,7 +436,9 @@ class EventNotifierTest {
 		var memTableThrown = catchThrowable(() -> memTableInfo.get().numEntries());
 
 		// Then
-		assertThat(flushThrown).isInstanceOf(IllegalStateException.class);
-		assertThat(memTableThrown).isInstanceOf(IllegalStateException.class);
+		// the view's arena is confined to the RocksDB callback thread, so a read from here fails on the thread
+		// check; a read from the callback thread itself would fail as a closed session
+		assertThat(flushThrown).isInstanceOfAny(IllegalStateException.class, WrongThreadException.class);
+		assertThat(memTableThrown).isInstanceOfAny(IllegalStateException.class, WrongThreadException.class);
 	}
 }
