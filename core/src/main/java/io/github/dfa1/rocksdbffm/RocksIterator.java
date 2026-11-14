@@ -110,9 +110,9 @@ public final class RocksIterator extends NativeObject {
 	/// Package-private: created via [#create].
 	private RocksIterator(NativeObjectWithChildren owningDb, ReadOptions readOptions, MemorySegment ptr) {
 		super(ptr);
-		// Garbage-collected: a parent's close releases this iterator from whichever thread closes the parent, and a
-		// confined arena cannot be closed from there.
-		this.lenSegment = Arena.ofAuto().allocate(ValueLayout.JAVA_LONG);
+		// malloc'd, not an arena: a parent's close releases this iterator from whichever thread closes the parent, which
+		// rules out a confined arena, and a garbage-collected one costs a cleaner registration per iterator.
+		this.lenSegment = NativeCalls.malloc(NativeCalls.SIZE_T.byteSize());
 		// Two parents: the database or transaction, and the options, whose iterate bounds the native iterator keeps raw
 		// pointers into. Holding them also keeps the options' bounds memory reachable.
 		borrowedFrom(owningDb, readOptions);
@@ -323,7 +323,7 @@ public final class RocksIterator extends NativeObject {
 	public <R> R key(Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment raw = readKey();
-			MemorySegment view = raw.reinterpret(lenSegment.get(ValueLayout.JAVA_LONG, 0), arena, null).asReadOnly();
+			MemorySegment view = raw.reinterpret(lenSegment.get(NativeCalls.SIZE_T, 0), arena, null).asReadOnly();
 			R result = fn.map(view);
 			Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
 			return result;
@@ -342,7 +342,7 @@ public final class RocksIterator extends NativeObject {
 	public <R> R value(Mapper<R> fn) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment raw = readValue();
-			MemorySegment view = raw.reinterpret(lenSegment.get(ValueLayout.JAVA_LONG, 0), arena, null).asReadOnly();
+			MemorySegment view = raw.reinterpret(lenSegment.get(NativeCalls.SIZE_T, 0), arena, null).asReadOnly();
 			R result = fn.map(view);
 			Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
 			return result;
@@ -405,7 +405,7 @@ public final class RocksIterator extends NativeObject {
 	@CheckReturnValue
 	public CopyResult key(ByteBuffer dst) {
 		MemorySegment raw = readKey();
-		long len = lenSegment.get(ValueLayout.JAVA_LONG, 0);
+		long len = lenSegment.get(NativeCalls.SIZE_T, 0);
 		if (len > dst.remaining()) {
 			return new CopyResult.NotEnoughCapacity(len);
 		}
@@ -426,7 +426,7 @@ public final class RocksIterator extends NativeObject {
 	@CheckReturnValue
 	public CopyResult value(ByteBuffer dst) {
 		MemorySegment raw = readValue();
-		long len = lenSegment.get(ValueLayout.JAVA_LONG, 0);
+		long len = lenSegment.get(NativeCalls.SIZE_T, 0);
 		if (len > dst.remaining()) {
 			return new CopyResult.NotEnoughCapacity(len);
 		}
@@ -446,7 +446,7 @@ public final class RocksIterator extends NativeObject {
 	/// @return current key as a newly allocated byte array
 	public byte[] key() {
 		MemorySegment raw = readKey();
-		return NativeCalls.toByteArray(raw, lenSegment.get(ValueLayout.JAVA_LONG, 0));
+		return NativeCalls.toByteArray(raw, lenSegment.get(NativeCalls.SIZE_T, 0));
 	}
 
 	/// Returns a copy of the current value as a byte array.
@@ -456,7 +456,7 @@ public final class RocksIterator extends NativeObject {
 	/// @return current value as a newly allocated byte array
 	public byte[] value() {
 		MemorySegment raw = readValue();
-		return NativeCalls.toByteArray(raw, lenSegment.get(ValueLayout.JAVA_LONG, 0));
+		return NativeCalls.toByteArray(raw, lenSegment.get(NativeCalls.SIZE_T, 0));
 	}
 
 	/// Invokes `MH_KEY`. Returns the raw, unsized key pointer — every caller reinterprets
@@ -494,5 +494,6 @@ public final class RocksIterator extends NativeObject {
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
 		MH_DESTROY.invokeExact(ptr);
+		NativeCalls.free(lenSegment);
 	}
 }

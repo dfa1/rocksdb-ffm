@@ -124,14 +124,6 @@ public sealed interface MergeOperator {
 				"rocksdb_options_set_merge_operator",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		/// libc `void* malloc(size_t size)` — `full_merge`/`partial_merge` hand a malloc'd buffer
-		/// back to RocksDB, which copies it out and frees it with plain `free()` (`delete_value` is
-		/// passed as `NULL`, see [#create(String, FullMergeFn)]).
-		private static final MethodHandle MH_MALLOC = Linker.nativeLinker().downcallHandle(
-				Linker.nativeLinker().defaultLookup().find("malloc")
-						.orElseThrow(() -> new UnsatisfiedLinkError("Symbol not found: malloc")),
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-
 		private static final FunctionDescriptor FULL_MERGE_DESC = FunctionDescriptor.of(ValueLayout.ADDRESS,
 				ValueLayout.ADDRESS,   // state
 				ValueLayout.ADDRESS,   // key
@@ -240,14 +232,11 @@ public sealed interface MergeOperator {
 		}
 
 		private static MemorySegment mallocCopy(byte[] data) {
-			try {
-				int len = Math.max(1, data.length);
-				MemorySegment buf = ((MemorySegment) MH_MALLOC.invokeExact((long) len)).reinterpret(len);
-				MemorySegment.copy(data, 0, buf, ValueLayout.JAVA_BYTE, 0, data.length);
-				return buf;
-			} catch (Throwable t) {
-				throw new AssertionError(t);
-			}
+			// `full_merge`/`partial_merge` hand a malloc'd buffer back to RocksDB, which copies it out and frees it
+			// with plain `free()` (`delete_value` is passed as `NULL`, see [#create(String, FullMergeFn)]).
+			MemorySegment buf = NativeCalls.malloc(data.length);
+			MemorySegment.copy(data, 0, buf, ValueLayout.JAVA_BYTE, 0, data.length);
+			return buf;
 		}
 
 		/// Last checkpoint before a value crosses back into native code as an upcall's `ADDRESS`

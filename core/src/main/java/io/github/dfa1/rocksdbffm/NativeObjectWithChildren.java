@@ -54,7 +54,8 @@ abstract class NativeObjectWithChildren extends NativeObject {
 	/// sweep's already-in-progress or already-finished traversal (`children`'s iterator is only
 	/// weakly consistent for genuinely concurrent modifications), so this removes what it just
 	/// added and, only if that removal actually found it still there, abandons `child` via
-	/// [NativeObject#transferOwnership()] -- a real native resource leak (its release call would
+	/// [NativeObject#transferOwnership()] -- a real native resource leak, of everything its release would have freed
+	/// (the native object and any native memory the wrapper owns, such as an iterator's length slot; its release call would
 	/// itself be a use-after-free against a pointer this object's own
 	/// [#tryCloseResource(MemorySegment)] may already have freed), but not the JVM crash a later
 	/// use of a silently-dangling `child` would otherwise risk. If the removal instead finds
