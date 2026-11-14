@@ -107,30 +107,15 @@ public final class RocksIterator extends NativeObject {
 	// Reused across all key/value calls to avoid per-call Arena allocation.
 	private final MemorySegment lenSegment;
 
-	/// The database or [Transaction] that produced this iterator. Used in
-	/// [#tryClose(MemorySegment)] only to unregister once closed on its own; registration itself
-	/// happens in the constructor, via [NativeObjectWithChildren#registerChild(NativeObject)].
-	private final NativeObjectWithChildren owningDb;
-
-	/// The options this iterator was created with, a second owner: the native iterator keeps raw pointers into
-	/// them (iterate bounds), so it is released before they are destroyed. `null` for the immortal defaults.
-	private final ReadOptions readOptions;
-
 	/// Package-private: created via [#create].
 	private RocksIterator(NativeObjectWithChildren owningDb, ReadOptions readOptions, MemorySegment ptr) {
 		super(ptr);
-		this.owningDb = owningDb;
-		// DEFAULTS is immortal and never swept, so registering would only add a pointless reference.
-		this.readOptions = readOptions == ReadOptions.DEFAULTS ? null : readOptions;
 		// Garbage-collected: a parent's close releases this iterator from whichever thread closes the parent, and a
 		// confined arena cannot be closed from there.
 		this.lenSegment = Arena.ofAuto().allocate(ValueLayout.JAVA_LONG);
-		if (this.owningDb != null) {
-			owningDb.registerChild(this);
-		}
-		if (this.readOptions != null) {
-			this.readOptions.registerChild(this);
-		}
+		// Two parents: the database or transaction, and the options, whose iterate bounds the native iterator keeps raw
+		// pointers into. Holding them also keeps the options' bounds memory reachable.
+		borrowedFrom(owningDb, readOptions);
 	}
 
 	/// Package-private factory called by RocksDB.
@@ -508,19 +493,6 @@ public final class RocksIterator extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
-		// Unregister first: if this runs because owningDb's own close() is sweeping its
-		// children (owningDb closed first), its pointer is still valid for the rest of this
-		// call (NativeObjectWithChildren captures its raw pointer before nulling its own
-		// AtomicReference and only then closes children) — same ordering guarantee Snapshot
-		// relies on, though rocksdb_iter_destroy itself never touches the DB pointer; what it
-		// must not touch is the DB's now-freed internal state, which is exactly what this
-		// registration prevents by destroying the iterator first.
-		if (owningDb != null) {
-			owningDb.unregisterChild(this);
-		}
-		if (readOptions != null) {
-			readOptions.unregisterChild(this);
-		}
 		MH_DESTROY.invokeExact(ptr);
 	}
 }

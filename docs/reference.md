@@ -502,7 +502,7 @@ return `null` to run that compaction with no filter at all.
 | `Range`           | Half-open key range `[startKey, endKey)`. `of(byte[], byte[])`; used by `getApproximateSizes` |
 | `RocksDBException`| Unchecked; thrown for a genuine RocksDB-reported error (see [explanation.md#errors-are-always-loud](explanation.md#errors-are-always-loud)) |
 | `NativeObject`    | Base class of every native wrapper; `ptr()`, `close()` (idempotent), abstract `tryClose`      |
-| `NativeObjectWithChildren` | `NativeObject` subclass for wrappers that can produce children borrowing their pointer (every DB type producing `Snapshot`/`RocksIterator`); `registerChild`/`unregisterChild`, closes children before `tryCloseResource` — see [explanation.md](explanation.md#lifecycle-and-ownership) |
+| `NativeObjectWithChildren` | `NativeObject` subclass for wrappers that can produce children borrowing their pointer (every DB type producing `Snapshot`/`RocksIterator`); children register with `NativeObject#borrowedFrom`, closes children before `tryCloseResource` — see [explanation.md](explanation.md#lifecycle-and-ownership) |
 | `NativeDBWithBaseDB` | `NativeObjectWithChildren` subclass for wrappers with a second owned pointer (`TransactionDB`/`OptimisticTransactionDB`'s `rocksdb_t*` "base DB"); guarded `dbPtr()`, hooks `tryCloseBaseDb`/`tryClosePrimary` — see [explanation.md](explanation.md#lifecycle-and-ownership) |
 
 `Path` is used for every filesystem argument; there is no `String` path overload anywhere.

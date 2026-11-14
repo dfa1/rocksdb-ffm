@@ -248,4 +248,102 @@ class NativeObjectWithChildrenTest {
 			assertThat(child.tryCloseCount.get()).isEqualTo(1);
 		}
 	}
+
+	@Test
+	void borrowedFrom_twoParents_closingTheChildUnregistersFromBoth() {
+		// Given
+		var first = new TestParent(fakePtr(0x1));
+		var second = new TestParent(fakePtr(0x2));
+		var child = new TestChild(fakePtr(0x3));
+		child.borrowedFrom(first, second);
+		var registeredBefore = first.childCount() + second.childCount();
+
+		// When
+		child.close();
+
+		// Then
+		assertThat(registeredBefore).isEqualTo(2);
+		assertThat(first.childCount()).isZero();
+		assertThat(second.childCount()).isZero();
+		assertThat(child.tryCloseCount.get()).isEqualTo(1);
+	}
+
+	@Test
+	void borrowedFrom_twoParents_closingOneParentReleasesTheChildAndUnregistersFromTheOther() {
+		// Given
+		var first = new TestParent(fakePtr(0x1));
+		var second = new TestParent(fakePtr(0x2));
+		var child = new TestChild(fakePtr(0x3));
+		child.borrowedFrom(first, second);
+
+		// When
+		first.close();
+
+		// Then
+		assertThat(child.tryCloseCount.get()).isEqualTo(1);
+		assertThat(second.childCount()).isZero();
+	}
+
+	@Test
+	void borrowedFrom_anImmortalParent_isNotRegisteredWith() {
+		// Given
+		TestParent immortal = new TestParent(fakePtr(0x1)).makeImmortal();
+		var child = new TestChild(fakePtr(0x2));
+
+		// When
+		child.borrowedFrom(immortal);
+
+		// Then
+		assertThat(immortal.childCount()).isZero();
+	}
+
+	@Test
+	void grandparentClose_whileAChildIsStillSweepingItsOwnChildren_waitsForTheChild() throws Exception {
+		// Given — a child (like a Transaction) that is itself a parent, whose own child is slow to release
+		var order = new CopyOnWriteArrayList<String>();
+		var grandchildStarted = new CountDownLatch(1);
+		var grandchildMayFinish = new CountDownLatch(1);
+		var grandparent = new NativeObjectWithChildren(fakePtr(0x1)) {
+			@Override
+			protected void tryCloseResource(MemorySegment ptr) {
+				order.add("grandparent");
+			}
+		};
+		var child = new NativeObjectWithChildren(fakePtr(0x2)) {
+			@Override
+			protected void tryCloseResource(MemorySegment ptr) {
+				order.add("child");
+			}
+		};
+		var grandchild = new NativeObject(fakePtr(0x3)) {
+			@Override
+			protected void tryClose(MemorySegment ptr) {
+				grandchildStarted.countDown();
+				try {
+					grandchildMayFinish.await();
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+				order.add("grandchild");
+			}
+		};
+		child.borrowedFrom(grandparent);
+		grandchild.borrowedFrom(child);
+		try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+			var closingChild = executor.submit(child::close);
+			assertThat(grandchildStarted.await(5, TimeUnit.SECONDS)).isTrue();
+
+			// When
+			var closingGrandparent = executor.submit(grandparent::close);
+			Thread.sleep(200);
+			var grandparentFinishedEarly = closingGrandparent.isDone();
+			grandchildMayFinish.countDown();
+			closingChild.get(5, TimeUnit.SECONDS);
+			closingGrandparent.get(5, TimeUnit.SECONDS);
+
+			// Then
+			assertThat(grandparentFinishedEarly).isFalse();
+			assertThat(order).containsExactly("grandchild", "child", "grandparent");
+		}
+	}
 }
