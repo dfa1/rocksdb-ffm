@@ -13,13 +13,18 @@ import java.nio.ByteBuffer;
 /// Obtained via [TransactionDB#beginTransaction]. Always close after use
 /// (either committed or rolled back) to free the native object.
 ///
+/// A transaction is a child of the database it was begun on: closing the database while a transaction is
+/// still open releases it first, discarding anything uncommitted, and the transaction then throws
+/// [IllegalStateException] on use. Its iterators are children of the transaction in turn, closed before it.
+/// Close transactions before their database anyway; this only makes forgetting safe.
+///
 /// ```
 /// try (Transaction txn = txnDb.beginTransaction(writeOptions)) {
 ///     txn.put("key".getBytes(), "value".getBytes());
 ///     txn.commit();
 /// }
 /// ```
-public final class Transaction extends NativeObject {
+public final class Transaction extends NativeObjectWithChildren {
 
 	/// `rocksdb_pinnableslice_t* rocksdb_transaction_get_pinned_cf(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED_CF;
@@ -153,12 +158,21 @@ public final class Transaction extends NativeObject {
 	/// the JVM instead of raising a Java exception, since the C API does not null-check.
 	private final boolean hasSnapshot;
 
-	/// Package-private: created by TransactionDB or OptimisticTransactionDB.
+	/// The database this transaction was begun on, which releases it if it is still open when it closes.
+	private final NativeObjectWithChildren owningDb;
+
+	/// Package-private: created by TransactionDB or OptimisticTransactionDB, whose close releases this
+	/// transaction (rolling back anything uncommitted) before its own native pointer, so a transaction that
+	/// outlives its database throws [IllegalStateException] instead of touching freed memory.
 	///
+	/// @param owningDb    the database this transaction was begun on
+	/// @param ptr         the native `rocksdb_transaction_t*`
 	/// @param hasSnapshot whether this transaction was begun with `setSetSnapshot(true)`
-	Transaction(MemorySegment ptr, boolean hasSnapshot) {
+	Transaction(NativeObjectWithChildren owningDb, MemorySegment ptr, boolean hasSnapshot) {
 		super(ptr);
+		this.owningDb = owningDb;
 		this.hasSnapshot = hasSnapshot;
+		owningDb.registerChild(this);
 	}
 
 	// -----------------------------------------------------------------------
@@ -847,7 +861,8 @@ public final class Transaction extends NativeObject {
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE_ITERATOR_CF.invokeExact(
 					ptr(), readOptions.ptr(), cf.ptr());
-			return RocksIterator.create(iterPtr);
+			// A child of this transaction, so it is released before the transaction is destroyed.
+			return RocksIterator.create(this, iterPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("newIterator failed", t);
 		}
@@ -927,9 +942,13 @@ public final class Transaction extends NativeObject {
 	}
 
 	/// Destroys the native transaction object. Does _not_ commit or rollback;
-	/// call [#commit()] or [#rollback()] first.
+	/// call [#commit()] or [#rollback()] first: anything uncommitted is discarded. Its iterators are
+	/// closed first, and a transaction closed on its own stops being tracked by its database.
 	@Override
-	protected void tryClose(MemorySegment ptr) throws Throwable {
+	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
+		// Unregister first, as Snapshot does: when the database's close is sweeping its children this is
+		// still safe, since the database frees its own pointer only after the sweep.
+		owningDb.unregisterChild(this);
 		MH_DESTROY.invokeExact(ptr);
 	}
 
