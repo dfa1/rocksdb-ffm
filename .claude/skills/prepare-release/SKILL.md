@@ -48,10 +48,19 @@ java scripts/CheckPrototypes.java
 gh run list --branch main --limit 3           # latest CI must be green
 ```
 
-Also update the released-version strings (PURL badge and `<version>` in `README.md`, `docs/tutorial.md`, the BOM line and
-`pkg:maven` coordinate in `docs/reference.md`): `grep -rn "rocksdbffm\|<version>" README.md docs/*.md`. Ignore unrelated
-versions such as Zig 0.17.
 Stop and report on any failure.
+
+Then bump the released-version strings (PURL badge and `<version>` in `README.md`, `docs/tutorial.md`, the BOM line and
+`pkg:maven` coordinate in `docs/reference.md`) from the previous version to the new one, and commit them on their own
+(`docs: bump version strings to x.y`), separate from the CHANGELOG commit:
+
+```bash
+perl -pi -e 's/(rocksdbffm(?:-bom|-core|--core)?(?:[:@]|%40)|<version>)0\.OLD\b/${1}0.NEW/g' README.md docs/tutorial.md docs/reference.md
+git diff --stat                                # only those 3 files, only version lines
+grep -rn "0\.OLD" README.md docs/*.md          # anything left is unrelated (e.g. Zig 0.17) or a miss
+```
+
+The `<version>` pattern also matches unrelated Maven snippets, so check the diff rather than trusting the regex.
 
 ## 5. Cut it (confirm first)
 
