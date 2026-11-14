@@ -125,7 +125,7 @@ public final class RocksIterator extends NativeObject {
 		this.readOptions = readOptions == ReadOptions.DEFAULTS ? null : readOptions;
 		this.lenArena = Arena.ofConfined();
 		this.lenSegment = lenArena.allocate(ValueLayout.JAVA_LONG);
-		if (owningDb != null) {
+		if (this.owningDb != null) {
 			owningDb.registerChild(this);
 		}
 		if (this.readOptions != null) {
