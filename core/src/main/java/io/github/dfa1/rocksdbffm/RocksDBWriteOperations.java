@@ -29,7 +29,7 @@ import java.util.List;
 /// here — every current implementor of this interface implements that one too, but factoring it
 /// out lets [TransactionDB] implement compaction control as well, something it couldn't do while
 /// these methods lived only on this write-only interface it doesn't implement. See
-/// [#131](https://github.com/dfa1/rocksdbffm/issues/131).
+/// [#131](https://github.com/dfa1/rocksdb-ffm/issues/131).
 public interface RocksDBWriteOperations {
 
 	/// Returns the native `rocksdb_t*` pointer to operate on. Redeclared from
@@ -707,19 +707,21 @@ public interface RocksDBWriteOperations {
 	// -----------------------------------------------------------------------
 
 	/// Creates a new column family described by `descriptor` and returns its handle.
-	/// The caller must close the returned handle when done.
+	/// The handle is owned by this database, like the ones returned by the open; closing it is a no-op.
 	///
 	/// @param descriptor name and options for the new column family
-	/// @return handle to the newly created column family; caller must close it
+	/// @return handle to the newly created column family; owned by this database
+	/// @throws IllegalArgumentException if `descriptor` carries a TTL and this is not a [TtlDB]
 	default ColumnFamilyHandle createColumnFamily(ColumnFamilyDescriptor descriptor) {
-		return RocksDBWriteOperationsBindings.createCf(this, descriptor);
+		return RocksDBWriteOperationsBindings.createCf((NativeDB) this, descriptor);
 	}
 
 	/// Drops the column family identified by `handle`.
-	/// The handle should be closed after this call; it is no longer valid for reads/writes.
+	/// The handle is released by this call and no longer valid for reads/writes.
 	///
 	/// @param handle handle of the column family to drop
+	/// @throws IllegalArgumentException if `handle` does not belong to this database
 	default void dropColumnFamily(ColumnFamilyHandle handle) {
-		RocksDBWriteOperationsBindings.dropCf(dbPtr(), handle);
+		RocksDBWriteOperationsBindings.dropCf((NativeDB) this, handle);
 	}
 }

@@ -86,8 +86,8 @@ abstract class NativeObjectWithChildren extends NativeObject {
 
 	@Override
 	protected final void tryClose(MemorySegment ptr) throws Throwable {
-		// child.close() is safe to call whether or not the child was already closed by its own
-		// caller (NativeObject's close() is idempotent), and children is a ConcurrentHashMap-
+		// child.release() is safe to call whether or not the child was already closed by its own
+		// caller (NativeObject's release() is idempotent), and children is a ConcurrentHashMap-
 		// backed set, so a child unregistering itself mid-iteration does not throw
 		// ConcurrentModificationException. No children.clear() afterward: every child.close()
 		// call above already unregisters that child from `children` as part of its own
@@ -96,7 +96,7 @@ abstract class NativeObjectWithChildren extends NativeObject {
 		// this-very-sweep stragglers described there, and registerChild's own recheck cleans
 		// those up (whether that happens before or after this method returns).
 		for (NativeObject child : children) {
-			child.close();
+			child.release();
 		}
 		tryCloseResource(ptr);
 	}

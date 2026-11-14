@@ -48,17 +48,15 @@ class LoadLatestOptionsTest {
 	void loadLatestOptions_resultReopensTheDatabase() {
 		// Given
 		createDb(MemorySize.ofMB(16), MemorySize.ofMB(8));
-		var handles = new java.util.ArrayList<ColumnFamilyHandle>();
 
 		// When
 		try (var loaded = RocksDB.loadLatestOptions(dir, false);
-		     var db = RocksDB.openReadWrite(loaded.dbOptions(), dir, loaded.columnFamilies(), handles)) {
+		     var db = RocksDB.openReadWrite(loaded.dbOptions(), dir, loaded.columnFamilies())) {
 			var value = db.get("k".getBytes());
 
 			// Then
-			assertThat(handles).hasSize(2);
+			assertThat(db.getColumnFamilies()).hasSize(2);
 			assertThat(value).isEqualTo("v".getBytes());
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 

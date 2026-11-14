@@ -15,7 +15,7 @@ import java.util.Optional;
 /// [RocksDBReadOperations]/[RocksDBWriteOperations] -- by [TransactionDB], [Transaction],
 /// [WriteBatch], every `*Options` class, and effectively every other wrapper in the package --
 /// so it lives in its own class rather than on any single capability interface's `Bindings`
-/// companion. See [#131](https://github.com/dfa1/rocksdbffm/issues/131).
+/// companion. See [#131](https://github.com/dfa1/rocksdb-ffm/issues/131).
 final class NativeCalls {
 
 	/// `void rocksdb_close(rocksdb_t* db);`
@@ -150,6 +150,25 @@ final class NativeCalls {
 			len++;
 		}
 		return all.asSlice(0, len).toArray(ValueLayout.JAVA_BYTE);
+	}
+
+	/// Guards against handing a native call an array with an unfilled (NULL) slot — every C
+	/// API this backs (`rocksdb_open_column_families`, `rocksdb_ingest_external_file`, ...)
+	/// dereferences each entry as a pointer with no null check of its own, so a slot a
+	/// marshalling loop failed to populate would otherwise crash the JVM instead of failing
+	/// in Java. Cheap (a handful of pointer comparisons at DB-open/ingest time, not a hot
+	/// per-key path) insurance against that class of bug, whatever causes it.
+	///
+	/// @param arr  native `ADDRESS[n]` array to check
+	/// @param n    number of entries to check
+	/// @param what description of the array's contents, for the error message
+	/// @throws AssertionError if any of the first `n` entries is `MemorySegment.NULL`
+	static void requireNoNullEntries(MemorySegment arr, int n, String what) {
+		for (int i = 0; i < n; i++) {
+			if (MemorySegment.NULL.equals(arr.getAtIndex(ValueLayout.ADDRESS, i))) {
+				throw new AssertionError(what + " has an unpopulated (NULL) entry at index " + i);
+			}
+		}
 	}
 
 	/// Decodes a borrowed, non-owned `const char*` + separate `size_t*` out-param pair as a

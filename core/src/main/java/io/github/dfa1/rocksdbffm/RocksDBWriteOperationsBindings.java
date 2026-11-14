@@ -11,7 +11,7 @@ import java.util.List;
 
 /// FFM plumbing for [RocksDBWriteOperations]'s default methods. Kept out of [RocksDB] itself so
 /// that class doesn't also have to hold every feature area's `MH_` fields -- see
-/// [#131](https://github.com/dfa1/rocksdbffm/issues/131).
+/// [#131](https://github.com/dfa1/rocksdb-ffm/issues/131).
 final class RocksDBWriteOperationsBindings {
 
 	/// `void rocksdb_put(rocksdb_t* db, const rocksdb_writeoptions_t* options, const char* key, size_t keylen, const char* val, size_t vallen, char** errptr);`
@@ -28,8 +28,6 @@ final class RocksDBWriteOperationsBindings {
 	private static final MethodHandle MH_DELETE_CF;
 	/// `void rocksdb_delete_range_cf(rocksdb_t* db, const rocksdb_writeoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* start_key, size_t start_key_len, const char* end_key, size_t end_key_len, char** errptr);`
 	private static final MethodHandle MH_DELETE_RANGE_CF;
-	/// `rocksdb_column_family_handle_t* rocksdb_get_default_column_family_handle(rocksdb_t* db);`
-	private static final MethodHandle MH_GET_DEFAULT_CF;
 	/// `void rocksdb_write(rocksdb_t* db, const rocksdb_writeoptions_t* options, rocksdb_writebatch_t* batch, char** errptr);`
 	private static final MethodHandle MH_WRITE;
 	/// `void rocksdb_flush(rocksdb_t* db, const rocksdb_flushoptions_t* options, char** errptr);`
@@ -98,9 +96,6 @@ final class RocksDBWriteOperationsBindings {
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS));
-
-		MH_GET_DEFAULT_CF = NativeLibrary.lookup("rocksdb_get_default_column_family_handle",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_WRITE = NativeLibrary.lookup("rocksdb_write",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
@@ -303,7 +298,7 @@ final class RocksDBWriteOperationsBindings {
 	static void deleteRangeCfBytes(RocksDBWriteOperations db, WriteOptions writeOpts, byte[] startKey, byte[] endKey) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment cf = (MemorySegment) MH_GET_DEFAULT_CF.invokeExact(db.dbPtr());
+			MemorySegment cf = ((NativeDB) db).getColumnFamily(ColumnFamilyName.DEFAULT).ptr();
 			MH_DELETE_RANGE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf,
 					NativeCalls.toNative(arena, startKey), (long) startKey.length,
 					NativeCalls.toNative(arena, endKey), (long) endKey.length, err);
@@ -317,7 +312,7 @@ final class RocksDBWriteOperationsBindings {
 	                                ByteBuffer startKey, ByteBuffer endKey) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment cf = (MemorySegment) MH_GET_DEFAULT_CF.invokeExact(db.dbPtr());
+			MemorySegment cf = ((NativeDB) db).getColumnFamily(ColumnFamilyName.DEFAULT).ptr();
 			MH_DELETE_RANGE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf,
 					MemorySegment.ofBuffer(startKey), (long) startKey.remaining(),
 					MemorySegment.ofBuffer(endKey), (long) endKey.remaining(), err);
@@ -331,7 +326,7 @@ final class RocksDBWriteOperationsBindings {
 	                                 MemorySegment startKey, MemorySegment endKey) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment cf = (MemorySegment) MH_GET_DEFAULT_CF.invokeExact(db.dbPtr());
+			MemorySegment cf = ((NativeDB) db).getColumnFamily(ColumnFamilyName.DEFAULT).ptr();
 			MH_DELETE_RANGE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf,
 					startKey, startKey.byteSize(), endKey, endKey.byteSize(), err);
 			NativeCalls.checkError(err);
@@ -370,7 +365,7 @@ final class RocksDBWriteOperationsBindings {
 			for (int i = 0; i < files.size(); i++) {
 				fileArray.setAtIndex(ValueLayout.ADDRESS, i, arena.allocateFrom(files.get(i).toString()));
 			}
-			RocksDB.requireNoNullEntries(fileArray, files.size(), "ingest file list array");
+			NativeCalls.requireNoNullEntries(fileArray, files.size(), "ingest file list array");
 			MH_INGEST_EXTERNAL_FILE.invokeExact(db.dbPtr(), fileArray, (long) files.size(), options.ptr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
@@ -382,24 +377,26 @@ final class RocksDBWriteOperationsBindings {
 		ingestExternalFile(db, files, IngestExternalFileOptions.DEFAULTS);
 	}
 
-	static ColumnFamilyHandle createCf(RocksDBWriteOperations db, ColumnFamilyDescriptor descriptor) {
+	static ColumnFamilyHandle createCf(NativeDB db, ColumnFamilyDescriptor descriptor) {
+		descriptor.requireNoTtl();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment nameSeg = descriptor.name().toNative(arena);
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
 					db.dbPtr(), descriptor.options().ptr(), nameSeg, err);
 			NativeCalls.checkError(err);
-			return ColumnFamilyHandle.wrap(handle);
+			return db.adopt(descriptor.name(), handle);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("createColumnFamily failed", t);
 		}
 	}
 
-	static void dropCf(MemorySegment db, ColumnFamilyHandle handle) {
+	static void dropCf(NativeDB db, ColumnFamilyHandle handle) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MH_DROP_CF.invokeExact(db, handle.ptr(), err);
+			MH_DROP_CF.invokeExact(db.dbPtr(), handle.ptr(), err);
 			NativeCalls.checkError(err);
+			db.forget(handle);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("dropColumnFamily failed", t);
 		}

@@ -7,7 +7,6 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -97,7 +96,7 @@ class ColumnFamilyNameTest {
 		assertThat(listed).containsExactlyInAnyOrder(ColumnFamilyName.DEFAULT, raw);
 		var descriptors = listed.stream().map(ColumnFamilyDescriptor::of).toList();
 		try (var opts = Options.newOptions();
-		     var _ = RocksDB.openReadWrite(opts, dir, descriptors, new ArrayList<>())) {
+		     var _ = RocksDB.openReadWrite(opts, dir, descriptors)) {
 			// reopened without a name mismatch
 		}
 	}

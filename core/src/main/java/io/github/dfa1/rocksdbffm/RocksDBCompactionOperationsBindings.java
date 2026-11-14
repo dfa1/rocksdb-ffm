@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 
 /// FFM plumbing for [RocksDBCompactionOperations]'s default methods. Kept out of [RocksDB] itself so
 /// that class doesn't also have to hold every feature area's `MH_` fields -- see
-/// [#131](https://github.com/dfa1/rocksdbffm/issues/131).
+/// [#131](https://github.com/dfa1/rocksdb-ffm/issues/131).
 final class RocksDBCompactionOperationsBindings {
 
 	/// `void rocksdb_compact_range(rocksdb_t* db, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len);`

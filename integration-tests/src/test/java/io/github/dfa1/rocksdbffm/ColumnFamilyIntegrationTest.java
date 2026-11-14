@@ -29,20 +29,17 @@ class ColumnFamilyIntegrationTest {
 		}
 
 		// When — reopen with both column families
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var db = RocksDB.openReadWrite(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT),
-						     ColumnFamilyDescriptor.of(ColumnFamilyName.of("accounts"))),
-				     handles)) {
-			var accountsCf = handles.get(1);
+						     ColumnFamilyDescriptor.of(ColumnFamilyName.of("accounts"))))) {
+			var accountsCf = db.getColumnFamily(ColumnFamilyName.of("accounts"));
 
 			// Then — data still present
 			assertThat(db.get(accountsCf, "alice".getBytes())).isEqualTo("100".getBytes());
 			assertThat(db.get(accountsCf, "bob".getBytes())).isEqualTo("200".getBytes());
 			assertThat(db.get(accountsCf, "carol".getBytes())).isNull();
 
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -59,16 +56,14 @@ class ColumnFamilyIntegrationTest {
 		}
 
 		// When — reopen all three CFs
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var db = RocksDB.openReadWrite(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT),
 						     ColumnFamilyDescriptor.of(ColumnFamilyName.of("users")),
-						     ColumnFamilyDescriptor.of(ColumnFamilyName.of("orders"))),
-				     handles)) {
-			var defaultCf = handles.get(0);
-			var usersCf = handles.get(1);
-			var ordersCf = handles.get(2);
+						     ColumnFamilyDescriptor.of(ColumnFamilyName.of("orders"))))) {
+			var defaultCf = db.getColumnFamily(ColumnFamilyName.DEFAULT);
+			var usersCf = db.getColumnFamily(ColumnFamilyName.of("users"));
+			var ordersCf = db.getColumnFamily(ColumnFamilyName.of("orders"));
 
 			// Then — each CF sees only its own data
 			assertThat(db.get(usersCf, "u1".getBytes())).isEqualTo("alice".getBytes());
@@ -78,7 +73,6 @@ class ColumnFamilyIntegrationTest {
 			assertThat(db.get(usersCf, "o1".getBytes())).isNull();
 			assertThat(db.get(ordersCf, "u1".getBytes())).isNull();
 
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -148,13 +142,11 @@ class ColumnFamilyIntegrationTest {
 		}
 
 		// When — reopen
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var db = RocksDB.openReadWrite(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT),
-						     ColumnFamilyDescriptor.of(ColumnFamilyName.of("logs"))),
-				     handles)) {
-			var logsCf = handles.get(1);
+						     ColumnFamilyDescriptor.of(ColumnFamilyName.of("logs"))))) {
+			var logsCf = db.getColumnFamily(ColumnFamilyName.of("logs"));
 
 			// Then — range [log-2, log-5) is gone, log-1 and log-5 survive
 			assertThat(db.get(logsCf, "log-1".getBytes())).isEqualTo("entry-1".getBytes());
@@ -163,7 +155,6 @@ class ColumnFamilyIntegrationTest {
 			assertThat(db.get(logsCf, "log-4".getBytes())).isNull();
 			assertThat(db.get(logsCf, "log-5".getBytes())).isEqualTo("entry-5".getBytes());
 
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -185,20 +176,17 @@ class ColumnFamilyIntegrationTest {
 		// When — reopen and iterate
 		List<String> keys = new ArrayList<>();
 		List<String> values = new ArrayList<>();
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var db = RocksDB.openReadWrite(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT),
-						     ColumnFamilyDescriptor.of(ColumnFamilyName.of("sorted"))),
-				     handles)) {
-			try (var it = db.newIterator(handles.get(1))) {
+						     ColumnFamilyDescriptor.of(ColumnFamilyName.of("sorted"))))) {
+			try (var it = db.newIterator(db.getColumnFamily(ColumnFamilyName.of("sorted")))) {
 				for (it.seekToFirst(); it.isValid(); it.next()) {
 					keys.add(new String(it.key(), StandardCharsets.UTF_8));
 					values.add(new String(it.value(), StandardCharsets.UTF_8));
 				}
 				it.checkError();
 			}
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 
 		// Then — lexicographic order, CF-scoped

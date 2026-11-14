@@ -14,7 +14,7 @@ import java.util.OptionalLong;
 /// [RocksDBWriteOperations], but shares the CF-scoped property native symbols with them since
 /// there's no separate `rocksdb_transactiondb_property_value_cf`). Kept out of [RocksDB] itself
 /// so that class doesn't also have to hold every feature area's `MH_` fields -- see
-/// [#131](https://github.com/dfa1/rocksdbffm/issues/131).
+/// [#131](https://github.com/dfa1/rocksdb-ffm/issues/131).
 final class RocksDBReadOperationsBindings {
 
 	/// `rocksdb_pinnable_handle_t* rocksdb_get_pinned_v2(rocksdb_t* db, const rocksdb_readoptions_t* options, const char* key, size_t keylen, char** errptr);`

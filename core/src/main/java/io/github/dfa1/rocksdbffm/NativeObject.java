@@ -27,6 +27,10 @@ public abstract class NativeObject implements AutoCloseable {
 	/// `static final` field; class initialization makes that write visible to every thread.
 	private volatile boolean immortal;
 
+	/// Set once, by [#markOwnedByParent()], when the owning [NativeObjectWithChildren] releases this
+	/// object instead of its holder: [#close()] is then a no-op and only [#release()] frees it.
+	private volatile boolean ownedByParent;
+
 	/// Initializes this wrapper with the given native pointer.
 	///
 	/// @param owningPointer the non-NULL native pointer this object now owns
@@ -60,9 +64,16 @@ public abstract class NativeObject implements AutoCloseable {
 
 	@Override
 	public final void close() {
-		if (immortal) {
+		if (immortal || ownedByParent) {
 			return;
 		}
+		release();
+	}
+
+	/// Releases the native resource exactly once, whatever [#close()] would otherwise do: the
+	/// entry point for the owning [NativeObjectWithChildren] to free a child that opted out of
+	/// being closed by its holder (see [#markOwnedByParent()]). Idempotent and never throws.
+	final void release() {
 		MemorySegment ptr = owningPointer.getAndSet(MemorySegment.NULL);
 		if (!MemorySegment.NULL.equals(ptr)) {
 			try {
@@ -85,6 +96,20 @@ public abstract class NativeObject implements AutoCloseable {
 	///                    does not rethrow, so the rest of a try-with-resources chain still closes
 	protected abstract void tryClose(MemorySegment ptr) throws Throwable;
 
+
+	/// Makes [#close()] a no-op because the owning [NativeObjectWithChildren] releases this object
+	/// when it closes itself, through [#release()]. For a resource the holder only borrows, like a
+	/// [ColumnFamilyHandle] looked up from its database: closing it early would destroy it for every
+	/// other user of that database. Unlike [#makeImmortal()] the object is still freed, and
+	/// [#transferOwnership()] still works (the parent's late-registration path relies on it).
+	///
+	/// @param <T> the wrapper type, inferred from the assignment target
+	/// @return this object
+	@SuppressWarnings("unchecked")
+	<T extends NativeObject> T markOwnedByParent() {
+		this.ownedByParent = true;
+		return (T) this;
+	}
 
 	/// Makes this object immortal: it lives for the whole JVM, [#close()] is a no-op, and [#ptr()] keeps working.
 	///

@@ -650,25 +650,29 @@ public final class TransactionDB extends NativeDBWithBaseDB
 	/// instead would leave every `*_cf` transaction operation unable to find it.
 	///
 	/// @param descriptor name and options for the new column family
-	/// @return handle to the newly created column family; caller must close it
+	/// @return handle to the newly created column family; owned by this database
+	/// @throws IllegalArgumentException if `descriptor` carries a TTL
 	public ColumnFamilyHandle createColumnFamily(ColumnFamilyDescriptor descriptor) {
+		descriptor.requireNoTtl();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment nameSeg = descriptor.name().toNative(arena);
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
 					ptr(), descriptor.options().ptr(), nameSeg, err);
 			NativeCalls.checkError(err);
-			return ColumnFamilyHandle.wrap(handle);
+			return adopt(descriptor.name(), handle);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("createColumnFamily failed", t);
 		}
 	}
 
 	/// Drops the column family identified by `handle`.
+	/// The handle is released by this call and no longer valid for reads/writes.
 	///
 	/// @param handle handle of the column family to drop
+	/// @throws IllegalArgumentException if `handle` does not belong to this database
 	public void dropColumnFamily(ColumnFamilyHandle handle) {
-		RocksDBWriteOperationsBindings.dropCf(dbPtr(), handle);
+		RocksDBWriteOperationsBindings.dropCf(this, handle);
 	}
 
 	// -----------------------------------------------------------------------

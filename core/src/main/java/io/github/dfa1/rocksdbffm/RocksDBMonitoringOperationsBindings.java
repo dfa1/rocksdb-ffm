@@ -9,7 +9,7 @@ import java.util.List;
 
 /// FFM plumbing for [RocksDBMonitoringOperations#getApproximateSizes]'s four overloads. Kept out
 /// of [RocksDB] itself so that class doesn't also have to hold every feature area's `MH_` fields
-/// -- see [#131](https://github.com/dfa1/rocksdbffm/issues/131). The rest of
+/// -- see [#131](https://github.com/dfa1/rocksdb-ffm/issues/131). The rest of
 /// [RocksDBMonitoringOperations] (`getLiveFiles`, `getLiveFilesStorageInfo`) has no `MH_` fields
 /// of its own; [LiveFiles]/[LiveFilesStorageInfo] own that plumbing directly.
 final class RocksDBMonitoringOperationsBindings {
