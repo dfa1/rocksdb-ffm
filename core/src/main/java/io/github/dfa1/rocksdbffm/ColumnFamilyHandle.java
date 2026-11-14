@@ -8,12 +8,13 @@ import java.lang.invoke.MethodHandle;
 
 /// FFM wrapper for `rocksdb_column_family_handle_t`.
 ///
-/// Obtained via [RocksDB#openReadWrite] or [ReadWriteDB#createColumnFamily].
-/// Must be closed after use to release the native handle.
+/// Obtained via [RocksDB#openReadWrite] or [ReadWriteDB#createColumnFamily]. The database owns it: [#close()] does
+/// nothing, and the handle is released when the database closes or the column family is dropped, after which it
+/// throws [IllegalStateException].
 ///
 /// ```
-/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(path, dbOpts);
-///      var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+/// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(path, dbOpts)) {
+///     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 ///     db.put(cf, "key".getBytes(), "value".getBytes());
 /// }
 /// ```
@@ -43,12 +44,24 @@ public final class ColumnFamilyHandle extends NativeObject {
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
-	private ColumnFamilyHandle(MemorySegment ptr) {
+	private ColumnFamilyHandle(NativeObjectWithChildren owningDb, MemorySegment ptr) {
 		super(ptr);
+		borrowedFrom(owningDb);
 	}
 
-	static ColumnFamilyHandle wrap(MemorySegment ptr) {
-		return new ColumnFamilyHandle(ptr);
+	/// Wraps a handle the database owns: it is registered as a child of `owningDb`, which releases it.
+	///
+	/// @param owningDb the database the column family belongs to
+	/// @param ptr      the native `rocksdb_column_family_handle_t*`
+	/// @return the wrapped handle
+	static ColumnFamilyHandle wrap(NativeObjectWithChildren owningDb, MemorySegment ptr) {
+		return new ColumnFamilyHandle(owningDb, ptr);
+	}
+
+	/// Does nothing: the database that owns this handle releases it, because closing it early would destroy it for
+	/// every other user of that database.
+	@Override
+	public void close() {
 	}
 
 	/// Returns a new native handle to the default column family of `dbPtr`, for a database opened

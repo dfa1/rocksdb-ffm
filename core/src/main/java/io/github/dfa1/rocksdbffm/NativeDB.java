@@ -73,8 +73,7 @@ abstract class NativeDB extends NativeObjectWithChildren {
 	/// @param handlePtr the native `rocksdb_column_family_handle_t*`, now owned by this database
 	/// @return the wrapped handle
 	final ColumnFamilyHandle adopt(ColumnFamilyName name, MemorySegment handlePtr) {
-		ColumnFamilyHandle handle = ColumnFamilyHandle.wrap(handlePtr).markOwnedByParent();
-		registerChild(handle);
+		ColumnFamilyHandle handle = ColumnFamilyHandle.wrap(this, handlePtr);
 		columnFamilies.updateAndGet(current -> {
 			var copy = new LinkedHashMap<>(current);
 			copy.put(name, handle);
@@ -83,7 +82,7 @@ abstract class NativeDB extends NativeObjectWithChildren {
 		return handle;
 	}
 
-	/// Unregisters and releases a handle that was dropped natively.
+	/// Releases a handle that was dropped natively; releasing it also unregisters it.
 	///
 	/// @param handle the handle of a column family this database just dropped
 	/// @throws IllegalArgumentException if `handle` does not belong to this database
@@ -98,7 +97,6 @@ abstract class NativeDB extends NativeObjectWithChildren {
 			}
 			after = Collections.unmodifiableSequencedMap(copy);
 		} while (!columnFamilies.compareAndSet(before, after));
-		unregisterChild(handle);
 		handle.release();
 	}
 }

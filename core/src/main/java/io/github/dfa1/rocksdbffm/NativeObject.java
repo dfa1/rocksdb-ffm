@@ -34,10 +34,6 @@ public abstract class NativeObject implements AutoCloseable {
 	/// makes the write visible to the sweeping thread.
 	private NativeObjectWithChildren[] parents = NO_PARENTS;
 
-	/// Set once, by [#markOwnedByParent()], when the owning [NativeObjectWithChildren] releases this
-	/// object instead of its holder: [#close()] is then a no-op and only [#release()] frees it.
-	private volatile boolean ownedByParent;
-
 	/// Initializes this wrapper with the given native pointer.
 	///
 	/// @param owningPointer the non-NULL native pointer this object now owns
@@ -69,9 +65,11 @@ public abstract class NativeObject implements AutoCloseable {
 		return MemorySegment.NULL.equals(owningPointer.get());
 	}
 
+	/// Releases the native resource, unless this object is immortal. A wrapper that is released by its owner and
+	/// not by whoever holds it (a [ColumnFamilyHandle]) overrides this as a no-op; [#release()] still frees it.
 	@Override
-	public final void close() {
-		if (immortal || ownedByParent) {
+	public void close() {
+		if (immortal) {
 			return;
 		}
 		release();
@@ -117,8 +115,8 @@ public abstract class NativeObject implements AutoCloseable {
 	}
 
 	/// Releases the native resource exactly once, whatever [#close()] would otherwise do: the
-	/// entry point for the owning [NativeObjectWithChildren] to free a child that opted out of
-	/// being closed by its holder (see [#markOwnedByParent()]). Idempotent and never throws.
+	/// entry point for the owning [NativeObjectWithChildren] to free a child whose [#close()] is a no-op.
+	/// Idempotent and never throws.
 	///
 	/// A call that loses the race to another thread already releasing this object blocks until that
 	/// release has finished, instead of returning at once: a parent's sweep calls this on each child
@@ -159,20 +157,6 @@ public abstract class NativeObject implements AutoCloseable {
 	///                    does not rethrow, so the rest of a try-with-resources chain still closes
 	protected abstract void tryClose(MemorySegment ptr) throws Throwable;
 
-
-	/// Makes [#close()] a no-op because the owning [NativeObjectWithChildren] releases this object
-	/// when it closes itself, through [#release()]. For a resource the holder only borrows, like a
-	/// [ColumnFamilyHandle] looked up from its database: closing it early would destroy it for every
-	/// other user of that database. Unlike [#makeImmortal()] the object is still freed, and
-	/// [#transferOwnership()] still works (the parent's late-registration path relies on it).
-	///
-	/// @param <T> the wrapper type, inferred from the assignment target
-	/// @return this object
-	@SuppressWarnings("unchecked")
-	<T extends NativeObject> T markOwnedByParent() {
-		this.ownedByParent = true;
-		return (T) this;
-	}
 
 	/// Makes this object immortal: it lives for the whole JVM, [#close()] is a no-op, and [#ptr()] keeps working.
 	///
