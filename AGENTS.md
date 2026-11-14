@@ -227,8 +227,8 @@ type (`ReadWriteDB`, `TtlDB`, …) or its capability interface, not on `RocksDB`
 - `CHANGELOG.md` sections are published verbatim as the GitHub release notes (`publish.yml`). **Do not edit it in a
   contributor PR** — the maintainer adds the entry at merge time. Format: every entry links the pull request
   (`[#NNN](https://github.com/dfa1/rocksdb-ffm/pull/NNN)`, plus the issue when there is one), and an entry from an
-  external contributor ends with `— thanks [@handle](https://github.com/handle)` (`publish.yml` rewrites it to a bare
-  `@handle` in the release notes, where the mention notifies that person when the release is published)
+  external contributor ends with `— thanks [@handle](https://github.com/handle)` (kept as an explicit link in the release
+  notes too: `publish.yml` publishes the section verbatim)
 
 ## Code
 
