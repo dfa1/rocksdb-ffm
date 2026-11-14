@@ -8,7 +8,8 @@ import java.util.concurrent.atomic.AtomicReference;
 /// Holds the native pointer in an [AtomicReference]. On [#close()],
 /// the reference is atomically swapped to [MemorySegment#NULL], ensuring
 /// [#tryClose(MemorySegment)] is called exactly once even under
-/// concurrent or repeated close() calls.
+/// concurrent or repeated close() calls. A `close()` that loses that race returns at once, possibly
+/// before the winning thread's native release has finished.
 ///
 /// That guarantee is narrower than it might read: it covers concurrent or repeated calls to
 /// [#close()] itself, not `close()` racing a concurrent call to any *other* method. Nothing
@@ -67,9 +68,13 @@ public abstract class NativeObject implements AutoCloseable {
 
 	/// Releases the native resource, unless this object is immortal. A wrapper that is released by its owner and
 	/// not by whoever holds it (a [ColumnFamilyHandle]) overrides this as a no-op; [#release()] still frees it.
+	///
+	/// Returns at once if another thread is already releasing this object, instead of waiting for it as
+	/// [#release()] does: only a parent's sweep needs that wait. A native release can block on a callback thread
+	/// (`rocksdb_close` draining an event listener), and a `close()` from that callback would otherwise deadlock.
 	@Override
 	public void close() {
-		if (immortal) {
+		if (immortal || isClosed()) {
 			return;
 		}
 		release();
