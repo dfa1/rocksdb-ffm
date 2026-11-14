@@ -20,7 +20,7 @@ import java.lang.invoke.MethodHandle;
 ///     ...
 /// }
 /// ```
-public final class EnvOptions extends NativeObject {
+public final class EnvOptions extends NativeObjectWithChildren {
 
 	/// `rocksdb_envoptions_t* rocksdb_envoptions_create(void);`
 	private static final MethodHandle MH_CREATE;
@@ -366,7 +366,9 @@ public final class EnvOptions extends NativeObject {
 	}
 
 	/// Attaches a [RateLimiter] to throttle this file's I/O. `rateLimiter` remains owned by
-	/// the caller and can be shared across multiple `EnvOptions`/`Options`.
+	/// the caller and can be shared across multiple `EnvOptions`/`Options`; these options keep it alive
+	/// themselves, so it may be closed right away. An [SstFileWriter] built from these options borrows that
+	/// limiter, so it is closed with them.
 	///
 	/// @param rateLimiter rate limiter to use; caller retains ownership
 	/// @return `this` for chaining
@@ -380,7 +382,7 @@ public final class EnvOptions extends NativeObject {
 	}
 
 	@Override
-	protected void tryClose(MemorySegment ptr) throws Throwable {
+	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
 		MH_DESTROY.invokeExact(ptr);
 	}
 }

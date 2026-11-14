@@ -84,8 +84,16 @@ public final class SstFileWriter extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
-	private SstFileWriter(MemorySegment ptr) {
+	/// The options this writer was created with, whose rate limiter the native writer's copy points at; `null`
+	/// for the immortal defaults.
+	private final EnvOptions envOptions;
+
+	private SstFileWriter(EnvOptions envOptions, MemorySegment ptr) {
 		super(ptr);
+		this.envOptions = envOptions == EnvOptions.DEFAULTS ? null : envOptions;
+		if (this.envOptions != null) {
+			this.envOptions.registerChild(this);
+		}
 	}
 
 	/// Creates an SST file writer using the given DB options (comparator, compression, etc.)
@@ -98,15 +106,16 @@ public final class SstFileWriter extends NativeObject {
 	}
 
 	/// Creates an SST file writer using the given DB options (comparator, compression, etc.)
-	/// and file-I/O behavior. RocksDB copies `envOptions` internally; it may be closed after
-	/// this call.
+	/// and file-I/O behavior. RocksDB copies `envOptions` internally, but the copy still points at their rate
+	/// limiter: closing `envOptions` closes this writer first, and a closed writer throws
+	/// [IllegalStateException].
 	///
 	/// @param options    DB options that control comparator and compression for the SST file
 	/// @param envOptions low-level file-I/O behavior (mmap/direct I/O, sync cadence, ...)
 	/// @return a new [SstFileWriter]; caller must close it
 	public static SstFileWriter newSstFileWriter(Options options, EnvOptions envOptions) {
 		try {
-			return new SstFileWriter((MemorySegment) MH_CREATE.invokeExact(envOptions.ptr(), options.ptr()));
+			return new SstFileWriter(envOptions, (MemorySegment) MH_CREATE.invokeExact(envOptions.ptr(), options.ptr()));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("sstfilewriter create failed", t);
 		}
@@ -301,6 +310,9 @@ public final class SstFileWriter extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
+		if (envOptions != null) {
+			envOptions.unregisterChild(this);
+		}
 		MH_DESTROY.invokeExact(ptr);
 	}
 }

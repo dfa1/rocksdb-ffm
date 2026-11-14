@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 class EnvOptionsTest {
 
@@ -193,6 +194,42 @@ class EnvOptionsTest {
 
 			// When / Then -- rateLimiter is still open and usable after being shared here
 			assertThat(rateLimiter.ptr()).isNotNull();
+		}
+	}
+
+	@Test
+	void sstFileWriter_usedAfterItsEnvOptionsAndRateLimiterClosed_throws(@TempDir Path dir) {
+		// Given
+		var rateLimiter = RateLimiter.create(MemorySize.ofMB(10));
+		var envOptions = EnvOptions.newEnvOptions().setRateLimiter(rateLimiter);
+		try (var opts = Options.newOptions();
+		     var writer = SstFileWriter.newSstFileWriter(opts, envOptions)) {
+			writer.open(dir.resolve("rl.sst"));
+			rateLimiter.close();
+
+			// When
+			envOptions.close();
+			var thrown = catchThrowable(() -> writer.put("k".getBytes(), "v".getBytes()));
+
+			// Then
+			assertThat(thrown).isInstanceOf(IllegalStateException.class);
+		}
+	}
+
+	@Test
+	void sstFileWriter_closedBeforeItsEnvOptions_isClean(@TempDir Path dir) {
+		// Given
+		try (var envOptions = EnvOptions.newEnvOptions();
+		     var opts = Options.newOptions()) {
+			var writer = SstFileWriter.newSstFileWriter(opts, envOptions);
+			writer.close();
+			writer.close();
+
+			// When
+			var thrown = catchThrowable(envOptions::close);
+
+			// Then
+			assertThat(thrown).isNull();
 		}
 	}
 }
