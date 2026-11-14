@@ -256,7 +256,7 @@ class ColumnFamilyNameTest {
 				.toList();
 
 		// Then
-		assertThat(thrown).allSatisfy(t -> assertThat(t).isInstanceOf(IllegalArgumentException.class));
+		assertThat(thrown).isNotEmpty().allSatisfy(t -> assertThat(t).isInstanceOf(IllegalArgumentException.class));
 	}
 
 	// -----------------------------------------------------------------------
