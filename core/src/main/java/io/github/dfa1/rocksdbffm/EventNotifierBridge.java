@@ -65,6 +65,9 @@ final class EventNotifierBridge {
 
 	private static final FunctionDescriptor DESTRUCTOR_DESC = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
 
+	/// Bound for the duration of every listener callback; see [#inCallback()].
+	private static final ScopedValue<Boolean> IN_CALLBACK = ScopedValue.newInstance();
+
 	// One global upcall stub per callback, shared by every attached EventNotifier. Live for the
 	// JVM lifetime so the function pointers stay valid; dispatch is keyed off the `state` pointer,
 	// which carries a registry id rather than real memory (same trick as Logger/MergeOperator.Custom).
@@ -234,12 +237,20 @@ final class EventNotifierBridge {
 		}, method);
 	}
 
+	/// Whether the calling thread is inside an [EventNotifier] callback, where closing a database would hang:
+	/// `rocksdb_close` waits for background work to finish, and the callback is that background work.
+	///
+	/// @return `true` while a listener callback is running on this thread
+	static boolean inCallback() {
+		return IN_CALLBACK.isBound();
+	}
+
 	private static void dispatch(MemorySegment state, Consumer<EventNotifier> call, String method) {
 		BackgroundUpcallThreads.track();
 		try {
 			EventNotifier notifier = REGISTRY.get(state);
 			if (notifier != null) {
-				call.accept(notifier);
+				ScopedValue.where(IN_CALLBACK, Boolean.TRUE).run(() -> call.accept(notifier));
 			}
 		} catch (Throwable t) {
 			// exceptions must not escape into native code, but they must be shown to the user somehow

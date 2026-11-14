@@ -30,6 +30,22 @@ abstract class NativeDB extends NativeObjectWithChildren {
 		super(ptr);
 	}
 
+	/// Closes this database, releasing everything still borrowed from it first.
+	///
+	/// Must not be called from an [EventNotifier] callback: closing waits for RocksDB's background work to
+	/// finish, and the callback is part of that work, so the call would never return and would wedge a
+	/// thread of the pool every database in the process shares. Hand the close to another thread instead.
+	///
+	/// @throws IllegalStateException if called from an [EventNotifier] callback
+	@Override
+	public void close() {
+		if (EventNotifierBridge.inCallback()) {
+			throw new IllegalStateException("a database cannot be closed from an EventNotifier callback: "
+					+ "the close would wait for the thread running the callback. Close it from another thread");
+		}
+		super.close();
+	}
+
 	/// Returns the native `rocksdb_t*` pointer to operate on, after checking that this object has not
 	/// been closed.
 	///
