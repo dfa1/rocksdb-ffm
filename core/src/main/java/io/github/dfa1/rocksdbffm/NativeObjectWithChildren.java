@@ -84,6 +84,19 @@ abstract class NativeObjectWithChildren extends NativeObject {
 		children.remove(child);
 	}
 
+	/// Releases every still-registered child of the given type, leaving this object and its other
+	/// children open — for a native call that invalidates one kind of borrowed object (e.g. a
+	/// transaction's iterators on commit) without destroying its parent.
+	///
+	/// @param type the kind of child to release
+	final void releaseChildren(Class<? extends NativeObject> type) {
+		for (NativeObject child : children) {
+			if (type.isInstance(child)) {
+				child.release();
+			}
+		}
+	}
+
 	@Override
 	protected final void tryClose(MemorySegment ptr) throws Throwable {
 		// child.release() is safe to call whether or not the child was already closed by its own

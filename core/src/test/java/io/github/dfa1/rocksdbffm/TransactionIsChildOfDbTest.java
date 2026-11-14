@@ -231,4 +231,37 @@ class TransactionIsChildOfDbTest {
 			assertThat(catchThrowable(snapshot::close)).isNull();
 		}
 	}
+
+	@ParameterizedTest
+	@MethodSource("flavors")
+	void aTransactionsIterator_isReleasedByCommitRollbackAndRollbackToSavePoint(Flavor flavor, @TempDir Path dir) {
+		// Given
+		var opened = flavor.open().apply(dir);
+		try (var wo = WriteOptions.newWriteOptions();
+		     var ro = ReadOptions.newReadOptions()) {
+			var txn = opened.begin().apply(wo);
+			var cf = opened.db().getColumnFamily(ColumnFamilyName.DEFAULT);
+			txn.put(cf, KEY, VALUE);
+			var afterCommit = txn.newIterator(cf, ro);
+			var afterRollback = txn.newIterator(cf, ro);
+			var afterSavePoint = txn.newIterator(cf, ro);
+			afterSavePoint.seekToFirst();
+
+			// When
+			txn.setSavePoint();
+			txn.rollbackToSavePoint();
+			var savePointResult = catchThrowable(afterSavePoint::isValid);
+			txn.rollback();
+			var rollbackResult = catchThrowable(afterRollback::isValid);
+			txn.commit();
+			var commitResult = catchThrowable(afterCommit::isValid);
+
+			// Then
+			assertThat(savePointResult).isInstanceOf(IllegalStateException.class);
+			assertThat(rollbackResult).isInstanceOf(IllegalStateException.class);
+			assertThat(commitResult).isInstanceOf(IllegalStateException.class);
+			txn.close();
+			opened.db().close();
+		}
+	}
 }
