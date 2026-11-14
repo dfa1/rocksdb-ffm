@@ -73,16 +73,24 @@ public abstract class NativeObject implements AutoCloseable {
 	/// Releases the native resource exactly once, whatever [#close()] would otherwise do: the
 	/// entry point for the owning [NativeObjectWithChildren] to free a child that opted out of
 	/// being closed by its holder (see [#markOwnedByParent()]). Idempotent and never throws.
+	///
+	/// A call that loses the race to another thread already releasing this object blocks until that
+	/// release has finished, instead of returning at once: a parent's sweep calls this on each child
+	/// and then frees its own pointer, so returning early would let the parent be destroyed while a
+	/// child, released by another thread, is still using it. Parents are always locked before their
+	/// children and [#tryClose(MemorySegment)] never locks a parent, so the wait cannot deadlock.
 	final void release() {
-		MemorySegment ptr = owningPointer.getAndSet(MemorySegment.NULL);
-		if (!MemorySegment.NULL.equals(ptr)) {
-			try {
-				tryClose(ptr);
-			} catch (Throwable throwable) {
-				// close() must never throw — a failure here must not stop the rest of a
-				// try-with-resources chain from closing — but a failure to release a native
-				// resource is still worth knowing about.
-				LOG.log(System.Logger.Level.ERROR, getClass().getSimpleName() + ".close() failed", throwable);
+		synchronized (this) {
+			MemorySegment ptr = owningPointer.getAndSet(MemorySegment.NULL);
+			if (!MemorySegment.NULL.equals(ptr)) {
+				try {
+					tryClose(ptr);
+				} catch (Throwable throwable) {
+					// close() must never throw — a failure here must not stop the rest of a
+					// try-with-resources chain from closing — but a failure to release a native
+					// resource is still worth knowing about.
+					LOG.log(System.Logger.Level.ERROR, getClass().getSimpleName() + ".close() failed", throwable);
+				}
 			}
 		}
 	}
