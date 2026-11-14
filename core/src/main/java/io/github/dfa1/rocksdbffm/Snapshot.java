@@ -113,7 +113,11 @@ public final class Snapshot extends NativeObject {
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
 		for (ReadOptions options : installedIn) {
-			options.snapshotReleased(this);
+			try {
+				options.snapshotReleased(this);
+			} catch (RuntimeException e) {
+				// the release below must run whatever happened to the options
+			}
 		}
 		if (MemorySegment.NULL.equals(dbPtr)) {
 			// Borrowed from a transaction: only the malloc'd wrapper is ours to free.

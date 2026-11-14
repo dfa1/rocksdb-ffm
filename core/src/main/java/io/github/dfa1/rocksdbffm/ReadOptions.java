@@ -525,12 +525,12 @@ public final class ReadOptions extends NativeObjectWithChildren {
 			return;
 		}
 		snapshotReleased = true;
-		if (!isClosed()) {
-			try {
-				MH_SET_SNAPSHOT.invokeExact(ptr(), MemorySegment.NULL);
-			} catch (Throwable t) {
-				throw NativeCalls.wrapInvokeFailure("readoptions setSnapshot failed", t);
-			}
+		try {
+			MH_SET_SNAPSHOT.invokeExact(ptr(), MemorySegment.NULL);
+		} catch (IllegalStateException closed) {
+			// closed concurrently: nothing left to unhook, and the snapshot's own release must still run
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("readoptions setSnapshot failed", t);
 		}
 	}
 

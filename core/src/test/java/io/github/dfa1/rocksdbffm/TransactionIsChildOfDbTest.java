@@ -234,7 +234,7 @@ class TransactionIsChildOfDbTest {
 
 	@ParameterizedTest
 	@MethodSource("flavors")
-	void aTransactionsIterator_isReleasedByCommitRollbackAndRollbackToSavePoint(Flavor flavor, @TempDir Path dir) {
+	void aTransactionsIterator_isReleasedByRollbackToSavePoint(Flavor flavor, @TempDir Path dir) {
 		// Given
 		var opened = flavor.open().apply(dir);
 		try (var wo = WriteOptions.newWriteOptions();
@@ -242,24 +242,58 @@ class TransactionIsChildOfDbTest {
 			var txn = opened.begin().apply(wo);
 			var cf = opened.db().getColumnFamily(ColumnFamilyName.DEFAULT);
 			txn.put(cf, KEY, VALUE);
-			var afterCommit = txn.newIterator(cf, ro);
-			var afterRollback = txn.newIterator(cf, ro);
-			var afterSavePoint = txn.newIterator(cf, ro);
-			afterSavePoint.seekToFirst();
+			var iterator = txn.newIterator(cf, ro);
+			txn.setSavePoint();
 
 			// When
-			txn.setSavePoint();
 			txn.rollbackToSavePoint();
-			var savePointResult = catchThrowable(afterSavePoint::isValid);
-			txn.rollback();
-			var rollbackResult = catchThrowable(afterRollback::isValid);
-			txn.commit();
-			var commitResult = catchThrowable(afterCommit::isValid);
 
 			// Then
-			assertThat(savePointResult).isInstanceOf(IllegalStateException.class);
-			assertThat(rollbackResult).isInstanceOf(IllegalStateException.class);
-			assertThat(commitResult).isInstanceOf(IllegalStateException.class);
+			assertThat(catchThrowable(iterator::isValid)).isInstanceOf(IllegalStateException.class);
+			txn.close();
+			opened.db().close();
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("flavors")
+	void aTransactionsIterator_isReleasedByRollback(Flavor flavor, @TempDir Path dir) {
+		// Given
+		var opened = flavor.open().apply(dir);
+		try (var wo = WriteOptions.newWriteOptions();
+		     var ro = ReadOptions.newReadOptions()) {
+			var txn = opened.begin().apply(wo);
+			var cf = opened.db().getColumnFamily(ColumnFamilyName.DEFAULT);
+			txn.put(cf, KEY, VALUE);
+			var iterator = txn.newIterator(cf, ro);
+
+			// When
+			txn.rollback();
+
+			// Then
+			assertThat(catchThrowable(iterator::isValid)).isInstanceOf(IllegalStateException.class);
+			txn.close();
+			opened.db().close();
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("flavors")
+	void aTransactionsIterator_isReleasedByCommit(Flavor flavor, @TempDir Path dir) {
+		// Given
+		var opened = flavor.open().apply(dir);
+		try (var wo = WriteOptions.newWriteOptions();
+		     var ro = ReadOptions.newReadOptions()) {
+			var txn = opened.begin().apply(wo);
+			var cf = opened.db().getColumnFamily(ColumnFamilyName.DEFAULT);
+			txn.put(cf, KEY, VALUE);
+			var iterator = txn.newIterator(cf, ro);
+
+			// When
+			txn.commit();
+
+			// Then
+			assertThat(catchThrowable(iterator::isValid)).isInstanceOf(IllegalStateException.class);
 			txn.close();
 			opened.db().close();
 		}

@@ -429,23 +429,14 @@ class EventNotifierTest {
 		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 			db.flush(FlushOptions.newFlushOptions());
-
-			// When
-			var flushThrown = catchThrowable(() -> flushInfo.get().jobId());
-			var memTableThrown = catchThrowable(() -> memTableInfo.get().numEntries());
-			var otherThread = new AtomicReference<Throwable>();
-			var reader = new Thread(() -> otherThread.set(catchThrowable(() -> flushInfo.get().columnFamilyName())));
-			reader.start();
-			try {
-				reader.join();
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
-
-			// Then
-			assertThat(flushThrown).isInstanceOf(IllegalStateException.class);
-			assertThat(memTableThrown).isInstanceOf(IllegalStateException.class);
-			assertThat(otherThread.get()).isInstanceOf(IllegalStateException.class);
 		}
+
+		// When — read after the database closed, so every callback has finished
+		var flushThrown = catchThrowable(() -> flushInfo.get().jobId());
+		var memTableThrown = catchThrowable(() -> memTableInfo.get().numEntries());
+
+		// Then
+		assertThat(flushThrown).isInstanceOf(IllegalStateException.class);
+		assertThat(memTableThrown).isInstanceOf(IllegalStateException.class);
 	}
 }

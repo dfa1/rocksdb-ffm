@@ -197,7 +197,7 @@ final class RocksDBMonitoringOperationsBindings {
     static void verifyChecksum(MemorySegment db, ReadOptions options) {
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment err = NativeCalls.errHolder(arena);
-            MH_VERIFY_CHECKSUM_WITH_OPTIONS.invokeExact(db, options.ptr(), err);
+            MH_VERIFY_CHECKSUM_WITH_OPTIONS.invokeExact(db, options.readPtr(), err);
             NativeCalls.checkError(err);
         } catch (Throwable t) {
             throw NativeCalls.wrapInvokeFailure("verifyChecksum failed", t);
@@ -217,7 +217,7 @@ final class RocksDBMonitoringOperationsBindings {
     static void verifyFileChecksums(MemorySegment db, ReadOptions options) {
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment err = NativeCalls.errHolder(arena);
-            MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS.invokeExact(db, options.ptr(), err);
+            MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS.invokeExact(db, options.readPtr(), err);
             NativeCalls.checkError(err);
         } catch (Throwable t) {
             throw NativeCalls.wrapInvokeFailure("verifyFileChecksums failed", t);
