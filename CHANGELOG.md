@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** `LiveFileStorageInfo.fileChecksum()` returns `Optional<FileChecksum>` (raw bytes + function name, hex `toString()`) instead of `Optional<String>`. The checksum is binary, so decoding it as a NUL-terminated UTF-8 string truncated it at the first `0x00` and mangled bytes `>= 0x80`. Only CRC32C is read (4 bytes, lossless); other functions yield empty until the C API exposes a length ([#305](https://github.com/dfa1/rocksdb-ffm/issues/305))
 - **Breaking:** `ColumnFamilyDescriptor.name()` returns `String`; the `of(byte[])`/`of(byte[], Options)` factories and `LoadedOptions.columnFamilyOptions(byte[])` are removed. The C API takes names as NUL-terminated strings, so the `byte[]` forms were only ever decoded as UTF-8 ([#275](https://github.com/dfa1/rocksdb-ffm/pull/275))
 
 ## [0.18] — 2026-11-09
