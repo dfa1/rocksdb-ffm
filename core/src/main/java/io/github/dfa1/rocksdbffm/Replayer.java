@@ -63,19 +63,15 @@ public final class Replayer extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 
-	/// The database trace records are replayed into; the replayer keeps raw pointers to it, so it is released
-	/// before the database is.
-	private final NativeObjectWithChildren owningDb;
-
 	/// The column families this replayer replays into. The native replayer keeps raw pointers to their handles, which
 	/// [NativeDB#forget(ColumnFamilyHandle)] frees when one is dropped.
 	private final List<ColumnFamilyHandle> columnFamilies;
 
 	private Replayer(NativeObjectWithChildren owningDb, List<ColumnFamilyHandle> columnFamilies, MemorySegment ptr) {
 		super(ptr);
-		this.owningDb = owningDb;
 		this.columnFamilies = columnFamilies;
-		owningDb.registerChild(this);
+		// The database trace records are replayed into; the replayer keeps raw pointers to it.
+		borrowedFrom(owningDb);
 	}
 
 	/// Returns [#ptr()] for a call that replays into the column families, after checking that none was dropped.
@@ -171,7 +167,6 @@ public final class Replayer extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
-		owningDb.unregisterChild(this);
 		MH_DESTROY.invokeExact(ptr);
 	}
 }

@@ -159,9 +159,6 @@ public final class Transaction extends NativeObjectWithChildren {
 	/// the JVM instead of raising a Java exception, since the C API does not null-check.
 	private final boolean hasSnapshot;
 
-	/// The database this transaction was begun on, which releases it if it is still open when it closes.
-	private final NativeObjectWithChildren owningDb;
-
 	/// Package-private: created by TransactionDB or OptimisticTransactionDB, whose close releases this
 	/// transaction (rolling back anything uncommitted) before its own native pointer, so a transaction that
 	/// outlives its database throws [IllegalStateException] instead of touching freed memory.
@@ -171,9 +168,9 @@ public final class Transaction extends NativeObjectWithChildren {
 	/// @param hasSnapshot whether this transaction was begun with `setSetSnapshot(true)`
 	Transaction(NativeObjectWithChildren owningDb, MemorySegment ptr, boolean hasSnapshot) {
 		super(ptr);
-		this.owningDb = owningDb;
 		this.hasSnapshot = hasSnapshot;
-		owningDb.registerChild(this);
+		// The database this transaction was begun on, which releases it if it is still open when it closes.
+		borrowedFrom(owningDb);
 	}
 
 	// -----------------------------------------------------------------------
@@ -953,9 +950,6 @@ public final class Transaction extends NativeObjectWithChildren {
 	/// closed first, and a transaction closed on its own stops being tracked by its database.
 	@Override
 	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		// Unregister first, as Snapshot does: when the database's close is sweeping its children this is
-		// still safe, since the database frees its own pointer only after the sweep.
-		owningDb.unregisterChild(this);
 		MH_DESTROY.invokeExact(ptr);
 	}
 

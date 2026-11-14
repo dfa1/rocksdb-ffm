@@ -48,15 +48,6 @@ public final class Snapshot extends NativeObject {
 	/// should be used instead (transaction snapshot ownership model).
 	private final MemorySegment dbPtr;
 
-	/// The DB object that produced this snapshot — NULL for transaction-owned snapshots, which
-	/// register with nothing (`rocksdb_free` doesn't touch the DB at all, so there is no
-	/// ordering hazard to guard against). Used in [#tryClose(MemorySegment)] only to
-	/// unregister this snapshot from the DB's child set once released on its own, so a
-	/// long-lived DB doesn't accumulate strong references to every snapshot it ever produced —
-	/// registration itself happens in the constructor below, via
-	/// [NativeObjectWithChildren#registerChild(NativeObject)].
-	private final NativeObjectWithChildren owningDb;
-
 	/// Creates a snapshot owned by a RocksDB or TransactionDB instance, and registers it with
 	/// `owningDb` so it is released automatically if `owningDb` closes first.
 	///
@@ -65,9 +56,8 @@ public final class Snapshot extends NativeObject {
 	/// @param ptr      the native snapshot pointer
 	Snapshot(NativeObjectWithChildren owningDb, MemorySegment dbPtr, MemorySegment ptr) {
 		super(ptr);
-		this.owningDb = owningDb;
 		this.dbPtr = dbPtr;
-		owningDb.registerChild(this);
+		borrowedFrom(owningDb);
 	}
 
 	/// Creates a snapshot borrowed from a [Transaction]: `rocksdb_transaction_get_snapshot` returns a malloc'd
@@ -79,9 +69,8 @@ public final class Snapshot extends NativeObject {
 	/// @param ptr               the malloc'd `rocksdb_snapshot_t*` wrapper
 	Snapshot(Transaction owningTransaction, MemorySegment ptr) {
 		super(ptr);
-		this.owningDb = owningTransaction;
 		this.dbPtr = MemorySegment.NULL;
-		owningTransaction.registerChild(this);
+		borrowedFrom(owningTransaction);
 	}
 
 	/// Returns the sequence number at which this snapshot was taken.
@@ -96,15 +85,12 @@ public final class Snapshot extends NativeObject {
 	protected void tryClose(MemorySegment ptr) throws Throwable {
 		if (MemorySegment.NULL.equals(dbPtr)) {
 			// Borrowed from a transaction: only the malloc'd wrapper is ours to free.
-			owningDb.unregisterChild(this);
 			NativeCalls.free(ptr);
 			return;
 		}
-		// Unregister first: if this runs because owningDb's own close() is sweeping its
-		// children (owningDb closed first), dbPtr is still valid — owningDb captures its raw
-		// pointer before nulling its own AtomicReference and only then closes children — so
-		// this release call is always safe, whichever side closed first.
-		owningDb.unregisterChild(this);
+		// If this runs because the database's own close() is sweeping its children, dbPtr is still valid:
+		// the database captures its raw pointer before closing children, so this release is safe whichever
+		// side closed first.
 		MH_RELEASE.invokeExact(dbPtr, ptr);
 	}
 

@@ -8,9 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /// native pointer for their own release call (e.g. [Snapshot]'s `rocksdb_release_snapshot`
 /// needs its owning DB's pointer) — and would otherwise dangle if this object closed first.
 ///
-/// A child registers itself via [#registerChild(NativeObject)] (typically from its own
-/// constructor) and unregisters via [#unregisterChild(NativeObject)] once released on its own,
-/// so a long-lived parent doesn't accumulate strong references to every child it ever produced.
+/// A child registers itself with [NativeObject#borrowedFrom(NativeObjectWithChildren...)], last in its own
+/// constructor, and [NativeObject#release()] unregisters it once released on its own, so a long-lived parent
+/// doesn't accumulate strong references to every child it ever produced.
 /// [#tryClose(MemorySegment)] closes every still-registered child, synchronously, while `ptr`
 /// is still valid — before delegating to [#tryCloseResource(MemorySegment)] for this object's
 /// own native destroy call — so a child's release call never runs against memory this object
@@ -95,6 +95,11 @@ abstract class NativeObjectWithChildren extends NativeObject {
 				child.release();
 			}
 		}
+	}
+
+	/// @return how many children are registered right now, for tests asserting that a closed child unregistered
+	final int childCount() {
+		return children.size();
 	}
 
 	@Override

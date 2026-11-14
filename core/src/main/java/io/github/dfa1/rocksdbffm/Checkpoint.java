@@ -51,13 +51,10 @@ public final class Checkpoint extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 
-	/// The database this checkpoint object keeps a raw pointer to; released before the database is.
-	private final NativeObjectWithChildren owningDb;
-
 	private Checkpoint(NativeObjectWithChildren owningDb, MemorySegment ptr) {
 		super(ptr);
-		this.owningDb = owningDb;
-		owningDb.registerChild(this);
+		// The database this checkpoint object keeps a raw pointer to.
+		borrowedFrom(owningDb);
 	}
 
 	/// Creates a checkpoint object bound to `db`.
@@ -114,7 +111,6 @@ public final class Checkpoint extends NativeObject {
 
 	@Override
 	public void tryClose(MemorySegment ptr) throws Throwable {
-		owningDb.unregisterChild(this);
 		MH_DESTROY.invokeExact(ptr);
 	}
 }

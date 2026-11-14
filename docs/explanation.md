@@ -223,7 +223,7 @@ safe. What the tree cannot make safe is a method running on another thread *whil
 close-versus-call window described above).
 
 For contributors: a new wrapper whose native object points into another wrapper's memory takes that owner in its
-constructor, calls `owner.registerChild(this)`, and calls `owner.unregisterChild(this)` first thing in its release. A
+constructor and calls `borrowedFrom(owner)` last in it: the registration, and the unregistration when the child is closed on its own, are then automatic. A
 borrowed object with no owner is a bug: it is exactly what made `Transaction.newIterator` and `Transaction.getSnapshot`
 read freed memory once their transaction was gone ([#312](https://github.com/dfa1/rocksdb-ffm/issues/312)).
 

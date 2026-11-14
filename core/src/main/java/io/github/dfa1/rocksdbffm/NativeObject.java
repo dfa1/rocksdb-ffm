@@ -23,9 +23,16 @@ public abstract class NativeObject implements AutoCloseable {
 
 	private final AtomicReference<MemorySegment> owningPointer;
 
-	/// Set once, by [#makeImmortal()], before the object is published through a
-	/// `static final` field; class initialization makes that write visible to every thread.
+	/// Set by [#makeImmortal()], which only ever runs once per object and before anything else can race with it.
 	private volatile boolean immortal;
+
+	private static final NativeObjectWithChildren[] NO_PARENTS = new NativeObjectWithChildren[0];
+
+	/// The objects this one borrows native memory from, set once by [#borrowedFrom(NativeObjectWithChildren...)];
+	/// [#release()] unregisters from them after the native release call. A plain field: it is assigned in full
+	/// before the registration that publishes this object to a parent's sweep, and that registration is what
+	/// makes the write visible to the sweeping thread.
+	private NativeObjectWithChildren[] parents = NO_PARENTS;
 
 	/// Set once, by [#markOwnedByParent()], when the owning [NativeObjectWithChildren] releases this
 	/// object instead of its holder: [#close()] is then a no-op and only [#release()] frees it.
@@ -70,6 +77,45 @@ public abstract class NativeObject implements AutoCloseable {
 		release();
 	}
 
+	/// @return `true` if [#makeImmortal()] was called, so [#close()] does nothing
+	final boolean isImmortal() {
+		return immortal;
+	}
+
+	/// Declares that this object borrows native memory from each of `owners` (usually one; a [RocksIterator] has its
+	/// database and its [ReadOptions]): it is registered as a child of each, so their close releases it first, and
+	/// [#release()] unregisters it when it is closed on its own, so a long-lived owner does not accumulate every
+	/// child it ever produced. Call it once, last in the constructor, once every field
+	/// [#tryClose(MemorySegment)] reads is assigned, because registering makes this object visible to a concurrent
+	/// sweep by an owner.
+	///
+	/// An immortal owner (a shared `DEFAULTS` instance) is never swept, so registering would only add a
+	/// pointless reference and it is skipped.
+	///
+	/// @param owners the objects whose native memory this one borrows
+	final void borrowedFrom(NativeObjectWithChildren... owners) {
+		int live = 0;
+		for (NativeObjectWithChildren owner : owners) {
+			if (!owner.isImmortal()) {
+				live++;
+			}
+		}
+		if (live == 0) {
+			return;
+		}
+		NativeObjectWithChildren[] mine = new NativeObjectWithChildren[live];
+		int next = 0;
+		for (NativeObjectWithChildren owner : owners) {
+			if (!owner.isImmortal()) {
+				mine[next++] = owner;
+			}
+		}
+		parents = mine;
+		for (NativeObjectWithChildren owner : mine) {
+			owner.registerChild(this);
+		}
+	}
+
 	/// Releases the native resource exactly once, whatever [#close()] would otherwise do: the
 	/// entry point for the owning [NativeObjectWithChildren] to free a child that opted out of
 	/// being closed by its holder (see [#markOwnedByParent()]). Idempotent and never throws.
@@ -92,11 +138,18 @@ public abstract class NativeObject implements AutoCloseable {
 					// try-with-resources chain from closing — but a failure to release a native
 					// resource is still worth knowing about.
 					LOG.log(System.Logger.Level.ERROR, getClass().getSimpleName() + ".close() failed", throwable);
+				} finally {
+					// Unregister last: a parent that starts closing while this release is still running must
+					// still find this object in its children, so its sweep waits on the monitor above instead of
+					// freeing the parent under a native release in progress. When this runs because that parent's
+					// own sweep is releasing its children, its pointer stays valid until the sweep ends.
+					for (NativeObjectWithChildren owner : parents) {
+						owner.unregisterChild(this);
+					}
 				}
 			}
 		}
 	}
-
 
 	/// Called exactly once with the non-NULL pointer when this object is closed.
 	/// Implementations must release the native resource.
