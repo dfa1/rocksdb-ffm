@@ -80,7 +80,9 @@ public abstract class NativeObject implements AutoCloseable {
 	/// child, released by another thread, is still using it. Parents are always locked before their
 	/// children and [#tryClose(MemorySegment)] never locks a parent, so the wait cannot deadlock.
 	final void release() {
-		synchronized (this) {
+		// A private monitor (this field is already allocated per object): `synchronized (this)` would let user code
+		// that locks a wrapper it holds block, or deadlock with, a parent's close.
+		synchronized (owningPointer) {
 			MemorySegment ptr = owningPointer.getAndSet(MemorySegment.NULL);
 			if (!MemorySegment.NULL.equals(ptr)) {
 				try {

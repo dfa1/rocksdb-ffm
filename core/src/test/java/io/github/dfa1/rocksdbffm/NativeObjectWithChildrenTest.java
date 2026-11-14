@@ -213,4 +213,39 @@ class NativeObjectWithChildrenTest {
 			assertThat(order).containsExactly("child", "parent");
 		}
 	}
+
+	@Test
+	void parentClose_whileUserCodeHoldsTheMonitorOfAChild_doesNotBlock() throws Exception {
+		// Given — user code synchronizing on a wrapper object it holds a reference to
+		var parent = new TestParent(fakePtr(0x1));
+		var child = new TestChild(fakePtr(0x2));
+		parent.registerChild(child);
+		var monitorHeld = new CountDownLatch(1);
+		var releaseMonitor = new CountDownLatch(1);
+		try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+			executor.submit(() -> {
+				synchronized (child) {
+					monitorHeld.countDown();
+					releaseMonitor.await();
+				}
+				return null;
+			});
+			assertThat(monitorHeld.await(5, TimeUnit.SECONDS)).isTrue();
+
+			// When
+			var closingParent = executor.submit(parent::close);
+			Throwable thrown = null;
+			try {
+				closingParent.get(5, TimeUnit.SECONDS);
+			} catch (java.util.concurrent.TimeoutException e) {
+				thrown = e;
+			} finally {
+				releaseMonitor.countDown();
+			}
+
+			// Then
+			assertThat(thrown).isNull();
+			assertThat(child.tryCloseCount.get()).isEqualTo(1);
+		}
+	}
 }
