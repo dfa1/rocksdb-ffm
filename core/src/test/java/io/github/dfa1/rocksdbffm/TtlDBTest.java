@@ -158,27 +158,51 @@ class TtlDBTest {
 	}
 
 	@Test
-	void openTtl_perColumnFamilyTtlOutOfRange_isRejected(@TempDir Path dir) {
+	void withTtl_ttlOutOfRange_isRejected() {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true)) {
-			var handles = new ArrayList<ColumnFamilyHandle>();
-			var descriptors = List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT));
+		var descriptor = ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT);
 
-			// When
-			var thrown = catchThrowable(() -> RocksDB.openTtl(dbOpts, dir, descriptors,
-					List.of(Duration.ofSeconds(-1)), handles));
+		// When
+		var negative = catchThrowable(() -> descriptor.withTtl(Duration.ofSeconds(-1)));
+		var tooLong = catchThrowable(() -> descriptor.withTtl(Duration.ofSeconds(Integer.MAX_VALUE + 1L)));
 
-			// Then
-			assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
-		}
+		// Then
+		assertThat(negative).isInstanceOf(IllegalArgumentException.class);
+		assertThat(tooLong).isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	void withTtl_nullTtl_isRejected() {
+		// Given
+		var descriptor = ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT);
+
+		// When
+		var thrown = catchThrowable(() -> descriptor.withTtl(null));
+
+		// Then
+		assertThat(thrown).isInstanceOf(NullPointerException.class);
+	}
+
+	@Test
+	void withTtl_returnsACopy_andTtlReportsIt() {
+		// Given
+		var plain = ColumnFamilyDescriptor.of(ColumnFamilyName.of("sessions"));
+
+		// When
+		var withTtl = plain.withTtl(Duration.ofHours(24));
+
+		// Then
+		assertThat(plain.ttl()).isEmpty();
+		assertThat(withTtl.ttl()).contains(Duration.ofHours(24));
+		assertThat(withTtl.name()).isEqualTo(plain.name());
 	}
 
 	@Test
 	void getTtl_perColumnFamilyOpen_isEmpty(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTtl(dbOpts, dir, List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT)),
-				     List.of(Duration.ofSeconds(60)), new ArrayList<>())) {
+		     var db = RocksDB.openTtl(dbOpts, dir,
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT).withTtl(Duration.ofSeconds(60))))) {
 
 			// When
 			var ttl = db.getTtl();
@@ -189,17 +213,67 @@ class TtlDBTest {
 	}
 
 	@Test
-	void openTtl_ttlsAndDescriptorsDifferInSize_isRejected(@TempDir Path dir) {
+	void openTtl_descriptorWithoutTtl_isAccepted_andNeverExpires(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true)) {
-			var descriptors = List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openTtl(dbOpts, dir, List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT)))) {
 
 			// When
-			var thrown = catchThrowable(() -> RocksDB.openTtl(dbOpts, dir, descriptors,
-					List.of(Duration.ofSeconds(60), Duration.ofSeconds(60)), new ArrayList<>()));
+			db.put("k".getBytes(), "v".getBytes());
+			var result = db.get("k".getBytes());
 
 			// Then
-			assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+			assertThat(result).isEqualTo("v".getBytes());
+			assertThat(db.getTtl()).isEmpty();
+		}
+	}
+
+	@Test
+	void createColumnFamily_withTtl_createsARegisteredFamily(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openTtl(dbOpts, dir, Duration.ofHours(1))) {
+			var sessions = ColumnFamilyName.of("sessions");
+
+			// When
+			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(sessions).withTtl(Duration.ofHours(24)));
+			db.put(cf, "k".getBytes(), "v".getBytes());
+
+			// Then
+			assertThat(db.getColumnFamily(sessions)).isSameAs(cf);
+			assertThat(db.get(cf, "k".getBytes())).isEqualTo("v".getBytes());
+		}
+	}
+
+	@Test
+	void createColumnFamily_withoutTtl_isAccepted(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openTtl(dbOpts, dir, Duration.ofHours(1))) {
+
+			// When
+			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("plain")));
+
+			// Then
+			assertThat(cf.getName()).isEqualTo(ColumnFamilyName.of("plain"));
+		}
+	}
+
+	@Test
+	void nonTtlDatabases_rejectADescriptorWithATtl(@TempDir Path dir) {
+		// Given
+		var withTtl = ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")).withTtl(Duration.ofHours(1));
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openReadWrite(dbOpts, dir)) {
+
+			// When
+			var created = catchThrowable(() -> db.createColumnFamily(withTtl));
+			var opened = catchThrowable(() -> RocksDB.openReadWrite(dbOpts, dir,
+					List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), withTtl)));
+
+			// Then
+			assertThat(created).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("TtlDB");
+			assertThat(opened).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("TtlDB");
 		}
 	}
 
@@ -1139,40 +1213,35 @@ class TtlDBTest {
 		}
 
 		// When — reopen with both CFs, each given its own TTL
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.openTtl(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     List.of(Duration.ofSeconds(60), Duration.ZERO),
-				     handles)) {
-			var cf = handles.get(1);
+		     var db = RocksDB.openTtl(opts, dir, List.of(
+				     ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT).withTtl(Duration.ofSeconds(60)),
+				     ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")).withTtl(Duration.ZERO)))) {
+			var cf = db.getColumnFamily(ColumnFamilyName.of("cf1"));
 
 			// Then
 			assertThat(db.get(cf, "k".getBytes())).isEqualTo("v".getBytes());
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
 	@Test
-	void openTtl_withColumnFamilies_populatesHandlesInDescriptorOrder(@TempDir Path dir) {
+	void openTtl_withColumnFamilies_registersHandlesInOrder(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))).close();
 		}
 
 		// When
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
-		     var _ = RocksDB.openTtl(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     List.of(Duration.ZERO, Duration.ZERO),
-				     handles)) {
+		     var db = RocksDB.openTtl(opts, dir, List.of(
+				     ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT).withTtl(Duration.ZERO),
+				     ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")).withTtl(Duration.ZERO)))) {
 
 			// Then
-			assertThat(handles).hasSize(2);
-			assertThat(handles.get(0).getName()).isEqualTo(ColumnFamilyName.DEFAULT);
-			assertThat(handles.get(1).getName()).isEqualTo(ColumnFamilyName.of("cf1"));
-			handles.forEach(ColumnFamilyHandle::close);
+			assertThat(db.getColumnFamilies().keySet())
+					.containsExactly(ColumnFamilyName.DEFAULT, ColumnFamilyName.of("cf1"));
+			assertThat(db.getColumnFamily(ColumnFamilyName.DEFAULT).getName()).isEqualTo(ColumnFamilyName.DEFAULT);
+			assertThat(db.getColumnFamily(ColumnFamilyName.of("cf1")).getName()).isEqualTo(ColumnFamilyName.of("cf1"));
 		}
 	}
 

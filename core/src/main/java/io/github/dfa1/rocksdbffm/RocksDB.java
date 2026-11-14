@@ -8,6 +8,7 @@ import java.lang.invoke.MethodHandle;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,15 +24,17 @@ import java.util.Objects;
 /// | [#openSecondary] | [SecondaryDB] |
 /// | [#openTransaction] | [TransactionDB] |
 /// | [#openOptimistic] | [OptimisticTransactionDB] |
+/// | [#listColumnFamilies] | `List<ColumnFamilyName>` |
+/// | [#loadLatestOptions] | [LoadedOptions] |
 ///
-/// `RocksDB` is non-instantiable and holds only the `rocksdb_t*` open/list-column-families
+/// `RocksDB` is non-instantiable and holds only the `rocksdb_t*` open/list/load-options
 /// method handles used by its own static factories. Every other capability (read, write,
 /// compaction, monitoring, tracing) has its own `MethodHandle`-holding companion class instead
 /// -- `RocksDBReadOperationsBindings`, `RocksDBWriteOperationsBindings`,
 /// `RocksDBCompactionOperationsBindings`, `RocksDBMonitoringOperationsBindings`,
 /// `RocksDBTracingOperationsBindings` -- and low-level shared plumbing (`errptr` handling,
 /// native string/byte marshaling, `close`/`free`) lives on [NativeCalls]. See
-/// [#131](https://github.com/dfa1/rocksdbffm/issues/131).
+/// [#131](https://github.com/dfa1/rocksdb-ffm/issues/131).
 public final class RocksDB {
 
 	// -----------------------------------------------------------------------
@@ -51,7 +54,7 @@ public final class RocksDB {
 	/// `rocksdb_optimistictransactiondb_t* rocksdb_optimistictransactiondb_open(const rocksdb_options_t* options, const char* name, char** errptr);`
 	private static final MethodHandle MH_OPEN_OPTIMISTIC;
 	/// `rocksdb_t* rocksdb_optimistictransactiondb_get_base_db(rocksdb_optimistictransactiondb_t* otxn_db);`
-	private static final MethodHandle MH_GET_BASE_DB;
+	private static final MethodHandle MH_OPTIMISTIC_GET_BASE_DB;
 
 	// -----------------------------------------------------------------------
 	// Column-family open/list method handles — used only inside factory methods
@@ -109,7 +112,7 @@ public final class RocksDB {
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_GET_BASE_DB = NativeLibrary.lookup("rocksdb_optimistictransactiondb_get_base_db",
+		MH_OPTIMISTIC_GET_BASE_DB = NativeLibrary.lookup("rocksdb_optimistictransactiondb_get_base_db",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_OPEN_CF = NativeLibrary.lookup("rocksdb_open_column_families",
@@ -197,7 +200,7 @@ public final class RocksDB {
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
 			MemorySegment ptr = (MemorySegment) MH_OPEN.invokeExact(options.ptr(), pathSeg, err);
 			NativeCalls.checkError(err);
-			return new ReadWriteDB(ptr);
+			return withDefaultColumnFamily(new ReadWriteDB(ptr));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openReadWrite failed", t);
 		}
@@ -212,19 +215,6 @@ public final class RocksDB {
 		return openReadWrite(Options.DEFAULTS, path);
 	}
 
-	/// Converts a TTL to the whole seconds native expects. Native treats a non-positive TTL as "never expire",
-	/// so a negative one is rejected rather than silently disabling expiry, and so is one that does not fit.
-	private static int toTtlSeconds(Duration ttl) {
-		if (ttl.isNegative()) {
-			throw new IllegalArgumentException("ttl must not be negative: " + ttl);
-		}
-		long seconds = ttl.toSeconds();
-		if (seconds > Integer.MAX_VALUE) {
-			throw new IllegalArgumentException("ttl exceeds " + Integer.MAX_VALUE + " seconds: " + ttl);
-		}
-		return (int) seconds;
-	}
-
 	/// Opens (or creates) a TTL-aware read-write database at `path`.
 	///
 	/// Keys are lazily expired during the next compaction that covers their
@@ -233,16 +223,16 @@ public final class RocksDB {
 	/// @param options the database options
 	/// @param path directory where the database files are stored
 	/// @param ttl time-to-live for keys; [Duration#ZERO] disables expiry
-	/// @throws IllegalArgumentException if `ttl` is negative or longer than [Integer#MAX_VALUE] seconds
 	/// @return a new [TtlDB] instance
+	/// @throws IllegalArgumentException if `ttl` is negative or longer than [Integer#MAX_VALUE] seconds
 	public static TtlDB openTtl(Options options, Path path, Duration ttl) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
 			MemorySegment ptr = (MemorySegment) MH_OPEN_WITH_TTL.invokeExact(
-					options.ptr(), pathSeg, toTtlSeconds(ttl), err);
+					options.ptr(), pathSeg, TtlDB.toTtlSeconds(ttl), err);
 			NativeCalls.checkError(err);
-			return new TtlDB(ptr, ttl);
+			return withDefaultColumnFamily(new TtlDB(ptr, ttl));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openTtl failed", t);
 		}
@@ -253,8 +243,8 @@ public final class RocksDB {
 	///
 	/// @param path directory where the database files are stored
 	/// @param ttl time-to-live for keys; [Duration#ZERO] disables expiry
-	/// @throws IllegalArgumentException if `ttl` is negative or longer than [Integer#MAX_VALUE] seconds
 	/// @return a new [TtlDB] instance
+	/// @throws IllegalArgumentException if `ttl` is negative or longer than [Integer#MAX_VALUE] seconds
 	public static TtlDB openTtl(Path path, Duration ttl) {
 		return openTtl(Options.DEFAULTS, path, ttl);
 	}
@@ -276,7 +266,7 @@ public final class RocksDB {
 			MemorySegment ptr = (MemorySegment) MH_OPEN_FOR_READ_ONLY.invokeExact(
 					options.ptr(), pathSeg, NativeCalls.toByte(errorIfWalFileExists), err);
 			NativeCalls.checkError(err);
-			return new ReadOnlyDB(ptr);
+			return withDefaultColumnFamily(new ReadOnlyDB(ptr));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openReadOnly failed", t);
 		}
@@ -319,41 +309,40 @@ public final class RocksDB {
 					options.ptr(), primary, secondary, err);
 			NativeCalls.checkError(err);
 
-			return new SecondaryDB(ptr);
+			return withDefaultColumnFamily(new SecondaryDB(ptr));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openSecondary failed", t);
 		}
 	}
 
 	/// Opens a secondary (read-only replica) instance at `primaryPath` with multiple column
-	/// families. The `handles` list is cleared and populated with one [ColumnFamilyHandle]
-	/// per descriptor, each legitimately scoped to this secondary instance — unlike a handle
-	/// obtained from the primary or any other `rocksdb_t*`, safe to pass to this instance's
-	/// column-family-scoped reads.
+	/// families. The handles are owned by the returned database and looked up with
+	/// `getColumnFamily(ColumnFamilyName)` on the returned database; each is legitimately scoped to this secondary
+	/// instance — unlike a handle obtained from the primary or any other `rocksdb_t*`, safe to pass
+	/// to this instance's column-family-scoped reads.
 	///
 	/// @param options      the database options
 	/// @param primaryPath   directory of the primary database
 	/// @param secondaryPath a dedicated directory for this secondary's own MANIFEST/WAL tails
-	/// @param descriptors   one descriptor per column family (must include `"default"`)
-	/// @param handles       output list populated with one handle per descriptor
+	/// @param descriptors   one descriptor per column family (must include [ColumnFamilyName#DEFAULT])
 	/// @return a new [SecondaryDB] instance
+	/// @throws IllegalArgumentException if two descriptors share a name, or one carries a TTL (only
+	///                                  [#openTtl(Options, Path, List)] accepts that)
 	public static SecondaryDB openSecondary(Options options, Path primaryPath, Path secondaryPath,
-	                                        List<ColumnFamilyDescriptor> descriptors,
-	                                        List<ColumnFamilyHandle> handles) {
+	                                        List<ColumnFamilyDescriptor> descriptors) {
 		int n = descriptors.size();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment primary = arena.allocateFrom(primaryPath.toString());
 			MemorySegment secondary = arena.allocateFrom(secondaryPath.toString());
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors);
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, false);
 
 			MemorySegment ptr = (MemorySegment) MH_OPEN_SECONDARY_CF.invokeExact(
 					options.ptr(), primary, secondary, n, cfArrays.names(), cfArrays.options(), handlesArr, err);
 			NativeCalls.checkError(err);
 
-			collectCfHandles(handlesArr, n, handles);
-			return new SecondaryDB(ptr);
+			return adoptHandles(new SecondaryDB(ptr), handlesArr, descriptors);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openSecondary failed", t);
 		}
@@ -379,7 +368,7 @@ public final class RocksDB {
 			NativeCalls.checkError(err);
 
 			MemorySegment baseDb = (MemorySegment) MH_TRANSACTION_GET_BASE_DB.invokeExact(ptr);
-			return new TransactionDB(ptr, baseDb);
+			return withDefaultColumnFamily(new TransactionDB(ptr, baseDb));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openTransaction failed", t);
 		}
@@ -399,8 +388,8 @@ public final class RocksDB {
 					options.ptr(), pathSeg, err);
 			NativeCalls.checkError(err);
 
-			MemorySegment baseDb = (MemorySegment) MH_GET_BASE_DB.invokeExact(ptr);
-			return new OptimisticTransactionDB(ptr, baseDb);
+			MemorySegment baseDb = (MemorySegment) MH_OPTIMISTIC_GET_BASE_DB.invokeExact(ptr);
+			return withDefaultColumnFamily(new OptimisticTransactionDB(ptr, baseDb));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openOptimistic failed", t);
 		}
@@ -413,31 +402,30 @@ public final class RocksDB {
 	/// Opens a read-write database at `path` with multiple column families.
 	///
 	/// The `descriptors` list must include a descriptor for every existing column family in the
-	/// database, including the default column family (`"default"`). The `handles` list is cleared
-	/// and populated with one [ColumnFamilyHandle] per descriptor, in the same order. The caller
-	/// is responsible for closing each handle.
+	/// database, including the default column family ([ColumnFamilyName#DEFAULT]). The returned
+	/// database owns one [ColumnFamilyHandle] per descriptor and releases them when it is closed;
+	/// look them up with `getColumnFamily(ColumnFamilyName)` on the returned database.
 	///
 	/// @param options the database options
 	/// @param path directory where the database files are stored
-	/// @param descriptors one descriptor per column family (must include `"default"`)
-	/// @param handles output list populated with one handle per descriptor
+	/// @param descriptors one descriptor per column family (must include [ColumnFamilyName#DEFAULT])
 	/// @return a new [ReadWriteDB] instance
+	/// @throws IllegalArgumentException if two descriptors share a name, or one carries a TTL (only
+	///                                  [#openTtl(Options, Path, List)] accepts that)
 	public static ReadWriteDB openReadWrite(Options options, Path path,
-	                                        List<ColumnFamilyDescriptor> descriptors,
-	                                        List<ColumnFamilyHandle> handles) {
+	                                        List<ColumnFamilyDescriptor> descriptors) {
 		int n = descriptors.size();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors);
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, false);
 
 			MemorySegment ptr = (MemorySegment) MH_OPEN_CF.invokeExact(
 					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, err);
 			NativeCalls.checkError(err);
 
-			collectCfHandles(handlesArr, n, handles);
-			return new ReadWriteDB(ptr);
+			return adoptHandles(new ReadWriteDB(ptr), handlesArr, descriptors);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openReadWrite failed", t);
 		}
@@ -445,43 +433,43 @@ public final class RocksDB {
 
 	/// Opens a read-only database at `path` with multiple column families.
 	///
-	/// The `handles` list is cleared and populated with one [ColumnFamilyHandle] per descriptor.
+	/// The handles are owned by the returned database; look them up with
+	/// `getColumnFamily(ColumnFamilyName)` on the returned database.
 	///
 	/// @param options the database options
 	/// @param path directory where the database files are stored
-	/// @param descriptors one descriptor per column family (must include `"default"`)
-	/// @param handles output list populated with one handle per descriptor
+	/// @param descriptors one descriptor per column family (must include [ColumnFamilyName#DEFAULT])
 	/// @return a new [ReadOnlyDB] instance
+	/// @throws IllegalArgumentException if two descriptors share a name, or one carries a TTL (only
+	///                                  [#openTtl(Options, Path, List)] accepts that)
 	public static ReadOnlyDB openReadOnly(Options options, Path path,
-	                                      List<ColumnFamilyDescriptor> descriptors,
-	                                      List<ColumnFamilyHandle> handles) {
-		return openReadOnly(options, path, descriptors, handles, false);
+	                                      List<ColumnFamilyDescriptor> descriptors) {
+		return openReadOnly(options, path, descriptors, false);
 	}
 
 	/// Opens a read-only database at `path` with multiple column families.
 	///
 	/// @param options the database options
 	/// @param path directory where the database files are stored
-	/// @param descriptors one descriptor per column family (must include `"default"`)
-	/// @param handles output list populated with one handle per descriptor
+	/// @param descriptors one descriptor per column family (must include [ColumnFamilyName#DEFAULT])
 	/// @param errorIfWalFileExists if `true`, fails when unrecovered WAL files are present
 	/// @return a new [ReadOnlyDB] instance
+	/// @throws IllegalArgumentException if two descriptors share a name, or one carries a TTL (only
+	///                                  [#openTtl(Options, Path, List)] accepts that)
 	public static ReadOnlyDB openReadOnly(Options options, Path path,
 	                                      List<ColumnFamilyDescriptor> descriptors,
-	                                      List<ColumnFamilyHandle> handles,
 	                                      boolean errorIfWalFileExists) {
 		int n = descriptors.size();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors);
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, false);
 			MemorySegment ptr = (MemorySegment) MH_OPEN_FOR_READ_ONLY_CF.invokeExact(
 					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr,
 					NativeCalls.toByte(errorIfWalFileExists), err);
 			NativeCalls.checkError(err);
-			collectCfHandles(handlesArr, n, handles);
-			return new ReadOnlyDB(ptr);
+			return adoptHandles(new ReadOnlyDB(ptr), handlesArr, descriptors);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openReadOnly failed", t);
 		}
@@ -489,41 +477,31 @@ public final class RocksDB {
 
 	/// Opens a TTL-aware read-write database at `path` with multiple column families.
 	///
-	/// Each column family is paired with its own TTL from `ttls` (index-aligned with `descriptors`).
-	/// A TTL of [Duration#ZERO] disables expiry for that column family.
-	/// The `handles` list is cleared and populated with one [ColumnFamilyHandle] per descriptor.
+	/// Each family's TTL is the one given with [ColumnFamilyDescriptor#withTtl(Duration)]; a descriptor
+	/// without one never expires its keys, the same as [Duration#ZERO]. The handles are owned by the
+	/// returned database; look them up with `getColumnFamily(ColumnFamilyName)` on it.
 	///
 	/// @param options     database-level options
 	/// @param path        path to the database directory
-	/// @param descriptors column family descriptors (name + optional per-CF options)
-	/// @param ttls        per-column-family TTLs, index-aligned with `descriptors`
-	/// @param handles     output list; cleared and filled with one handle per descriptor
-	/// @throws IllegalArgumentException if `ttls` and `descriptors` differ in size, or any TTL is negative or
-	/// longer than [Integer#MAX_VALUE] seconds
+	/// @param descriptors one descriptor per column family (must include [ColumnFamilyName#DEFAULT]), each
+	///                    optionally carrying its TTL
 	/// @return an open [TtlDB] instance; caller must close it
-	public static TtlDB openTtl(Options options, Path path,
-	                            List<ColumnFamilyDescriptor> descriptors,
-	                            List<Duration> ttls,
-	                            List<ColumnFamilyHandle> handles) {
+	/// @throws IllegalArgumentException if two descriptors share a name
+	public static TtlDB openTtl(Options options, Path path, List<ColumnFamilyDescriptor> descriptors) {
 		int n = descriptors.size();
-		if (ttls.size() != n) {
-			throw new IllegalArgumentException(
-					"ttls must have one entry per descriptor: " + ttls.size() + " ttls for " + n + " descriptors");
-		}
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
 			MemorySegment ttlsArr = arena.allocate(ValueLayout.JAVA_INT, n);
-			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors);
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, true);
 			for (int i = 0; i < n; i++) {
-				ttlsArr.setAtIndex(ValueLayout.JAVA_INT, i, toTtlSeconds(ttls.get(i)));
+				ttlsArr.setAtIndex(ValueLayout.JAVA_INT, i, descriptors.get(i).ttlSeconds());
 			}
 			MemorySegment ptr = (MemorySegment) MH_OPEN_CF_WITH_TTL.invokeExact(
 					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, ttlsArr, err);
 			NativeCalls.checkError(err);
-			collectCfHandles(handlesArr, n, handles);
-			return new TtlDB(ptr, null);
+			return adoptHandles(new TtlDB(ptr, null), handlesArr, descriptors);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openTtl failed", t);
 		}
@@ -531,31 +509,31 @@ public final class RocksDB {
 
 	/// Opens a [TransactionDB] at `path` with multiple column families.
 	///
-	/// The `handles` list is cleared and populated with one [ColumnFamilyHandle] per descriptor.
+	/// The handles are owned by the returned database; look them up with
+	/// `getColumnFamily(ColumnFamilyName)` on the returned database.
 	///
 	/// @param options       database-level options
 	/// @param txnDbOptions  transaction database options
 	/// @param path          path to the database directory
-	/// @param descriptors   column family descriptors (name + optional per-CF options)
-	/// @param handles       output list; cleared and filled with one handle per descriptor
+	/// @param descriptors   one descriptor per column family (must include [ColumnFamilyName#DEFAULT])
 	/// @return an open [TransactionDB] instance; caller must close it
+	/// @throws IllegalArgumentException if two descriptors share a name, or one carries a TTL (only
+	///                                  [#openTtl(Options, Path, List)] accepts that)
 	public static TransactionDB openTransaction(Options options,
 	                                            TransactionDBOptions txnDbOptions,
 	                                            Path path,
-	                                            List<ColumnFamilyDescriptor> descriptors,
-	                                            List<ColumnFamilyHandle> handles) {
+	                                            List<ColumnFamilyDescriptor> descriptors) {
 		int n = descriptors.size();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors);
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, false);
 			MemorySegment ptr = (MemorySegment) MH_OPEN_TRANSACTION_CF.invokeExact(
 					options.ptr(), txnDbOptions.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, err);
 			NativeCalls.checkError(err);
-			collectCfHandles(handlesArr, n, handles);
 			MemorySegment baseDb = (MemorySegment) MH_TRANSACTION_GET_BASE_DB.invokeExact(ptr);
-			return new TransactionDB(ptr, baseDb);
+			return adoptHandles(new TransactionDB(ptr, baseDb), handlesArr, descriptors);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openTransaction failed", t);
 		}
@@ -563,28 +541,28 @@ public final class RocksDB {
 
 	/// Opens an [OptimisticTransactionDB] at `path` with multiple column families.
 	///
-	/// The `handles` list is cleared and populated with one [ColumnFamilyHandle] per descriptor.
+	/// The handles are owned by the returned database; look them up with
+	/// `getColumnFamily(ColumnFamilyName)` on the returned database.
 	///
 	/// @param options     database-level options
 	/// @param path        path to the database directory
-	/// @param descriptors column family descriptors (name + optional per-CF options)
-	/// @param handles     output list; cleared and filled with one handle per descriptor
+	/// @param descriptors one descriptor per column family (must include [ColumnFamilyName#DEFAULT])
 	/// @return an open [OptimisticTransactionDB] instance; caller must close it
+	/// @throws IllegalArgumentException if two descriptors share a name, or one carries a TTL (only
+	///                                  [#openTtl(Options, Path, List)] accepts that)
 	public static OptimisticTransactionDB openOptimistic(Options options, Path path,
-	                                                     List<ColumnFamilyDescriptor> descriptors,
-	                                                     List<ColumnFamilyHandle> handles) {
+	                                                     List<ColumnFamilyDescriptor> descriptors) {
 		int n = descriptors.size();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
 			MemorySegment handlesArr = arena.allocate(ValueLayout.ADDRESS, n);
-			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors);
+			CfNamesAndOptions cfArrays = buildCfArrays(arena, descriptors, false);
 			MemorySegment ptr = (MemorySegment) MH_OPEN_OPTIMISTIC_CF.invokeExact(
 					options.ptr(), pathSeg, n, cfArrays.names(), cfArrays.options(), handlesArr, err);
 			NativeCalls.checkError(err);
-			collectCfHandles(handlesArr, n, handles);
-			MemorySegment baseDb = (MemorySegment) MH_GET_BASE_DB.invokeExact(ptr);
-			return new OptimisticTransactionDB(ptr, baseDb);
+			MemorySegment baseDb = (MemorySegment) MH_OPTIMISTIC_GET_BASE_DB.invokeExact(ptr);
+			return adoptHandles(new OptimisticTransactionDB(ptr, baseDb), handlesArr, descriptors);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("openOptimistic failed", t);
 		}
@@ -592,9 +570,14 @@ public final class RocksDB {
 
 	/// Lists the names of all column families in the database at `path`.
 	///
+	/// Names only: the families' options are not restored. Building descriptors from these names with
+	/// [ColumnFamilyDescriptor#of(ColumnFamilyName)] reopens every family with default options, not the
+	/// ones it was created with. To reopen a database as it was configured, use
+	/// [#loadLatestOptions(Path, boolean)], whose descriptors carry each family's saved options.
+	///
 	/// @param options database-level options used to open the database metadata
 	/// @param path    path to the database directory
-	/// @return list of column family names as raw byte arrays
+	/// @return the column family names, including [ColumnFamilyName#DEFAULT]
 	public static List<ColumnFamilyName> listColumnFamilies(Options options, Path path) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
@@ -697,7 +680,7 @@ public final class RocksDB {
 	}
 
 	// -----------------------------------------------------------------------
-	// Package-private CF helpers
+	// Column family open helpers
 	// -----------------------------------------------------------------------
 
 	/// The parallel `char* names[]` / `rocksdb_options_t* options[]` arrays a
@@ -705,33 +688,25 @@ public final class RocksDB {
 	private record CfNamesAndOptions(MemorySegment names, MemorySegment options) {
 	}
 
-	/// Guards against handing a native call an array with an unfilled (NULL) slot — every C
-	/// API this backs (`rocksdb_open_column_families`, `rocksdb_ingest_external_file`, ...)
-	/// dereferences each entry as a pointer with no null check of its own, so a slot a
-	/// marshalling loop failed to populate would otherwise crash the JVM instead of failing
-	/// in Java. Cheap (a handful of pointer comparisons at DB-open/ingest time, not a hot
-	/// per-key path) insurance against that class of bug, whatever causes it.
-	///
-	/// @param arr  native `ADDRESS[n]` array to check
-	/// @param n    number of entries to check
-	/// @param what description of the array's contents, for the error message
-	/// @throws AssertionError if any of the first `n` entries is `MemorySegment.NULL`
-	static void requireNoNullEntries(MemorySegment arr, int n, String what) {
-		for (int i = 0; i < n; i++) {
-			if (MemorySegment.NULL.equals(arr.getAtIndex(ValueLayout.ADDRESS, i))) {
-				throw new AssertionError(what + " has an unpopulated (NULL) entry at index " + i);
-			}
-		}
-	}
-
 	/// Allocates and fills the parallel names/options arrays every `*_column_families` open
 	/// call marshals, one entry per `descriptors[i]`.
 	///
 	/// @param arena       arena backing the returned native arrays (and any allocated names)
 	/// @param descriptors one descriptor per column family
+	/// @param allowTtl    whether a descriptor may carry a TTL (only for [TtlDB])
 	/// @return the names and options arrays, both length `descriptors.size()`
-	private static CfNamesAndOptions buildCfArrays(Arena arena, List<ColumnFamilyDescriptor> descriptors) {
+	private static CfNamesAndOptions buildCfArrays(Arena arena, List<ColumnFamilyDescriptor> descriptors,
+	                                               boolean allowTtl) {
 		int n = descriptors.size();
+		var seen = new HashSet<ColumnFamilyName>();
+		for (ColumnFamilyDescriptor desc : descriptors) {
+			if (!seen.add(desc.name())) {
+				throw new IllegalArgumentException("duplicate column family name: " + desc.name());
+			}
+			if (!allowTtl) {
+				desc.requireNoTtl();
+			}
+		}
 		MemorySegment namesArr = arena.allocate(ValueLayout.ADDRESS, n);
 		MemorySegment optsArr = arena.allocate(ValueLayout.ADDRESS, n);
 		for (int i = 0; i < n; i++) {
@@ -740,21 +715,44 @@ public final class RocksDB {
 					desc.name().toNative(arena));
 			optsArr.setAtIndex(ValueLayout.ADDRESS, i, desc.options().ptr());
 		}
-		requireNoNullEntries(namesArr, n, "column family names array");
-		requireNoNullEntries(optsArr, n, "column family options array");
+		NativeCalls.requireNoNullEntries(namesArr, n, "column family names array");
+		NativeCalls.requireNoNullEntries(optsArr, n, "column family options array");
 		return new CfNamesAndOptions(namesArr, optsArr);
 	}
 
-	/// Reads a native `rocksdb_column_family_handle_t*[]` array populated by a
-	/// `*_column_families` open call back into `handles`, wrapping each entry.
+	/// Hands the `rocksdb_column_family_handle_t*[]` array populated by a `*_column_families` open
+	/// call to `db`, which owns and later releases each handle. On failure `db` is closed.
 	///
-	/// @param handlesArr native array of `n` column family handle pointers
-	/// @param n          number of handles
-	/// @param handles    output list; cleared then populated with one handle per entry
-	private static void collectCfHandles(MemorySegment handlesArr, int n, List<ColumnFamilyHandle> handles) {
-		handles.clear();
-		for (int i = 0; i < n; i++) {
-			handles.add(ColumnFamilyHandle.wrap(handlesArr.getAtIndex(ValueLayout.ADDRESS, i)));
+	/// @param db          the freshly opened database
+	/// @param handlesArr  native array of one handle pointer per descriptor
+	/// @param descriptors the descriptors passed to the open call, in the same order
+	/// @param <T>         the database type
+	/// @return `db`
+	private static <T extends NativeDB> T adoptHandles(T db, MemorySegment handlesArr, List<ColumnFamilyDescriptor> descriptors) {
+		try {
+			for (int i = 0; i < descriptors.size(); i++) {
+				db.adopt(descriptors.get(i).name(), handlesArr.getAtIndex(ValueLayout.ADDRESS, i));
+			}
+			return db;
+		} catch (Throwable t) {
+			db.close();
+			throw t;
+		}
+	}
+
+	/// Registers the default column family handle of a database opened without column family
+	/// descriptors, so `getColumnFamily(ColumnFamilyName)` on the returned database works on every database.
+	///
+	/// @param db the freshly opened database
+	/// @param <T> the database type
+	/// @return `db`
+	private static <T extends NativeDB> T withDefaultColumnFamily(T db) {
+		try {
+			db.adopt(ColumnFamilyName.DEFAULT, ColumnFamilyHandle.defaultHandle(db.dbPtr()));
+			return db;
+		} catch (Throwable t) {
+			db.close();
+			throw t;
 		}
 	}
 }

@@ -27,9 +27,12 @@ Nobody uses the library in production yet, so this can be fixed once, without a 
 
 ## Decision
 
-- Every multi-column-family open takes `List<ColumnFamilyDescriptor>` (`openTtl`:
-  `List<TtlColumnFamily>`, a record pairing a descriptor with its TTL) and returns only the DB. The old
+- Every multi-column-family open takes `List<ColumnFamilyDescriptor>` and returns only the DB. The old
   overloads are deleted. There is no double or triple list anywhere.
+- The per-family TTL of `openTtl` lives on the descriptor (`ColumnFamilyDescriptor.withTtl(Duration)`, nullable:
+  none means never expire, the same as `Duration.ZERO`), so it needs no parallel list and no pairing type.
+  `TtlDB.createColumnFamily` honors it through `rocksdb_create_column_family_with_ttl`. Every other database type
+  rejects a descriptor that carries a TTL (`IllegalArgumentException`) instead of silently ignoring it.
 - Every DB type (`NativeDB`) keeps a registry of its handles by `ColumnFamilyName`, in open order:
   `getColumnFamily(ColumnFamilyName)` (throws `NoSuchElementException` for an unknown name) and
   `getColumnFamilies()` (an unmodifiable snapshot). `ColumnFamilyName.DEFAULT` is always present.
@@ -79,6 +82,8 @@ Nobody uses the library in production yet, so this can be fixed once, without a 
 - **Keep the output list.** Keeps positional alignment, caller ownership and the use-after-free.
 - **Return a result record holding the DB and a map.** Every caller unpacks two values, the map still
   has to be tied to the DB's lifetime, and it does not cover `createColumnFamily`.
+- **A `TtlColumnFamily(descriptor, ttl)` record for `openTtl`.** Type-safe, but a second type next to the
+  descriptor, and it left `TtlDB.createColumnFamily` unable to give a new family its own TTL.
 - **`SequencedMap<ColumnFamilyDescriptor, Duration>` as the TTL input.** With identity equality it
   adds nothing over a list of pairs; with name-based equality `HashMap.put` keeps the first key, so a
   second descriptor's `Options` would be silently dropped while its TTL is taken.

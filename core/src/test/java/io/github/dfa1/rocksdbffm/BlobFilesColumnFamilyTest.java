@@ -26,15 +26,12 @@ class BlobFilesColumnFamilyTest {
 		}
 
 		// When — reopen with both CFs listed explicitly
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(false).setEnableBlobFiles(true);
 		     var db = RocksDB.openReadWrite(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     handles)) {
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))))) {
 			// Then
-			assertThat(handles).hasSize(2);
-			assertThat(db.get(handles.get(1), "key".getBytes())).isEqualTo("value".getBytes());
-			handles.forEach(ColumnFamilyHandle::close);
+			assertThat(db.getColumnFamilies()).hasSize(2);
+			assertThat(db.get(db.getColumnFamily(ColumnFamilyName.of("cf1")), "key".getBytes())).isEqualTo("value".getBytes());
 		}
 	}
 

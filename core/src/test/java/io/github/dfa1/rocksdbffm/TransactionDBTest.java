@@ -290,7 +290,6 @@ class TransactionDBTest {
 			// Then
 			assertThat(txn.get(cf, ro, "k".getBytes())).isEqualTo("v".getBytes());
 			txn.commit();
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -1049,17 +1048,14 @@ class TransactionDBTest {
 		}
 
 		// When — reopen with both CFs via the CF-aware factory overload
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
 		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     handles)) {
-			var cf = handles.get(1);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))))) {
+			var cf = db.getColumnFamily(ColumnFamilyName.of("cf1"));
 
 			// Then
 			assertThat(db.get(cf, "k".getBytes())).isEqualTo("v".getBytes());
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 

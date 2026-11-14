@@ -21,6 +21,8 @@ public final class ColumnFamilyHandle extends NativeObject {
 
 	/// `void rocksdb_column_family_handle_destroy(rocksdb_column_family_handle_t*);`
 	private static final MethodHandle MH_DESTROY;
+	/// `rocksdb_column_family_handle_t* rocksdb_get_default_column_family_handle(rocksdb_t* db);`
+	private static final MethodHandle MH_GET_DEFAULT;
 	/// `uint32_t rocksdb_column_family_handle_get_id(rocksdb_column_family_handle_t* handle);`
 	private static final MethodHandle MH_GET_ID;
 	/// `char* rocksdb_column_family_handle_get_name(rocksdb_column_family_handle_t* handle, size_t* name_len);`
@@ -29,6 +31,9 @@ public final class ColumnFamilyHandle extends NativeObject {
 	static {
 		MH_DESTROY = NativeLibrary.lookup("rocksdb_column_family_handle_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+
+		MH_GET_DEFAULT = NativeLibrary.lookup("rocksdb_get_default_column_family_handle",
+				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_GET_ID = NativeLibrary.lookup("rocksdb_column_family_handle_get_id",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
@@ -44,6 +49,19 @@ public final class ColumnFamilyHandle extends NativeObject {
 
 	static ColumnFamilyHandle wrap(MemorySegment ptr) {
 		return new ColumnFamilyHandle(ptr);
+	}
+
+	/// Returns a new native handle to the default column family of `dbPtr`, for a database opened
+	/// without column family descriptors. The only mapping of `rocksdb_get_default_column_family_handle`.
+	///
+	/// @param dbPtr the `rocksdb_t*` of the database
+	/// @return a new handle; the caller (the database) owns it
+	static MemorySegment defaultHandle(MemorySegment dbPtr) {
+		try {
+			return (MemorySegment) MH_GET_DEFAULT.invokeExact(dbPtr);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("defaultHandle failed", t);
+		}
 	}
 
 	/// Returns the numeric ID of this column family.

@@ -8,7 +8,6 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -368,17 +367,14 @@ class SecondaryDBTest {
 		}
 
 		// When — the secondary opens the same column families and catches up
-		List<ColumnFamilyHandle> secondaryHandles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     secondaryHandles)) {
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))))) {
 			secondary.tryCatchUpWithPrimary();
-			var cf1 = secondaryHandles.get(1);
+			var cf1 = secondary.getColumnFamily(ColumnFamilyName.of("cf1"));
 
 			// Then — reading through the secondary's own cf1 handle sees the primary's write
 			assertThat(secondary.get(cf1, "k".getBytes())).isEqualTo("v".getBytes());
-			secondaryHandles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 }

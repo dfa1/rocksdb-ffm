@@ -173,21 +173,20 @@ try (var opts = Options.newOptions().setCreateIfMissing(true);
 ```
 
 On reopen you must list **every** column family that exists in the database, including `default`,
-or the open fails. Handles come back in the same order as the descriptors:
+or the open fails. The database owns the handles and releases them when it is closed, so look them up by
+name; there is nothing to close:
 
 ```java
-List<ColumnFamilyHandle> handles = new ArrayList<>();
 try (var options = Options.newOptions();
      var db = RocksDB.openReadWrite(options, dbPath,
 		     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT),
-				     ColumnFamilyDescriptor.of(ColumnFamilyName.of("accounts"))),
-		     handles)) {
-	var accounts = handles.get(1);
+				     ColumnFamilyDescriptor.of(ColumnFamilyName.of("accounts"))))) {
+	var accounts = db.getColumnFamily(ColumnFamilyName.of("accounts"));
 	db.put(accounts, "bob".getBytes(), "200".getBytes());
-} finally {
-	handles.forEach(ColumnFamilyHandle::close);
 }
 ```
+
+`db.getColumnFamilies()` returns every handle in open order, followed by the ones created since.
 
 Not sure what exists on disk? Ask first:
 
@@ -196,6 +195,16 @@ try (var options = Options.newOptions()) {
 	List<ColumnFamilyName> names = RocksDB.listColumnFamilies(options, dbPath);
 }
 ```
+
+This gives names only, not the families' options: descriptors built from them with
+`ColumnFamilyDescriptor.of(name)` reopen every family with **default** options, not the ones it was created
+with. To reopen a database as it was configured, load its saved options instead (next section).
+
+**Who owns a descriptor's `Options`?** The descriptor only references them and never closes them.
+`ColumnFamilyDescriptor.of(name)` uses a shared default owned by the library; with `of(name, options)` you own
+`options` and close them yourself. RocksDB copies them during the open or create call, so you may close them
+right after it, but don't reuse the descriptor afterward: it throws `IllegalStateException`. One `Options` can
+back several descriptors as long as it stays open until the last call using any of them.
 
 Every DB type has the same column-family overloads — see
 [reference.md#column-families](reference.md#column-families).
@@ -206,11 +215,9 @@ Instead of repeating every setting in Java, read them back from the database's l
 reopen with them:
 
 ```java
-var handles = new ArrayList<ColumnFamilyHandle>();
 try (var loaded = RocksDB.loadLatestOptions(dbPath, false);
-     var db = RocksDB.openReadWrite(loaded.dbOptions(), dbPath, loaded.columnFamilies(), handles)) {
+     var db = RocksDB.openReadWrite(loaded.dbOptions(), dbPath, loaded.columnFamilies())) {
 	// ...
-	handles.forEach(ColumnFamilyHandle::close);
 }
 ```
 
@@ -488,21 +495,24 @@ Force one with `db.compactRange()` if a test needs determinism. `Duration.ZERO` 
 A negative TTL, or one longer than `Integer.MAX_VALUE` seconds, is rejected with `IllegalArgumentException`.
 `db.getTtl()` returns the TTL you passed (RocksDB cannot report it), as an `Optional`.
 
-To give each column family its own TTL, pass one `Duration` per descriptor, in the same order. The lists
-must have the same size. `getTtl()` is then empty:
+To give each column family its own TTL, put it on the descriptor with `withTtl`. A descriptor without one never
+expires its keys, and `getTtl()` is empty for this open:
 
 ```java
-var descriptors = List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("sessions")));
-var ttls = List.of(Duration.ofHours(1), Duration.ofHours(24));
-var handles = new ArrayList<ColumnFamilyHandle>();
+var families = List.of(
+		ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT).withTtl(Duration.ofHours(1)),
+		ColumnFamilyDescriptor.of(ColumnFamilyName.of("sessions")).withTtl(Duration.ofHours(24)));
 
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openTtl(opts, dbPath, descriptors, ttls, handles)) {
+     var db = RocksDB.openTtl(opts, dbPath, families)) {
 	// default expires after 1 hour, sessions after 24 hours
+	db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cache")).withTtl(Duration.ofMinutes(10)));
 }
 ```
 
-Each column family must already exist when you open it this way.
+Each column family must already exist when you open it this way. A family created without a TTL never expires its
+keys, even in a database opened with a single TTL: give it one with `withTtl`. Only a `TtlDB` accepts a descriptor with a TTL: any other
+open or `createColumnFamily` rejects it with `IllegalArgumentException` instead of ignoring it.
 
 ## Take a checkpoint
 

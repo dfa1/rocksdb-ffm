@@ -173,6 +173,17 @@ never double-free — whichever runs second is a no-op. No lock, no cost added t
 at all — a stronger result than the "lock around every native call site" trade the second paragraph
 of this section declines for the unrelated, broader close()-vs-any-method race.
 
+The fifth case is a child that is handed out *and kept* by its owner: a `ColumnFamilyHandle`. Destroying one after
+its database is closed is a use-after-free (its destructor locks the database's mutex), and the previous API pushed
+that ordering onto the caller through an output list. Now every database type (`NativeDB`) owns its handles in a
+name-to-handle registry, filled from the open call and by `createColumnFamily`, and registers each one as a child. The
+sweep above releases them before the database's own pointer, and `close()` on a handle is a no-op, because a handle
+looked up by name is shared by every user of that database and closing it early would break them all. It differs from
+`makeImmortal()` (which is never freed) and from the other children (which the holder closes): it is freed exactly
+once, by its owner. Only `dropColumnFamily` releases one earlier; a thread still using that handle at that moment is
+in the same close-versus-call window as any other `NativeObject`. See
+[ADR 0009](adr/0009-db-owned-column-family-handles.md).
+
 ## Only valid operations
 
 Each way of opening a database gets its own Java type, exposing only the operations that are

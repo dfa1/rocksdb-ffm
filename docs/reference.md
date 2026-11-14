@@ -67,7 +67,9 @@ Every database is opened through a static factory on `RocksDB`. There is no publ
 anywhere in the library.
 
 Column families are not a separate method name — every factory that supports them takes
-`List<ColumnFamilyDescriptor>` / `List<ColumnFamilyHandle> out` as an overload of the plain form.
+`List<ColumnFamilyDescriptor>` as an overload of the plain form (`openTtl` reads each family's TTL from its descriptor).
+The returned database owns the column family handles: `getColumnFamily(ColumnFamilyName)` and
+`getColumnFamilies()` look them up.
 
 | Factory                                                                       | Column families? | Returns                   |
 |:------------------------------------------------------------------------------|:-----------------|:--------------------------|
@@ -391,8 +393,8 @@ compaction, so close them promptly.
 | Type                     | Description                                                        |
 |:-------------------------|:-------------------------------------------------------------------|
 | `ColumnFamilyName`       | `of(String)`, `DEFAULT`; holds the raw name bytes (lossless for non-UTF-8 names), `toString()` decodes for display |
-| `ColumnFamilyDescriptor` | `of(ColumnFamilyName)`, `of(ColumnFamilyName, Options)`; `name()` |
-| `ColumnFamilyHandle`     | Live handle; `getId()`, `getName()`; `AutoCloseable`               |
+| `ColumnFamilyDescriptor` | `of(ColumnFamilyName)`, `of(ColumnFamilyName, Options)`; `withTtl(Duration)` (a `TtlDB` only); `name()`, `ttl()` |
+| `ColumnFamilyHandle`     | Live handle owned by its database; `getId()`, `getName()`; `close()` is a no-op       |
 
 `createColumnFamily(ColumnFamilyDescriptor)` and `dropColumnFamily(handle)` exist on `ReadWriteDB`,
 `TtlDB`, `TransactionDB`, and `OptimisticTransactionDB`. Every read method
@@ -400,7 +402,9 @@ compaction, so close them promptly.
 overload across all three access tiers on those five types plus `ReadOnlyDB`; write methods
 (`put`/`delete`/`deleteRange`/`flush`) add the same overload on the five writable types.
 Reopening requires listing every existing column family, `default` included — for
-`SecondaryDB`, via `openSecondary(Options, Path primary, Path secondary, List<ColumnFamilyDescriptor>, List<ColumnFamilyHandle>)`.
+`SecondaryDB`, via `openSecondary(Options, Path primary, Path secondary, List<ColumnFamilyDescriptor>)`.
+Handles are owned by the database, whether returned by the open or by `createColumnFamily`: they are
+released when it closes, and `dropColumnFamily` releases (and unregisters) the dropped one.
 
 ## Backup, checkpoint, ingest
 

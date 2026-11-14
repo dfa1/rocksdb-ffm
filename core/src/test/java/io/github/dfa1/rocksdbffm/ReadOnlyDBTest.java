@@ -7,7 +7,6 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -214,12 +213,11 @@ class ReadOnlyDBTest {
 			rw.put(cf, "key".getBytes(), "value".getBytes());
 		}
 
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))), handles);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))));
 		     Arena arena = Arena.ofConfined()) {
-			var cf1 = handles.get(1);
+			var cf1 = ro.getColumnFamily(ColumnFamilyName.of("cf1"));
 			var key = arena.allocateFrom("key").asSlice(0, 3);
 
 			// When
@@ -228,7 +226,6 @@ class ReadOnlyDBTest {
 			// Then
 			assertThat(result).isEqualTo("value".getBytes());
 
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -245,19 +242,16 @@ class ReadOnlyDBTest {
 			cf.close();
 		}
 
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     handles)) {
-			var cf = handles.get(1);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))))) {
+			var cf = ro.getColumnFamily(ColumnFamilyName.of("cf1"));
 
 			// When
 			var result = ro.get(cf, "k".getBytes());
 
 			// Then
 			assertThat(result).isEqualTo("v".getBytes());
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -270,20 +264,17 @@ class ReadOnlyDBTest {
 			cf.close();
 		}
 
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     handles);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))));
 		     var readOpts = ReadOptions.newReadOptions()) {
-			var cf = handles.get(1);
+			var cf = ro.getColumnFamily(ColumnFamilyName.of("cf1"));
 
 			// When
 			var result = ro.get(cf, readOpts, "k".getBytes());
 
 			// Then
 			assertThat(result).isEqualTo("v".getBytes());
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -296,12 +287,10 @@ class ReadOnlyDBTest {
 			cf.close();
 		}
 
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     handles)) {
-			var cf = handles.get(1);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))))) {
+			var cf = ro.getColumnFamily(ColumnFamilyName.of("cf1"));
 			var key = ByteBuffer.allocateDirect(3);
 			key.put("key".getBytes()).flip();
 			var out = ByteBuffer.allocateDirect(32);
@@ -311,7 +300,6 @@ class ReadOnlyDBTest {
 
 			// Then
 			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -324,13 +312,11 @@ class ReadOnlyDBTest {
 			cf.close();
 		}
 
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     handles);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))));
 		     Arena arena = Arena.ofConfined()) {
-			var cf = handles.get(1);
+			var cf = ro.getColumnFamily(ColumnFamilyName.of("cf1"));
 			var key = arena.allocateFrom("key");
 			var value = arena.allocate(32);
 
@@ -341,7 +327,6 @@ class ReadOnlyDBTest {
 			assertThat(result).isEqualTo(CopyResult.Copied.INSTANCE);
 			assertThat(value.asSlice(0, 5).toArray(ValueLayout.JAVA_BYTE))
 					.isEqualTo("value".getBytes());
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -359,12 +344,10 @@ class ReadOnlyDBTest {
 			cf.close();
 		}
 
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     handles)) {
-			var cf = handles.get(1);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))))) {
+			var cf = ro.getColumnFamily(ColumnFamilyName.of("cf1"));
 
 			// When
 			try (var it = ro.newIterator(cf)) {
@@ -374,7 +357,6 @@ class ReadOnlyDBTest {
 				assertThat(it.isValid()).isTrue();
 				assertThat(it.key()).isEqualTo("a".getBytes());
 			}
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -387,13 +369,11 @@ class ReadOnlyDBTest {
 			cf.close();
 		}
 
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     handles);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))));
 		     var readOpts = ReadOptions.newReadOptions()) {
-			var cf = handles.get(1);
+			var cf = ro.getColumnFamily(ColumnFamilyName.of("cf1"));
 
 			// When
 			try (var it = ro.newIterator(cf, readOpts)) {
@@ -403,7 +383,6 @@ class ReadOnlyDBTest {
 				assertThat(it.isValid()).isTrue();
 				assertThat(it.key()).isEqualTo("x".getBytes());
 			}
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -420,19 +399,16 @@ class ReadOnlyDBTest {
 			cf.close();
 		}
 
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     handles)) {
-			var cf = handles.get(1);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))))) {
+			var cf = ro.getColumnFamily(ColumnFamilyName.of("cf1"));
 
 			// When
 			var result = ro.getProperty(cf, Property.STATS);
 
 			// Then
 			assertThat(result).isPresent();
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -445,19 +421,16 @@ class ReadOnlyDBTest {
 			cf.close();
 		}
 
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     handles)) {
-			var cf = handles.get(1);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))))) {
+			var cf = ro.getColumnFamily(ColumnFamilyName.of("cf1"));
 
 			// When
 			var result = ro.getLongProperty(cf, Property.ESTIMATE_NUM_KEYS);
 
 			// Then
 			assertThat(result).isPresent();
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -605,16 +578,13 @@ class ReadOnlyDBTest {
 		}
 
 		// When — reopen read-only with both CFs via the 5-arg factory overload
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var ro = RocksDB.openReadOnly(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
-				     handles, false)) {
-			var cf = handles.get(1);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))), false)) {
+			var cf = ro.getColumnFamily(ColumnFamilyName.of("cf1"));
 
 			// Then
 			assertThat(ro.get(cf, "k".getBytes())).isEqualTo("v".getBytes());
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 }

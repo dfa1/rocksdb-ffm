@@ -7,7 +7,6 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -269,11 +268,10 @@ class PinnedGetTest {
 	@Test
 	void pinnedGet_and_pinnedGetCf_agreeOnDefaultFamily(@TempDir Path dir) {
 		// Given
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openReadWrite(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT)), handles)) {
-			var defaultCf = handles.get(0);
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT)))) {
+			var defaultCf = db.getColumnFamily(ColumnFamilyName.DEFAULT);
 			db.put("k".getBytes(), "v".getBytes());
 
 			try (Arena arena = Arena.ofConfined()) {

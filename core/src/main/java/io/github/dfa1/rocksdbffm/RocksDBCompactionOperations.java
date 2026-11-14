@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
 /// existed, `TransactionDB` had no compaction control at all, even though nothing in the C API
 /// stopped it (`rocksdb_transactiondb_get_base_db()` gives it the same plain `rocksdb_t*` handle
 /// `getProperty`/`getLiveFiles()` already call through). See
-/// [#131](https://github.com/dfa1/rocksdbffm/issues/131).
+/// [#131](https://github.com/dfa1/rocksdb-ffm/issues/131).
 ///
 /// Every method here is a direct, zero-logic forward into the matching package-private
 /// [RocksDBCompactionOperationsBindings] helper — implementors only need to supply the native pointer.

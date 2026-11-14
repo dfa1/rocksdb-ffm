@@ -103,20 +103,17 @@ class ColumnFamilyTest {
 		}
 
 		// When — reopen with both CFs
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(false);
 		     var db = RocksDB.openReadWrite(opts, dir,
 				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT),
-						     ColumnFamilyDescriptor.of(ColumnFamilyName.of("users"))),
-				     handles)) {
-			var defaultCf = handles.get(0);
-			var usersCf = handles.get(1);
+						     ColumnFamilyDescriptor.of(ColumnFamilyName.of("users"))))) {
+			var defaultCf = db.getColumnFamily(ColumnFamilyName.DEFAULT);
+			var usersCf = db.getColumnFamily(ColumnFamilyName.of("users"));
 
 			// Then
 			assertThat(db.get(usersCf, "alice".getBytes())).isEqualTo("data".getBytes());
 			assertThat(db.get(defaultCf, "alice".getBytes())).isNull();
 
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 
@@ -141,18 +138,15 @@ class ColumnFamilyTest {
 	@Test
 	void columnFamilyHandle_defaultIdIsZero(@TempDir Path dir) {
 		// Given
-		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var _ = RocksDB.openReadWrite(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT)),
-				     handles)) {
+		     var db = RocksDB.openReadWrite(opts, dir,
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT)))) {
 
 			// When
-			int id = handles.get(0).getId();
+			int id = db.getColumnFamily(ColumnFamilyName.DEFAULT).getId();
 
 			// Then
 			assertThat(id).isZero();
-			handles.forEach(ColumnFamilyHandle::close);
 		}
 	}
 

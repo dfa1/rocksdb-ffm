@@ -37,15 +37,10 @@ import java.util.List;
 /// ```
 public final class ReadBatch implements AutoCloseable {
 
-	/// `rocksdb_column_family_handle_t* rocksdb_get_default_column_family_handle(rocksdb_t* db);`
-	private static final MethodHandle MH_GET_DEFAULT_CF;
 	/// `void rocksdb_batched_multi_get_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, size_t num_keys, const char* const* keys_list, const size_t* keys_list_sizes, rocksdb_pinnableslice_t** values, char** errs, const bool sorted_input);`
 	private static final MethodHandle MH_BATCHED_MULTI_GET_CF;
 
 	static {
-		MH_GET_DEFAULT_CF = NativeLibrary.lookup("rocksdb_get_default_column_family_handle",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
 		MH_BATCHED_MULTI_GET_CF = NativeLibrary.lookup("rocksdb_batched_multi_get_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
@@ -101,7 +96,7 @@ public final class ReadBatch implements AutoCloseable {
 		if (capacity <= 0) {
 			throw new IllegalArgumentException("capacity must be positive: " + capacity);
 		}
-		return new ReadBatch(db, cf, capacity);
+		return new ReadBatch(db, cf != null ? cf : ((NativeDB) db).getColumnFamily(ColumnFamilyName.DEFAULT), capacity);
 	}
 
 	/// The maximum number of keys a single [#get] call on this batch may pass.
@@ -139,12 +134,12 @@ public final class ReadBatch implements AutoCloseable {
 			return List.of();
 		}
 		try (Arena callArena = Arena.ofConfined()) {
-			MemorySegment cfPtr = cf != null ? cf.ptr() : (MemorySegment) MH_GET_DEFAULT_CF.invokeExact(db.dbPtr());
+			MemorySegment cfPtr = cf.ptr();
 			for (int i = 0; i < n; i++) {
 				byte[] key = keys.get(i);
 				writeKeySlot(i, NativeCalls.toNative(callArena, key), key.length);
 			}
-			RocksDB.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
+			NativeCalls.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
 			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collectBytes(n);
@@ -187,12 +182,12 @@ public final class ReadBatch implements AutoCloseable {
 			return List.of();
 		}
 		try {
-			MemorySegment cfPtr = cf != null ? cf.ptr() : (MemorySegment) MH_GET_DEFAULT_CF.invokeExact(db.dbPtr());
+			MemorySegment cfPtr = cf.ptr();
 			for (int i = 0; i < n; i++) {
 				ByteBuffer key = keys.get(i);
 				writeKeySlot(i, MemorySegment.ofBuffer(key), key.remaining());
 			}
-			RocksDB.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
+			NativeCalls.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
 			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collectBuffers(n, values);
@@ -256,12 +251,12 @@ public final class ReadBatch implements AutoCloseable {
 			return List.of();
 		}
 		try {
-			MemorySegment cfPtr = cf != null ? cf.ptr() : (MemorySegment) MH_GET_DEFAULT_CF.invokeExact(db.dbPtr());
+			MemorySegment cfPtr = cf.ptr();
 			for (int i = 0; i < n; i++) {
 				MemorySegment key = keys.get(i);
 				writeKeySlot(i, key, key.byteSize());
 			}
-			RocksDB.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
+			NativeCalls.requireNoNullEntries(keysArr, n, "ReadBatch keys array");
 			MH_BATCHED_MULTI_GET_CF.invokeExact(db.dbPtr(), readOptions.ptr(), cfPtr, (long) n,
 					keysArr, keySizesArr, valuesArr, errsArr, false);
 			return collect(n, fn);
