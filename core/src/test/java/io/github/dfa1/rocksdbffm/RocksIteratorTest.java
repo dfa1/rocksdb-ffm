@@ -261,6 +261,26 @@ class RocksIteratorTest {
 		}
 	}
 
+	@Test
+	void seek_withMemorySegment(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		     var arena = Arena.ofConfined()) {
+			db.put("a".getBytes(), "1".getBytes());
+			db.put("c".getBytes(), "3".getBytes());
+			MemorySegment target = arena.allocateFrom(ValueLayout.JAVA_BYTE, "b".getBytes());
+
+			// When
+			try (RocksIterator it = db.newIterator()) {
+				it.seek(target);
+
+				// Then — "b" doesn't exist, should land on "c"
+				assertThat(it.isValid()).isTrue();
+				assertThat(it.key()).isEqualTo("c".getBytes());
+			}
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// key/value access tiers
 	// -----------------------------------------------------------------------
@@ -364,6 +384,30 @@ class RocksIteratorTest {
 				assertThat(valBuf.position()).isZero();
 				assertThat(valBuf.get(0)).isEqualTo((byte) 'X');
 				assertThat(valBuf.get(1)).isEqualTo((byte) 'X');
+			}
+		}
+	}
+
+	@Test
+	void key_value_byteBuffer_exactFit_copiesAndAdvancesPosition(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+			db.put("hello".getBytes(), "world".getBytes());
+
+			try (RocksIterator it = db.newIterator()) {
+				it.seekToFirst();
+				ByteBuffer keyBuf = ByteBuffer.allocateDirect(5);
+				ByteBuffer valBuf = ByteBuffer.allocateDirect(5);
+
+				// When
+				CopyResult keyResult = it.key(keyBuf);
+				CopyResult valResult = it.value(valBuf);
+
+				// Then — capacity == length is not "not enough capacity"
+				assertThat(keyResult).isNotInstanceOf(CopyResult.NotEnoughCapacity.class);
+				assertThat(valResult).isNotInstanceOf(CopyResult.NotEnoughCapacity.class);
+				assertThat(keyBuf.position()).isEqualTo(5);
+				assertThat(valBuf.position()).isEqualTo(5);
 			}
 		}
 	}

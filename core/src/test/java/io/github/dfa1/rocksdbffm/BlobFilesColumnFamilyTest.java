@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
@@ -79,8 +80,8 @@ class BlobFilesColumnFamilyTest {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true).setEnableBlobFiles(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
-			ByteBuffer key = ByteBuffer.allocateDirect(3).put("bbk".getBytes()).flip();
-			ByteBuffer value = ByteBuffer.allocateDirect(3).put("bbv".getBytes()).flip();
+			ByteBuffer key = directBuffer("bbk");
+			ByteBuffer value = directBuffer("bbv");
 
 			// When
 			db.put(cf, key, value);

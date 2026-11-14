@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
@@ -242,13 +243,13 @@ class ColumnFamilyTest {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
-			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
-			ByteBuffer val = ByteBuffer.allocateDirect(1).put((byte) 'v').flip();
+			ByteBuffer key = directBuffer("k");
+			ByteBuffer val = directBuffer("v");
 
 			// When
 			db.put(cf, key, val);
 
-			ByteBuffer getKey = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			ByteBuffer getKey = directBuffer("k");
 			ByteBuffer getVal = ByteBuffer.allocateDirect(64);
 
 			// Then
@@ -261,11 +262,11 @@ class ColumnFamilyTest {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
-			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
-			ByteBuffer val = ByteBuffer.allocateDirect(5).put("value".getBytes()).flip();
+			ByteBuffer key = directBuffer("k");
+			ByteBuffer val = directBuffer("value");
 			db.put(cf, key, val);
 
-			ByteBuffer getKey = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			ByteBuffer getKey = directBuffer("k");
 			ByteBuffer getVal = ByteBuffer.allocateDirect(2);
 
 			// When

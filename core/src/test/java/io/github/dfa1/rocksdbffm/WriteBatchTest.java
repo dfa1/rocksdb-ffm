@@ -5,9 +5,11 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.decodeUint64;
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
+import static io.github.dfa1.rocksdbffm.TestBytes.encodeUint64;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /// Covers the [WriteBatch] overloads not already exercised by [RocksDBTest],
@@ -86,8 +88,8 @@ class WriteBatchTest {
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var batch = WriteBatch.create()) {
-			var key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
-			var value = ByteBuffer.allocateDirect(1).put((byte) 'v').flip();
+			var key = directBuffer("k");
+			var value = directBuffer("v");
 
 			// When
 			batch.put(cf, key, value);
@@ -128,7 +130,7 @@ class WriteBatchTest {
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var batch = WriteBatch.create()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
-			var key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			var key = directBuffer("k");
 
 			// When
 			batch.delete(cf, key);
@@ -170,8 +172,8 @@ class WriteBatchTest {
 		     var batch = WriteBatch.create()) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
-			var start = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
-			var end = ByteBuffer.allocateDirect(1).put((byte) 'b').flip();
+			var start = directBuffer("a");
+			var end = directBuffer("b");
 
 			// When
 			batch.deleteRange(cf, start, end);
@@ -204,4 +206,85 @@ class WriteBatchTest {
 			assertThat(db.get(cf, "b".getBytes())).isEqualTo("2".getBytes());
 		}
 	}
+
+	// -----------------------------------------------------------------------
+	// merge() tiers — queue operands with uint64Add, then verify the sum after write()
+	// -----------------------------------------------------------------------
+
+	@Test
+	void merge_byteBuffer_sumsOperandsAfterWrite(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true).setMergeOperator(MergeOperator.uint64Add());
+		     var db = RocksDB.openReadWrite(opts, dir);
+		     var batch = WriteBatch.create()) {
+			batch.merge(directBuffer("views".getBytes()), directBuffer(encodeUint64(1)));
+			batch.merge(directBuffer("views".getBytes()), directBuffer(encodeUint64(4)));
+
+			// When
+			db.write(batch);
+
+			// Then
+			assertThat(decodeUint64(db.get("views".getBytes()))).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void merge_columnFamily_bytes_sumsOperandsAfterWrite(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true).setMergeOperator(MergeOperator.uint64Add());
+		     var db = RocksDB.openReadWrite(opts, dir);
+		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var batch = WriteBatch.create()) {
+			batch.merge(cf, "views".getBytes(), encodeUint64(1));
+			batch.merge(cf, "views".getBytes(), encodeUint64(4));
+
+			// When
+			db.write(batch);
+
+			// Then
+			assertThat(decodeUint64(db.get(cf, "views".getBytes()))).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void merge_columnFamily_byteBuffer_sumsOperandsAfterWrite(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true).setMergeOperator(MergeOperator.uint64Add());
+		     var db = RocksDB.openReadWrite(opts, dir);
+		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var batch = WriteBatch.create()) {
+			batch.merge(cf, directBuffer("views".getBytes()), directBuffer(encodeUint64(1)));
+			batch.merge(cf, directBuffer("views".getBytes()), directBuffer(encodeUint64(4)));
+
+			// When
+			db.write(batch);
+
+			// Then
+			assertThat(decodeUint64(db.get(cf, "views".getBytes()))).isEqualTo(5);
+		}
+	}
+
+	@Test
+	void merge_columnFamily_memorySegment_sumsOperandsAfterWrite(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true).setMergeOperator(MergeOperator.uint64Add());
+		     var db = RocksDB.openReadWrite(opts, dir);
+		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var batch = WriteBatch.create();
+		     var arena = Arena.ofConfined()) {
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
+			batch.merge(cf, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(1)));
+			batch.merge(cf, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(4)));
+
+			// When
+			db.write(batch);
+
+			// Then
+			assertThat(decodeUint64(db.get(cf, "views".getBytes()))).isEqualTo(5);
+		}
+	}
+
 }

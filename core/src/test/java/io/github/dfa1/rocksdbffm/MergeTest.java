@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.time.Duration;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -43,8 +44,8 @@ class MergeTest {
 	void readWriteDb_merge_byteBuffer_throwsWithoutMergeOperator(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
-			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
-			ByteBuffer value = ByteBuffer.allocateDirect(1).put((byte) 'v').flip();
+			ByteBuffer key = directBuffer("k");
+			ByteBuffer value = directBuffer("v");
 
 			// When
 			var thrown = assertThatThrownBy(() -> db.merge(key, value));

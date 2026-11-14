@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ReadOptionsTest {
@@ -302,7 +303,7 @@ class ReadOptionsTest {
 			db.put("c".getBytes(), "3".getBytes());
 
 			try (var readOptions = ReadOptions.newReadOptions()) {
-				ByteBuffer bound = ByteBuffer.allocateDirect(1).put((byte) 'b').flip();
+				ByteBuffer bound = directBuffer("b");
 				readOptions.setIterateLowerBound(bound);
 
 				// When
@@ -329,7 +330,7 @@ class ReadOptionsTest {
 			db.put("c".getBytes(), "3".getBytes());
 
 			try (var readOptions = ReadOptions.newReadOptions()) {
-				ByteBuffer bound = ByteBuffer.allocateDirect(1).put((byte) 'b').flip();
+				ByteBuffer bound = directBuffer("b");
 				readOptions.setIterateUpperBound(bound);
 
 				// When

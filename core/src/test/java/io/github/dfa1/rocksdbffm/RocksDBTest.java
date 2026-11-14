@@ -5,9 +5,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -137,8 +137,8 @@ class RocksDBTest {
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var batch = WriteBatch.create()) {
 
-			var key = ByteBuffer.allocateDirect(2).put("k1".getBytes()).flip();
-			var value = ByteBuffer.allocateDirect(2).put("v1".getBytes()).flip();
+			var key = directBuffer("k1");
+			var value = directBuffer("v1");
 			batch.put(key, value);
 
 			// When
@@ -175,7 +175,7 @@ class RocksDBTest {
 		     var batch = WriteBatch.create()) {
 
 			db.put("k1".getBytes(), "v1".getBytes());
-			var key = ByteBuffer.allocateDirect(2).put("k1".getBytes()).flip();
+			var key = directBuffer("k1");
 			batch.delete(key);
 
 			// When

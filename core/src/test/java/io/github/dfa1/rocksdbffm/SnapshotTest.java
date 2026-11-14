@@ -10,6 +10,7 @@ import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -161,7 +162,7 @@ class SnapshotTest {
 				db.put("key".getBytes(), "after".getBytes());
 
 				// When
-				var key = ByteBuffer.allocateDirect(3).put("key".getBytes()).flip();
+				var key = directBuffer("key");
 				var out = ByteBuffer.allocateDirect(16);
 				CopyResult result = db.get(ro, key, out);
 
@@ -236,7 +237,7 @@ class SnapshotTest {
 				db.put(cf, "key".getBytes(), "after".getBytes());
 
 				// When
-				var byteBufferKey = ByteBuffer.allocateDirect(3).put("key".getBytes()).flip();
+				var byteBufferKey = directBuffer("key");
 				var byteBufferOut = ByteBuffer.allocateDirect(16);
 				CopyResult byteBufferResult = db.get(cf, ro, byteBufferKey, byteBufferOut);
 

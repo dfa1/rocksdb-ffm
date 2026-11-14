@@ -7,12 +7,14 @@ import org.junit.jupiter.api.io.TempDir;
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.decodeUint64;
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
+import static io.github.dfa1.rocksdbffm.TestBytes.encodeUint64;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -532,7 +534,7 @@ class TransactionDBTest {
 	void directGet_byteBuffer_returnsNotFound_whenKeyAbsent(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir)) {
-			var key = ByteBuffer.allocateDirect(7).put("missing".getBytes()).flip();
+			var key = directBuffer("missing");
 			var out = ByteBuffer.allocateDirect(32);
 
 			// When
@@ -571,14 +573,6 @@ class TransactionDBTest {
 		}
 	}
 
-	private static long decodeUint64(byte[] bytes) {
-		return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getLong();
-	}
-
-	private static byte[] encodeUint64(long value) {
-		return ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN).putLong(value).array();
-	}
-
 	@Test
 	void directMerge_sumsOperands(@TempDir Path dir) {
 		// Given
@@ -597,7 +591,7 @@ class TransactionDBTest {
 	void directMerge_byteBuffer_sumsOperands(@TempDir Path dir) {
 		// Given
 		try (var db = openDbWithMergeOperator(dir)) {
-			var key = ByteBuffer.allocateDirect(5).put("views".getBytes()).flip();
+			var key = directBuffer("views");
 			db.merge(key.duplicate(), directBuffer(encodeUint64(1)));
 
 			// When
@@ -652,7 +646,7 @@ class TransactionDBTest {
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add())) {
 			handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts)));
 			var cf = handles.get(0);
-			var key = ByteBuffer.allocateDirect(5).put("views".getBytes()).flip();
+			var key = directBuffer("views");
 			db.merge(cf, key.duplicate(), directBuffer(encodeUint64(1)));
 
 			// When
@@ -683,10 +677,6 @@ class TransactionDBTest {
 			assertThat(decodeUint64(db.get(cf, "views".getBytes()))).isEqualTo(5);
 			handles.forEach(ColumnFamilyHandle::close);
 		}
-	}
-
-	private static ByteBuffer directBuffer(byte[] bytes) {
-		return (ByteBuffer) ByteBuffer.allocateDirect(bytes.length).put(bytes).flip();
 	}
 
 	// -----------------------------------------------------------------------
@@ -734,7 +724,7 @@ class TransactionDBTest {
 		try (var db = openDbWithCf(dir, handles)) {
 			var cf = handles.get(0);
 			db.put(cf, "k".getBytes(), "v".getBytes());
-			var key = ByteBuffer.allocateDirect(1).put("k".getBytes()).flip();
+			var key = directBuffer("k");
 			var value = ByteBuffer.allocateDirect(64);
 
 			// When
@@ -752,7 +742,7 @@ class TransactionDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var db = openDbWithCf(dir, handles)) {
 			var cf = handles.get(0);
-			var key = ByteBuffer.allocateDirect(1).put("k".getBytes()).flip();
+			var key = directBuffer("k");
 			var value = ByteBuffer.allocateDirect(64);
 
 			// When
@@ -1218,6 +1208,102 @@ class TransactionDBTest {
 		     var txn = db.beginTransaction(wo)) {
 			txn.put(key.getBytes(), value.getBytes());
 			txn.commit();
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// merge / delete with explicit WriteOptions, pinned cf get, cf flush
+	// -----------------------------------------------------------------------
+
+	@Test
+	void directMerge_withWriteOptions_allTiers_sumOperands(@TempDir Path dir) {
+		// Given
+		try (var db = openDbWithMergeOperator(dir);
+		     var wo = WriteOptions.newWriteOptions();
+		     var arena = Arena.ofConfined()) {
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
+			db.merge(wo, "views".getBytes(), encodeUint64(1));
+			db.merge(wo, directBuffer("views".getBytes()), directBuffer(encodeUint64(2)));
+
+			// When
+			db.merge(wo, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(4)));
+
+			// Then
+			assertThat(decodeUint64(db.get("views".getBytes()))).isEqualTo(7);
+		}
+	}
+
+	@Test
+	void directMerge_columnFamily_withWriteOptions_allTiers_sumOperands(@TempDir Path dir) {
+		// Given
+		try (var db = openDbWithMergeOperator(dir);
+		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var wo = WriteOptions.newWriteOptions();
+		     var arena = Arena.ofConfined()) {
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
+			db.merge(cf, wo, "views".getBytes(), encodeUint64(1));
+			db.merge(cf, wo, directBuffer("views".getBytes()), directBuffer(encodeUint64(2)));
+
+			// When
+			db.merge(cf, wo, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(4)));
+
+			// Then
+			assertThat(decodeUint64(db.get(cf, "views".getBytes()))).isEqualTo(7);
+		}
+	}
+
+	@Test
+	void directDelete_columnFamily_bytes_removesKey(@TempDir Path dir) {
+		// Given
+		try (var db = openDb(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var wo = WriteOptions.newWriteOptions()) {
+			db.put(cf, "k1".getBytes(), "v".getBytes());
+			db.put(cf, "k2".getBytes(), "v".getBytes());
+
+			// When
+			db.delete(cf, "k1".getBytes());
+			db.delete(cf, wo, "k2".getBytes());
+
+			// Then
+			assertThat(db.get(cf, "k1".getBytes())).isNull();
+			assertThat(db.get(cf, "k2".getBytes())).isNull();
+		}
+	}
+
+	@Test
+	void directGet_columnFamily_pinned_returnsMappedValue_whenPresent(@TempDir Path dir) {
+		// Given
+		try (var db = openDb(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var arena = Arena.ofConfined()) {
+			db.put(cf, "k".getBytes(), "value".getBytes());
+			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "k".getBytes());
+
+			// When
+			Long size = db.get(cf, key, seg -> seg.byteSize());
+
+			// Then
+			assertThat(size).isEqualTo(5L);
+		}
+	}
+
+	@Test
+	void flush_columnFamily_writesSstFile(@TempDir Path dir) throws java.io.IOException {
+		// Given
+		try (var db = openDb(dir);
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var fo = FlushOptions.newFlushOptions()) {
+			db.put(cf, "k".getBytes(), "v".getBytes());
+
+			// When
+			db.flush(cf, fo);
+
+			// Then
+			try (var files = java.nio.file.Files.list(dir)) {
+				assertThat(files.filter(f -> f.toString().endsWith(".sst"))).isNotEmpty();
+			}
 		}
 	}
 }

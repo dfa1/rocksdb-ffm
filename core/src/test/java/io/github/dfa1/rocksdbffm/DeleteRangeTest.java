@@ -5,9 +5,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class DeleteRangeTest {
@@ -76,8 +76,8 @@ class DeleteRangeTest {
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
 
-			var start = ByteBuffer.allocateDirect(1).put((byte) 'b').flip();
-			var end = ByteBuffer.allocateDirect(1).put((byte) 'c').flip();
+			var start = directBuffer("b");
+			var end = directBuffer("c");
 
 			// When
 			db.deleteRange(start, end);
@@ -178,8 +178,8 @@ class DeleteRangeTest {
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
 
-			var start = ByteBuffer.allocateDirect(1).put((byte) 'b').flip();
-			var end = ByteBuffer.allocateDirect(1).put((byte) 'd').flip();
+			var start = directBuffer("b");
+			var end = directBuffer("d");
 
 			batch.deleteRange(start, end);
 

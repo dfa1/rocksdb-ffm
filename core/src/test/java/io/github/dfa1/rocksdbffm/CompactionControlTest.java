@@ -7,6 +7,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
@@ -83,8 +84,8 @@ class CompactionControlTest {
 
 			byte[] startBytes = "a".getBytes();
 			byte[] endBytes = "b".getBytes();
-			ByteBuffer start = ByteBuffer.allocateDirect(startBytes.length).put(startBytes).flip();
-			ByteBuffer end = ByteBuffer.allocateDirect(endBytes.length).put(endBytes).flip();
+			ByteBuffer start = directBuffer(startBytes);
+			ByteBuffer end = directBuffer(endBytes);
 
 			// When
 			db.compactRange(start, end);

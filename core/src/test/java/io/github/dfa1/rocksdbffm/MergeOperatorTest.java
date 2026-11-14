@@ -6,12 +6,14 @@ import org.junit.jupiter.api.io.TempDir;
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.decodeUint64;
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
+import static io.github.dfa1.rocksdbffm.TestBytes.encodeUint64;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -71,7 +73,7 @@ class MergeOperatorTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add());
 		     var db = RocksDB.openReadWrite(opts, dir)) {
-			ByteBuffer key = ByteBuffer.allocateDirect(5).put("views".getBytes()).flip();
+			ByteBuffer key = directBuffer("views");
 			db.merge(key.duplicate(), directBuffer(encodeUint64(1)));
 			db.merge(key.duplicate(), directBuffer(encodeUint64(4)));
 
@@ -168,7 +170,7 @@ class MergeOperatorTest {
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts))) {
-			ByteBuffer key = ByteBuffer.allocateDirect(5).put("views".getBytes()).flip();
+			ByteBuffer key = directBuffer("views");
 			db.merge(cf, key.duplicate(), directBuffer(encodeUint64(1)));
 			db.merge(cf, key.duplicate(), directBuffer(encodeUint64(4)));
 
@@ -233,7 +235,7 @@ class MergeOperatorTest {
 				.setMergeOperator(MergeOperator.uint64Add());
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var wo = WriteOptions.newWriteOptions()) {
-			ByteBuffer key = ByteBuffer.allocateDirect(5).put("views".getBytes()).flip();
+			ByteBuffer key = directBuffer("views");
 			db.merge(wo, key.duplicate(), directBuffer(encodeUint64(1)));
 			db.merge(wo, key.duplicate(), directBuffer(encodeUint64(4)));
 
@@ -319,7 +321,7 @@ class MergeOperatorTest {
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
 		     var wo = WriteOptions.newWriteOptions()) {
-			ByteBuffer key = ByteBuffer.allocateDirect(5).put("views".getBytes()).flip();
+			ByteBuffer key = directBuffer("views");
 			db.merge(cf, wo, key.duplicate(), directBuffer(encodeUint64(1)));
 			db.merge(cf, wo, key.duplicate(), directBuffer(encodeUint64(4)));
 
@@ -353,18 +355,6 @@ class MergeOperatorTest {
 			// Then
 			assertThat(total).isEqualTo(5);
 		}
-	}
-
-	private static ByteBuffer directBuffer(byte[] bytes) {
-		return (ByteBuffer) ByteBuffer.allocateDirect(bytes.length).put(bytes).flip();
-	}
-
-	private static byte[] encodeUint64(long value) {
-		return ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN).putLong(value).array();
-	}
-
-	private static long decodeUint64(byte[] bytes) {
-		return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getLong();
 	}
 
 	// -----------------------------------------------------------------------

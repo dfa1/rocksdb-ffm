@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -437,8 +438,8 @@ class TtlDBTest {
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
-			var start = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
-			var end = ByteBuffer.allocateDirect(1).put((byte) 'b').flip();
+			var start = directBuffer("a");
+			var end = directBuffer("b");
 
 			// When
 			db.deleteRange(start, end);
@@ -643,8 +644,8 @@ class TtlDBTest {
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60))) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
-			var start = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
-			var end = ByteBuffer.allocateDirect(1).put((byte) 'b').flip();
+			var start = directBuffer("a");
+			var end = directBuffer("b");
 
 			// When
 			db.compactRange(start, end);
@@ -855,13 +856,13 @@ class TtlDBTest {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
-			var key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
-			var value = ByteBuffer.allocateDirect(1).put((byte) 'v').flip();
+			var key = directBuffer("k");
+			var value = directBuffer("v");
 
 			// When
 			db.put(cf, key, value);
 
-			var getKey = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			var getKey = directBuffer("k");
 			var getVal = ByteBuffer.allocateDirect(32);
 
 			// Then
@@ -911,7 +912,7 @@ class TtlDBTest {
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
-			var key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			var key = directBuffer("k");
 
 			// When
 			db.delete(cf, key);
@@ -968,8 +969,8 @@ class TtlDBTest {
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
-			var start = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
-			var end = ByteBuffer.allocateDirect(1).put((byte) 'b').flip();
+			var start = directBuffer("a");
+			var end = directBuffer("b");
 
 			// When
 			db.deleteRange(cf, start, end);
@@ -1041,7 +1042,7 @@ class TtlDBTest {
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openTtl(dbOpts, dir, Duration.ofSeconds(60));
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
-			var key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			var key = directBuffer("k");
 
 			// When
 			var result = db.keyMayExist(cf, key);

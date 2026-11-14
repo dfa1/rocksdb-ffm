@@ -8,6 +8,7 @@ import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class WriteOptionsTest {
@@ -218,8 +219,8 @@ class WriteOptionsTest {
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
-			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
-			ByteBuffer value = ByteBuffer.allocateDirect(1).put((byte) 'v').flip();
+			ByteBuffer key = directBuffer("k");
+			ByteBuffer value = directBuffer("v");
 
 			// When
 			db.put(wo, key, value);
@@ -281,8 +282,8 @@ class WriteOptionsTest {
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
-			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
-			ByteBuffer value = ByteBuffer.allocateDirect(1).put((byte) 'v').flip();
+			ByteBuffer key = directBuffer("k");
+			ByteBuffer value = directBuffer("v");
 
 			// When
 			db.put(cf, wo, key, value);
@@ -366,7 +367,7 @@ class WriteOptionsTest {
 			// delete_withExplicitDisableWal_isAbsentFromWal for why.
 			db.put(wo, "k".getBytes(), "v".getBytes());
 			SequenceNumber start = db.getLatestSequenceNumber();
-			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			ByteBuffer key = directBuffer("k");
 
 			// When
 			db.delete(wo, key);
@@ -430,7 +431,7 @@ class WriteOptionsTest {
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			db.put(cf, wo, "k".getBytes(), "v".getBytes());
 			SequenceNumber start = db.getLatestSequenceNumber();
-			ByteBuffer key = ByteBuffer.allocateDirect(1).put((byte) 'k').flip();
+			ByteBuffer key = directBuffer("k");
 
 			// When
 			db.delete(cf, wo, key);
@@ -495,8 +496,8 @@ class WriteOptionsTest {
 			db.put(wo, "a".getBytes(), "1".getBytes());
 			db.put(wo, "b".getBytes(), "2".getBytes());
 			SequenceNumber start = db.getLatestSequenceNumber();
-			ByteBuffer startKey = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
-			ByteBuffer endKey = ByteBuffer.allocateDirect(1).put((byte) 'c').flip();
+			ByteBuffer startKey = directBuffer("a");
+			ByteBuffer endKey = directBuffer("c");
 
 			// When
 			db.deleteRange(wo, startKey, endKey);
@@ -562,8 +563,8 @@ class WriteOptionsTest {
 			db.put(cf, wo, "a".getBytes(), "1".getBytes());
 			db.put(cf, wo, "b".getBytes(), "2".getBytes());
 			SequenceNumber start = db.getLatestSequenceNumber();
-			ByteBuffer startKey = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
-			ByteBuffer endKey = ByteBuffer.allocateDirect(1).put((byte) 'c').flip();
+			ByteBuffer startKey = directBuffer("a");
+			ByteBuffer endKey = directBuffer("c");
 
 			// When
 			db.deleteRange(cf, wo, startKey, endKey);

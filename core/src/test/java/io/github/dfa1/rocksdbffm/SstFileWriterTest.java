@@ -6,10 +6,10 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.List;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -156,8 +156,8 @@ class SstFileWriterTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var writer = SstFileWriter.newSstFileWriter(opts)) {
 			writer.open(sstPath);
-			var key = ByteBuffer.allocateDirect(3).put("key".getBytes()).flip();
-			var value = ByteBuffer.allocateDirect(5).put("value".getBytes()).flip();
+			var key = directBuffer("key");
+			var value = directBuffer("value");
 			writer.put(key, value);
 			writer.finish();
 		}
@@ -239,7 +239,7 @@ class SstFileWriterTest {
 		try (var opts = Options.newOptions();
 		     var writer = SstFileWriter.newSstFileWriter(opts)) {
 			writer.open(sstPath);
-			var key = ByteBuffer.allocateDirect(3).put("key".getBytes()).flip();
+			var key = directBuffer("key");
 			writer.delete(key);
 			writer.finish();
 		}
@@ -329,8 +329,8 @@ class SstFileWriterTest {
 		try (var opts = Options.newOptions();
 		     var writer = SstFileWriter.newSstFileWriter(opts)) {
 			writer.open(sstPath);
-			var start = ByteBuffer.allocateDirect(1).put((byte) 'a').flip();
-			var end = ByteBuffer.allocateDirect(1).put((byte) 'b').flip();
+			var start = directBuffer("a");
+			var end = directBuffer("b");
 			writer.deleteRange(start, end);
 			writer.finish();
 		}

@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 
+import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -276,6 +277,23 @@ class ReadBatchTest {
 		}
 	}
 
+	@Test
+	void get_byteBuffer_exceedsCapacity_throws(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		     var batch = ReadBatch.create(db, 1);
+		     var ro = ReadOptions.newReadOptions()) {
+			var keys = List.of(ByteBuffer.allocateDirect(1), ByteBuffer.allocateDirect(1));
+			var values = List.of(ByteBuffer.allocateDirect(8), ByteBuffer.allocateDirect(8));
+
+			// When
+			var thrown = assertThatThrownBy(() -> batch.get(ro, keys, values));
+
+			// Then
+			thrown.isInstanceOf(IllegalArgumentException.class);
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// ByteBuffer tier
 	// -----------------------------------------------------------------------
@@ -357,10 +375,5 @@ class ReadBatchTest {
 		byte[] out = new byte[(int) value.byteSize()];
 		MemorySegment.copy(value, 0, MemorySegment.ofArray(out), 0, value.byteSize());
 		return new String(out, StandardCharsets.UTF_8);
-	}
-
-	private static ByteBuffer directBuffer(String s) {
-		byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
-		return ByteBuffer.allocateDirect(bytes.length).put(bytes).flip();
 	}
 }
