@@ -146,12 +146,9 @@ public final class ReadOptions extends NativeObjectWithChildren {
 	// call. Closed alongside the native pointer in tryClose.
 	private final Arena boundsArena;
 
-	/// The snapshot installed by [#setSnapshot(Snapshot)], which the native struct holds a raw pointer to.
+	/// The snapshot installed by [#setSnapshot(Snapshot)], which the native struct holds a raw pointer to. Reads
+	/// through [#readPtr()] throw once it is closed, instead of dereferencing the freed snapshot.
 	private volatile Snapshot snapshot;
-
-	/// Set when [#snapshot] was released while installed; reads through these options then throw instead of
-	/// dereferencing the freed snapshot.
-	private volatile boolean snapshotReleased;
 
 	private ReadOptions(MemorySegment ptr) {
 		super(ptr);
@@ -180,15 +177,7 @@ public final class ReadOptions extends NativeObjectWithChildren {
 		try {
 			MemorySegment snapPtr = (snapshot == null) ? MemorySegment.NULL : snapshot.ptr();
 			MH_SET_SNAPSHOT.invokeExact(ptr(), snapPtr);
-			Snapshot previous = this.snapshot;
-			if (previous != null) {
-				previous.uninstall(this);
-			}
 			this.snapshot = snapshot;
-			this.snapshotReleased = false;
-			if (snapshot != null) {
-				snapshot.install(this);
-			}
 			return this;
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("readoptions setSnapshot failed", t);
@@ -511,35 +500,15 @@ public final class ReadOptions extends NativeObjectWithChildren {
 	/// @throws IllegalStateException if closed, or the installed snapshot was closed
 	MemorySegment readPtr() {
 		MemorySegment ptr = ptr();
-		if (snapshotReleased) {
+		Snapshot installed = snapshot;
+		if (installed != null && installed.isClosed()) {
 			throw new IllegalStateException("the snapshot set on these ReadOptions was closed: set another or null");
 		}
 		return ptr;
 	}
 
-	/// Called by `snapshot`'s release: unhooks the freed pointer from the native struct and poisons reads.
-	///
-	/// @param released the snapshot being released
-	void snapshotReleased(Snapshot released) {
-		if (snapshot != released) {
-			return;
-		}
-		snapshotReleased = true;
-		try {
-			MH_SET_SNAPSHOT.invokeExact(ptr(), MemorySegment.NULL);
-		} catch (IllegalStateException closed) {
-			// closed concurrently: nothing left to unhook, and the snapshot's own release must still run
-		} catch (Throwable t) {
-			throw NativeCalls.wrapInvokeFailure("readoptions setSnapshot failed", t);
-		}
-	}
-
 	@Override
 	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		Snapshot installed = snapshot;
-		if (installed != null) {
-			installed.uninstall(this);
-		}
 		MH_DESTROY.invokeExact(ptr);
 		boundsArena.close();
 	}

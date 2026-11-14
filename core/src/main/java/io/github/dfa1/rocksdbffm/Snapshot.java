@@ -4,8 +4,6 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /// FFM wrapper for `rocksdb_snapshot_t`.
 ///
@@ -86,22 +84,6 @@ public final class Snapshot extends NativeObject {
 		owningTransaction.registerChild(this);
 	}
 
-	/// The [ReadOptions] this snapshot is installed in via [ReadOptions#setSnapshot(Snapshot)]; their native
-	/// structs hold a raw pointer to it, so releasing it poisons them.
-	private final Set<ReadOptions> installedIn = ConcurrentHashMap.newKeySet();
-
-	void install(ReadOptions options) {
-		installedIn.add(options);
-		if (isClosed()) {
-			// Released between the caller's ptr() and here: the sweep may have missed this one.
-			options.snapshotReleased(this);
-		}
-	}
-
-	void uninstall(ReadOptions options) {
-		installedIn.remove(options);
-	}
-
 	/// Returns the sequence number at which this snapshot was taken.
 	/// Useful for ordering and debugging.
 	///
@@ -112,13 +94,6 @@ public final class Snapshot extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
-		for (ReadOptions options : installedIn) {
-			try {
-				options.snapshotReleased(this);
-			} catch (RuntimeException e) {
-				// the release below must run whatever happened to the options
-			}
-		}
 		if (MemorySegment.NULL.equals(dbPtr)) {
 			// Borrowed from a transaction: only the malloc'd wrapper is ours to free.
 			owningDb.unregisterChild(this);
