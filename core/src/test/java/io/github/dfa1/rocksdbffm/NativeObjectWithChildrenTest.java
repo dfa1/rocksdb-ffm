@@ -170,4 +170,47 @@ class NativeObjectWithChildrenTest {
 			return true;
 		}
 	}
+
+	@Test
+	void parentClose_whileAnotherThreadIsStillClosingAChild_waitsForTheChild() throws Exception {
+		// Given — a child whose release is slow and already running on another thread
+		var order = new CopyOnWriteArrayList<String>();
+		var childStarted = new CountDownLatch(1);
+		var childMayFinish = new CountDownLatch(1);
+		var parent = new NativeObjectWithChildren(fakePtr(0x1)) {
+			@Override
+			protected void tryCloseResource(MemorySegment ptr) {
+				order.add("parent");
+			}
+		};
+		var child = new NativeObject(fakePtr(0x2)) {
+			@Override
+			protected void tryClose(MemorySegment ptr) {
+				childStarted.countDown();
+				try {
+					childMayFinish.await();
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+				order.add("child");
+			}
+		};
+		parent.registerChild(child);
+		try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+			var closingChild = executor.submit(child::close);
+			assertThat(childStarted.await(5, TimeUnit.SECONDS)).isTrue();
+
+			// When
+			var closingParent = executor.submit(parent::close);
+			Thread.sleep(200);
+			var parentFinishedEarly = closingParent.isDone();
+			childMayFinish.countDown();
+			closingChild.get(5, TimeUnit.SECONDS);
+			closingParent.get(5, TimeUnit.SECONDS);
+
+			// Then
+			assertThat(parentFinishedEarly).isFalse();
+			assertThat(order).containsExactly("child", "parent");
+		}
+	}
 }
