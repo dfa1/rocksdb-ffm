@@ -83,14 +83,17 @@ final class RocksDBTracingOperationsBindings {
 	private RocksDBTracingOperationsBindings() {
 	}
 
-	/// [#startTrace(RocksDBTracingOperations, Env, EnvOptions, TraceOptions, Path)] using the
+	/// [#startTrace(RocksDBTracingOperations, Path, Env, EnvOptions, TraceOptions)] using the
 	/// immortal default [Env]/[EnvOptions] pair.
-	static void startTrace(RocksDBTracingOperations db, TraceOptions traceOptions, Path tracePath) {
-		startTrace(db, Env.DEFAULTS, EnvOptions.DEFAULTS, traceOptions, tracePath);
+	static void startTrace(RocksDBTracingOperations db, Path tracePath, TraceOptions traceOptions) {
+		startTrace(db, tracePath, Env.DEFAULTS, EnvOptions.DEFAULTS, traceOptions);
 	}
 
-	static void startTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,
-			TraceOptions traceOptions, Path tracePath) {
+	static void startTrace(RocksDBTracingOperations db,
+			Path tracePath,
+			Env env,
+			EnvOptions envOptions,
+			TraceOptions traceOptions) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(tracePath.toString());
@@ -111,14 +114,17 @@ final class RocksDBTracingOperationsBindings {
 		}
 	}
 
-	/// [#startIoTrace(RocksDBTracingOperations, Env, EnvOptions, TraceOptions, Path)] using the
+	/// [#startIoTrace(RocksDBTracingOperations, Path, Env, EnvOptions, TraceOptions)] using the
 	/// immortal default [Env]/[EnvOptions] pair.
-	static void startIoTrace(RocksDBTracingOperations db, TraceOptions traceOptions, Path tracePath) {
-		startIoTrace(db, Env.DEFAULTS, EnvOptions.DEFAULTS, traceOptions, tracePath);
+	static void startIoTrace(RocksDBTracingOperations db, Path tracePath, TraceOptions traceOptions) {
+		startIoTrace(db, tracePath, Env.DEFAULTS, EnvOptions.DEFAULTS, traceOptions);
 	}
 
-	static void startIoTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,
-			TraceOptions traceOptions, Path tracePath) {
+	static void startIoTrace(RocksDBTracingOperations db,
+			Path tracePath,
+			Env env,
+			EnvOptions envOptions,
+			TraceOptions traceOptions) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(tracePath.toString());
@@ -139,14 +145,17 @@ final class RocksDBTracingOperationsBindings {
 		}
 	}
 
-	/// [#startBlockCacheTrace(RocksDBTracingOperations, Env, EnvOptions, TraceOptions, Path)]
+	/// [#startBlockCacheTrace(RocksDBTracingOperations, Path, Env, EnvOptions, TraceOptions)]
 	/// using the immortal default [Env]/[EnvOptions] pair.
-	static void startBlockCacheTrace(RocksDBTracingOperations db, TraceOptions traceOptions, Path tracePath) {
-		startBlockCacheTrace(db, Env.DEFAULTS, EnvOptions.DEFAULTS, traceOptions, tracePath);
+	static void startBlockCacheTrace(RocksDBTracingOperations db, Path tracePath, TraceOptions traceOptions) {
+		startBlockCacheTrace(db, tracePath, Env.DEFAULTS, EnvOptions.DEFAULTS, traceOptions);
 	}
 
-	static void startBlockCacheTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,
-			TraceOptions traceOptions, Path tracePath) {
+	static void startBlockCacheTrace(RocksDBTracingOperations db,
+			Path tracePath,
+			Env env,
+			EnvOptions envOptions,
+			TraceOptions traceOptions) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(tracePath.toString());
@@ -158,15 +167,21 @@ final class RocksDBTracingOperationsBindings {
 		}
 	}
 
-	/// [#startBlockCacheTrace(RocksDBTracingOperations, Env, EnvOptions, BlockCacheTraceOptions,
-	/// BlockCacheTraceWriterOptions, Path)] using the immortal default [Env]/[EnvOptions] pair.
-	static void startBlockCacheTrace(RocksDBTracingOperations db, BlockCacheTraceOptions traceOptions,
-			BlockCacheTraceWriterOptions writerOptions, Path tracePath) {
-		startBlockCacheTrace(db, Env.DEFAULTS, EnvOptions.DEFAULTS, traceOptions, writerOptions, tracePath);
+	/// [#startBlockCacheTrace(RocksDBTracingOperations, Path, Env, EnvOptions, BlockCacheTraceOptions,
+	/// BlockCacheTraceWriterOptions)] using the immortal default [Env]/[EnvOptions] pair.
+	static void startBlockCacheTrace(RocksDBTracingOperations db,
+			Path tracePath,
+			BlockCacheTraceOptions traceOptions,
+			BlockCacheTraceWriterOptions writerOptions) {
+		startBlockCacheTrace(db, tracePath, Env.DEFAULTS, EnvOptions.DEFAULTS, traceOptions, writerOptions);
 	}
 
-	static void startBlockCacheTrace(RocksDBTracingOperations db, Env env, EnvOptions envOptions,
-			BlockCacheTraceOptions traceOptions, BlockCacheTraceWriterOptions writerOptions, Path tracePath) {
+	static void startBlockCacheTrace(RocksDBTracingOperations db,
+			Path tracePath,
+			Env env,
+			EnvOptions envOptions,
+			BlockCacheTraceOptions traceOptions,
+			BlockCacheTraceWriterOptions writerOptions) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(tracePath.toString());

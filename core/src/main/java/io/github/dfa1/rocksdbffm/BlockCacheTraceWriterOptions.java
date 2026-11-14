@@ -8,7 +8,7 @@ import java.lang.invoke.MethodHandle;
 /// FFM wrapper for `rocksdb_block_cache_trace_writer_options_t`.
 ///
 /// Controls trace-file rollover for
-/// [RocksDBTracingOperations#startBlockCacheTrace(BlockCacheTraceOptions, BlockCacheTraceWriterOptions, java.nio.file.Path)].
+/// [RocksDBTracingOperations#startBlockCacheTrace(java.nio.file.Path, BlockCacheTraceOptions, BlockCacheTraceWriterOptions)].
 /// May be closed immediately after being passed to `startBlockCacheTrace` -- RocksDB copies the
 /// underlying struct by value.
 public final class BlockCacheTraceWriterOptions extends NativeObject {

@@ -35,7 +35,7 @@ class JfrEventNotifierTest {
 		try (var recording = startRecording(FLUSH, MEMTABLE_SEALED)) {
 			try (var opts = Options.newOptions().setCreateIfMissing(true)
 					.addEventListener(JfrEventNotifier.create());
-			     var db = RocksDB.openReadWrite(opts, dir.resolve("db"))) {
+			     var db = RocksDB.openReadWrite(dir.resolve("db"), opts)) {
 				db.put("k".getBytes(), "v".getBytes());
 
 				// When
@@ -68,7 +68,7 @@ class JfrEventNotifierTest {
 			     var sfm = SstFileManager.create(env);
 			     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sfm)
 					     .addEventListener(JfrEventNotifier.create(sfm));
-			     var db = RocksDB.openReadWrite(opts, dir.resolve("db"))) {
+			     var db = RocksDB.openReadWrite(dir.resolve("db"), opts)) {
 				db.put("k".getBytes(), "v".getBytes());
 				sfm.close();
 
@@ -97,7 +97,7 @@ class JfrEventNotifierTest {
 			     var sfm = SstFileManager.create(env);
 			     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sfm)
 					     .addEventListener(JfrEventNotifier.create(sfm));
-			     var db = RocksDB.openReadWrite(opts, dir.resolve("db"))) {
+			     var db = RocksDB.openReadWrite(dir.resolve("db"), opts)) {
 				for (String value : List.of("v1", "v2")) {
 					db.put("k".getBytes(), value.getBytes());
 					flush(db);
@@ -162,7 +162,7 @@ class JfrEventNotifierTest {
 					     .setLevel0StopWritesTrigger(999_999)
 					     .addEventListener(notifier)
 					     .addEventListener(probe);
-			     var db = RocksDB.openReadWrite(opts, dir.resolve("db" + attempt))) {
+			     var db = RocksDB.openReadWrite(dir.resolve("db" + attempt), opts)) {
 				db.put("k".getBytes(), "v1".getBytes());
 				flush(db);
 				db.put("k".getBytes(), "v2".getBytes());
@@ -273,7 +273,7 @@ class JfrEventNotifierTest {
 			     var sfm = SstFileManager.create(env).setMaxAllowedSpaceUsage(MemorySize.ofBytes(1));
 			     var opts = Options.newOptions().setCreateIfMissing(true).setSstFileManager(sfm)
 					     .addEventListener(JfrEventNotifier.create(sfm));
-			     var db = RocksDB.openReadWrite(opts, dir.resolve("db"))) {
+			     var db = RocksDB.openReadWrite(dir.resolve("db"), opts)) {
 				db.put("k".getBytes(), "v".getBytes());
 
 				// When
@@ -321,7 +321,7 @@ class JfrEventNotifierTest {
 		try (var recording = startRecording(INGESTED)) {
 			try (var opts = Options.newOptions().setCreateIfMissing(true)
 					.addEventListener(JfrEventNotifier.create());
-			     var db = RocksDB.openReadWrite(opts, dir.resolve("db"))) {
+			     var db = RocksDB.openReadWrite(dir.resolve("db"), opts)) {
 
 				// When
 				db.ingestExternalFile(sst);
@@ -352,7 +352,7 @@ class JfrEventNotifierTest {
 		try (var _ = startRecording(FLUSH);
 		     var opts = Options.newOptions().setCreateIfMissing(true)
 				     .addEventListener(notifier).addEventListener(probe);
-		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"))) {
+		     var db = RocksDB.openReadWrite(dir.resolve("db"), opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -377,7 +377,7 @@ class JfrEventNotifierTest {
 		};
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.addEventListener(notifier).addEventListener(probe);
-		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"))) {
+		     var db = RocksDB.openReadWrite(dir.resolve("db"), opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When

@@ -57,7 +57,7 @@ class CompressionTypeTest {
 		try (Options opts = Options.newOptions()
 				.setCreateIfMissing(true)
 				.setCompression(CompressionType.NO_COMPRESSION);
-		     ReadWriteDB db = RocksDB.openReadWrite(opts, dir)) {
+		     ReadWriteDB db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
 		}
@@ -70,7 +70,7 @@ class CompressionTypeTest {
 		try (Options opts = Options.newOptions()
 				.setCreateIfMissing(true)
 				.setCompression(type);
-		     ReadWriteDB db = RocksDB.openReadWrite(opts, dir)) {
+		     ReadWriteDB db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
 		}
@@ -91,7 +91,7 @@ class CompressionTypeTest {
 		try (Options opts = Options.newOptions()
 				.setCreateIfMissing(true)
 				.setCompression(CompressionType.NO_COMPRESSION);
-		     ReadWriteDB db = RocksDB.openReadWrite(opts, noCompressionDir);
+		     ReadWriteDB db = RocksDB.openReadWrite(noCompressionDir, opts);
 		     FlushOptions flushOptions = FlushOptions.newFlushOptions()) {
 			for (int i = 0; i < 100; i++) {
 				db.put(("k" + i).getBytes(), value);
@@ -104,7 +104,7 @@ class CompressionTypeTest {
 		try (Options opts = Options.newOptions()
 				.setCreateIfMissing(true)
 				.setCompression(type);
-		     ReadWriteDB db = RocksDB.openReadWrite(opts, compressedDir);
+		     ReadWriteDB db = RocksDB.openReadWrite(compressedDir, opts);
 		     FlushOptions flushOptions = FlushOptions.newFlushOptions()) {
 			for (int i = 0; i < 100; i++) {
 				db.put(("k" + i).getBytes(), value);

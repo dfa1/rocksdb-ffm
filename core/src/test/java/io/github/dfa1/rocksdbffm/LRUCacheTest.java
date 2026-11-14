@@ -112,7 +112,7 @@ class LRUCacheTest {
 		var cache = LRUCache.newLRUCache(MemorySize.ofMB(16));
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setTableFormatConfig(BlockBasedTableOptions.newBlockBasedConfig().setBlockCache(cache));
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put("k".getBytes(), "v".getBytes());
 			db.get("k".getBytes());
 		}
@@ -134,7 +134,7 @@ class LRUCacheTest {
 					 .setCacheIndexAndFilterBlocks(true)
 					 .setFilterPolicy(filter);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setTableFormatConfig(tbl);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			for (int i = 0; i < 100; i++) {
 				db.put(("key-" + i).getBytes(), ("val-" + i).getBytes());
 			}

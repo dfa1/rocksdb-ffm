@@ -28,7 +28,7 @@ class EnvOptionsTest {
 		}
 
 		// When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir.resolve("db"))) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir.resolve("db"), dbOpts)) {
 			db.ingestExternalFile(List.of(sstPath));
 			var result = db.get("aaa".getBytes());
 

@@ -26,7 +26,7 @@ class CompactionFilterTest {
 		CompactionFilter.FilterFn keepAll = (level, key, existingValue) -> CompactionFilter.FilterDecision.keep();
 		try (var filter = CompactionFilter.create("keep-all", keepAll);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("a"), bytes("1"));
 			db.put(bytes("b"), bytes("2"));
 
@@ -50,7 +50,7 @@ class CompactionFilterTest {
 		};
 		try (var filter = CompactionFilter.create("drop-prefixed", dropTombstonePrefixed);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("drop-1"), bytes("x"));
 			db.put(bytes("drop-2"), bytes("y"));
 			db.put(bytes("keep-1"), bytes("z"));
@@ -75,7 +75,7 @@ class CompactionFilterTest {
 		};
 		try (var filter = CompactionFilter.create("upper-case", upperCase);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("k"), bytes("hello"));
 
 			// When
@@ -99,7 +99,7 @@ class CompactionFilterTest {
 		int keyCount = 200;
 		try (var filter = CompactionFilter.create("upper-case-many", upperCase);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			for (int i = 0; i < keyCount; i++) {
 				// triangular-wave size: grows for the first half of keys, shrinks for the rest
 				int size = 1 + (i < keyCount / 2 ? i : keyCount - i);
@@ -125,7 +125,7 @@ class CompactionFilterTest {
 		};
 		try (var filter = CompactionFilter.create("throwing", throwing);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("k"), bytes("v"));
 
 			// When
@@ -161,7 +161,7 @@ class CompactionFilterTest {
 		CompactionFilter.FilterFn removeAll = (level, key, existingValue) -> CompactionFilter.FilterDecision.remove();
 		try (var filter = CompactionFilter.create("remove-all", removeAll).setIgnoreSnapshots(false);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("a"), bytes("1"));
 			db.put(bytes("b"), bytes("2"));
 
@@ -184,7 +184,7 @@ class CompactionFilterTest {
 		};
 		try (var filter = CompactionFilter.create("capturing-empty", capturing);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("k"), bytes(""));
 
 			// When
@@ -219,7 +219,7 @@ class CompactionFilterTest {
 		};
 		try (var filter = CompactionFilter.create("capturing", capturing);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setCompactionFilter(filter);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			db.put(bytes("k"), bytes("expected-value"));
 
 			// When

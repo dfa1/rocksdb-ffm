@@ -37,7 +37,7 @@ class FaultInjectionTest {
 
 		// Given
 		try (var options = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(options, dir);
+		     var db = RocksDB.openReadWrite(dir, options);
 		     var flushOptions = FlushOptions.newFlushOptions().setWait(true)) {
 			db.put("k".getBytes(), "v".getBytes());
 			Files.setPosixFilePermissions(dir, READ_EXECUTE_ONLY);

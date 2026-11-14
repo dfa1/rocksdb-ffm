@@ -73,13 +73,13 @@ The returned database owns the column family handles: `getColumnFamily(ColumnFam
 
 | Factory                                                                       | Column families? | Returns                   |
 |:------------------------------------------------------------------------------|:-----------------|:--------------------------|
-| `openReadWrite(Path)` / `(Options, Path)`                                      | yes               | `ReadWriteDB`             |
-| `openReadOnly(Path)` / `(Options, Path)` / `(Options, Path, boolean errorIfWalFileExists)` | yes  | `ReadOnlyDB`  |
-| `openTtl(Path, Duration)` / `(Options, Path, Duration)`                        | yes               | `TtlDB`                   |
-| `openSecondary(Options, Path primary, Path secondary)`                         | yes               | `SecondaryDB`             |
-| `openTransaction(Options, TransactionDBOptions, Path)`                         | yes               | `TransactionDB`           |
-| `openOptimistic(Options, Path)`                                                | yes               | `OptimisticTransactionDB` |
-| `listColumnFamilies(Options, Path)`                                            | —                 | `List<ColumnFamilyName>`  |
+| `openReadWrite(Path)` / `(Path, Options)`                                      | yes               | `ReadWriteDB`             |
+| `openReadOnly(Path)` / `(Path, Options)` / `(Path, Options, boolean errorIfWalFileExists)` | yes  | `ReadOnlyDB`  |
+| `openTtl(Path, Duration)` / `(Path, Options, Duration)`                        | yes               | `TtlDB`                   |
+| `openSecondary(Path primary, Path secondary, Options)`                         | yes               | `SecondaryDB`             |
+| `openTransaction(Path, Options, TransactionDBOptions)`                         | yes               | `TransactionDB`           |
+| `openOptimistic(Path, Options)`                                                | yes               | `OptimisticTransactionDB` |
+| `listColumnFamilies(Path, Options)`                                            | —                 | `List<ColumnFamilyName>`  |
 
 The `Path`-only forms use default options, so they fail if the database does not exist. To create it, pass
 `Options` with `setCreateIfMissing(true)`.
@@ -402,7 +402,7 @@ compaction, so close them promptly.
 overload across all three access tiers on those five types plus `ReadOnlyDB`; write methods
 (`put`/`delete`/`deleteRange`/`flush`) add the same overload on the five writable types.
 Reopening requires listing every existing column family, `default` included — for
-`SecondaryDB`, via `openSecondary(Options, Path primary, Path secondary, List<ColumnFamilyDescriptor>)`.
+`SecondaryDB`, via `openSecondary(Path primary, Path secondary, Options, List<ColumnFamilyDescriptor>)`.
 Handles are owned by the database, whether returned by the open or by `createColumnFamily`: they are
 released when it closes, and `dropColumnFamily` releases (and unregisters) the dropped one.
 
@@ -411,7 +411,7 @@ released when it closes, and `dropColumnFamily` releases (and unregisters) the d
 | Type                  | API                                                                                              |
 |:----------------------|:--------------------------------------------------------------------------------------------------|
 | `Checkpoint`          | `newCheckpoint(db)` for any `RocksDBReadOperations` implementor (`ReadWriteDB`/`TtlDB`/`ReadOnlyDB`/`SecondaryDB`/`OptimisticTransactionDB`); `exportTo(Path[, MemorySize logSizeForFlush])` |
-| `BackupEngine`        | `open(Options, Path)`, `open(BackupEngineOptions, Env)`; `createNewBackup(db[, boolean flushBeforeBackup])`, `getBackupInfo()`, `purgeOldBackups(int)`, `verifyBackup(BackupId)`, `restoreDbFromLatestBackup(...)`, `restoreDbFromBackup(BackupId, ...)` |
+| `BackupEngine`        | `open(Path, Options)`, `open(BackupEngineOptions, Env)`; `createNewBackup(db[, boolean flushBeforeBackup])`, `getBackupInfo()`, `purgeOldBackups(int)`, `verifyBackup(BackupId)`, `restoreDbFromLatestBackup(...)`, `restoreDbFromBackup(BackupId, ...)` |
 | `BackupEngineOptions` | `create(Path)`; `setShareTableFiles`, `setSync`, `setDestroyOldData`, `setBackupLogFiles`, `setBackupRateLimit`, `setRestoreRateLimit`, `setMaxBackgroundOperations`, `setCallbackTriggerIntervalSize`, `setMaxValidBackupsToOpen`, `setShareFilesWithChecksumNaming`, `setEnv` |
 | `BackupInfo`          | Record: `backupId()`, `timestamp()` (epoch seconds), `size()` (`MemorySize`), `numberOfFiles()`   |
 | `SstFileWriter`       | `newSstFileWriter(Options[, EnvOptions])`; `open(Path)`, `put`, `delete`, `deleteRange`, `finish()`, `fileSize()` — keys must be added in sorted order |

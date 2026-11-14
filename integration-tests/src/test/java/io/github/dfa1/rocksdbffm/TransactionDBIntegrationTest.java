@@ -12,7 +12,7 @@ class TransactionDBIntegrationTest {
 	private static TransactionDB openDb(Path path) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions()) {
-			return RocksDB.openTransaction(opts, txnDbOpts, path);
+			return RocksDB.openTransaction(path, opts, txnDbOpts);
 		}
 	}
 

@@ -18,7 +18,7 @@ import java.lang.invoke.MethodHandle;
 ///      Options opts = Options.newOptions()
 ///          .setCreateIfMissing(true)
 ///          .setSstFileManager(sfm)) {
-///     var db = RocksDB.openReadWrite(opts, path);
+///     var db = RocksDB.openReadWrite(path, opts);
 /// }
 /// ```
 ///

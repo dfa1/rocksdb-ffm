@@ -23,7 +23,7 @@ import java.lang.invoke.MethodHandle;
 ///
 /// ```
 /// try (Options opts = Options.newOptions().setCreateIfMissing(true);
-///      OptimisticTransactionDB db = RocksDB.openOptimistic(opts, path)) {
+///      OptimisticTransactionDB db = RocksDB.openOptimistic(path, opts)) {
 ///     try (WriteOptions wo = WriteOptions.newWriteOptions();
 ///          Transaction txn = db.beginTransaction(wo)) {
 ///         txn.put("key".getBytes(), "value".getBytes());

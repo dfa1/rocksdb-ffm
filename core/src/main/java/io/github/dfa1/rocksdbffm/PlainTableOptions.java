@@ -18,7 +18,7 @@ package io.github.dfa1.rocksdbffm;
 ///         .setPrefixExtractor(SliceTransform.newFixedPrefix(4))
 ///         .setTableFormatConfig(PlainTableOptions.newPlainTableOptions()
 ///                 .setEncodingType(PlainTableOptions.EncodingType.PREFIX))) {
-///     RocksDB db = RocksDB.openReadWrite(opts, path);
+///     RocksDB db = RocksDB.openReadWrite(path, opts);
 /// }
 /// ```
 public final class PlainTableOptions {

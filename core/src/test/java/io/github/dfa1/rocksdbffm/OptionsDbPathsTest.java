@@ -29,7 +29,7 @@ class OptionsDbPathsTest {
 		try (var options = Options.newOptions()
 				.setCreateIfMissing(true)
 				.setDbPaths(List.of(DbPath.of(hot, MemorySize.ofKB(1)), DbPath.of(cold, MemorySize.ofGB(1))));
-		     var db = RocksDB.openReadWrite(options, dbDir);
+		     var db = RocksDB.openReadWrite(dbDir, options);
 		     var flushOptions = FlushOptions.newFlushOptions().setWait(true)) {
 			for (int i = 0; i < 5; i++) {
 				db.put(("key" + i).getBytes(), value);
@@ -53,7 +53,7 @@ class OptionsDbPathsTest {
 		try (var options = Options.newOptions()
 				.setCreateIfMissing(true)
 				.setCfPaths(List.of(DbPath.of(cfDir, MemorySize.ofGB(1))));
-		     var db = RocksDB.openReadWrite(options, dbDir);
+		     var db = RocksDB.openReadWrite(dbDir, options);
 		     var flushOptions = FlushOptions.newFlushOptions().setWait(true)) {
 			db.put("key".getBytes(), value);
 			db.flush(flushOptions);

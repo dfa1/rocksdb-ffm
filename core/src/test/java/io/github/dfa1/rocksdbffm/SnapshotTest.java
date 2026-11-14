@@ -24,7 +24,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_readsDoNotSeeWritesAfterSnapshot(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("key".getBytes(), "before".getBytes());
 
 			// When — take snapshot, then overwrite the key
@@ -44,7 +44,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_readsDoNotSeeDeletesAfterSnapshot(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("key".getBytes(), "value".getBytes());
 
 			// When
@@ -63,7 +63,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_sequenceNumberIsNonNegative(@TempDir Path dir) {
 		// Given / When
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(), "v".getBytes());
 			try (Snapshot snap = db.getSnapshot()) {
 
@@ -76,7 +76,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_sequenceNumberIncreasesWithWrites(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			try (Snapshot snap1 = db.getSnapshot()) {
 				db.put("k".getBytes(), "v".getBytes());
 				try (Snapshot snap2 = db.getSnapshot()) {
@@ -95,7 +95,7 @@ class SnapshotTest {
 	@Test
 	void setSnapshot_null_clearsSnapshot(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     ReadOptions ro = ReadOptions.newReadOptions()) {
 			db.put("key".getBytes(), "v1".getBytes());
 
@@ -122,7 +122,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_iteratorDoesNotSeeWritesAfterSnapshot(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -153,7 +153,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_get_byteBuffer_isolatesFromWritesAfterSnapshot(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("key".getBytes(), "before".getBytes());
 
 			try (Snapshot snap = db.getSnapshot();
@@ -179,7 +179,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_get_memorySegment_isolatesFromWritesAfterSnapshot(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("key".getBytes(), "before".getBytes());
 
 			try (Snapshot snap = db.getSnapshot();
@@ -204,7 +204,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_get_mapper_isolatesFromWritesAfterSnapshot(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("key".getBytes(), "before".getBytes());
 
 			try (Snapshot snap = db.getSnapshot();
@@ -226,7 +226,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_get_cf_isolatesFromWritesAfterSnapshot(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "key".getBytes(), "before".getBytes());
 
@@ -272,7 +272,7 @@ class SnapshotTest {
 		// Given
 		try (var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
 		     var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir)) {
+		     var db = RocksDB.openTransaction(dir, opts, txnDbOpts)) {
 
 			db.put("key".getBytes(), "before".getBytes());
 
@@ -294,7 +294,7 @@ class SnapshotTest {
 	@Test
 	void snapshot_double_close(@TempDir Path dir) {
 		// Given — an already-closed snapshot
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			Snapshot snap = db.getSnapshot();
 			snap.close();
 
@@ -310,7 +310,7 @@ class SnapshotTest {
 	void snapshot_closedAfterOwningDb_doesNotCrash(@TempDir Path dir) {
 		// Given — a snapshot that is never explicitly closed by the caller
 		Options opts = Options.newOptions().setCreateIfMissing(true);
-		var db = RocksDB.openReadWrite(opts, dir);
+		var db = RocksDB.openReadWrite(dir, opts);
 		opts.close();
 		Snapshot snap = db.getSnapshot();
 
@@ -336,7 +336,7 @@ class SnapshotTest {
 		// Given
 		try (var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
 		     var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir);
+		     var db = RocksDB.openTransaction(dir, opts, txnDbOpts);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txnOpts = TransactionOptions.newTransactionOptions().setSetSnapshot(true)) {
 
@@ -360,7 +360,7 @@ class SnapshotTest {
 		// Given
 		try (var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
 		     var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir);
+		     var db = RocksDB.openTransaction(dir, opts, txnDbOpts);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txnOpts = TransactionOptions.newTransactionOptions().setSetSnapshot(true)) {
 
@@ -384,7 +384,7 @@ class SnapshotTest {
 		// a Java exception
 		try (var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
 		     var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir);
+		     var db = RocksDB.openTransaction(dir, opts, txnDbOpts);
 		     var wo = WriteOptions.newWriteOptions();
 		     var txn = db.beginTransaction(wo)) {
 

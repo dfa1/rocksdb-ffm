@@ -14,7 +14,7 @@ import java.util.Objects;
 ///
 /// ```
 /// try (Options opts = Options.newOptions().setCreateIfMissing(true)) {
-///     RocksDB db = RocksDB.openReadWrite(opts, path);
+///     RocksDB db = RocksDB.openReadWrite(path, opts);
 /// }
 /// ```
 ///

@@ -12,7 +12,7 @@ class RocksDBMonitoringOperationsTest {
     @Test
     void verifyChecksum_onValidDatabase_succeeds(@TempDir Path dir) {
         // Given
-        try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+        try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
             db.put("key".getBytes(), "value".getBytes());
 
             // When
@@ -28,7 +28,7 @@ class RocksDBMonitoringOperationsTest {
     void verifyChecksum_withReadOptions_onValidDatabase_succeeds(
             @TempDir Path dir) {
         // Given
-        try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+        try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
              var readOptions = ReadOptions.newReadOptions()) {
             db.put("key".getBytes(), "value".getBytes());
 
@@ -48,7 +48,7 @@ class RocksDBMonitoringOperationsTest {
              var options = Options.newOptions()
                      .setCreateIfMissing(true)
                      .setFileChecksumGenFactory(factory);
-             var db = RocksDB.openReadWrite(options, dir);
+             var db = RocksDB.openReadWrite(dir, options);
              var flushOptions = FlushOptions.newFlushOptions()) {
             db.put("key".getBytes(), "value".getBytes());
             db.flush(flushOptions);
@@ -70,7 +70,7 @@ class RocksDBMonitoringOperationsTest {
              var options = Options.newOptions()
                      .setCreateIfMissing(true)
                      .setFileChecksumGenFactory(factory);
-             var db = RocksDB.openReadWrite(options, dir);
+             var db = RocksDB.openReadWrite(dir, options);
              var readOptions = ReadOptions.newReadOptions();
              var flushOptions = FlushOptions.newFlushOptions()) {
             db.put("key".getBytes(), "value".getBytes());

@@ -21,8 +21,8 @@ class BackupEngineIntegrationTest {
 
 		// Given — open DB, write data, create backup
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbDir);
-		     var engine = BackupEngine.open(opts, backupDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts);
+		     var engine = BackupEngine.open(backupDir, opts)) {
 
 			db.put("k1".getBytes(), "v1".getBytes());
 			db.put("k2".getBytes(), "v2".getBytes());
@@ -47,7 +47,7 @@ class BackupEngineIntegrationTest {
 
 		// Then — restored DB contains original data
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.openReadWrite(opts, restoreDir)) {
+		     var db = RocksDB.openReadWrite(restoreDir, opts)) {
 
 			assertThat(db.get("k1".getBytes())).isEqualTo("v1".getBytes());
 			assertThat(db.get("k2".getBytes())).isEqualTo("v2".getBytes());
@@ -63,8 +63,8 @@ class BackupEngineIntegrationTest {
 
 		// Given — two backups at different states
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbDir);
-		     var engine = BackupEngine.open(opts, backupDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts);
+		     var engine = BackupEngine.open(backupDir, opts)) {
 
 			db.put("k".getBytes(), "v1".getBytes());
 			engine.createNewBackup(db, true);
@@ -83,8 +83,8 @@ class BackupEngineIntegrationTest {
 
 		// Then — each restored directory reflects the state at backup time
 		try (var opts = Options.newOptions();
-		     var db1 = RocksDB.openReadWrite(opts, restoreV1);
-		     var db2 = RocksDB.openReadWrite(opts, restoreV2)) {
+		     var db1 = RocksDB.openReadWrite(restoreV1, opts);
+		     var db2 = RocksDB.openReadWrite(restoreV2, opts)) {
 
 			assertThat(db1.get("k".getBytes())).isEqualTo("v1".getBytes());
 			assertThat(db2.get("k".getBytes())).isEqualTo("v2".getBytes());
@@ -98,8 +98,8 @@ class BackupEngineIntegrationTest {
 
 		// Given — three backups
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbDir);
-		     var engine = BackupEngine.open(opts, backupDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts);
+		     var engine = BackupEngine.open(backupDir, opts)) {
 
 			engine.createNewBackup(db);
 			engine.createNewBackup(db);
@@ -124,8 +124,8 @@ class BackupEngineIntegrationTest {
 
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbDir);
-		     var engine = BackupEngine.open(opts, backupDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts);
+		     var engine = BackupEngine.open(backupDir, opts)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 			engine.createNewBackup(db);
@@ -143,8 +143,8 @@ class BackupEngineIntegrationTest {
 		var backupDir = dir.resolve("backup");
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbDir);
-		     var engine = BackupEngine.open(opts, backupDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts);
+		     var engine = BackupEngine.open(backupDir, opts)) {
 
 			engine.createNewBackup(db);
 
@@ -193,7 +193,7 @@ class BackupEngineIntegrationTest {
 
 		// Given — write data
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts)) {
 			db.put("key".getBytes(), "value".getBytes());
 
 			// When — backup via explicit BackupEngineOptions + Env
@@ -215,7 +215,7 @@ class BackupEngineIntegrationTest {
 
 		// Then
 		try (var opts = Options.newOptions();
-		     var db = RocksDB.openReadWrite(opts, restoreDir)) {
+		     var db = RocksDB.openReadWrite(restoreDir, opts)) {
 			assertThat(db.get("key".getBytes())).isEqualTo("value".getBytes());
 		}
 	}
@@ -232,8 +232,8 @@ class BackupEngineIntegrationTest {
 				.setCreateIfMissing(true)
 				.setEnableBlobFiles(true)
 				.setMinBlobSize(MemorySize.ofBytes(0));
-		     var db = RocksDB.openReadWrite(opts, dbDir);
-		     var engine = BackupEngine.open(opts, backupDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts);
+		     var engine = BackupEngine.open(backupDir, opts)) {
 
 			db.put("k".getBytes(), value);
 
@@ -250,7 +250,7 @@ class BackupEngineIntegrationTest {
 
 		// Then — restored ReadWriteDB contains the original value
 		try (var opts = Options.newOptions();
-		     var restored = RocksDB.openReadWrite(opts, restoreDir)) {
+		     var restored = RocksDB.openReadWrite(restoreDir, opts)) {
 			assertThat(restored.get("k".getBytes())).isEqualTo(value);
 		}
 	}
@@ -264,8 +264,8 @@ class BackupEngineIntegrationTest {
 
 		// Given — a TtlDB
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTtl(opts, dbDir, ttl);
-		     var engine = BackupEngine.open(opts, backupDir)) {
+		     var db = RocksDB.openTtl(dbDir, opts, ttl);
+		     var engine = BackupEngine.open(backupDir, opts)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -282,7 +282,7 @@ class BackupEngineIntegrationTest {
 
 		// Then — restored TtlDB contains the original value
 		try (var opts = Options.newOptions();
-		     var restored = RocksDB.openTtl(opts, restoreDir, ttl)) {
+		     var restored = RocksDB.openTtl(restoreDir, opts, ttl)) {
 			assertThat(restored.get("k".getBytes())).isEqualTo("v".getBytes());
 		}
 	}
@@ -297,8 +297,8 @@ class BackupEngineIntegrationTest {
 		// Given — two backups with different content, flushed so the restored DB
 		// (opened without pointing back at walDir) can still see the data
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbDir);
-		     var engine = BackupEngine.open(opts, backupDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts);
+		     var engine = BackupEngine.open(backupDir, opts)) {
 
 			db.put("k".getBytes(), "first".getBytes());
 			engine.createNewBackup(db, true);
@@ -315,7 +315,7 @@ class BackupEngineIntegrationTest {
 
 		// Then — restored DB reflects the state of the selected backup
 		try (var opts = Options.newOptions();
-		     var restored = RocksDB.openReadWrite(opts, restoreDir)) {
+		     var restored = RocksDB.openReadWrite(restoreDir, opts)) {
 			assertThat(restored.get("k".getBytes())).isEqualTo("first".getBytes());
 		}
 	}

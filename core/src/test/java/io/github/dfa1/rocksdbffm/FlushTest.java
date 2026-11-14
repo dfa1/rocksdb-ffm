@@ -45,7 +45,7 @@ class FlushTest {
 	@Test
 	void flush_dataIsReadableAfterFlush(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var fo = FlushOptions.newFlushOptions().setWait(true)) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -60,7 +60,7 @@ class FlushTest {
 	@Test
 	void flush_multipleKeys(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			for (int i = 0; i < 100; i++) {
 				db.put(("key" + i).getBytes(), ("val" + i).getBytes());
@@ -78,7 +78,7 @@ class FlushTest {
 	@Test
 	void flushWal_doesNotThrow(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When
@@ -101,7 +101,7 @@ class FlushTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
-		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir);
+		     var db = RocksDB.openTransaction(dir, opts, txnDbOpts);
 		     var fo = FlushOptions.newFlushOptions().setWait(true)) {
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -118,7 +118,7 @@ class FlushTest {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
-		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir)) {
+		     var db = RocksDB.openTransaction(dir, opts, txnDbOpts)) {
 			db.put("k".getBytes(), "v".getBytes());
 
 			// When

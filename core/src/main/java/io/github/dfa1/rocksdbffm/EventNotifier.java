@@ -23,7 +23,7 @@ package io.github.dfa1.rocksdbffm;
 ///             System.out.println("flushed " + info.filePath());
 ///         }
 ///     });
-///     var db = RocksDB.openReadWrite(opts, dbPath);
+///     var db = RocksDB.openReadWrite(dbPath, opts);
 /// }
 /// ```
 public interface EventNotifier {

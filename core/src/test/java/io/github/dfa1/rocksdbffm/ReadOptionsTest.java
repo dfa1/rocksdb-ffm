@@ -189,7 +189,7 @@ class ReadOptionsTest {
 	@Test
 	void setIterateLowerBound_bytes_restrictsIteration(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -215,7 +215,7 @@ class ReadOptionsTest {
 	@Test
 	void setIterateUpperBound_bytes_restrictsIteration(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -241,7 +241,7 @@ class ReadOptionsTest {
 	@Test
 	void setIterateLowerBound_memorySegment_restrictsIteration(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var arena = Arena.ofConfined()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
@@ -269,7 +269,7 @@ class ReadOptionsTest {
 	@Test
 	void setIterateUpperBound_memorySegment_restrictsIteration(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var arena = Arena.ofConfined()) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
@@ -297,7 +297,7 @@ class ReadOptionsTest {
 	@Test
 	void setIterateLowerBound_byteBuffer_restrictsIteration(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -324,7 +324,7 @@ class ReadOptionsTest {
 	@Test
 	void setIterateUpperBound_byteBuffer_restrictsIteration(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 			db.put("c".getBytes(), "3".getBytes());
@@ -351,7 +351,7 @@ class ReadOptionsTest {
 	@Test
 	void setIterateLowerBound_null_clearsBound(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 
@@ -377,7 +377,7 @@ class ReadOptionsTest {
 	@Test
 	void setIterateUpperBound_null_clearsBound(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			db.put("a".getBytes(), "1".getBytes());
 			db.put("b".getBytes(), "2".getBytes());
 

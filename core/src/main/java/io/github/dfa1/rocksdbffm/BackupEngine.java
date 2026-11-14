@@ -21,8 +21,8 @@ import java.util.List;
 ///
 /// // Create a backup
 /// try (var opts   = Options.newOptions().setCreateIfMissing(true);
-///      var db     = RocksDB.openReadWrite(opts, dbDir);
-///      var engine = BackupEngine.open(opts, backupDir)) {
+///      var db     = RocksDB.openReadWrite(dbDir, opts);
+///      var engine = BackupEngine.open(backupDir, opts)) {
 ///     db.put("k".getBytes(), "v".getBytes());
 ///     engine.createNewBackup(db);
 /// }
@@ -167,10 +167,10 @@ public final class BackupEngine extends NativeObject {
 	///
 	/// The `backupPath` directory is created if it does not exist.
 	///
-	/// @param options the DB options supplying the env and info_log
 	/// @param backupPath directory where backups are stored (created if absent)
+	/// @param options the DB options supplying the env and info_log
 	/// @return a new [BackupEngine] instance
-	public static BackupEngine open(Options options, Path backupPath) {
+	public static BackupEngine open(Path backupPath, Options options) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(backupPath.toString());

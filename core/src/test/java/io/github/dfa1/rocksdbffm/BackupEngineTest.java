@@ -17,8 +17,8 @@ class BackupEngineTest {
 	void createNewBackup_isVisibleInGetBackupInfo(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
-		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
+		     var db = RocksDB.openReadWrite(dir.resolve("db"), opts);
+		     var engine = BackupEngine.open(dir.resolve("backup"), opts)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 
@@ -37,8 +37,8 @@ class BackupEngineTest {
 	void getBackupInfo_isEmptyForFreshEngine(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var _ = RocksDB.openReadWrite(opts, dir.resolve("db"));
-		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
+		     var _ = RocksDB.openReadWrite(dir.resolve("db"), opts);
+		     var engine = BackupEngine.open(dir.resolve("backup"), opts)) {
 
 			// When
 			var result = engine.getBackupInfo();
@@ -56,8 +56,8 @@ class BackupEngineTest {
 		// on the C++ side). A handful of backups makes an accidental one-past-the-end read
 		// more likely to land outside the allocation than a single-backup case would.
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
-		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
+		     var db = RocksDB.openReadWrite(dir.resolve("db"), opts);
+		     var engine = BackupEngine.open(dir.resolve("backup"), opts)) {
 
 			for (int i = 0; i < 5; i++) {
 				db.put(("k" + i).getBytes(), ("v" + i).getBytes());
@@ -78,8 +78,8 @@ class BackupEngineTest {
 	void verifyBackup_succeedsForValidBackup(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
-		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
+		     var db = RocksDB.openReadWrite(dir.resolve("db"), opts);
+		     var engine = BackupEngine.open(dir.resolve("backup"), opts)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 			engine.createNewBackup(db);
@@ -93,8 +93,8 @@ class BackupEngineTest {
 	void verifyBackup_throwsForUnknownBackupId(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
-		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
+		     var db = RocksDB.openReadWrite(dir.resolve("db"), opts);
+		     var engine = BackupEngine.open(dir.resolve("backup"), opts)) {
 
 			engine.createNewBackup(db);
 
@@ -110,8 +110,8 @@ class BackupEngineTest {
 	void purgeOldBackups_keepsOnlyMostRecent(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
-		     var engine = BackupEngine.open(opts, dir.resolve("backup"))) {
+		     var db = RocksDB.openReadWrite(dir.resolve("db"), opts);
+		     var engine = BackupEngine.open(dir.resolve("backup"), opts)) {
 
 			engine.createNewBackup(db);
 			engine.createNewBackup(db);
@@ -135,8 +135,8 @@ class BackupEngineTest {
 
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbDir);
-		     var engine = BackupEngine.open(opts, backupDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts);
+		     var engine = BackupEngine.open(backupDir, opts)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 			engine.createNewBackup(db);
@@ -149,7 +149,7 @@ class BackupEngineTest {
 
 		// Then
 		try (var opts = Options.newOptions();
-		     var restored = RocksDB.openReadWrite(opts, restoreDir)) {
+		     var restored = RocksDB.openReadWrite(restoreDir, opts)) {
 			assertThat(restored.get("k".getBytes())).isEqualTo("v".getBytes());
 		}
 	}
@@ -163,8 +163,8 @@ class BackupEngineTest {
 
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbDir);
-		     var engine = BackupEngine.open(opts, backupDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts);
+		     var engine = BackupEngine.open(backupDir, opts)) {
 
 			// flushBeforeBackup=true: the value must land in an SST file rather than
 			// staying WAL-only, since we open the restored DB below without pointing
@@ -180,7 +180,7 @@ class BackupEngineTest {
 
 		// Then
 		try (var opts = Options.newOptions();
-		     var restored = RocksDB.openReadWrite(opts, restoreDir)) {
+		     var restored = RocksDB.openReadWrite(restoreDir, opts)) {
 			assertThat(restored.get("k".getBytes())).isEqualTo("v".getBytes());
 		}
 	}
@@ -193,8 +193,8 @@ class BackupEngineTest {
 
 		// Given — two backups with different content
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbDir);
-		     var engine = BackupEngine.open(opts, backupDir)) {
+		     var db = RocksDB.openReadWrite(dbDir, opts);
+		     var engine = BackupEngine.open(backupDir, opts)) {
 
 			db.put("k".getBytes(), "first".getBytes());
 			engine.createNewBackup(db, true);
@@ -210,7 +210,7 @@ class BackupEngineTest {
 
 		// Then
 		try (var opts = Options.newOptions();
-		     var restored = RocksDB.openReadWrite(opts, restoreDir)) {
+		     var restored = RocksDB.openReadWrite(restoreDir, opts)) {
 			assertThat(restored.get("k".getBytes())).isEqualTo("first".getBytes());
 		}
 	}
@@ -222,7 +222,7 @@ class BackupEngineTest {
 
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbDir);
+		     var db = RocksDB.openReadWrite(dbDir, opts);
 		     var env = Env.defaultEnv();
 		     var beOpts = BackupEngineOptions.create(backupDir)) {
 
@@ -242,8 +242,8 @@ class BackupEngineTest {
 	void close_isIdempotent(@TempDir Path dir) {
 		// Given — an already-closed instance
 		var opts = Options.newOptions().setCreateIfMissing(true);
-		var db = RocksDB.openReadWrite(opts, dir.resolve("db"));
-		var engine = BackupEngine.open(opts, dir.resolve("backup"));
+		var db = RocksDB.openReadWrite(dir.resolve("db"), opts);
+		var engine = BackupEngine.open(dir.resolve("backup"), opts);
 		engine.close();
 
 		// When

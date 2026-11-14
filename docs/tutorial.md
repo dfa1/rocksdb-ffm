@@ -91,7 +91,7 @@ public class App {
 		Path dbPath = Path.of("target/demo-db");
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openReadWrite(opts, dbPath)) {
+		     var db = RocksDB.openReadWrite(dbPath, opts)) {
 			db.put("user:1".getBytes(), "alice".getBytes());
 
 			byte[] value = db.get("user:1".getBytes());
@@ -106,7 +106,7 @@ public class App {
 
 Three things are happening here.
 
-`RocksDB.openReadWrite(Options, Path)` opens the database, creating it because `createIfMissing` is set — a plain
+`RocksDB.openReadWrite(Path, Options)` opens the database, creating it because `createIfMissing` is set — a plain
 `openReadWrite(Path)` fails on a missing database. It returns a
 `ReadWriteDB`, which is `AutoCloseable` — the try-with-resources block is what releases the native
 handle. **Every** type in this library that owns native memory works that way; see
@@ -151,7 +151,7 @@ database). Everything else you tune goes on the same object, which is itself nat
 try (var options = Options.newOptions()
 		.setCreateIfMissing(true)
 		.setCompression(CompressionType.ZSTD);
-     var db = RocksDB.openReadWrite(options, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, options)) {
 	db.put("user:1".getBytes(), "alice".getBytes());
 }
 ```
@@ -169,7 +169,7 @@ try (var cache = LRUCache.newLRUCache(MemorySize.ofMB(64));
      var options = Options.newOptions()
 		     .setCreateIfMissing(true)
 		     .setTableFormatConfig(tableConfig);
-     var db = RocksDB.openReadWrite(options, dbPath)) {
+     var db = RocksDB.openReadWrite(dbPath, options)) {
 	// ...
 }
 ```
@@ -186,7 +186,7 @@ A `WriteBatch` collects operations and applies them in a single atomic write:
 
 ```java
 try (var opts = Options.newOptions().setCreateIfMissing(true);
-     var db = RocksDB.openReadWrite(opts, dbPath);
+     var db = RocksDB.openReadWrite(dbPath, opts);
      var batch = WriteBatch.create()) {
 	batch.put("user:1".getBytes(), "alice".getBytes());
 	batch.put("user:2".getBytes(), "bob".getBytes());

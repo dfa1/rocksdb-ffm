@@ -16,7 +16,7 @@ class CuckooTableOptionsTest {
 		     var opts = Options.newOptions()
 				     .setCreateIfMissing(true)
 				     .setTableFormatConfig(cuckoo);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 

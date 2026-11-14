@@ -119,15 +119,15 @@ public class MergeOperatorBenchmark {
 
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.uint64Add())) {
-			uint64AddDb = RocksDB.openReadWrite(opts, uint64AddDbPath);
+			uint64AddDb = RocksDB.openReadWrite(uint64AddDbPath, opts);
 		}
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.custom("trivial", TRIVIAL))) {
-			customTrivialDb = RocksDB.openReadWrite(opts, customTrivialDbPath);
+			customTrivialDb = RocksDB.openReadWrite(customTrivialDbPath, opts);
 		}
 		try (var opts = Options.newOptions().setCreateIfMissing(true)
 				.setMergeOperator(MergeOperator.custom("concat", CONCAT))) {
-			customConcatDb = RocksDB.openReadWrite(opts, customConcatDbPath);
+			customConcatDb = RocksDB.openReadWrite(customConcatDbPath, opts);
 		}
 
 		Random random = new Random(42);

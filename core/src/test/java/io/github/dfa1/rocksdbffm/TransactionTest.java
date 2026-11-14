@@ -23,7 +23,7 @@ class TransactionTest {
 	private static TransactionDB openDb(Path path) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions()) {
-			return RocksDB.openTransaction(opts, txnDbOpts, path);
+			return RocksDB.openTransaction(path, opts, txnDbOpts);
 		}
 	}
 
@@ -467,7 +467,7 @@ class TransactionTest {
 	private static TransactionDB openMergeDb(Path path) {
 		try (var opts = Options.newOptions().setCreateIfMissing(true).setMergeOperator(MergeOperator.uint64Add());
 		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions()) {
-			return RocksDB.openTransaction(opts, txnDbOpts, path);
+			return RocksDB.openTransaction(path, opts, txnDbOpts);
 		}
 	}
 

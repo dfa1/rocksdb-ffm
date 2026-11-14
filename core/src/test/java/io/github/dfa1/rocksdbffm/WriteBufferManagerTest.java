@@ -210,7 +210,7 @@ class WriteBufferManagerTest {
 		try (var wbm = WriteBufferManager.create(MemorySize.ofMB(100), false);
 		     var opts = Options.newOptions().setCreateIfMissing(true)
 				     .setWriteBufferSize(MemorySize.ofMB(4)).setWriteBufferManager(wbm);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			var before = wbm.memoryUsage();
 
 			// When
@@ -228,7 +228,7 @@ class WriteBufferManagerTest {
 		try (var wbm = WriteBufferManager.create(MemorySize.ofMB(100), false);
 		     var opts = Options.newOptions().setCreateIfMissing(true)
 				     .setWriteBufferSize(MemorySize.ofMB(4)).setWriteBufferManager(wbm);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 			var before = wbm.mutableMemtableMemoryUsage();
 
 			// When
@@ -246,8 +246,8 @@ class WriteBufferManagerTest {
 		try (var wbm = WriteBufferManager.create(MemorySize.ofMB(100), false);
 		     var opts = Options.newOptions().setCreateIfMissing(true)
 				     .setWriteBufferSize(MemorySize.ofMB(4)).setWriteBufferManager(wbm);
-		     var db1 = RocksDB.openReadWrite(opts, dir.resolve("db1"));
-		     var db2 = RocksDB.openReadWrite(opts, dir.resolve("db2"))) {
+		     var db1 = RocksDB.openReadWrite(dir.resolve("db1"), opts);
+		     var db2 = RocksDB.openReadWrite(dir.resolve("db2"), opts)) {
 			putValues(db1, "k", 16);
 			var afterFirst = wbm.memoryUsage();
 
@@ -267,7 +267,7 @@ class WriteBufferManagerTest {
 		     var wbm = WriteBufferManager.createWithCache(MemorySize.ofMB(100), cache, false);
 		     var opts = Options.newOptions().setCreateIfMissing(true)
 				     .setWriteBufferSize(MemorySize.ofMB(4)).setWriteBufferManager(wbm);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When
 			putValues(db, "k", 16);
@@ -283,7 +283,7 @@ class WriteBufferManagerTest {
 		// Given — a budget the first put already exceeds
 		try (var wbm = WriteBufferManager.create(MemorySize.ofKB(1), false);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setWriteBufferManager(wbm);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var noSlowdown = WriteOptions.newWriteOptions().setNoSlowdown(true)) {
 			db.put(noSlowdown, "k1".getBytes(), VALUE);
 
@@ -300,7 +300,7 @@ class WriteBufferManagerTest {
 		// Given — a budget the freshly opened memtable already exceeds
 		try (var wbm = WriteBufferManager.create(MemorySize.ofKB(1), true);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setWriteBufferManager(wbm);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var noSlowdown = WriteOptions.newWriteOptions().setNoSlowdown(true)) {
 
 			// When
@@ -316,7 +316,7 @@ class WriteBufferManagerTest {
 		// Given — created without stalling, then switched on
 		try (var wbm = WriteBufferManager.create(MemorySize.ofKB(1), false);
 		     var opts = Options.newOptions().setCreateIfMissing(true).setWriteBufferManager(wbm);
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var noSlowdown = WriteOptions.newWriteOptions().setNoSlowdown(true)) {
 			db.put(noSlowdown, "k1".getBytes(), VALUE);
 

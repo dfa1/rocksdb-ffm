@@ -16,7 +16,7 @@ import java.util.Objects;
 ///      var opts = Options.newOptions()
 ///          .setCreateIfMissing(true)
 ///          .setWriteBufferManager(wbm)) {
-///     try (var db = RocksDB.openReadWrite(opts, path)) {
+///     try (var db = RocksDB.openReadWrite(path, opts)) {
 ///         // use db
 ///     }
 /// }

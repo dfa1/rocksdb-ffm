@@ -142,7 +142,7 @@ class WriteOptionsTest {
 	@Test
 	void put_withExplicitDisableWal_isReadableButAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
 
@@ -162,7 +162,7 @@ class WriteOptionsTest {
 	@Test
 	void put_withoutExplicitOptions_appearsInWal(@TempDir Path dir) {
 		// Given — same workload as above, but via the default-options overload
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
 
 			// When
@@ -178,7 +178,7 @@ class WriteOptionsTest {
 	@Test
 	void put_withExplicitDisableWal_cfScoped_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
@@ -197,7 +197,7 @@ class WriteOptionsTest {
 	@Test
 	void put_arena_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
@@ -216,7 +216,7 @@ class WriteOptionsTest {
 	@Test
 	void put_byteBuffer_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
 			ByteBuffer key = directBuffer("k");
@@ -236,7 +236,7 @@ class WriteOptionsTest {
 	@Test
 	void put_memorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
@@ -257,7 +257,7 @@ class WriteOptionsTest {
 	@Test
 	void put_arenaMemorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
@@ -278,7 +278,7 @@ class WriteOptionsTest {
 	@Test
 	void put_cfScoped_byteBuffer_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
@@ -299,7 +299,7 @@ class WriteOptionsTest {
 	@Test
 	void put_cfScoped_memorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
@@ -322,7 +322,7 @@ class WriteOptionsTest {
 	void merge_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
 		try (var opts = Options.newOptions().setCreateIfMissing(true).setMergeOperator(MergeOperator.uint64Add());
-		     var db = RocksDB.openReadWrite(opts, dir);
+		     var db = RocksDB.openReadWrite(dir, opts);
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			SequenceNumber start = db.getLatestSequenceNumber();
 
@@ -339,7 +339,7 @@ class WriteOptionsTest {
 	@Test
 	void delete_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			// Setup write is itself WAL-disabled: getUpdatesSince(seq) is inclusive of the
 			// batch at seq, so a WAL-enabled setup put here would make start coincide with
@@ -361,7 +361,7 @@ class WriteOptionsTest {
 	@Test
 	void delete_byteBuffer_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			// Setup write is itself WAL-disabled — see comment in
 			// delete_withExplicitDisableWal_isAbsentFromWal for why.
@@ -383,7 +383,7 @@ class WriteOptionsTest {
 	@Test
 	void delete_memorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			// Setup write is itself WAL-disabled — see comment in
@@ -406,7 +406,7 @@ class WriteOptionsTest {
 	@Test
 	void delete_cfScoped_bytes_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			db.put(cf, wo, "k".getBytes(), "v".getBytes());
@@ -426,7 +426,7 @@ class WriteOptionsTest {
 	@Test
 	void delete_cfScoped_byteBuffer_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			db.put(cf, wo, "k".getBytes(), "v".getBytes());
@@ -447,7 +447,7 @@ class WriteOptionsTest {
 	@Test
 	void delete_cfScoped_memorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
@@ -469,7 +469,7 @@ class WriteOptionsTest {
 	@Test
 	void deleteRange_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			// Setup writes are themselves WAL-disabled — see comment in
 			// delete_withExplicitDisableWal_isAbsentFromWal for why.
@@ -491,7 +491,7 @@ class WriteOptionsTest {
 	@Test
 	void deleteRange_byteBuffer_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			db.put(wo, "a".getBytes(), "1".getBytes());
 			db.put(wo, "b".getBytes(), "2".getBytes());
@@ -513,7 +513,7 @@ class WriteOptionsTest {
 	@Test
 	void deleteRange_memorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			db.put(wo, "a".getBytes(), "1".getBytes());
@@ -536,7 +536,7 @@ class WriteOptionsTest {
 	@Test
 	void deleteRange_cfScoped_bytes_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			db.put(cf, wo, "a".getBytes(), "1".getBytes());
@@ -557,7 +557,7 @@ class WriteOptionsTest {
 	@Test
 	void deleteRange_cfScoped_byteBuffer_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
 			db.put(cf, wo, "a".getBytes(), "1".getBytes());
@@ -580,7 +580,7 @@ class WriteOptionsTest {
 	@Test
 	void deleteRange_cfScoped_memorySegment_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true)) {
@@ -604,7 +604,7 @@ class WriteOptionsTest {
 	@Test
 	void write_batch_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true);
 		     var batch = WriteBatch.create()) {
 			batch.put("k".getBytes(), "v".getBytes());
@@ -624,7 +624,7 @@ class WriteOptionsTest {
 	@Test
 	void write_batch_arena_withExplicitDisableWal_isAbsentFromWal(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions().setDisableWal(true);
 		     var batch = WriteBatch.create()) {
@@ -651,7 +651,7 @@ class WriteOptionsTest {
 		// Given
 		try (var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
 		     var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir);
+		     var db = RocksDB.openTransaction(dir, opts, txnDbOpts);
 		     var wo = WriteOptions.newWriteOptions().setSync(false)) {
 
 			// When
@@ -667,7 +667,7 @@ class WriteOptionsTest {
 		// Given
 		try (var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
 		     var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir);
+		     var db = RocksDB.openTransaction(dir, opts, txnDbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var wo = WriteOptions.newWriteOptions().setSync(false)) {
 
@@ -684,7 +684,7 @@ class WriteOptionsTest {
 		// Given
 		try (var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
 		     var opts = Options.newOptions().setCreateIfMissing(true);
-		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir);
+		     var db = RocksDB.openTransaction(dir, opts, txnDbOpts);
 		     var wo = WriteOptions.newWriteOptions().setSync(false)) {
 			db.put("k".getBytes(), "v".getBytes());
 

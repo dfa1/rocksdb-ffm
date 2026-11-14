@@ -17,7 +17,7 @@ class RateLimiterIntegrationTest {
 		     var opts = Options.newOptions()
 				     .setCreateIfMissing(true)
 				     .setRateLimiter(limiter);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When
 			db.put("key".getBytes(), "value".getBytes());
@@ -34,7 +34,7 @@ class RateLimiterIntegrationTest {
 		     var opts = Options.newOptions()
 				     .setCreateIfMissing(true)
 				     .setRateLimiter(limiter);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When
 			db.put("k".getBytes(), "v".getBytes());
@@ -53,7 +53,7 @@ class RateLimiterIntegrationTest {
 		     var opts = Options.newOptions()
 				     .setCreateIfMissing(true)
 				     .setRateLimiter(limiter);
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			// When
 			db.put("key".getBytes(), "value".getBytes());
@@ -73,7 +73,7 @@ class RateLimiterIntegrationTest {
 			limiter.close();
 
 			// When — Options (and the underlying shared_ptr) still valid
-			try (var db = RocksDB.openReadWrite(opts, dir)) {
+			try (var db = RocksDB.openReadWrite(dir, opts)) {
 				db.put("key".getBytes(), "value".getBytes());
 				var result = db.get("key".getBytes());
 

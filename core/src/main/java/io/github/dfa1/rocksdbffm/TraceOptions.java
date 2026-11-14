@@ -17,7 +17,7 @@ import java.util.Set;
 /// try (var opts = TraceOptions.newTraceOptions()
 ///             .setSamplingFrequency(10)
 ///             .setFilter(Set.of(TraceFilter.ITERATOR_SEEK, TraceFilter.ITERATOR_SEEK_FOR_PREV))) {
-///     db.startTrace(opts, tracePath);
+///     db.startTrace(tracePath, opts);
 ///     // ... workload runs while trace is captured ...
 ///     db.endTrace();
 /// }

@@ -86,7 +86,7 @@ class EventNotifierExitTest {
 			};
 
 			try (var opts = Options.newOptions().setCreateIfMissing(true).addEventListener(notifier);
-			     var db = RocksDB.openReadWrite(opts, Path.of(args[0]))) {
+			     var db = RocksDB.openReadWrite(Path.of(args[0]), opts)) {
 				db.put("k".getBytes(), "v".getBytes());
 				db.flush(FlushOptions.newFlushOptions());
 			}

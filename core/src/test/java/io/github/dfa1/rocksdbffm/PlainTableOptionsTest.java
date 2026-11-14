@@ -17,7 +17,7 @@ class PlainTableOptionsTest {
 				     .setPrefixExtractor(SliceTransform.newFixedPrefix(1))
 				     .setTableFormatConfig(PlainTableOptions.newPlainTableOptions()
 						     .setEncodingType(PlainTableOptions.EncodingType.PREFIX));
-		     var db = RocksDB.openReadWrite(opts, dir)) {
+		     var db = RocksDB.openReadWrite(dir, opts)) {
 
 			db.put("k".getBytes(), "v".getBytes());
 

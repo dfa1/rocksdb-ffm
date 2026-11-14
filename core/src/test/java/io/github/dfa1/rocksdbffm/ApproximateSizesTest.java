@@ -23,7 +23,7 @@ class ApproximateSizesTest {
 	@Test
 	void getApproximateSizes_afterFlush_returnsPositiveSizeForFullRange(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			writeSizableData(db, 200);
 			db.flush(fo);
@@ -40,7 +40,7 @@ class ApproximateSizesTest {
 	@Test
 	void getApproximateSizes_beforeFlush_defaultsToZero(@TempDir Path dir) {
 		// Given -- default options exclude memtables and nothing has been flushed to SST yet
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
 			writeSizableData(db, 200);
 
 			// When
@@ -54,7 +54,7 @@ class ApproximateSizesTest {
 	@Test
 	void getApproximateSizes_withIncludeMemtables_countsUnflushedData(@TempDir Path dir) {
 		// Given -- same unflushed data as above, but this time asking to count memtables
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var opts = SizeApproximationOptions.create().setIncludeMemtables(true)) {
 			writeSizableData(db, 200);
 
@@ -70,7 +70,7 @@ class ApproximateSizesTest {
 	@Test
 	void getApproximateSizes_multipleRanges_returnsOneSizePerRange(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var fo = FlushOptions.newFlushOptions()) {
 			writeSizableData(db, 200);
 			db.flush(fo);
@@ -90,7 +90,7 @@ class ApproximateSizesTest {
 	@Test
 	void getApproximateSizes_columnFamilyScoped_isolatesFromDefaultCf(@TempDir Path dir) {
 		// Given -- data written only to a non-default column family
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var fo = FlushOptions.newFlushOptions()) {
 			byte[] value = new byte[4096];
@@ -112,7 +112,7 @@ class ApproximateSizesTest {
 	@Test
 	void getApproximateSizes_columnFamilyScopedWithOptions_countsUnflushedData(@TempDir Path dir) {
 		// Given
-		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var opts = SizeApproximationOptions.create().setIncludeMemtables(true)) {
 			byte[] value = new byte[4096];

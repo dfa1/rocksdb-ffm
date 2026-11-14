@@ -7,7 +7,7 @@ import java.util.NoSuchElementException;
 /// [RocksDB#loadLatestOptions(java.nio.file.Path, boolean)].
 ///
 /// Hand [#dbOptions()] and [#columnFamilies()] straight to
-/// [RocksDB#openReadWrite(Options, java.nio.file.Path, List)] (or any other
+/// [RocksDB#openReadWrite(java.nio.file.Path, Options, List)] (or any other
 /// column-family `open*` overload) to reopen the database exactly as it was configured.
 ///
 /// This object owns [#dbOptions()] and the [Options] inside every descriptor; closing it closes
