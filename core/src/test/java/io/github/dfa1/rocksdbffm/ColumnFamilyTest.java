@@ -26,11 +26,11 @@ class ColumnFamilyTest {
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var _ = RocksDB.openReadWrite(opts, dir)) {
 			// When
-			List<byte[]> families = RocksDB.listColumnFamilies(opts, dir);
+			List<ColumnFamilyName> families = RocksDB.listColumnFamilies(opts, dir);
 
 			// Then
 			assertThat(families).hasSize(1);
-			assertThat(new String(families.get(0), StandardCharsets.UTF_8)).isEqualTo("default");
+			assertThat(families.get(0)).isEqualTo(ColumnFamilyName.DEFAULT);
 		}
 	}
 
@@ -42,7 +42,7 @@ class ColumnFamilyTest {
 	void createColumnFamily_canPutAndGetInNewFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 
 			// When
 			db.put(cf, "key".getBytes(), "value".getBytes());
@@ -56,7 +56,7 @@ class ColumnFamilyTest {
 	void createColumnFamily_isolatedFromDefaultFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put("key".getBytes(), "default-value".getBytes());
 			db.put(cf, "key".getBytes(), "cf-value".getBytes());
 
@@ -74,7 +74,7 @@ class ColumnFamilyTest {
 	void dropColumnFamily_removesFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir)) {
-			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("to-drop"));
+			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("to-drop")));
 			db.put(cf, "key".getBytes(), "value".getBytes());
 
 			// When
@@ -83,11 +83,8 @@ class ColumnFamilyTest {
 
 			// Then — family list should only contain default
 			try (var opts = Options.newOptions()) {
-				List<byte[]> families = RocksDB.listColumnFamilies(opts, dir);
-				List<String> names = families.stream()
-						.map(b -> new String(b, StandardCharsets.UTF_8))
-						.toList();
-				assertThat(names).containsExactly("default");
+				List<ColumnFamilyName> families = RocksDB.listColumnFamilies(opts, dir);
+				assertThat(families).containsExactly(ColumnFamilyName.DEFAULT);
 			}
 		}
 	}
@@ -101,7 +98,7 @@ class ColumnFamilyTest {
 		// Given — create a DB with a non-default CF and write data
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var db = RocksDB.openReadWrite(opts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("users"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("users")))) {
 			db.put(cf, "alice".getBytes(), "data".getBytes());
 		}
 
@@ -109,8 +106,8 @@ class ColumnFamilyTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(false);
 		     var db = RocksDB.openReadWrite(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"),
-						     ColumnFamilyDescriptor.of("users")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT),
+						     ColumnFamilyDescriptor.of(ColumnFamilyName.of("users"))),
 				     handles)) {
 			var defaultCf = handles.get(0);
 			var usersCf = handles.get(1);
@@ -131,13 +128,13 @@ class ColumnFamilyTest {
 	void columnFamilyHandle_returnsCorrectName(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("my-cf"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("my-cf")))) {
 
 			// When
-			String name = cf.getName();
+			var name = cf.getName();
 
 			// Then
-			assertThat(name).isEqualTo("my-cf");
+			assertThat(name).isEqualTo(ColumnFamilyName.of("my-cf"));
 		}
 	}
 
@@ -147,7 +144,7 @@ class ColumnFamilyTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var _ = RocksDB.openReadWrite(opts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT)),
 				     handles)) {
 
 			// When
@@ -167,7 +164,7 @@ class ColumnFamilyTest {
 	void delete_removesKeyFromColumnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
@@ -186,7 +183,7 @@ class ColumnFamilyTest {
 	void deleteRange_removesKeyRangeFromColumnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
 			db.put(cf, "c".getBytes(), "3".getBytes());
@@ -209,7 +206,7 @@ class ColumnFamilyTest {
 	void keyMayExist_returnsTrueForPresentKey(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
 			// When
@@ -224,7 +221,7 @@ class ColumnFamilyTest {
 	void keyMayExist_returnsFalseForAbsentKey(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 
 			// When
 			var result = db.keyMayExist(cf, "absent".getBytes());
@@ -242,7 +239,7 @@ class ColumnFamilyTest {
 	void put_get_byteBuffer_overload(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			ByteBuffer key = directBuffer("k");
 			ByteBuffer val = directBuffer("v");
 
@@ -261,7 +258,7 @@ class ColumnFamilyTest {
 	void get_byteBuffer_returnsNotEnoughCapacity_whenValueDoesNotFit(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			ByteBuffer key = directBuffer("k");
 			ByteBuffer val = directBuffer("value");
 			db.put(cf, key, val);
@@ -286,7 +283,7 @@ class ColumnFamilyTest {
 	void newIterator_scansKeysInColumnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
 
@@ -308,7 +305,7 @@ class ColumnFamilyTest {
 	void newIterator_doesNotSeeKeysFromOtherFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put("default-key".getBytes(), "x".getBytes());
 			db.put(cf, "cf-key".getBytes(), "y".getBytes());
 
@@ -333,7 +330,7 @@ class ColumnFamilyTest {
 	void writeBatch_putAndDelete_inColumnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var batch = WriteBatch.create()) {
 
 			// When
@@ -352,7 +349,7 @@ class ColumnFamilyTest {
 	void writeBatch_deleteRange_inColumnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var batch = WriteBatch.create()) {
 			db.put(cf, "a".getBytes(), "1".getBytes());
 			db.put(cf, "b".getBytes(), "2".getBytes());
@@ -377,7 +374,7 @@ class ColumnFamilyTest {
 	void flush_columnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var flushOpts = FlushOptions.newFlushOptions().setWait(true)) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 
@@ -393,7 +390,7 @@ class ColumnFamilyTest {
 	void getProperty_columnFamily(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 
 			// When
 			var prop = db.getProperty(cf, Property.NUM_ENTRIES_ACTIVE_MEM_TABLE);
@@ -410,11 +407,11 @@ class ColumnFamilyTest {
 
 		// When
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			var name = cf.getName();
 
 			// Then
-			assertThat(name).isEqualTo("cf1");
+			assertThat(name).isEqualTo(ColumnFamilyName.of("cf1"));
 		}
 	}
 }

@@ -149,7 +149,7 @@ class MergeOperatorTest {
 				.setMergeOperator(MergeOperator.uint64Add());
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts))) {
 			db.merge(cf, "views".getBytes(), encodeUint64(1));
 			db.merge(cf, "views".getBytes(), encodeUint64(4));
 
@@ -169,7 +169,7 @@ class MergeOperatorTest {
 				.setMergeOperator(MergeOperator.uint64Add());
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts))) {
 			ByteBuffer key = directBuffer("views");
 			db.merge(cf, key.duplicate(), directBuffer(encodeUint64(1)));
 			db.merge(cf, key.duplicate(), directBuffer(encodeUint64(4)));
@@ -190,7 +190,7 @@ class MergeOperatorTest {
 				.setMergeOperator(MergeOperator.uint64Add());
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
 			db.merge(cf, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(1)));
@@ -297,7 +297,7 @@ class MergeOperatorTest {
 				.setMergeOperator(MergeOperator.uint64Add());
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var wo = WriteOptions.newWriteOptions()) {
 			db.merge(cf, wo, "views".getBytes(), encodeUint64(1));
 			db.merge(cf, wo, "views".getBytes(), encodeUint64(4));
@@ -319,7 +319,7 @@ class MergeOperatorTest {
 				.setMergeOperator(MergeOperator.uint64Add());
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var wo = WriteOptions.newWriteOptions()) {
 			ByteBuffer key = directBuffer("views");
 			db.merge(cf, wo, key.duplicate(), directBuffer(encodeUint64(1)));
@@ -342,7 +342,7 @@ class MergeOperatorTest {
 				.setMergeOperator(MergeOperator.uint64Add());
 		     var db = RocksDB.openReadWrite(opts, dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var arena = Arena.ofConfined();
 		     var wo = WriteOptions.newWriteOptions()) {
 			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());

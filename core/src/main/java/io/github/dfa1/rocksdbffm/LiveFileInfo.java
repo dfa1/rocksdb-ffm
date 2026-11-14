@@ -95,10 +95,10 @@ public final class LiveFileInfo {
 	/// Returns the name of the column family this file belongs to.
 	///
 	/// @return the column family name
-	public String columnFamilyName() {
+	public ColumnFamilyName columnFamilyName() {
 		try {
 			MemorySegment p = (MemorySegment) MH_CF_NAME.invokeExact(owner.ptr(), index);
-			return NativeCalls.toBorrowedJavaString(p);
+			return ColumnFamilyName.ofBytes(NativeCalls.toBorrowedBytes(p));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("columnFamilyName failed", t);
 		}

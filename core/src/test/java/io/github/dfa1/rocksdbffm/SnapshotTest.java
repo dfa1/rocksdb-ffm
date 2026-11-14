@@ -227,7 +227,7 @@ class SnapshotTest {
 	void snapshot_get_cf_isolatesFromWritesAfterSnapshot(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "key".getBytes(), "before".getBytes());
 
 			try (Snapshot snap = db.getSnapshot();

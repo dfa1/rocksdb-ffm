@@ -102,7 +102,7 @@ class TracingTest {
 		}
 
 		try (Options targetOpts = Options.newOptions().setCreateIfMissing(true); var target = RocksDB.openReadWrite(targetOpts, dir.resolve("target"));
-		     var cf = target.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = target.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var env = Env.defaultEnv();
 		     var envOptions = EnvOptions.newEnvOptions();
 		     var replayer = Replayer.create(target, List.of(cf), env, envOptions, tracePath)) {

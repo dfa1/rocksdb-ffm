@@ -86,7 +86,7 @@ class MergeTest {
 	void readWriteDb_merge_columnFamily_throwsWithoutMergeOperator(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			// When
 			var thrown = assertThatThrownBy(() -> db.merge(cf, "k".getBytes(), "v".getBytes()));
 

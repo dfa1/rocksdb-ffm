@@ -270,7 +270,7 @@ class TransactionDBTest {
 
 	private static TransactionDB openDbWithCf(Path path, List<ColumnFamilyHandle> handles) {
 		var db = openDb(path);
-		handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of("cf1")));
+		handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))));
 		return db;
 	}
 
@@ -625,7 +625,7 @@ class TransactionDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var db = openDbWithMergeOperator(dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add())) {
-			handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts)));
+			handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts)));
 			var cf = handles.get(0);
 			db.merge(cf, "views".getBytes(), encodeUint64(1));
 
@@ -644,7 +644,7 @@ class TransactionDBTest {
 		List<ColumnFamilyHandle> handles = new ArrayList<>();
 		try (var db = openDbWithMergeOperator(dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add())) {
-			handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts)));
+			handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts)));
 			var cf = handles.get(0);
 			var key = directBuffer("views");
 			db.merge(cf, key.duplicate(), directBuffer(encodeUint64(1)));
@@ -665,7 +665,7 @@ class TransactionDBTest {
 		try (var db = openDbWithMergeOperator(dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
 		     var arena = Arena.ofConfined()) {
-			handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts)));
+			handles.add(db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts)));
 			var cf = handles.get(0);
 			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
 			db.merge(cf, key, arena.allocateFrom(ValueLayout.JAVA_BYTE, encodeUint64(1)));
@@ -994,7 +994,7 @@ class TransactionDBTest {
 	void getProperty_columnFamily_returnsValue(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 
 			// When
 			var result = db.getProperty(cf, Property.NUM_ENTRIES_ACTIVE_MEM_TABLE);
@@ -1008,7 +1008,7 @@ class TransactionDBTest {
 	void getLongProperty_columnFamily_returnsValue(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 
 			// When
 			var result = db.getLongProperty(cf, Property.ESTIMATE_NUM_KEYS);
@@ -1022,7 +1022,7 @@ class TransactionDBTest {
 	void dropColumnFamily_removesFamily(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir)) {
-			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("to-drop"));
+			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("to-drop")));
 
 			// When
 			db.dropColumnFamily(cf);
@@ -1030,11 +1030,8 @@ class TransactionDBTest {
 
 			// Then — family list should only contain default
 			try (var opts = Options.newOptions()) {
-				List<byte[]> families = RocksDB.listColumnFamilies(opts, dir);
-				List<String> names = families.stream()
-						.map(b -> new String(b, StandardCharsets.UTF_8))
-						.toList();
-				assertThat(names).containsExactly("default");
+				List<ColumnFamilyName> families = RocksDB.listColumnFamilies(opts, dir);
+				assertThat(families).containsExactly(ColumnFamilyName.DEFAULT);
 			}
 		}
 	}
@@ -1047,7 +1044,7 @@ class TransactionDBTest {
 	void openTransaction_withColumnFamilies_reopensExistingFamily(@TempDir Path dir) {
 		// Given — create a DB with a custom CF, then close it
 		try (var db = openDb(dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"))) {
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")))) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 		}
 
@@ -1056,7 +1053,7 @@ class TransactionDBTest {
 		try (var opts = Options.newOptions();
 		     var txnDbOpts = TransactionDBOptions.newTransactionDBOptions();
 		     var db = RocksDB.openTransaction(opts, txnDbOpts, dir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     handles)) {
 			var cf = handles.get(1);
 
@@ -1099,7 +1096,7 @@ class TransactionDBTest {
 	void dropColumnFamily_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
 		// Given
 		var db = openDb(dir);
-		ColumnFamilyHandle cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		ColumnFamilyHandle cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		db.close();
 
 		// When
@@ -1113,7 +1110,7 @@ class TransactionDBTest {
 	void getProperty_columnFamily_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
 		// Given
 		var db = openDb(dir);
-		ColumnFamilyHandle cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		ColumnFamilyHandle cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		db.close();
 
 		// When
@@ -1127,7 +1124,7 @@ class TransactionDBTest {
 	void getLongProperty_columnFamily_afterClose_throwsInsteadOfCrashing(@TempDir Path dir) {
 		// Given
 		var db = openDb(dir);
-		ColumnFamilyHandle cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		ColumnFamilyHandle cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		db.close();
 
 		// When
@@ -1238,7 +1235,7 @@ class TransactionDBTest {
 		// Given
 		try (var db = openDbWithMergeOperator(dir);
 		     var cfOpts = Options.newOptions().setMergeOperator(MergeOperator.uint64Add());
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1", cfOpts));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"), cfOpts));
 		     var wo = WriteOptions.newWriteOptions();
 		     var arena = Arena.ofConfined()) {
 			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "views".getBytes());
@@ -1257,7 +1254,7 @@ class TransactionDBTest {
 	void directDelete_columnFamily_bytes_removesKey(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var wo = WriteOptions.newWriteOptions()) {
 			db.put(cf, "k1".getBytes(), "v".getBytes());
 			db.put(cf, "k2".getBytes(), "v".getBytes());
@@ -1276,7 +1273,7 @@ class TransactionDBTest {
 	void directGet_columnFamily_pinned_returnsMappedValue_whenPresent(@TempDir Path dir) {
 		// Given
 		try (var db = openDb(dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var arena = Arena.ofConfined()) {
 			db.put(cf, "k".getBytes(), "value".getBytes());
 			var key = arena.allocateFrom(ValueLayout.JAVA_BYTE, "k".getBytes());
@@ -1293,7 +1290,7 @@ class TransactionDBTest {
 	void flush_columnFamily_writesSstFile(@TempDir Path dir) throws java.io.IOException {
 		// Given
 		try (var db = openDb(dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var fo = FlushOptions.newFlushOptions()) {
 			db.put(cf, "k".getBytes(), "v".getBytes());
 

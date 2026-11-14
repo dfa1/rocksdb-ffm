@@ -91,7 +91,7 @@ class ApproximateSizesTest {
 	void getApproximateSizes_columnFamilyScoped_isolatesFromDefaultCf(@TempDir Path dir) {
 		// Given -- data written only to a non-default column family
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var fo = FlushOptions.newFlushOptions()) {
 			byte[] value = new byte[4096];
 			for (int i = 0; i < 200; i++) {
@@ -113,7 +113,7 @@ class ApproximateSizesTest {
 	void getApproximateSizes_columnFamilyScopedWithOptions_countsUnflushedData(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
-		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var opts = SizeApproximationOptions.create().setIncludeMemtables(true)) {
 			byte[] value = new byte[4096];
 			for (int i = 0; i < 200; i++) {

@@ -54,7 +54,7 @@ class EventNotifierCompactionIntegrationTest {
 			public void onCompactionCompleted(CompactionJobInfo info) {
 				compactionCompletedCount.incrementAndGet();
 				compactionOutputLevels.add(info.outputLevel());
-				compactionColumnFamilyNames.add(info.columnFamilyName());
+				compactionColumnFamilyNames.add(info.columnFamilyName().toString());
 			}
 		};
 

@@ -46,7 +46,7 @@ public final class LoadedOptions implements AutoCloseable {
 	/// @param name column family name
 	/// @return the family's options; owned by this object, do not close
 	/// @throws NoSuchElementException if no column family has that name
-	public Options columnFamilyOptions(String name) {
+	public Options columnFamilyOptions(ColumnFamilyName name) {
 		for (ColumnFamilyDescriptor descriptor : columnFamilies) {
 			if (descriptor.name().equals(name)) {
 				return descriptor.options();

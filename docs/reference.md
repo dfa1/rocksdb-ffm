@@ -77,7 +77,7 @@ Column families are not a separate method name — every factory that supports t
 | `openSecondary(Options, Path primary, Path secondary)`                         | yes               | `SecondaryDB`             |
 | `openTransaction(Options, TransactionDBOptions, Path)`                         | yes               | `TransactionDB`           |
 | `openOptimistic(Options, Path)`                                                | yes               | `OptimisticTransactionDB` |
-| `listColumnFamilies(Options, Path)`                                            | —                 | `List<byte[]>`            |
+| `listColumnFamilies(Options, Path)`                                            | —                 | `List<ColumnFamilyName>`  |
 
 The `Path`-only forms use default options, so they fail if the database does not exist. To create it, pass
 `Options` with `setCreateIfMissing(true)`.
@@ -97,7 +97,7 @@ Each type exposes only the operations that are valid for it — see
 | `TransactionDB`           |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   —    | ✅  |
 | `OptimisticTransactionDB` |  ✅   |  ✅  |   ✅    |    ✅    |  ✅   |   ✅    |   ✅   | ✅  |
 
-`SecondaryDB` adds `tryCatchUpWithPrimary()`. `TtlDB` adds `getTtl()` (the TTL passed to the single-TTL open) and `getColumnFamilyTtls()` (the per-family TTLs passed to the per-column-family open). `TransactionDB` and
+`SecondaryDB` adds `tryCatchUpWithPrimary()`. `TtlDB` adds `getTtl()` (the TTL passed to the single-TTL open; empty for the per-column-family open). `TransactionDB` and
 `OptimisticTransactionDB` add `beginTransaction(...)`.
 
 ## Key/value operations
@@ -390,7 +390,8 @@ compaction, so close them promptly.
 
 | Type                     | Description                                                        |
 |:-------------------------|:-------------------------------------------------------------------|
-| `ColumnFamilyDescriptor` | `of(String)`, `of(String, Options)`; `name()` |
+| `ColumnFamilyName`       | `of(String)`, `DEFAULT`; holds the raw name bytes (lossless for non-UTF-8 names), `toString()` decodes for display |
+| `ColumnFamilyDescriptor` | `of(ColumnFamilyName)`, `of(ColumnFamilyName, Options)`; `name()` |
 | `ColumnFamilyHandle`     | Live handle; `getId()`, `getName()`; `AutoCloseable`               |
 
 `createColumnFamily(ColumnFamilyDescriptor)` and `dropColumnFamily(handle)` exist on `ReadWriteDB`,

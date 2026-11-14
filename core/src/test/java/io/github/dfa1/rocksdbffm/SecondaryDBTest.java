@@ -361,7 +361,7 @@ class SecondaryDBTest {
 		// Given — primary creates a non-default column family and writes/flushes data into it
 		try (var opts = Options.newOptions().setCreateIfMissing(true);
 		     var primary = RocksDB.openReadWrite(opts, primaryDir);
-		     var cf1 = primary.createColumnFamily(ColumnFamilyDescriptor.of("cf1"));
+		     var cf1 = primary.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		     var fo = FlushOptions.newFlushOptions()) {
 			primary.put(cf1, "k".getBytes(), "v".getBytes());
 			primary.flush(cf1, fo);
@@ -371,7 +371,7 @@ class SecondaryDBTest {
 		List<ColumnFamilyHandle> secondaryHandles = new ArrayList<>();
 		try (var opts = Options.newOptions();
 		     var secondary = RocksDB.openSecondary(opts, primaryDir, secondaryDir,
-				     List.of(ColumnFamilyDescriptor.of("default"), ColumnFamilyDescriptor.of("cf1")),
+				     List.of(ColumnFamilyDescriptor.of(ColumnFamilyName.DEFAULT), ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1"))),
 				     secondaryHandles)) {
 			secondary.tryCatchUpWithPrimary();
 			var cf1 = secondaryHandles.get(1);

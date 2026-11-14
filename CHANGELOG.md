@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** column family names are the new `ColumnFamilyName` type, which keeps the raw name bytes so a name written by another binding round-trips unchanged: `ColumnFamilyDescriptor.of(ColumnFamilyName)`/`name()`, `ColumnFamilyHandle.getName()`, `columnFamilyName()` on the event/live-file info types, `LoadedOptions.columnFamilyOptions(ColumnFamilyName)` and `RocksDB.listColumnFamilies` (now `List<ColumnFamilyName>`, previously lossy `List<byte[]>`); `ColumnFamilyName.DEFAULT` replaces the `"default"` literal ([#275](https://github.com/dfa1/rocksdb-ffm/pull/275), [#304](https://github.com/dfa1/rocksdb-ffm/pull/304), closes [#302](https://github.com/dfa1/rocksdb-ffm/issues/302))
+
 ## [0.19] — 2026-11-13
 
 Shared immortal defaults, no implicit database creation, `BlobDB` folded into `ReadWriteDB`, and a batch of new options from contributors.
@@ -27,7 +31,7 @@ Shared immortal defaults, no implicit database creation, `BlobDB` folded into `R
 - `beginTransaction(WriteOptions)`, `ingestExternalFile(files)`, `newSstFileWriter(Options)`, the default-env tracing overloads, `Replayer.create(db, path)` and column families created without options reuse one immortal native default instead of creating and destroying options on every call ([#276](https://github.com/dfa1/rocksdb-ffm/pull/276))
 - **Breaking:** `openReadWrite(Path)` and `openTtl(Path, Duration)` no longer create a missing database: they use default options and fail with "does not exist". Pass `Options` with `setCreateIfMissing(true)` to create it ([#286](https://github.com/dfa1/rocksdb-ffm/pull/286), closes [#285](https://github.com/dfa1/rocksdb-ffm/issues/285))
 - **Breaking:** `BlobDB` and `RocksDB.openBlob(...)` are removed. Blob files are an `Options` setting, so use `RocksDB.openReadWrite(options, path)` with `setEnableBlobFiles(true)` ([#288](https://github.com/dfa1/rocksdb-ffm/pull/288))
-- **Breaking:** `TtlDB.getTtl()` returns `Optional<Duration>`, empty for the per-column-family open; new `TtlDB.getColumnFamilyTtls()` returns each family's TTL by name ([#291](https://github.com/dfa1/rocksdb-ffm/pull/291), closes [#289](https://github.com/dfa1/rocksdb-ffm/issues/289))
+- **Breaking:** `TtlDB.getTtl()` returns `Optional<Duration>`, empty for the per-column-family open ([#291](https://github.com/dfa1/rocksdb-ffm/pull/291), closes [#289](https://github.com/dfa1/rocksdb-ffm/issues/289))
 
 ### Fixed
 
