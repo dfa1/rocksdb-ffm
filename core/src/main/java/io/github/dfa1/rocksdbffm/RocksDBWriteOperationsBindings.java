@@ -393,6 +393,8 @@ final class RocksDBWriteOperationsBindings {
 	}
 
 	static void dropCf(NativeDB db, ColumnFamilyHandle handle) {
+		// Before the native drop: it acts on whichever database the handle belongs to, not on `db`.
+		db.requireOwns(handle);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DROP_CF.invokeExact(db.dbPtr(), handle.ptr(), err);
