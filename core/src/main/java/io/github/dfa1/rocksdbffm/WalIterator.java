@@ -62,12 +62,18 @@ public final class WalIterator extends NativeObject {
 	// instead of raising a Java exception (see getBatch()'s guard below).
 	private boolean batchFetchedAtCurrentPosition;
 
-	private WalIterator(MemorySegment ptr) {
+	/// The database this iterator reads through; it holds raw pointers into the database's state, so it is
+	/// released before the database is.
+	private final NativeObjectWithChildren owningDb;
+
+	private WalIterator(NativeObjectWithChildren owningDb, MemorySegment ptr) {
 		super(ptr);
+		this.owningDb = owningDb;
+		owningDb.registerChild(this);
 	}
 
-	static WalIterator wrap(MemorySegment ptr) {
-		return new WalIterator(ptr);
+	static WalIterator wrap(NativeObjectWithChildren owningDb, MemorySegment ptr) {
+		return new WalIterator(owningDb, ptr);
 	}
 
 	/// Returns `true` if the iterator is positioned at a valid batch.
@@ -137,6 +143,7 @@ public final class WalIterator extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
+		owningDb.unregisterChild(this);
 		MH_DESTROY.invokeExact(ptr);
 	}
 }

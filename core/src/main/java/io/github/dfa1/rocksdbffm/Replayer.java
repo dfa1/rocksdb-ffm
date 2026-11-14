@@ -63,8 +63,14 @@ public final class Replayer extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 
-	private Replayer(MemorySegment ptr) {
+	/// The database trace records are replayed into; the replayer keeps raw pointers to it, so it is released
+	/// before the database is.
+	private final NativeObjectWithChildren owningDb;
+
+	private Replayer(NativeObjectWithChildren owningDb, MemorySegment ptr) {
 		super(ptr);
+		this.owningDb = owningDb;
+		owningDb.registerChild(this);
 	}
 
 	/// Opens `tracePath` for replay against `db`'s default column family, using the default
@@ -101,7 +107,7 @@ public final class Replayer extends NativeObject {
 			MemorySegment ptr = (MemorySegment) MH_CREATE.invokeExact(
 					db.dbPtr(), cfArr, (long) cfs.size(), env.ptr(), envOptions.ptr(), pathSeg, err);
 			NativeCalls.checkError(err);
-			return new Replayer(ptr);
+			return new Replayer((NativeObjectWithChildren) db, ptr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("Replayer.create failed", t);
 		}
@@ -144,6 +150,7 @@ public final class Replayer extends NativeObject {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
+		owningDb.unregisterChild(this);
 		MH_DESTROY.invokeExact(ptr);
 	}
 }
