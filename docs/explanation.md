@@ -173,10 +173,6 @@ never double-free — whichever runs second is a no-op. No lock, no cost added t
 at all — a stronger result than the "lock around every native call site" trade the second paragraph
 of this section declines for the unrelated, broader close()-vs-any-method race.
 
-A `Transaction` follows the same pattern, one level
-deeper: it registers with the database it was begun on, and the iterators it creates register with the transaction, so a
-database close releases iterators, then transactions (anything uncommitted is discarded), then its own pointer.
-
 The fifth case is a child that is handed out *and kept* by its owner: a `ColumnFamilyHandle`. Destroying one after
 its database is closed is a use-after-free (its destructor locks the database's mutex), and the previous API pushed
 that ordering onto the caller through an output list. Now every database type (`NativeDB`) owns its handles in a
@@ -187,6 +183,36 @@ looked up by name is shared by every user of that database and closing it early 
 once, by its owner. Only `dropColumnFamily` releases one earlier; a thread still using that handle at that moment is
 in the same close-versus-call window as any other `NativeObject`. See
 [ADR 0009](adr/0009-db-owned-column-family-handles.md).
+
+### The ownership tree
+
+The cases above compose into one rule: *an object that borrows a native pointer from another object is that object's
+child, and children are released before their parent.* For a database it looks like this:
+
+```
+Database (ReadWriteDB, TtlDB, TransactionDB, ...)
+├── ColumnFamilyHandle     owned by the database; close() is a no-op
+├── RocksIterator          closed by you, or by the database's close
+├── Snapshot               closed by you, or by the database's close
+└── Transaction            TransactionDB and OptimisticTransactionDB only
+    ├── RocksIterator      from txn.newIterator(...)
+    └── Snapshot           from txn.getSnapshot()
+```
+
+Closing a node closes its whole subtree first, depth first, and only then frees its own pointer: a database close
+releases iterators and snapshots, then each transaction (iterators and snapshot first, then the transaction itself,
+which discards anything uncommitted), then the column family handles, then the database. A child closed on its own
+unregisters from its parent, so a long-lived database does not accumulate dead children. Once a database is closed,
+every object in its tree throws `IllegalStateException` instead of dereferencing freed memory.
+
+For callers that means: close what you open, innermost first, and you are fine; if you forget, closing the parent is
+safe. What the tree cannot make safe is a method running on another thread *while* its parent closes (the
+close-versus-call window described above).
+
+For contributors: a new wrapper whose native object points into another wrapper's memory takes that owner in its
+constructor, calls `owner.registerChild(this)`, and calls `owner.unregisterChild(this)` first thing in its release. A
+borrowed object with no owner is a bug: it is exactly what made `Transaction.newIterator` and `Transaction.getSnapshot`
+read freed memory once their transaction was gone ([#312](https://github.com/dfa1/rocksdb-ffm/issues/312)).
 
 ## Only valid operations
 
