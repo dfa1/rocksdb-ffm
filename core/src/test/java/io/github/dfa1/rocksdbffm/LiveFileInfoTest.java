@@ -82,7 +82,7 @@ class LiveFileInfoTest {
 
 			// Then
 			assertThat(size).isEqualTo(1);
-			assertThatThrownBy(file::name).isInstanceOf(IllegalStateException.class);
+			assertThatThrownBy(file::relativeFilename).isInstanceOf(IllegalStateException.class);
 		}
 	}
 
@@ -117,11 +117,11 @@ class LiveFileInfoTest {
 
 			// When
 			List<Long> entryCounts = new ArrayList<>();
-			List<String> names = new ArrayList<>();
+			List<Path> names = new ArrayList<>();
 			try (var files = db.getLiveFiles()) {
 				for (LiveFileInfo file : files) {
 					entryCounts.add(file.numberOfEntries());
-					names.add(file.name());
+					names.add(file.relativeFilename());
 				}
 			}
 
@@ -153,7 +153,7 @@ class LiveFileInfoTest {
 	}
 
 	@Test
-	void path_unlikeResolvingNameAgainstDirectory_keepsTheDirectory(@TempDir Path dir) {
+	void relativeFilename_hasNoLeadingSlash_soResolveKeepsTheDirectory(@TempDir Path dir) {
 		// Given
 		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dbOpts, dir);
 		     var fo = FlushOptions.newFlushOptions()) {
@@ -163,12 +163,11 @@ class LiveFileInfoTest {
 			// When
 			try (var files = db.getLiveFiles()) {
 				LiveFileInfo file = files.get(0);
-				Path naive = file.directory().resolve(file.name());
+				Path resolved = file.directory().resolve(file.relativeFilename());
 
 				// Then
-				assertThat(file.name()).startsWith("/");
-				assertThat(naive).isNotEqualTo(file.path());
-				assertThat(file.path()).isEqualTo(dir.resolve(file.name().substring(1)));
+				assertThat(file.relativeFilename().isAbsolute()).isFalse();
+				assertThat(resolved).isEqualTo(file.path()).startsWith(dir).isRegularFile();
 			}
 		}
 	}
@@ -194,7 +193,7 @@ class LiveFileInfoTest {
 				assertThat(files.size()).isEqualTo(1);
 				LiveFileInfo file = files.get(0);
 				assertThat(file.columnFamilyName()).isEqualTo("default");
-				assertThat(file.name()).endsWith(".sst");
+				assertThat(file.relativeFilename().toString()).endsWith(".sst");
 				assertThat(file.directory()).isEqualTo(dir);
 				assertThat(file.level()).isZero();
 				assertThat(file.size().toBytes()).isPositive();
@@ -269,7 +268,7 @@ class LiveFileInfoTest {
 			}
 
 			// When / Then
-			assertThatThrownBy(file::name).isInstanceOf(IllegalStateException.class);
+			assertThatThrownBy(file::relativeFilename).isInstanceOf(IllegalStateException.class);
 		}
 	}
 

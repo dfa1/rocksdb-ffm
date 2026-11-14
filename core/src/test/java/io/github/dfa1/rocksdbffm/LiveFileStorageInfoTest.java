@@ -104,7 +104,7 @@ class LiveFileStorageInfoTest {
 				LiveFileStorageInfo tableFile = findFirst(info, FileType.TABLE_FILE);
 
 				// Then
-				assertThat(tableFile.relativeFilename()).endsWith(".sst");
+				assertThat(tableFile.relativeFilename().toString()).endsWith(".sst");
 				assertThat(tableFile.directory()).isEqualTo(dir);
 				assertThat(tableFile.fileNumber()).isPositive();
 				assertThat(tableFile.size().toBytes()).isPositive();
@@ -129,7 +129,7 @@ class LiveFileStorageInfoTest {
 
 				// Then — CURRENT has no file number, and its "true" contents at the moment of
 				// this snapshot are captured directly rather than read back off disk later
-				assertThat(currentFile.relativeFilename()).isEqualTo("CURRENT");
+				assertThat(currentFile.relativeFilename()).isEqualTo(Path.of("CURRENT"));
 				assertThat(currentFile.fileNumber()).isZero();
 				assertThat(currentFile.replacementContents()).isNotEmpty()
 						.hasSize((int) currentFile.size().toBytes());
