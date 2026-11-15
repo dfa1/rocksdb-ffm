@@ -25,8 +25,8 @@ final class NativeCalls {
 	static final MethodHandle MH_FREE = NativeLibrary.lookup("rocksdb_free",
 			FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-	/// The platform's own `size_t`, for the `size_t*` length out-parameters of the C API: its size is a fact of the
-	/// target, not an assumption of ours. Every platform with a bundled native library is 64-bit; on one where
+	/// The platform's own `size_t`, for every `size_t` of the C API (by-value parameters and return values, `size_t*`
+	/// slots, arrays): its size is a fact of the target, not an assumption of ours. Every platform with a bundled native library is 64-bit; on one where
 	/// `size_t` is not a `long`, this fails class initialization with a clear error instead of misreading lengths.
 	static final ValueLayout.OfLong SIZE_T = (ValueLayout.OfLong) Linker.nativeLinker().canonicalLayouts().get("size_t");
 
@@ -35,7 +35,7 @@ final class NativeCalls {
 	private static final MethodHandle MH_MALLOC = Linker.nativeLinker().downcallHandle(
 			Linker.nativeLinker().defaultLookup().find("malloc")
 					.orElseThrow(() -> new UnsatisfiedLinkError("Symbol not found: malloc")),
-			FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+			FunctionDescriptor.of(ValueLayout.ADDRESS, SIZE_T));
 
 	static {
 		MH_CLOSE = NativeLibrary.lookup("rocksdb_close",
