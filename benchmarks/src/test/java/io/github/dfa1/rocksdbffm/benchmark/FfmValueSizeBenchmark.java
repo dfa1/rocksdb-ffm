@@ -4,6 +4,7 @@ import io.github.dfa1.rocksdbffm.CopyResult;
 import io.github.dfa1.rocksdbffm.FlushOptions;
 import io.github.dfa1.rocksdbffm.Mapper;
 import io.github.dfa1.rocksdbffm.ReadWriteDB;
+import io.github.dfa1.rocksdbffm.Options;
 import io.github.dfa1.rocksdbffm.RocksDB;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -136,7 +137,9 @@ public class FfmValueSizeBenchmark {
 	@Setup(Level.Trial)
 	public void setup() throws Exception {
 		dbPath = Files.createTempDirectory("bench-ffm-valuesize-");
-		db = RocksDB.openReadWrite(dbPath);
+		try (Options createOptions = Options.newOptions().setCreateIfMissing(true)) {
+			db = RocksDB.openReadWrite(dbPath, createOptions);
+		}
 		arena = Arena.ofConfined();
 
 		int keyCount = (int) Math.clamp(TARGET_DB_BYTES / valueSize, MIN_KEYS, MAX_KEYS);
