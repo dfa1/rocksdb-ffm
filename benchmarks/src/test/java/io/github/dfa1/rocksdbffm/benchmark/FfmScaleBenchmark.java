@@ -2,6 +2,7 @@ package io.github.dfa1.rocksdbffm.benchmark;
 
 import io.github.dfa1.rocksdbffm.FlushOptions;
 import io.github.dfa1.rocksdbffm.ReadWriteDB;
+import io.github.dfa1.rocksdbffm.Options;
 import io.github.dfa1.rocksdbffm.RocksDB;
 import io.github.dfa1.rocksdbffm.RocksIterator;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -68,7 +69,9 @@ public class FfmScaleBenchmark {
 	@Setup(Level.Trial)
 	public void setup() throws Exception {
 		dbPath = Files.createTempDirectory("bench-ffm-scale-");
-		db = RocksDB.openReadWrite(dbPath);
+		try (Options createOptions = Options.newOptions().setCreateIfMissing(true)) {
+			db = RocksDB.openReadWrite(dbPath, createOptions);
+		}
 		arena = Arena.ofConfined();
 
 		byte[][] keys = TestData.randomBytes(keyCount, KEY_SIZE);

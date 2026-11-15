@@ -2,6 +2,7 @@ package io.github.dfa1.rocksdbffm.benchmark;
 
 import io.github.dfa1.rocksdbffm.CopyResult;
 import io.github.dfa1.rocksdbffm.ReadWriteDB;
+import io.github.dfa1.rocksdbffm.Options;
 import io.github.dfa1.rocksdbffm.RocksDB;
 import io.github.dfa1.rocksdbffm.WriteBatch;
 import io.github.dfa1.rocksdbffm.WriteOptions;
@@ -102,7 +103,9 @@ public class FfmBenchmark {
 	@Setup(Level.Trial)
 	public void setup() throws Exception {
 		dbPath = Files.createTempDirectory("bench-ffm-");
-		db = RocksDB.openReadWrite(dbPath);
+		try (Options createOptions = Options.newOptions().setCreateIfMissing(true)) {
+			db = RocksDB.openReadWrite(dbPath, createOptions);
+		}
 		noWalWriteOptions = WriteOptions.newWriteOptions().setDisableWal(true);
 		reusedArena = new ResettableArena(4096);
 

@@ -1,6 +1,7 @@
 package io.github.dfa1.rocksdbffm.benchmark;
 
 import io.github.dfa1.rocksdbffm.ReadWriteDB;
+import io.github.dfa1.rocksdbffm.Options;
 import io.github.dfa1.rocksdbffm.RocksDB;
 import io.github.dfa1.rocksdbffm.WriteBatch;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -56,7 +57,9 @@ public class WriteBatchSizeBenchmark {
 	@Setup(Level.Trial)
 	public void setup() throws Exception {
 		dbPath = Files.createTempDirectory("bench-writebatch-");
-		db = RocksDB.openReadWrite(dbPath);
+		try (Options createOptions = Options.newOptions().setCreateIfMissing(true)) {
+			db = RocksDB.openReadWrite(dbPath, createOptions);
+		}
 		batch = WriteBatch.create();
 		arena = Arena.ofConfined();
 

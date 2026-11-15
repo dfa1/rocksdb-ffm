@@ -6,6 +6,7 @@ import io.github.dfa1.rocksdbffm.ColumnFamilyHandle;
 import io.github.dfa1.rocksdbffm.CopyResult;
 import io.github.dfa1.rocksdbffm.FlushOptions;
 import io.github.dfa1.rocksdbffm.ReadWriteDB;
+import io.github.dfa1.rocksdbffm.Options;
 import io.github.dfa1.rocksdbffm.RocksDB;
 import io.github.dfa1.rocksdbffm.WaitForCompactOptions;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -108,7 +109,9 @@ public class BlogGetBenchmark {
 	@Setup(Level.Trial)
 	public void setup() throws Exception {
 		dbPath = Files.createTempDirectory("bench-ffm-blogget-");
-		db = RocksDB.openReadWrite(dbPath);
+		try (Options createOptions = Options.newOptions().setCreateIfMissing(true)) {
+			db = RocksDB.openReadWrite(dbPath, createOptions);
+		}
 		cf1 = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
 		arena = Arena.ofConfined();
 
