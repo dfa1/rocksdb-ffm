@@ -18,12 +18,4 @@ public final class ReadOnlyDB extends NativeDB
 		super(ptr);
 	}
 
-	// -----------------------------------------------------------------------
-	// AutoCloseable
-	// -----------------------------------------------------------------------
-
-	@Override
-	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		NativeCalls.closeDb(ptr);
-	}
 }

@@ -4,7 +4,7 @@ import java.lang.foreign.MemorySegment;
 
 /// FFM wrapper for a read-write `rocksdb_t*` instance.
 ///
-/// Obtain via [RocksDB#openReadWrite] or [RocksDB#openTtl].
+/// Obtain via [RocksDB#openReadWrite].
 ///
 /// ```
 /// try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(path, dbOpts)) {
@@ -18,14 +18,5 @@ public final class ReadWriteDB extends NativeDB
 
 	ReadWriteDB(MemorySegment ptr) {
 		super(ptr);
-	}
-
-	// -----------------------------------------------------------------------
-	// AutoCloseable
-	// -----------------------------------------------------------------------
-
-	@Override
-	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		NativeCalls.closeDb(ptr);
 	}
 }
