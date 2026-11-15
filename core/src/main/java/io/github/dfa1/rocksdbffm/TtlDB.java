@@ -88,13 +88,4 @@ public final class TtlDB extends NativeDB
 			throw NativeCalls.wrapInvokeFailure("createColumnFamily failed", t);
 		}
 	}
-
-	// -----------------------------------------------------------------------
-	// AutoCloseable
-	// -----------------------------------------------------------------------
-
-	@Override
-	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		NativeCalls.closeDb(ptr);
-	}
 }

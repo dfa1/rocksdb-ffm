@@ -63,13 +63,4 @@ public final class SecondaryDB extends NativeDB
 			throw NativeCalls.wrapInvokeFailure("tryCatchUpWithPrimary failed", t);
 		}
 	}
-
-	// -----------------------------------------------------------------------
-	// AutoCloseable
-	// -----------------------------------------------------------------------
-
-	@Override
-	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
-		NativeCalls.closeDb(ptr);
-	}
 }

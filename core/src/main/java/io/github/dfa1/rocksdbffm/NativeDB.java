@@ -1,6 +1,9 @@
 package io.github.dfa1.rocksdbffm;
 
+import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.MethodHandle;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.NoSuchElementException;
@@ -21,6 +24,9 @@ import java.util.concurrent.atomic.AtomicReference;
 /// [ColumnFamilyHandle#close()] is a no-op. See
 /// [ADR 0009](https://github.com/dfa1/rocksdb-ffm/blob/main/docs/adr/0009-db-owned-column-family-handles.md).
 abstract class NativeDB extends NativeObjectWithChildren {
+
+	/// `void rocksdb_close(rocksdb_t* db);`
+	private static final MethodHandle MH_CLOSE = NativeLibrary.lookup("rocksdb_close", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
 	/// In open order, then creation order. An immutable snapshot replaced wholesale on every change
 	/// (copy-on-write): lookups are lock-free, and changes happen only on open, create and drop.
@@ -54,10 +60,15 @@ abstract class NativeDB extends NativeObjectWithChildren {
 	public void close() {
 		if (inCallback()) {
 			throw new IllegalStateException("a database cannot be closed from inside a callback: "
-					+ "whatever invoked the callback is still using it. Close it once the callback has returned, "
-					+ "or from another thread");
+					                                + "whatever invoked the callback is still using it. Close it once the callback has returned, "
+					                                + "or from another thread");
 		}
 		super.close();
+	}
+
+	@Override
+	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
+		MH_CLOSE.invokeExact(ptr);
 	}
 
 	/// A stack walk rather than a flag set around each callback: `close()` is cold, while the callbacks sit on
