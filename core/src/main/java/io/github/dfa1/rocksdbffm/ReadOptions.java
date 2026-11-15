@@ -8,6 +8,7 @@ import java.lang.invoke.MethodHandle;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 /// FFM wrapper for `rocksdb_readoptions_t`.
 public final class ReadOptions extends NativeObjectWithChildren {
@@ -150,7 +151,7 @@ public final class ReadOptions extends NativeObjectWithChildren {
 
 	/// The snapshot installed by [#setSnapshot(Snapshot)], which the native struct holds a raw pointer to. Reads
 	/// through [#readPtr()] throw once it is closed, instead of dereferencing the freed snapshot.
-	private volatile Snapshot snapshot;
+	private final AtomicReference<Snapshot> snapshot = new AtomicReference<>();
 
 	private ReadOptions(MemorySegment ptr) {
 		super(ptr);
@@ -179,7 +180,7 @@ public final class ReadOptions extends NativeObjectWithChildren {
 		try {
 			MemorySegment snapPtr = (snapshot == null) ? MemorySegment.NULL : snapshot.ptr();
 			MH_SET_SNAPSHOT.invokeExact(ptr(), snapPtr);
-			this.snapshot = snapshot;
+			this.snapshot.set(snapshot);
 			return this;
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("readoptions setSnapshot failed", t);
@@ -502,7 +503,7 @@ public final class ReadOptions extends NativeObjectWithChildren {
 	/// @throws IllegalStateException if closed, or the installed snapshot was closed
 	MemorySegment readPtr() {
 		MemorySegment ptr = ptr();
-		Snapshot installed = snapshot;
+		Snapshot installed = snapshot.get();
 		if (installed != null && installed.isClosed()) {
 			throw new IllegalStateException("the snapshot set on these ReadOptions was closed: set another or null");
 		}
