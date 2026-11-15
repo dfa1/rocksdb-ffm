@@ -61,7 +61,7 @@ public final class LiveFileInfo {
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
 		MH_SIZE = NativeLibrary.lookup("rocksdb_livefiles_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
 		MH_SMALLESTKEY = NativeLibrary.lookup("rocksdb_livefiles_smallestkey",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,

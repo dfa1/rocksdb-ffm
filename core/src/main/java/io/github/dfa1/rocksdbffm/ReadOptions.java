@@ -115,19 +115,19 @@ public final class ReadOptions extends NativeObjectWithChildren {
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
 		MH_SET_READAHEAD_SIZE = NativeLibrary.lookup("rocksdb_readoptions_set_readahead_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_GET_READAHEAD_SIZE = NativeLibrary.lookup("rocksdb_readoptions_get_readahead_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_ITERATE_LOWER_BOUND = NativeLibrary.lookup("rocksdb_readoptions_set_iterate_lower_bound",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_SET_ITERATE_UPPER_BOUND = NativeLibrary.lookup("rocksdb_readoptions_set_iterate_upper_bound",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_SET_REQUEST_ID = NativeLibrary.lookup("rocksdb_readoptions_set_request_id",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_CLEAR_REQUEST_ID = NativeLibrary.lookup("rocksdb_readoptions_clear_request_id",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));

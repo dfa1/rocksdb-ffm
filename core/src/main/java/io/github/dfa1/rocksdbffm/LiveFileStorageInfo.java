@@ -45,35 +45,35 @@ public final class LiveFileStorageInfo {
 
 	static {
 		MH_RELATIVE_FILENAME = NativeLibrary.lookup("rocksdb_livefiles_storage_info_relative_filename",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_DIRECTORY = NativeLibrary.lookup("rocksdb_livefiles_storage_info_directory",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_FILE_NUMBER = NativeLibrary.lookup("rocksdb_livefiles_storage_info_file_number",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_FILE_TYPE = NativeLibrary.lookup("rocksdb_livefiles_storage_info_file_type",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_SIZE = NativeLibrary.lookup("rocksdb_livefiles_storage_info_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_TEMPERATURE = NativeLibrary.lookup("rocksdb_livefiles_storage_info_temperature",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_FILE_CHECKSUM = NativeLibrary.lookup("rocksdb_livefiles_storage_info_file_checksum",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_FILE_CHECKSUM_FUNC_NAME = NativeLibrary.lookup("rocksdb_livefiles_storage_info_file_checksum_func_name",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_REPLACEMENT_CONTENTS = NativeLibrary.lookup("rocksdb_livefiles_storage_info_replacement_contents",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_TRIM_TO_SIZE = NativeLibrary.lookup("rocksdb_livefiles_storage_info_trim_to_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 	}
 
 	private final LiveFilesStorageInfo owner;

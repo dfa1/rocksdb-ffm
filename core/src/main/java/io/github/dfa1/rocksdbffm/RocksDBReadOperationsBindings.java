@@ -48,45 +48,45 @@ final class RocksDBReadOperationsBindings {
 		MH_GET_PINNED_V2 =NativeLibrary.lookup("rocksdb_get_pinned_v2",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_GET_PINNED_CF_V2 = NativeLibrary.lookup("rocksdb_get_pinned_cf_v2",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_GET_INTO_BUFFER = NativeLibrary.lookup("rocksdb_get_into_buffer",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS));
 
 		MH_GET_INTO_BUFFER_CF = NativeLibrary.lookup("rocksdb_get_into_buffer_cf",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS));
 
 		MH_KEY_MAY_EXIST = NativeLibrary.lookup("rocksdb_key_may_exist",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_KEY_MAY_EXIST_CF = NativeLibrary.lookup("rocksdb_key_may_exist_cf",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_CREATE_ITERATOR_CF = NativeLibrary.lookup("rocksdb_create_iterator_cf",

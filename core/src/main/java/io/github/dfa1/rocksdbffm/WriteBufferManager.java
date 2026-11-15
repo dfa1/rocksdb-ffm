@@ -60,12 +60,12 @@ public final class WriteBufferManager extends NativeObject {
 	static {
 		MH_CREATE = NativeLibrary.lookup("rocksdb_write_buffer_manager_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.JAVA_LONG,
+						NativeCalls.SIZE_T,
 						ValueLayout.JAVA_BYTE));
 
 		MH_CREATE_WITH_CACHE = NativeLibrary.lookup("rocksdb_write_buffer_manager_create_with_cache",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.JAVA_LONG,
+						NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS,
 						ValueLayout.JAVA_BYTE));
 
@@ -79,32 +79,32 @@ public final class WriteBufferManager extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
 		MH_MEMORY_USAGE = NativeLibrary.lookup("rocksdb_write_buffer_manager_memory_usage",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_MUTABLE_MEMTABLE_MEMORY_USAGE = NativeLibrary.lookup("rocksdb_write_buffer_manager_mutable_memtable_memory_usage",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_DUMMY_ENTRIES_IN_CACHE_USAGE = NativeLibrary.lookup("rocksdb_write_buffer_manager_dummy_entries_in_cache_usage",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_BUFFER_SIZE = NativeLibrary.lookup("rocksdb_write_buffer_manager_buffer_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_BUFFER_SIZE = NativeLibrary.lookup("rocksdb_write_buffer_manager_set_buffer_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_SET_ALLOW_STALL = NativeLibrary.lookup("rocksdb_write_buffer_manager_set_allow_stall",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
 		MH_CREATE_WITH_POLICY = NativeLibrary.lookup("rocksdb_write_buffer_manager_create_with_policy",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.JAVA_LONG,
+						NativeCalls.SIZE_T,
 						ValueLayout.JAVA_BYTE,
 						ValueLayout.JAVA_INT));
 
 		MH_CREATE_WITH_CACHE_AND_POLICY = NativeLibrary.lookup("rocksdb_write_buffer_manager_create_with_cache_and_policy",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.JAVA_LONG,
+						NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS,
 						ValueLayout.JAVA_BYTE,
 						ValueLayout.JAVA_INT));

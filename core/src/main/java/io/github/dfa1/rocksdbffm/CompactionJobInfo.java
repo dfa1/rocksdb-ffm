@@ -74,12 +74,12 @@ public final class CompactionJobInfo {
 	/// `size_t rocksdb_compactionjobinfo_input_files_count(const rocksdb_compactionjobinfo_t*);`
 	private static final MethodHandle MH_INPUT_FILES_COUNT = NativeLibrary.lookup(
 			"rocksdb_compactionjobinfo_input_files_count",
-			FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+			FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 	/// `size_t rocksdb_compactionjobinfo_output_files_count(const rocksdb_compactionjobinfo_t*);`
 	private static final MethodHandle MH_OUTPUT_FILES_COUNT = NativeLibrary.lookup(
 			"rocksdb_compactionjobinfo_output_files_count",
-			FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+			FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 	/// `uint64_t rocksdb_compactionjobinfo_elapsed_micros(const rocksdb_compactionjobinfo_t*);`
 	private static final MethodHandle MH_ELAPSED_MICROS = NativeLibrary.lookup(
@@ -112,12 +112,12 @@ public final class CompactionJobInfo {
 	/// `size_t rocksdb_compactionjobinfo_num_input_files(const rocksdb_compactionjobinfo_t*);`
 	private static final MethodHandle MH_NUM_INPUT_FILES = NativeLibrary.lookup(
 			"rocksdb_compactionjobinfo_num_input_files",
-			FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+			FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 	/// `size_t rocksdb_compactionjobinfo_num_input_files_at_output_level(const rocksdb_compactionjobinfo_t*);`
 	private static final MethodHandle MH_NUM_INPUT_FILES_AT_OUTPUT_LEVEL = NativeLibrary.lookup(
 			"rocksdb_compactionjobinfo_num_input_files_at_output_level",
-			FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+			FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 	private final MemorySegment ptr;
 

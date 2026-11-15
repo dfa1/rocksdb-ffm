@@ -83,9 +83,9 @@ public final class CompactionFilter extends NativeObject {
 			ValueLayout.ADDRESS,   // state
 			ValueLayout.JAVA_INT,  // level
 			ValueLayout.ADDRESS,   // key
-			ValueLayout.JAVA_LONG, // key_length
+			NativeCalls.SIZE_T, // key_length
 			ValueLayout.ADDRESS,   // existing_value
-			ValueLayout.JAVA_LONG, // value_length
+			NativeCalls.SIZE_T, // value_length
 			ValueLayout.ADDRESS,   // new_value
 			ValueLayout.ADDRESS,   // new_value_length
 			ValueLayout.ADDRESS);  // value_changed
@@ -392,8 +392,8 @@ public final class CompactionFilter extends NativeObject {
 				case FilterDecision.ChangeValue(byte[] replacement) -> {
 					MemorySegment buf = scratchBuffer(s, replacement);
 					newValue.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0, buf);
-					newValueLength.reinterpret(ValueLayout.JAVA_LONG.byteSize())
-							.set(ValueLayout.JAVA_LONG, 0, replacement.length);
+					newValueLength.reinterpret(NativeCalls.SIZE_T.byteSize())
+							.set(NativeCalls.SIZE_T, 0, replacement.length);
 					valueChangedPtr.set(ValueLayout.JAVA_BYTE, 0, (byte) 1);
 					yield (byte) 0;
 				}

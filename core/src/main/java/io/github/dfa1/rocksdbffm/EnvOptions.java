@@ -136,19 +136,19 @@ public final class EnvOptions extends NativeObjectWithChildren {
 
 		MH_SET_COMPACTION_READAHEAD_SIZE = NativeLibrary.lookup(
 				"rocksdb_envoptions_set_compaction_readahead_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_GET_COMPACTION_READAHEAD_SIZE = NativeLibrary.lookup(
 				"rocksdb_envoptions_get_compaction_readahead_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_WRITABLE_FILE_MAX_BUFFER_SIZE = NativeLibrary.lookup(
 				"rocksdb_envoptions_set_writable_file_max_buffer_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_GET_WRITABLE_FILE_MAX_BUFFER_SIZE = NativeLibrary.lookup(
 				"rocksdb_envoptions_get_writable_file_max_buffer_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_RATE_LIMITER = NativeLibrary.lookup("rocksdb_envoptions_set_rate_limiter",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));

@@ -59,7 +59,7 @@ public final class Logger extends NativeObject {
 			ValueLayout.ADDRESS,   // void* priv  — carries the callback ID
 			ValueLayout.JAVA_INT,  // unsigned lev
 			ValueLayout.ADDRESS,   // char* msg
-			ValueLayout.JAVA_LONG  // size_t len
+			NativeCalls.SIZE_T  // size_t len
 	);
 
 	// Registry: callback ID (smuggled through the priv pointer) → LogCallback.

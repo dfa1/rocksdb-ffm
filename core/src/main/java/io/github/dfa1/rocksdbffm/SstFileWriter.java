@@ -60,21 +60,21 @@ public final class SstFileWriter extends NativeObject {
 		MH_PUT = NativeLibrary.lookup("rocksdb_sstfilewriter_put",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_DELETE = NativeLibrary.lookup("rocksdb_sstfilewriter_delete",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_DELETE_RANGE = NativeLibrary.lookup("rocksdb_sstfilewriter_delete_range",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_FINISH = NativeLibrary.lookup("rocksdb_sstfilewriter_finish",

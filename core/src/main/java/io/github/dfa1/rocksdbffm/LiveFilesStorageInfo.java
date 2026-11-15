@@ -42,7 +42,7 @@ public final class LiveFilesStorageInfo extends NativeObject implements Iterable
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_COUNT = NativeLibrary.lookup("rocksdb_livefiles_storage_info_count",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_DESTROY = NativeLibrary.lookup("rocksdb_livefiles_storage_info_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));

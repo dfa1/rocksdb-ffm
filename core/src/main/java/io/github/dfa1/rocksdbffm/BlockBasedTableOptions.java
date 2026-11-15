@@ -466,7 +466,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
 		MH_SET_BLOCK_SIZE = NativeLibrary.lookup("rocksdb_block_based_options_set_block_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_SET_FILTER_POLICY = NativeLibrary.lookup("rocksdb_block_based_options_set_filter_policy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
@@ -500,19 +500,19 @@ public final class BlockBasedTableOptions extends NativeObject {
 
 		MH_SET_MAX_AUTO_READAHEAD_SIZE = NativeLibrary.lookup(
 				"rocksdb_block_based_options_set_max_auto_readahead_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_GET_MAX_AUTO_READAHEAD_SIZE = NativeLibrary.lookup(
 				"rocksdb_block_based_options_get_max_auto_readahead_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_INITIAL_AUTO_READAHEAD_SIZE = NativeLibrary.lookup(
 				"rocksdb_block_based_options_set_initial_auto_readahead_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_GET_INITIAL_AUTO_READAHEAD_SIZE = NativeLibrary.lookup(
 				"rocksdb_block_based_options_get_initial_auto_readahead_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_NUM_FILE_READS_FOR_AUTO_READAHEAD = NativeLibrary.lookup(
 				"rocksdb_block_based_options_set_num_file_reads_for_auto_readahead",
@@ -706,19 +706,19 @@ public final class BlockBasedTableOptions extends NativeObject {
 
 		MH_SET_SUPER_BLOCK_ALIGNMENT_SIZE = NativeLibrary.lookup(
 				"rocksdb_block_based_options_set_super_block_alignment_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_GET_SUPER_BLOCK_ALIGNMENT_SIZE = NativeLibrary.lookup(
 				"rocksdb_block_based_options_get_super_block_alignment_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO = NativeLibrary.lookup(
 				"rocksdb_block_based_options_set_super_block_alignment_space_overhead_ratio",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_GET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO = NativeLibrary.lookup(
 				"rocksdb_block_based_options_get_super_block_alignment_space_overhead_ratio",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_PREPOPULATE_BLOCK_CACHE = NativeLibrary.lookup(
 				"rocksdb_block_based_options_set_prepopulate_block_cache",
@@ -730,7 +730,7 @@ public final class BlockBasedTableOptions extends NativeObject {
 
 		MH_SET_UDI_FACTORY_FROM_STRING = NativeLibrary.lookup(
 				"rocksdb_block_based_options_set_user_defined_index_factory_from_string",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_CLEAR_UDI_FACTORY = NativeLibrary.lookup(

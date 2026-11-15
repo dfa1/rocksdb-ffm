@@ -53,48 +53,48 @@ final class RocksDBWriteOperationsBindings {
 		MH_PUT = NativeLibrary.lookup("rocksdb_put",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_PUT_CF = NativeLibrary.lookup("rocksdb_put_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_MERGE = NativeLibrary.lookup("rocksdb_merge",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_MERGE_CF = NativeLibrary.lookup("rocksdb_merge_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_DELETE = NativeLibrary.lookup("rocksdb_delete",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_DELETE_CF = NativeLibrary.lookup("rocksdb_delete_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_DELETE_RANGE_CF = NativeLibrary.lookup("rocksdb_delete_range_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_WRITE = NativeLibrary.lookup("rocksdb_write",
@@ -124,7 +124,7 @@ final class RocksDBWriteOperationsBindings {
 
 		MH_INGEST_EXTERNAL_FILE = NativeLibrary.lookup("rocksdb_ingest_external_file",
 				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_CREATE_CF = NativeLibrary.lookup("rocksdb_create_column_family",

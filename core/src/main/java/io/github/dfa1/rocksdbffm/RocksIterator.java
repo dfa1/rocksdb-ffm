@@ -77,11 +77,11 @@ public final class RocksIterator extends NativeObject {
 
 		MH_SEEK = NativeLibrary.lookup("rocksdb_iter_seek",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_SEEK_FOR_PREV = NativeLibrary.lookup("rocksdb_iter_seek_for_prev",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_NEXT = NativeLibrary.lookup("rocksdb_iter_next",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));

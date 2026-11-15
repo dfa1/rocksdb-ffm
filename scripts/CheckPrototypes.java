@@ -14,7 +14,12 @@ import java.util.regex.Pattern;
 /// memory corruption, not an exception. Only the ABI is compared: return and parameter types,
 /// ignoring whitespace and parameter names.
 ///
-/// Exits 1 if a comment is missing, names a symbol `c.h` no longer declares, or differs from it.
+/// It also checks the `FunctionDescriptor` of each field: a `size_t` parameter or return value passed by value
+/// must be declared `NativeCalls.SIZE_T`, the platform's own `size_t`, never a fixed `JAVA_LONG`. (A `size_t*` stays
+/// `ADDRESS`; its slot is allocated and read with `NativeCalls.SIZE_T` where it is used.)
+///
+/// Exits 1 if a comment is missing, names a symbol `c.h` no longer declares, differs from it, or spells a `size_t`
+/// descriptor argument with anything but `SIZE_T`.
 ///
 /// Run from the repository root: `java scripts/CheckPrototypes.java`.
 
@@ -37,6 +42,82 @@ static String abi(String decl) {
 		String type = named ? m.group(1) + (m.group(3) == null ? "" : "[]") : r.group();
 		return Matcher.quoteReplacement(type.replaceAll("\\s+", ""));
 	});
+}
+
+static final Pattern SIZE_T_BY_VALUE = Pattern.compile("^(?:const\\s+)?size_t(?:\\s+\\w+)?$");
+
+/// Splits `text` at top-level commas, ignoring those inside nested parentheses.
+static List<String> topLevelArgs(String text) {
+	List<String> args = new ArrayList<>();
+	int depth = 0;
+	int start = 0;
+	for (int i = 0; i < text.length(); i++) {
+		char c = text.charAt(i);
+		if (c == '(') {
+			depth++;
+		} else if (c == ')') {
+			depth--;
+		} else if (c == ',' && depth == 0) {
+			args.add(text.substring(start, i).strip());
+			start = i + 1;
+		}
+	}
+	args.add(text.substring(start).strip());
+	return args;
+}
+
+/// The argument list of the `FunctionDescriptor` that follows the `"symbol"` literal in `source`, return layout
+/// first for `of(...)` (and `null` for `ofVoid(...)`), or `null` if there is none.
+static List<String> descriptorArgs(String source, String symbol) {
+	int at = source.indexOf("\"" + symbol + "\"");
+	int of = at < 0 ? -1 : source.indexOf("FunctionDescriptor.of", at);
+	if (of < 0) {
+		return null;
+	}
+	boolean isVoid = source.startsWith("FunctionDescriptor.ofVoid(", of);
+	int open = source.indexOf('(', of);
+	int depth = 0;
+	int close = open;
+	for (; close < source.length(); close++) {
+		char c = source.charAt(close);
+		depth += c == '(' ? 1 : c == ')' ? -1 : 0;
+		if (depth == 0) {
+			break;
+		}
+	}
+	List<String> args = new ArrayList<>(topLevelArgs(source.substring(open + 1, close)));
+	if (isVoid) {
+		args.addFirst(null);
+	}
+	return args;
+}
+
+/// Problems with the `size_t` by-value arguments of `symbol`'s descriptor, given its declaration in `c.h`.
+static List<String> sizeTProblems(String source, String symbol, String declared) {
+	List<String> args = descriptorArgs(source, symbol);
+	List<String> problems = new ArrayList<>();
+	if (args == null) {
+		return problems;
+	}
+	int open = declared.indexOf('(');
+	String ret = declared.substring(0, open).replaceAll("\\s*\\w+\\s*$", "").replaceAll("\\s+", " ").strip();
+	List<String> params = topLevelArgs(declared.substring(open + 1, declared.lastIndexOf(')')));
+	if (params.size() == 1 && params.getFirst().equals("void")) {
+		params = List.of();
+	}
+	if (args.size() != params.size() + 1) {
+		return problems; // an arity mismatch is not this check's concern
+	}
+	if (ret.equals("size_t") && !args.getFirst().endsWith("SIZE_T")) {
+		problems.add("return value is size_t but the descriptor says " + args.getFirst());
+	}
+	for (int p = 0; p < params.size(); p++) {
+		String arg = args.get(p + 1);
+		if (SIZE_T_BY_VALUE.matcher(params.get(p)).matches() && !arg.endsWith("SIZE_T")) {
+			problems.add("parameter " + (p + 1) + " is size_t but the descriptor says " + arg);
+		}
+	}
+	return problems;
 }
 
 /// Function name → declaration (whitespace collapsed), for every function `c.h` declares.
@@ -71,6 +152,7 @@ void main() throws Exception {
 	int checked = 0;
 	for (Path source : sources) {
 		List<String> lines = Files.readAllLines(source);
+		String text = String.join("\n", lines);
 		for (int i = 0; i < lines.size(); i++) {
 			if (!MH_FIELD.matcher(lines.get(i)).find()) {
 				continue;
@@ -96,6 +178,8 @@ void main() throws Exception {
 				errors.add(where + ": not declared in c.h: " + prototype);
 			} else if (!abi(declared).equals(abi(prototype))) {
 				errors.add(where + ": prototype changed\n    java: " + prototype + "\n    c.h:  " + declared);
+			} else {
+				sizeTProblems(text, name.group(1), declared).forEach(p -> errors.add(where + ": " + name.group(1) + ": " + p));
 			}
 		}
 	}

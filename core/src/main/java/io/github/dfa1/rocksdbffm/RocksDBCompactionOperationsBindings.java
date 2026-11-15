@@ -35,26 +35,26 @@ final class RocksDBCompactionOperationsBindings {
 		MH_COMPACT_RANGE = NativeLibrary.lookup("rocksdb_compact_range",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_COMPACT_RANGE_CF = NativeLibrary.lookup("rocksdb_compact_range_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_COMPACT_RANGE_OPT = NativeLibrary.lookup("rocksdb_compact_range_opt",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_SUGGEST_COMPACT_RANGE = NativeLibrary.lookup("rocksdb_suggest_compact_range",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
+						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
 		MH_DISABLE_FILE_DELETIONS = NativeLibrary.lookup("rocksdb_disable_file_deletions",

@@ -128,7 +128,7 @@ public final class RocksDB {
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		MH_LIST_CF_DESTROY = NativeLibrary.lookup("rocksdb_list_column_families_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_LOAD_LATEST_OPTIONS = NativeLibrary.lookup("rocksdb_load_latest_options",
 				FunctionDescriptor.ofVoid(
@@ -138,7 +138,7 @@ public final class RocksDB {
 
 		MH_LOAD_LATEST_OPTIONS_DESTROY = NativeLibrary.lookup("rocksdb_load_latest_options_destroy",
 				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_OPEN_FOR_READ_ONLY_CF = NativeLibrary.lookup("rocksdb_open_for_read_only_column_families",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,

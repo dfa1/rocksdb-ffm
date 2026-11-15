@@ -43,7 +43,7 @@ public final class ReadBatch implements AutoCloseable {
 	static {
 		MH_BATCHED_MULTI_GET_CF = NativeLibrary.lookup("rocksdb_batched_multi_get_cf",
 				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.JAVA_BOOLEAN));
@@ -70,7 +70,7 @@ public final class ReadBatch implements AutoCloseable {
 		this.cf = cf;
 		this.capacity = capacity;
 		this.keysArr = arena.allocate(ValueLayout.ADDRESS, capacity);
-		this.keySizesArr = arena.allocate(ValueLayout.JAVA_LONG, capacity);
+		this.keySizesArr = arena.allocate(NativeCalls.SIZE_T, capacity);
 		this.valuesArr = arena.allocate(ValueLayout.ADDRESS, capacity);
 		this.errsArr = arena.allocate(ValueLayout.ADDRESS, capacity);
 		this.vallenOut = arena.allocate(NativeCalls.SIZE_T);
@@ -209,7 +209,7 @@ public final class ReadBatch implements AutoCloseable {
 	/// @param keyLen this key's length in bytes
 	private void writeKeySlot(int i, MemorySegment keyPtr, long keyLen) {
 		keysArr.setAtIndex(ValueLayout.ADDRESS, i, keyPtr);
-		keySizesArr.setAtIndex(ValueLayout.JAVA_LONG, i, keyLen);
+		keySizesArr.setAtIndex(NativeCalls.SIZE_T, i, keyLen);
 	}
 
 	private void checkCapacity(int n) {
