@@ -26,13 +26,11 @@ public abstract class NativeObject implements AutoCloseable {
 	/// Set by [#makeImmortal()], which only ever runs once per object and before anything else can race with it.
 	private volatile boolean immortal;
 
-	private static final NativeObjectWithChildren[] NO_PARENTS = new NativeObjectWithChildren[0];
-
 	/// The objects this one borrows native memory from, set once by [#borrowedFrom(NativeObjectWithChildren...)];
 	/// [#release()] unregisters from them after the native release call. A plain field: it is assigned in full
 	/// before the registration that publishes this object to a parent's sweep, and that registration is what
 	/// makes the write visible to the sweeping thread.
-	private NativeObjectWithChildren[] parents = NO_PARENTS;
+	private NativeObjectWithChildren[] parents;
 
 	/// Initializes this wrapper with the given native pointer.
 	///
@@ -141,8 +139,10 @@ public abstract class NativeObject implements AutoCloseable {
 					// still find this object in its children, so its sweep waits on the monitor above instead of
 					// freeing the parent under a native release in progress. When this runs because that parent's
 					// own sweep is releasing its children, its pointer stays valid until the sweep ends.
-					for (NativeObjectWithChildren owner : parents) {
-						owner.unregisterChild(this);
+					if (parents != null) {
+						for (NativeObjectWithChildren owner : parents) {
+							owner.unregisterChild(this);
+						}
 					}
 				}
 			}

@@ -95,7 +95,9 @@ public final class Env extends NativeObject {
 	/// @return a new in-memory [Env], valid for the life of the JVM
 	public static Env memEnv() {
 		try {
-			return new Env((MemorySegment) MH_CREATE_MEM.invokeExact()).makeImmortal();
+			Env env = new Env((MemorySegment) MH_CREATE_MEM.invokeExact());
+			env.makeImmortal();
+			return env;
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("Env.memEnv failed", t);
 		}
