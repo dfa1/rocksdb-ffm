@@ -6,7 +6,8 @@ import java.lang.foreign.MemorySegment;
 ///
 /// The segment is only valid for the duration of [#map(MemorySegment)]; it is bound to
 /// an arena that is closed as soon as this method returns, so it — and any view derived
-/// from it — must not be retained past the call.
+/// from it — must not be retained past the call. For the same reason it must not close what it is reading
+/// from: closing the database here throws [IllegalStateException].
 ///
 /// @param <R> the type produced from mapping the pinned value
 @FunctionalInterface

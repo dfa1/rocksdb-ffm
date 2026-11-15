@@ -102,7 +102,8 @@ correct rather than a bug:
 try (var policy = FilterPolicy.newBloom(10);
      var tableConfig = BlockBasedTableOptions.newBlockBasedConfig().setFilterPolicy(policy);
      var options = Options.newOptions().setTableFormatConfig(tableConfig)) {
-	// policy.close() and tableConfig.close() are no-ops; the chain is freed once, at the top
+	// policy.close() is a no-op: the table config frees it. The options copied the table config,
+	// so tableConfig.close() frees only its own copy
 }
 ```
 
@@ -193,34 +194,135 @@ in the same close-versus-call window as any other `NativeObject`. See
 ### The ownership tree
 
 The cases above compose into one rule: *an object that borrows a native pointer from another object is that object's
-child, and children are released before their parent.* For a database it looks like this:
+child, and children are released before their parent.* The three diagrams below are the whole model: the states one
+wrapper goes through, who releases whom, and what a setter does to the object handed to it.
 
-```
-Database (ReadWriteDB, TtlDB, TransactionDB, ...)
-├── ColumnFamilyHandle     owned by the database; close() is a no-op
-├── RocksIterator          closed by you, or by the database's close
-├── Snapshot               closed by you, or by the database's close
-├── WalIterator, Checkpoint, Replayer
-└── Transaction            TransactionDB and OptimisticTransactionDB only
-    ├── RocksIterator      from txn.newIterator(...)
-    └── Snapshot           from txn.getSnapshot()
+**One wrapper.** Every `NativeObject` holds one pointer and is in one of four states:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Open: static factory
+    Open --> Closed: close(), or its owner's close
+    Open --> Transferred: handed to a setter that takes ownership
+    Open --> Immortal: makeImmortal()
+    Closed --> [*]: freed exactly once
+    Transferred --> [*]: freed by the native owner
 ```
 
-Closing a node closes its whole subtree first, depth first, and only then frees its own pointer: a database close
-releases all its children, then its own pointer, and a transaction releases its iterators and snapshot before it is
-destroyed (which discards anything uncommitted). Siblings are released in no particular order; only a child always goes
-before its parent. A child closed on its own
+| State         | `ptr()`                        | `close()`                         | Who frees the native object          |
+|:--------------|:-------------------------------|:----------------------------------|:-------------------------------------|
+| Open          | returns the pointer            | releases children, then itself    | —                                    |
+| Closed        | throws `IllegalStateException` | no-op                             | this wrapper did, once               |
+| Transferred   | throws `IllegalStateException` | no-op                             | the native object it was handed to   |
+| Immortal      | returns the pointer, forever   | no-op                             | nobody: it lives for the whole JVM   |
+
+**Who releases whom.** An arrow points from an owner to an object borrowing its native memory. Closing an owner
+releases everything its arrows reach first, depth first, and only then frees its own pointer:
+
+```mermaid
+flowchart TD
+    DB["<b>Database</b><br/>ReadWriteDB, ReadOnlyDB, SecondaryDB, TtlDB,<br/>TransactionDB, OptimisticTransactionDB"]
+    RO[ReadOptions]
+    EO[EnvOptions]
+    TX["Transaction<br/><i>the two transaction databases only</i>"]
+    CF["ColumnFamilyHandle<br/><i>close() is a no-op</i>"]
+    IT[RocksIterator]
+    SN[Snapshot]
+    MISC["WalIterator, Checkpoint, Replayer"]
+    TIT["RocksIterator<br/><i>txn.newIterator</i>"]
+    TSN["Snapshot<br/><i>txn.getSnapshot</i>"]
+    SFW[SstFileWriter]
+    PIN(["pinned value inside a Mapper<br/><i>not registered: lives for one call</i>"])
+
+    DB --> CF
+    DB --> IT
+    DB --> SN
+    DB --> MISC
+    DB --> TX
+    TX --> TIT
+    TX --> TSN
+    RO --> IT
+    RO --> TIT
+    EO --> SFW
+    DB -.-> PIN
+```
+
+Siblings are released in no particular order; only a child always goes before its parent. A child closed on its own
 unregisters from its parent, so a long-lived database does not accumulate dead children. Once a database is closed,
-every object in its tree throws `IllegalStateException` instead of dereferencing freed memory.
+every object in its graph throws `IllegalStateException` instead of dereferencing freed memory.
 
-A `RocksIterator` has a second parent, the `ReadOptions` it was created with (it keeps pointers to the iterate bounds), so
-closing the options also closes their iterators. Closing a `Snapshot` that is installed in a `ReadOptions` makes the
-next read through those options throw until another snapshot (or `null`) is set; a transaction's `commit`,
-`rollback` and `rollbackToSavePoint` close its iterators, which RocksDB invalidates.
+It is a graph, not a tree, because a `RocksIterator` has two owners: its database (or transaction), and the
+`ReadOptions` it was created with, whose iterate bounds it keeps pointers into. Closing either closes the iterator.
+
+Three calls release part of the graph while its owner stays open, because RocksDB frees or invalidates the native
+objects behind it:
+
+| Call                              | Releases                                  |
+|:----------------------------------|:------------------------------------------|
+| `dropColumnFamily(handle)`        | that `ColumnFamilyHandle`                 |
+| `txn.commit()`, `txn.rollback()`  | the transaction's iterators and snapshot  |
+| `txn.rollbackToSavePoint()`       | the transaction's iterators               |
+
+Closing a `Snapshot` that is installed in a `ReadOptions` makes the next read through those options throw until
+another snapshot (or `null`) is set.
+
+**What a setter does to its argument.** Read off `db/c.cc`, one of four things happens, and it decides whether closing
+the argument afterwards is a no-op, a real release, or required:
+
+```mermaid
+flowchart LR
+    FP[FilterPolicy] ==>|transfers| BBTO[BlockBasedTableOptions]
+    ST[SliceTransform] ==>|transfers| O[Options]
+    MO["MergeOperator.custom"] ==>|transfers| O
+    CFF[CompactionFilterFactory] ==>|transfers| O
+
+    C[Cache] -->|shared| BBTO
+    C -->|shared| O
+    RL[RateLimiter] -->|shared| O
+    RL -->|shared| EO[EnvOptions]
+    SH["SstFileManager, WriteBufferManager, Logger,<br/>SstPartitionerFactory, FileChecksumGenFactory"] -->|shared| O
+
+    BBTO -.->|copied| O
+    TC["CuckooTableOptions, FifoCompactionOptions,<br/>UniversalCompactionOptions"] -.->|copied| O
+    O -.->|copied at open| DB[Database]
+
+    CFI[CompactionFilter] --o|raw pointer: immortal| O
+    ENV["Env.memEnv()"] --o|raw pointer: immortal| O
+    ENV --o|raw pointer: immortal| BEO[BackupEngineOptions]
+```
+
+| Edge              | Native side                               | The argument's wrapper afterwards                            |
+|:------------------|:------------------------------------------|:-------------------------------------------------------------|
+| **transfers**     | takes the pointer and frees it            | Transferred: `close()` is a no-op                            |
+| **shared**        | copies a `shared_ptr`                     | Open: close it whenever you like, the last holder frees      |
+| **copied**        | copies the value                          | Open: close it whenever you like, even before the open       |
+| **raw pointer**   | keeps a pointer nothing can free safely   | Immortal: never freed, so create it once and reuse it        |
 
 For callers that means: close what you open, innermost first, and you are fine; if you forget, closing the parent is
-safe. What the tree cannot make safe is a method running on another thread *while* its parent closes (the
-close-versus-call window described above).
+safe. Two things the graph cannot make safe: a method running on another thread *while* its parent closes (the
+close-versus-call window described above), and a close from *inside* a callback, next.
+
+### Closing from inside a callback
+
+A callback runs in the middle of a native call that is still using the database, so closing the database there frees
+it under its own caller. Each of these was reproduced before `close()` refused it:
+
+| Callback that closes the database                                           | Runs on               | What happened                                                     |
+|:----------------------------------------------------------------------------|:----------------------|:------------------------------------------------------------------|
+| `Mapper` of a pinned get                                                    | the reading thread    | SIGSEGV releasing the pinned value after its block cache          |
+| `MergeOperator` during a `get`                                              | the reading thread    | SIGSEGV when the `Get` returned its super version                 |
+| `Logger` during a `flush`                                                   | the flushing thread   | SIGSEGV in `DBImpl::Flush`                                        |
+| `MergeOperator`, `CompactionFilter`, `CompactionFilterFactory`, `EventNotifier` | a background thread   | `rocksdb_close` waits forever for the job running the callback    |
+| `Mapper` of an iterator entry or a `ReadBatch` value                        | the reading thread    | reads of freed memory that happened not to crash                  |
+
+So a database's `close()` throws `IllegalStateException` when it is called from inside any callback this library is
+running on the calling thread, and the database stays open. Close it once the callback has returned, or hand the
+close to another thread. The check is a stack walk in `close()`, which is cold, and not a flag set around each callback:
+the callbacks sit on the hottest paths there are (a pinned get, a merge per key), and a pinned value is deliberately
+not registered as a child of its database for the same reason.
+
+The guard covers the database only. Closing the iterator, the `ReadOptions` or the transaction a `Mapper` is reading
+from, inside that `Mapper`, still leaves its view pointing at freed memory: do not.
 
 For contributors: a new wrapper whose native object points into another wrapper's memory takes that owner in its
 constructor and calls `borrowedFrom(owner)` last in it: the registration, and the unregistration when the child is closed on its own, are then automatic. A
@@ -287,6 +389,9 @@ Three consequences the API cannot hide, and one it can.
 
 **Callbacks must be thread-safe.** Several background threads can be in your callback at once.
 Nothing is serialized on your behalf.
+
+**A callback must not close a database.** The close throws `IllegalStateException` instead; see
+[Closing from inside a callback](#closing-from-inside-a-callback).
 
 **A callback must not throw.** An exception escaping an upcall stub does not propagate to a
 caller — the `Linker` javadoc is explicit that the JVM terminates abruptly. Every dispatch in this
