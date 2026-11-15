@@ -588,13 +588,13 @@ public final class RocksDB {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment pathSeg = arena.allocateFrom(path.toString());
-			MemorySegment lenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment lenSeg = arena.allocate(NativeCalls.SIZE_T);
 
 			MemorySegment namesPtr = (MemorySegment) MH_LIST_CF.invokeExact(
 					options.ptr(), pathSeg, lenSeg, err);
 			NativeCalls.checkError(err);
 
-			long count = lenSeg.get(ValueLayout.JAVA_LONG, 0);
+			long count = lenSeg.get(NativeCalls.SIZE_T, 0);
 			try {
 				List<ColumnFamilyName> result = new ArrayList<>((int) count);
 				MemorySegment namesArr = namesPtr.reinterpret(ValueLayout.ADDRESS.byteSize() * count);
@@ -647,7 +647,7 @@ public final class RocksDB {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment dbOptionsOut = arena.allocate(ValueLayout.ADDRESS);
-			MemorySegment countOut = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment countOut = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment namesOut = arena.allocate(ValueLayout.ADDRESS);
 			MemorySegment optionsOut = arena.allocate(ValueLayout.ADDRESS);
 
@@ -656,7 +656,7 @@ public final class RocksDB {
 			NativeCalls.checkError(err);
 
 			MemorySegment nativeDbOptions = dbOptionsOut.get(ValueLayout.ADDRESS, 0);
-			long count = countOut.get(ValueLayout.JAVA_LONG, 0);
+			long count = countOut.get(NativeCalls.SIZE_T, 0);
 			MemorySegment names = namesOut.get(ValueLayout.ADDRESS, 0);
 			MemorySegment options = optionsOut.get(ValueLayout.ADDRESS, 0);
 			try {

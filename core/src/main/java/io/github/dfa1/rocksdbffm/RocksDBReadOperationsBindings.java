@@ -155,7 +155,7 @@ final class RocksDBReadOperationsBindings {
 	static CopyResult getIntoBuffer(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valLenSeg = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
 			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db.dbPtr(), readOpts.readPtr(), key, key.byteSize(),
 					MemorySegment.ofBuffer(value), (long) value.remaining(), valLenSeg, foundSeg, err);
@@ -163,7 +163,7 @@ final class RocksDBReadOperationsBindings {
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
 				return CopyResult.NotFound.INSTANCE;
 			}
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			long valLen = valLenSeg.get(NativeCalls.SIZE_T, 0);
 			if (fit == 0) {
 				return new CopyResult.NotEnoughCapacity(valLen);
 			}
@@ -179,7 +179,7 @@ final class RocksDBReadOperationsBindings {
 	static CopyResult getIntoSegment(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valLenSeg = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
 			byte fit = (byte) MH_GET_INTO_BUFFER.invokeExact(db.dbPtr(), readOpts.readPtr(), key, key.byteSize(),
 					value, value.byteSize(), valLenSeg, foundSeg, err);
@@ -187,7 +187,7 @@ final class RocksDBReadOperationsBindings {
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
 				return CopyResult.NotFound.INSTANCE;
 			}
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			long valLen = valLenSeg.get(NativeCalls.SIZE_T, 0);
 			if (fit == 0) {
 				return new CopyResult.NotEnoughCapacity(valLen);
 			}
@@ -264,7 +264,7 @@ final class RocksDBReadOperationsBindings {
 	                                  MemorySegment key, ByteBuffer value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valLenSeg = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
 			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db.dbPtr(), readOpts.readPtr(), cf.ptr(), key, key.byteSize(),
 					MemorySegment.ofBuffer(value), (long) value.remaining(), valLenSeg, foundSeg, err);
@@ -272,7 +272,7 @@ final class RocksDBReadOperationsBindings {
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
 				return CopyResult.NotFound.INSTANCE;
 			}
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			long valLen = valLenSeg.get(NativeCalls.SIZE_T, 0);
 			if (fit == 0) {
 				return new CopyResult.NotEnoughCapacity(valLen);
 			}
@@ -289,7 +289,7 @@ final class RocksDBReadOperationsBindings {
 	                                   MemorySegment key, MemorySegment value) {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MemorySegment valLenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment valLenSeg = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment foundSeg = arena.allocate(ValueLayout.JAVA_BYTE);
 			byte fit = (byte) MH_GET_INTO_BUFFER_CF.invokeExact(db.dbPtr(), readOpts.readPtr(), cf.ptr(), key, key.byteSize(),
 					value, value.byteSize(), valLenSeg, foundSeg, err);
@@ -297,7 +297,7 @@ final class RocksDBReadOperationsBindings {
 			if (foundSeg.get(ValueLayout.JAVA_BYTE, 0) == 0) {
 				return CopyResult.NotFound.INSTANCE;
 			}
-			long valLen = valLenSeg.get(ValueLayout.JAVA_LONG, 0);
+			long valLen = valLenSeg.get(NativeCalls.SIZE_T, 0);
 			if (fit == 0) {
 				return new CopyResult.NotEnoughCapacity(valLen);
 			}

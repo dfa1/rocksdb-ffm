@@ -51,9 +51,9 @@ public final class MemTableInfo {
 	/// @return the column family name
 	public ColumnFamilyName columnFamilyName() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment sizeHolder = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment namePtr = (MemorySegment) MH_CF_NAME.invokeExact(ptr, sizeHolder);
-			return ColumnFamilyName.ofBytes(NativeCalls.toByteArray(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0)));
+			return ColumnFamilyName.ofBytes(NativeCalls.toByteArray(namePtr, sizeHolder.get(NativeCalls.SIZE_T, 0)));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("MemTableInfo.columnFamilyName failed", t);
 		}
@@ -94,9 +94,9 @@ public final class MemTableInfo {
 	/// @return the newest user-defined timestamp, as raw bytes; empty if none
 	public byte[] newestUserDefinedTimestamp() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment sizeHolder = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment udtPtr = (MemorySegment) MH_NEWEST_UDT.invokeExact(ptr, sizeHolder);
-			return NativeCalls.toByteArray(udtPtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toByteArray(udtPtr, sizeHolder.get(NativeCalls.SIZE_T, 0));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("MemTableInfo.newestUserDefinedTimestamp failed", t);
 		}

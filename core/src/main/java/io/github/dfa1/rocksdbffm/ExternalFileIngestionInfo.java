@@ -46,9 +46,9 @@ public final class ExternalFileIngestionInfo {
 	/// @return the column family name
 	public ColumnFamilyName columnFamilyName() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment sizeHolder = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment namePtr = (MemorySegment) MH_CF_NAME.invokeExact(ptr, sizeHolder);
-			return ColumnFamilyName.ofBytes(NativeCalls.toByteArray(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0)));
+			return ColumnFamilyName.ofBytes(NativeCalls.toByteArray(namePtr, sizeHolder.get(NativeCalls.SIZE_T, 0)));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("ExternalFileIngestionInfo.columnFamilyName failed", t);
 		}
@@ -59,9 +59,9 @@ public final class ExternalFileIngestionInfo {
 	/// @return the external file's original path
 	public Path externalFilePath() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment sizeHolder = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment pathPtr = (MemorySegment) MH_EXTERNAL_FILE_PATH.invokeExact(ptr, sizeHolder);
-			return Path.of(NativeCalls.toJavaString(pathPtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0)));
+			return Path.of(NativeCalls.toJavaString(pathPtr, sizeHolder.get(NativeCalls.SIZE_T, 0)));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("ExternalFileIngestionInfo.externalFilePath failed", t);
 		}
@@ -72,9 +72,9 @@ public final class ExternalFileIngestionInfo {
 	/// @return the ingested file's path inside the database
 	public Path internalFilePath() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment sizeHolder = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment pathPtr = (MemorySegment) MH_INTERNAL_FILE_PATH.invokeExact(ptr, sizeHolder);
-			return Path.of(NativeCalls.toJavaString(pathPtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0)));
+			return Path.of(NativeCalls.toJavaString(pathPtr, sizeHolder.get(NativeCalls.SIZE_T, 0)));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("ExternalFileIngestionInfo.internalFilePath failed", t);
 		}

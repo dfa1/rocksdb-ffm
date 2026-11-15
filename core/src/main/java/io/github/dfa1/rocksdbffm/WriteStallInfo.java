@@ -38,9 +38,9 @@ public final class WriteStallInfo {
 	/// @return the column family name
 	public ColumnFamilyName columnFamilyName() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment sizeHolder = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment sizeHolder = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment namePtr = (MemorySegment) MH_CF_NAME.invokeExact(ptr, sizeHolder);
-			return ColumnFamilyName.ofBytes(NativeCalls.toByteArray(namePtr, sizeHolder.get(ValueLayout.JAVA_LONG, 0)));
+			return ColumnFamilyName.ofBytes(NativeCalls.toByteArray(namePtr, sizeHolder.get(NativeCalls.SIZE_T, 0)));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("WriteStallInfo.columnFamilyName failed", t);
 		}
