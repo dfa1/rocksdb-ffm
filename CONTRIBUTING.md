@@ -67,7 +67,7 @@ Cloned without `--recurse-submodules`? Run `git submodule update --init --recurs
 - Open factories take the path first, then `Options`, then other options, descriptors, flags or a TTL (`openReadWrite(path, options, descriptors)`).
 - `MethodHandle`s are `private static final`, each with a `/// \`<c prototype>\`` comment copied from
   `c.h`. Errors go through `NativeCalls.errHolder`/`checkError`/`wrapInvokeFailure`.
-- No C `malloc`: never bind libc. Native memory comes from an `Arena`, the heap (via a `critical(true)` accessor
+- No C `malloc`: `core` never binds libc (benchmarks may, as an FFM-overhead stand-in). Native memory comes from an `Arena`, the heap (via a `critical(true)` accessor
   downcall), or RocksDB itself (freed with `rocksdb_free`) — see `AGENTS.md` for the callback-buffer pattern.
 
 ## Testing
