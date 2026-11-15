@@ -215,6 +215,44 @@ class TransactionIsChildOfDbTest {
 
 	@ParameterizedTest
 	@MethodSource("flavors")
+	void aTransactionsSnapshot_isReleasedByCommit(Flavor flavor, @TempDir Path dir) {
+		// Given — RocksDB frees the transaction's snapshot on commit, while the transaction itself stays open
+		var opened = flavor.open().apply(dir);
+		try (var wo = WriteOptions.newWriteOptions()) {
+			var txn = opened.beginWithSnapshot().apply(wo);
+			var snapshot = txn.getSnapshot();
+
+			// When
+			txn.commit();
+
+			// Then — reading it throws instead of touching the freed snapshot
+			assertThat(catchThrowable(snapshot::sequenceNumber)).isInstanceOf(IllegalStateException.class);
+			txn.close();
+			opened.db().close();
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("flavors")
+	void aTransactionsSnapshot_isReleasedByRollback(Flavor flavor, @TempDir Path dir) {
+		// Given — RocksDB frees the transaction's snapshot on rollback too
+		var opened = flavor.open().apply(dir);
+		try (var wo = WriteOptions.newWriteOptions()) {
+			var txn = opened.beginWithSnapshot().apply(wo);
+			var snapshot = txn.getSnapshot();
+
+			// When
+			txn.rollback();
+
+			// Then
+			assertThat(catchThrowable(snapshot::sequenceNumber)).isInstanceOf(IllegalStateException.class);
+			txn.close();
+			opened.db().close();
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("flavors")
 	void closingTheDb_withATransactionSnapshotOpen_closesCleanly(Flavor flavor, @TempDir Path dir) {
 		// Given
 		var opened = flavor.open().apply(dir);

@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.SequencedMap;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /// Base of every database type: a [NativeObjectWithChildren] that exposes the `rocksdb_t*` the shared
@@ -30,20 +31,40 @@ abstract class NativeDB extends NativeObjectWithChildren {
 		super(ptr);
 	}
 
+	/// The classes whose frames run a caller-supplied callback while RocksDB, or a pinned value, still uses the
+	/// database: the upcall dispatchers and the scoped zero-copy readers. See [#close()].
+	private static final Set<Class<?>> CALLBACK_HOSTS = Set.of(
+			EventNotifierBridge.class, MergeOperator.Custom.class, CompactionFilter.class, CompactionFilterFactory.class,
+			Logger.class, PinnableHandle.class, PinnableSlice.class, RocksIterator.class);
+
+	private static final StackWalker STACK = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
+
 	/// Closes this database, releasing everything still borrowed from it first.
 	///
-	/// Must not be called from an [EventNotifier] callback: closing waits for RocksDB's background work to
-	/// finish, and the callback is part of that work, so the call would never return and would wedge a
-	/// thread of the pool every database in the process shares. Hand the close to another thread instead.
+	/// Must not be called from inside a callback this library is running on the calling thread: an
+	/// [EventNotifier], [MergeOperator], [CompactionFilter], [CompactionFilterFactory] or [Logger] callback, or a
+	/// [Mapper] reading a pinned value or an iterator entry. Whatever invoked the callback is still using the
+	/// database. On a RocksDB background thread the close would wait for that very thread, never return, and
+	/// wedge a thread of the pool every database in the process shares; on a caller's thread it would free the
+	/// database under the read, flush or pinned value in progress. Close it once the callback has returned, or
+	/// hand the close to another thread.
 	///
-	/// @throws IllegalStateException if called from an [EventNotifier] callback
+	/// @throws IllegalStateException if called from inside such a callback
 	@Override
 	public void close() {
-		if (EventNotifierBridge.inCallback()) {
-			throw new IllegalStateException("a database cannot be closed from an EventNotifier callback: "
-					+ "the close would wait for the thread running the callback. Close it from another thread");
+		if (inCallback()) {
+			throw new IllegalStateException("a database cannot be closed from inside a callback: "
+					+ "whatever invoked the callback is still using it. Close it once the callback has returned, "
+					+ "or from another thread");
 		}
 		super.close();
+	}
+
+	/// A stack walk rather than a flag set around each callback: `close()` is cold, while the callbacks sit on
+	/// the hottest paths there are (a pinned get, a merge or compaction filter per key), which a per-call
+	/// `ScopedValue` binding would tax.
+	private static boolean inCallback() {
+		return STACK.walk(frames -> frames.anyMatch(frame -> CALLBACK_HOSTS.contains(frame.getDeclaringClass())));
 	}
 
 	/// Returns the native `rocksdb_t*` pointer to operate on, after checking that this object has not
