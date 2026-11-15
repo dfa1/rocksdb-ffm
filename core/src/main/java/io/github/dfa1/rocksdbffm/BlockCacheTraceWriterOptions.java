@@ -23,17 +23,17 @@ public final class BlockCacheTraceWriterOptions extends NativeObject {
 	private static final MethodHandle MH_GET_MAX_TRACE_FILE_SIZE;
 
 	static {
-		MH_CREATE = NativeLibrary.lookup("rocksdb_block_cache_trace_writer_options_create",
+		MH_CREATE = NativeLibrary.rocksdb("rocksdb_block_cache_trace_writer_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_block_cache_trace_writer_options_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_block_cache_trace_writer_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_MAX_TRACE_FILE_SIZE = NativeLibrary.lookup(
+		MH_SET_MAX_TRACE_FILE_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_block_cache_trace_writer_options_set_max_trace_file_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_MAX_TRACE_FILE_SIZE = NativeLibrary.lookup(
+		MH_GET_MAX_TRACE_FILE_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_block_cache_trace_writer_options_get_max_trace_file_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 	}

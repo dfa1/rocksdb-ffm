@@ -46,41 +46,41 @@ public final class SstFileWriter extends NativeObject {
 	private static final MethodHandle MH_FILE_SIZE;
 
 	static {
-		MH_CREATE = NativeLibrary.lookup("rocksdb_sstfilewriter_create",
+		MH_CREATE = NativeLibrary.rocksdb("rocksdb_sstfilewriter_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_sstfilewriter_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_sstfilewriter_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_OPEN = NativeLibrary.lookup("rocksdb_sstfilewriter_open",
+		MH_OPEN = NativeLibrary.rocksdb("rocksdb_sstfilewriter_open",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_PUT = NativeLibrary.lookup("rocksdb_sstfilewriter_put",
+		MH_PUT = NativeLibrary.rocksdb("rocksdb_sstfilewriter_put",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_DELETE = NativeLibrary.lookup("rocksdb_sstfilewriter_delete",
+		MH_DELETE = NativeLibrary.rocksdb("rocksdb_sstfilewriter_delete",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_DELETE_RANGE = NativeLibrary.lookup("rocksdb_sstfilewriter_delete_range",
+		MH_DELETE_RANGE = NativeLibrary.rocksdb("rocksdb_sstfilewriter_delete_range",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_FINISH = NativeLibrary.lookup("rocksdb_sstfilewriter_finish",
+		MH_FINISH = NativeLibrary.rocksdb("rocksdb_sstfilewriter_finish",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_FILE_SIZE = NativeLibrary.lookup("rocksdb_sstfilewriter_file_size",
+		MH_FILE_SIZE = NativeLibrary.rocksdb("rocksdb_sstfilewriter_file_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 

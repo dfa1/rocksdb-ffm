@@ -68,10 +68,10 @@ static List<String> topLevelArgs(String text) {
 	return args;
 }
 
-/// The argument list of the literal `FunctionDescriptor` passed to `lookup("symbol", ...)` in `source` (comments
+/// The argument list of the literal `FunctionDescriptor` passed to `rocksdb("symbol", ...)` in `source` (comments
 /// already stripped), return layout first for `of(...)` and `null` for `ofVoid(...)`, or `null` if there is none.
 static List<String> descriptorArgs(String source, String symbol) {
-	Matcher start = Pattern.compile("lookup\\(\\s*\"" + symbol + "\"\\s*,\\s*FunctionDescriptor\\.(of|ofVoid)\\(").matcher(source);
+	Matcher start = Pattern.compile("rocksdb\\(\\s*\"" + symbol + "\"\\s*,\\s*FunctionDescriptor\\.(of|ofVoid)\\(").matcher(source);
 	if (!start.find()) {
 		return null;
 	}
@@ -97,7 +97,7 @@ static List<String> sizeTProblems(String source, String symbol, String declared)
 	List<String> args = descriptorArgs(source, symbol);
 	List<String> problems = new ArrayList<>();
 	if (args == null) {
-		problems.add("no literal FunctionDescriptor in lookup(\"" + symbol + "\", ...)");
+		problems.add("no literal FunctionDescriptor in rocksdb(\"" + symbol + "\", ...)");
 		return problems;
 	}
 	int open = declared.indexOf('(');

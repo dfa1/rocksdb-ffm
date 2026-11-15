@@ -48,39 +48,39 @@ public final class LiveFileInfo {
 	private static final MethodHandle MH_DELETIONS;
 
 	static {
-		MH_CF_NAME = NativeLibrary.lookup("rocksdb_livefiles_column_family_name",
+		MH_CF_NAME = NativeLibrary.rocksdb("rocksdb_livefiles_column_family_name",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_NAME = NativeLibrary.lookup("rocksdb_livefiles_name",
+		MH_NAME = NativeLibrary.rocksdb("rocksdb_livefiles_name",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_DIRECTORY = NativeLibrary.lookup("rocksdb_livefiles_directory",
+		MH_DIRECTORY = NativeLibrary.rocksdb("rocksdb_livefiles_directory",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_LEVEL = NativeLibrary.lookup("rocksdb_livefiles_level",
+		MH_LEVEL = NativeLibrary.rocksdb("rocksdb_livefiles_level",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_SIZE = NativeLibrary.lookup("rocksdb_livefiles_size",
+		MH_SIZE = NativeLibrary.rocksdb("rocksdb_livefiles_size",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_SMALLESTKEY = NativeLibrary.lookup("rocksdb_livefiles_smallestkey",
+		MH_SMALLESTKEY = NativeLibrary.rocksdb("rocksdb_livefiles_smallestkey",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_LARGESTKEY = NativeLibrary.lookup("rocksdb_livefiles_largestkey",
+		MH_LARGESTKEY = NativeLibrary.rocksdb("rocksdb_livefiles_largestkey",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SMALLEST_SEQNO = NativeLibrary.lookup("rocksdb_livefiles_smallest_seqno",
+		MH_SMALLEST_SEQNO = NativeLibrary.rocksdb("rocksdb_livefiles_smallest_seqno",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_LARGEST_SEQNO = NativeLibrary.lookup("rocksdb_livefiles_largest_seqno",
+		MH_LARGEST_SEQNO = NativeLibrary.rocksdb("rocksdb_livefiles_largest_seqno",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_ENTRIES = NativeLibrary.lookup("rocksdb_livefiles_entries",
+		MH_ENTRIES = NativeLibrary.rocksdb("rocksdb_livefiles_entries",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_DELETIONS = NativeLibrary.lookup("rocksdb_livefiles_deletions",
+		MH_DELETIONS = NativeLibrary.rocksdb("rocksdb_livefiles_deletions",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 	}
 

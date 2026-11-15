@@ -78,113 +78,113 @@ public final class TransactionOptions extends NativeObject {
 	private static final MethodHandle MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD;
 
 	static {
-		MH_CREATE = NativeLibrary.lookup("rocksdb_transaction_options_create",
+		MH_CREATE = NativeLibrary.rocksdb("rocksdb_transaction_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_transaction_options_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_transaction_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_SET_SNAPSHOT = NativeLibrary.lookup("rocksdb_transaction_options_set_set_snapshot",
+		MH_SET_SET_SNAPSHOT = NativeLibrary.rocksdb("rocksdb_transaction_options_set_set_snapshot",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_SET_SNAPSHOT = NativeLibrary.lookup("rocksdb_transaction_options_get_set_snapshot",
+		MH_GET_SET_SNAPSHOT = NativeLibrary.rocksdb("rocksdb_transaction_options_get_set_snapshot",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_DEADLOCK_DETECT = NativeLibrary.lookup("rocksdb_transaction_options_set_deadlock_detect",
+		MH_SET_DEADLOCK_DETECT = NativeLibrary.rocksdb("rocksdb_transaction_options_set_deadlock_detect",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_DEADLOCK_DETECT = NativeLibrary.lookup("rocksdb_transaction_options_get_deadlock_detect",
+		MH_GET_DEADLOCK_DETECT = NativeLibrary.rocksdb("rocksdb_transaction_options_get_deadlock_detect",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY = NativeLibrary.lookup(
+		MH_SET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_set_use_only_the_last_commit_time_batch_for_recovery",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY = NativeLibrary.lookup(
+		MH_GET_USE_ONLY_THE_LAST_COMMIT_TIME_BATCH_FOR_RECOVERY = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_get_use_only_the_last_commit_time_batch_for_recovery",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_LOCK_TIMEOUT = NativeLibrary.lookup("rocksdb_transaction_options_set_lock_timeout",
+		MH_SET_LOCK_TIMEOUT = NativeLibrary.rocksdb("rocksdb_transaction_options_set_lock_timeout",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_LOCK_TIMEOUT = NativeLibrary.lookup("rocksdb_transaction_options_get_lock_timeout",
+		MH_GET_LOCK_TIMEOUT = NativeLibrary.rocksdb("rocksdb_transaction_options_get_lock_timeout",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_DEADLOCK_TIMEOUT_US = NativeLibrary.lookup("rocksdb_transaction_options_set_deadlock_timeout_us",
+		MH_SET_DEADLOCK_TIMEOUT_US = NativeLibrary.rocksdb("rocksdb_transaction_options_set_deadlock_timeout_us",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_DEADLOCK_TIMEOUT_US = NativeLibrary.lookup("rocksdb_transaction_options_get_deadlock_timeout_us",
+		MH_GET_DEADLOCK_TIMEOUT_US = NativeLibrary.rocksdb("rocksdb_transaction_options_get_deadlock_timeout_us",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_EXPIRATION = NativeLibrary.lookup("rocksdb_transaction_options_set_expiration",
+		MH_SET_EXPIRATION = NativeLibrary.rocksdb("rocksdb_transaction_options_set_expiration",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_EXPIRATION = NativeLibrary.lookup("rocksdb_transaction_options_get_expiration",
+		MH_GET_EXPIRATION = NativeLibrary.rocksdb("rocksdb_transaction_options_get_expiration",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_DEADLOCK_DETECT_DEPTH = NativeLibrary.lookup("rocksdb_transaction_options_set_deadlock_detect_depth",
+		MH_SET_DEADLOCK_DETECT_DEPTH = NativeLibrary.rocksdb("rocksdb_transaction_options_set_deadlock_detect_depth",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_DEADLOCK_DETECT_DEPTH = NativeLibrary.lookup("rocksdb_transaction_options_get_deadlock_detect_depth",
+		MH_GET_DEADLOCK_DETECT_DEPTH = NativeLibrary.rocksdb("rocksdb_transaction_options_get_deadlock_detect_depth",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_WRITE_BATCH_SIZE = NativeLibrary.lookup("rocksdb_transaction_options_set_max_write_batch_size",
+		MH_SET_MAX_WRITE_BATCH_SIZE = NativeLibrary.rocksdb("rocksdb_transaction_options_set_max_write_batch_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_GET_MAX_WRITE_BATCH_SIZE = NativeLibrary.lookup("rocksdb_transaction_options_get_max_write_batch_size",
+		MH_GET_MAX_WRITE_BATCH_SIZE = NativeLibrary.rocksdb("rocksdb_transaction_options_get_max_write_batch_size",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_SET_SKIP_CONCURRENCY_CONTROL = NativeLibrary.lookup(
+		MH_SET_SKIP_CONCURRENCY_CONTROL = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_set_skip_concurrency_control",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_SKIP_CONCURRENCY_CONTROL = NativeLibrary.lookup(
+		MH_GET_SKIP_CONCURRENCY_CONTROL = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_get_skip_concurrency_control",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_SKIP_PREPARE = NativeLibrary.lookup("rocksdb_transaction_options_set_skip_prepare",
+		MH_SET_SKIP_PREPARE = NativeLibrary.rocksdb("rocksdb_transaction_options_set_skip_prepare",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_SKIP_PREPARE = NativeLibrary.lookup("rocksdb_transaction_options_get_skip_prepare",
+		MH_GET_SKIP_PREPARE = NativeLibrary.rocksdb("rocksdb_transaction_options_get_skip_prepare",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_WRITE_BATCH_FLUSH_THRESHOLD = NativeLibrary.lookup(
+		MH_SET_WRITE_BATCH_FLUSH_THRESHOLD = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_set_write_batch_flush_threshold",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_WRITE_BATCH_FLUSH_THRESHOLD = NativeLibrary.lookup(
+		MH_GET_WRITE_BATCH_FLUSH_THRESHOLD = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_get_write_batch_flush_threshold",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE = NativeLibrary.lookup(
+		MH_SET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_set_write_batch_track_timestamp_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE = NativeLibrary.lookup(
+		MH_GET_WRITE_BATCH_TRACK_TIMESTAMP_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_get_write_batch_track_timestamp_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_COMMIT_BYPASS_MEMTABLE = NativeLibrary.lookup(
+		MH_SET_COMMIT_BYPASS_MEMTABLE = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_set_commit_bypass_memtable",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_COMMIT_BYPASS_MEMTABLE = NativeLibrary.lookup(
+		MH_GET_COMMIT_BYPASS_MEMTABLE = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_get_commit_bypass_memtable",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD = NativeLibrary.lookup(
+		MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_set_large_txn_commit_optimize_threshold",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD = NativeLibrary.lookup(
+		MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_THRESHOLD = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_get_large_txn_commit_optimize_threshold",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD = NativeLibrary.lookup(
+		MH_SET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_set_large_txn_commit_optimize_byte_threshold",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD = NativeLibrary.lookup(
+		MH_GET_LARGE_TXN_COMMIT_OPTIMIZE_BYTE_THRESHOLD = NativeLibrary.rocksdb(
 				"rocksdb_transaction_options_get_large_txn_commit_optimize_byte_threshold",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 	}

@@ -37,7 +37,7 @@ public final class SecondaryDB extends NativeDB
 	private static final MethodHandle MH_CATCH_UP;
 
 	static {
-		MH_CATCH_UP = NativeLibrary.lookup("rocksdb_try_catch_up_with_primary",
+		MH_CATCH_UP = NativeLibrary.rocksdb("rocksdb_try_catch_up_with_primary",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 

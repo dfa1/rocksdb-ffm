@@ -63,92 +63,92 @@ public final class Transaction extends NativeObjectWithChildren {
 	private static final MethodHandle MH_GET_PINNED_FOR_UPDATE;
 
 	static {
-		MH_COMMIT = NativeLibrary.lookup("rocksdb_transaction_commit",
+		MH_COMMIT = NativeLibrary.rocksdb("rocksdb_transaction_commit",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_ROLLBACK = NativeLibrary.lookup("rocksdb_transaction_rollback",
+		MH_ROLLBACK = NativeLibrary.rocksdb("rocksdb_transaction_rollback",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_transaction_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_transaction_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_SAVEPOINT = NativeLibrary.lookup("rocksdb_transaction_set_savepoint",
+		MH_SET_SAVEPOINT = NativeLibrary.rocksdb("rocksdb_transaction_set_savepoint",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_ROLLBACK_TO_SAVEPOINT = NativeLibrary.lookup("rocksdb_transaction_rollback_to_savepoint",
+		MH_ROLLBACK_TO_SAVEPOINT = NativeLibrary.rocksdb("rocksdb_transaction_rollback_to_savepoint",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_PUT = NativeLibrary.lookup("rocksdb_transaction_put",
+		MH_PUT = NativeLibrary.rocksdb("rocksdb_transaction_put",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_DELETE = NativeLibrary.lookup("rocksdb_transaction_delete",
+		MH_DELETE = NativeLibrary.rocksdb("rocksdb_transaction_delete",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_MERGE = NativeLibrary.lookup("rocksdb_transaction_merge",
+		MH_MERGE = NativeLibrary.rocksdb("rocksdb_transaction_merge",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_GET_PINNED = NativeLibrary.lookup("rocksdb_transaction_get_pinned",
+		MH_GET_PINNED = NativeLibrary.rocksdb("rocksdb_transaction_get_pinned",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_GET_PINNED_FOR_UPDATE = NativeLibrary.lookup("rocksdb_transaction_get_pinned_for_update",
+		MH_GET_PINNED_FOR_UPDATE = NativeLibrary.rocksdb("rocksdb_transaction_get_pinned_for_update",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
 
-		MH_PUT_CF = NativeLibrary.lookup("rocksdb_transaction_put_cf",
+		MH_PUT_CF = NativeLibrary.rocksdb("rocksdb_transaction_put_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_DELETE_CF = NativeLibrary.lookup("rocksdb_transaction_delete_cf",
+		MH_DELETE_CF = NativeLibrary.rocksdb("rocksdb_transaction_delete_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_MERGE_CF = NativeLibrary.lookup("rocksdb_transaction_merge_cf",
+		MH_MERGE_CF = NativeLibrary.rocksdb("rocksdb_transaction_merge_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_GET_PINNED_CF = NativeLibrary.lookup("rocksdb_transaction_get_pinned_cf",
+		MH_GET_PINNED_CF = NativeLibrary.rocksdb("rocksdb_transaction_get_pinned_cf",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_GET_PINNED_FOR_UPDATE_CF = NativeLibrary.lookup("rocksdb_transaction_get_pinned_for_update_cf",
+		MH_GET_PINNED_FOR_UPDATE_CF = NativeLibrary.rocksdb("rocksdb_transaction_get_pinned_for_update_cf",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_CREATE_ITERATOR_CF = NativeLibrary.lookup("rocksdb_transaction_create_iterator_cf",
+		MH_CREATE_ITERATOR_CF = NativeLibrary.rocksdb("rocksdb_transaction_create_iterator_cf",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 		// Note: must be freed with rocksdb_free, not rocksdb_release_snapshot
-		MH_GET_SNAPSHOT = NativeLibrary.lookup("rocksdb_transaction_get_snapshot",
+		MH_GET_SNAPSHOT = NativeLibrary.rocksdb("rocksdb_transaction_get_snapshot",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 

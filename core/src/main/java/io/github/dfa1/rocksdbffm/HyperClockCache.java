@@ -33,24 +33,24 @@ public final class HyperClockCache extends Cache {
 	private static final MethodHandle MH_CREATE_OPTS;
 
 	static {
-		MH_OPTS_CREATE = NativeLibrary.lookup("rocksdb_hyper_clock_cache_options_create",
+		MH_OPTS_CREATE = NativeLibrary.rocksdb("rocksdb_hyper_clock_cache_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						NativeCalls.SIZE_T,
 						NativeCalls.SIZE_T));
 
-		MH_OPTS_DESTROY = NativeLibrary.lookup("rocksdb_hyper_clock_cache_options_destroy",
+		MH_OPTS_DESTROY = NativeLibrary.rocksdb("rocksdb_hyper_clock_cache_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_OPTS_SET_NUM_SHARD_BITS = NativeLibrary.lookup(
+		MH_OPTS_SET_NUM_SHARD_BITS = NativeLibrary.rocksdb(
 				"rocksdb_hyper_clock_cache_options_set_num_shard_bits",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_CREATE = NativeLibrary.lookup("rocksdb_cache_create_hyper_clock",
+		MH_CREATE = NativeLibrary.rocksdb("rocksdb_cache_create_hyper_clock",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						NativeCalls.SIZE_T,
 						NativeCalls.SIZE_T));
 
-		MH_CREATE_OPTS = NativeLibrary.lookup("rocksdb_cache_create_hyper_clock_opts",
+		MH_CREATE_OPTS = NativeLibrary.rocksdb("rocksdb_cache_create_hyper_clock_opts",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 

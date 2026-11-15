@@ -15,16 +15,16 @@ import java.lang.invoke.MethodHandle;
 public final class WriteStallInfo {
 
 	/// `const char* rocksdb_writestallinfo_cf_name(const rocksdb_writestallinfo_t*, size_t* size);`
-	private static final MethodHandle MH_CF_NAME = NativeLibrary.lookup(
+	private static final MethodHandle MH_CF_NAME = NativeLibrary.rocksdb(
 			"rocksdb_writestallinfo_cf_name",
 			FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 	/// `const rocksdb_writestallcondition_t* rocksdb_writestallinfo_cur(const rocksdb_writestallinfo_t*);`
-	private static final MethodHandle MH_CUR = NativeLibrary.lookup(
+	private static final MethodHandle MH_CUR = NativeLibrary.rocksdb(
 			"rocksdb_writestallinfo_cur", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 	/// `const rocksdb_writestallcondition_t* rocksdb_writestallinfo_prev(const rocksdb_writestallinfo_t*);`
-	private static final MethodHandle MH_PREV = NativeLibrary.lookup(
+	private static final MethodHandle MH_PREV = NativeLibrary.rocksdb(
 			"rocksdb_writestallinfo_prev", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 	private final MemorySegment ptr;

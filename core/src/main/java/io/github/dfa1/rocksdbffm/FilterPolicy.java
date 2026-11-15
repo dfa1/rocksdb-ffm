@@ -32,16 +32,16 @@ public final class FilterPolicy extends NativeObject {
 	private static final MethodHandle MH_DESTROY;
 
 	static {
-		MH_CREATE_BLOOM = NativeLibrary.lookup("rocksdb_filterpolicy_create_bloom",
+		MH_CREATE_BLOOM = NativeLibrary.rocksdb("rocksdb_filterpolicy_create_bloom",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
 
-		MH_CREATE_RIBBON = NativeLibrary.lookup("rocksdb_filterpolicy_create_ribbon",
+		MH_CREATE_RIBBON = NativeLibrary.rocksdb("rocksdb_filterpolicy_create_ribbon",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
 
-		MH_CREATE_RIBBON_HYBRID = NativeLibrary.lookup("rocksdb_filterpolicy_create_ribbon_hybrid",
+		MH_CREATE_RIBBON_HYBRID = NativeLibrary.rocksdb("rocksdb_filterpolicy_create_ribbon_hybrid",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_filterpolicy_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_filterpolicy_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

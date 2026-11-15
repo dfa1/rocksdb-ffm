@@ -35,19 +35,19 @@ public final class Checkpoint extends NativeObject {
 	private static final MethodHandle MH_DESTROY;
 
 	static {
-		MH_CREATE = NativeLibrary.lookup("rocksdb_checkpoint_object_create",
+		MH_CREATE = NativeLibrary.rocksdb("rocksdb_checkpoint_object_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS,   // db
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_EXPORT = NativeLibrary.lookup("rocksdb_checkpoint_create",
+		MH_EXPORT = NativeLibrary.rocksdb("rocksdb_checkpoint_create",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,   // checkpoint
 						ValueLayout.ADDRESS,   // checkpoint_dir
 						ValueLayout.JAVA_LONG, // log_size_for_flush
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_checkpoint_object_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_checkpoint_object_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

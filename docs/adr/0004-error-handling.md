@@ -128,7 +128,7 @@ boilerplate over a plain shared method, for real added complexity.
 
 - **Compose the classification into every downcall `MethodHandle` itself**, via
   `MethodHandles.catchException`/`throwException`/`filterArguments`, applied once in
-  `NativeLibrary.lookup(...)` rather than at each call site. Tried first; rejected once it became
+  `NativeLibrary.rocksdb(...)` rather than at each call site. Tried first; rejected once it became
   clear it doesn't actually reduce call-site boilerplate: `invokeExact`'s `throws Throwable` still
   forces a `try`/`catch` at every syntactic call site regardless of what the specific handle instance
   does at runtime, so the catch body just becomes a different (still mandatory) fixed line — real

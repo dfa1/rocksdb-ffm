@@ -29,7 +29,7 @@ public final class TtlDB extends NativeDB
 	private static final MethodHandle MH_CREATE_CF_WITH_TTL;
 
 	static {
-		MH_CREATE_CF_WITH_TTL = NativeLibrary.lookup("rocksdb_create_column_family_with_ttl",
+		MH_CREATE_CF_WITH_TTL = NativeLibrary.rocksdb("rocksdb_create_column_family_with_ttl",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT,
 						ValueLayout.ADDRESS));

@@ -30,16 +30,16 @@ public final class ColumnFamilyHandle extends NativeObject {
 	private static final MethodHandle MH_GET_NAME;
 
 	static {
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_column_family_handle_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_column_family_handle_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_GET_DEFAULT = NativeLibrary.lookup("rocksdb_get_default_column_family_handle",
+		MH_GET_DEFAULT = NativeLibrary.rocksdb("rocksdb_get_default_column_family_handle",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_GET_ID = NativeLibrary.lookup("rocksdb_column_family_handle_get_id",
+		MH_GET_ID = NativeLibrary.rocksdb("rocksdb_column_family_handle_get_id",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_GET_NAME = NativeLibrary.lookup("rocksdb_column_family_handle_get_name",
+		MH_GET_NAME = NativeLibrary.rocksdb("rocksdb_column_family_handle_get_name",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}

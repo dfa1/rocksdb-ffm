@@ -87,7 +87,7 @@ public sealed interface MergeOperator {
 	record Uint64Add() implements MergeOperator {
 
 		/// `void rocksdb_options_set_uint64add_merge_operator(rocksdb_options_t*);`
-		private static final MethodHandle MH_SET_UINT64ADD_MERGE_OPERATOR = NativeLibrary.lookup(
+		private static final MethodHandle MH_SET_UINT64ADD_MERGE_OPERATOR = NativeLibrary.rocksdb(
 				"rocksdb_options_set_uint64add_merge_operator",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
@@ -104,7 +104,7 @@ public sealed interface MergeOperator {
 	final class Custom extends NativeObject implements MergeOperator {
 
 		/// `rocksdb_mergeoperator_t* rocksdb_mergeoperator_create(void* state, void (*destructor)(void*), char* (*full_merge)(void*, const char* key, size_t key_length, const char* existing_value, size_t existing_value_length, const char* const* operands_list, const size_t* operands_list_length, int num_operands, unsigned char* success, size_t* new_value_length), char* (*partial_merge)(void*, const char* key, size_t key_length, const char* const* operands_list, const size_t* operands_list_length, int num_operands, unsigned char* success, size_t* new_value_length), void (*delete_value)(void*, const char* value, size_t value_length), const char* (*name)(void*));`
-		private static final MethodHandle MH_MERGEOPERATOR_CREATE = NativeLibrary.lookup(
+		private static final MethodHandle MH_MERGEOPERATOR_CREATE = NativeLibrary.rocksdb(
 				"rocksdb_mergeoperator_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS,  // state
@@ -115,12 +115,12 @@ public sealed interface MergeOperator {
 						ValueLayout.ADDRESS)); // name
 
 		/// `void rocksdb_mergeoperator_destroy(rocksdb_mergeoperator_t*);`
-		private static final MethodHandle MH_MERGEOPERATOR_DESTROY = NativeLibrary.lookup(
+		private static final MethodHandle MH_MERGEOPERATOR_DESTROY = NativeLibrary.rocksdb(
 				"rocksdb_mergeoperator_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
 		/// `void rocksdb_options_set_merge_operator(rocksdb_options_t*, rocksdb_mergeoperator_t*);`
-		private static final MethodHandle MH_SET_MERGE_OPERATOR = NativeLibrary.lookup(
+		private static final MethodHandle MH_SET_MERGE_OPERATOR = NativeLibrary.rocksdb(
 				"rocksdb_options_set_merge_operator",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 

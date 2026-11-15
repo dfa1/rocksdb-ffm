@@ -50,19 +50,19 @@ public final class RateLimiter extends NativeObject {
 	private static final MethodHandle MH_DESTROY;
 
 	static {
-		MH_CREATE = NativeLibrary.lookup("rocksdb_ratelimiter_create",
+		MH_CREATE = NativeLibrary.rocksdb("rocksdb_ratelimiter_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.JAVA_LONG,
 						ValueLayout.JAVA_LONG,
 						ValueLayout.JAVA_INT));
 
-		MH_CREATE_AUTO_TUNED = NativeLibrary.lookup("rocksdb_ratelimiter_create_auto_tuned",
+		MH_CREATE_AUTO_TUNED = NativeLibrary.rocksdb("rocksdb_ratelimiter_create_auto_tuned",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.JAVA_LONG,
 						ValueLayout.JAVA_LONG,
 						ValueLayout.JAVA_INT));
 
-		MH_CREATE_WITH_MODE = NativeLibrary.lookup("rocksdb_ratelimiter_create_with_mode",
+		MH_CREATE_WITH_MODE = NativeLibrary.rocksdb("rocksdb_ratelimiter_create_with_mode",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.JAVA_LONG,
 						ValueLayout.JAVA_LONG,
@@ -70,7 +70,7 @@ public final class RateLimiter extends NativeObject {
 						ValueLayout.JAVA_INT,
 						ValueLayout.JAVA_BYTE));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_ratelimiter_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_ratelimiter_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

@@ -39,35 +39,35 @@ public final class SizeApproximationOptions extends NativeObject {
 	private static final MethodHandle MH_GET_FILES_SIZE_ERROR_MARGIN;
 
 	static {
-		MH_CREATE = NativeLibrary.lookup("rocksdb_size_approximation_options_create",
+		MH_CREATE = NativeLibrary.rocksdb("rocksdb_size_approximation_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_size_approximation_options_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_size_approximation_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_INCLUDE_MEMTABLES = NativeLibrary.lookup("rocksdb_size_approximation_options_set_include_memtables",
+		MH_SET_INCLUDE_MEMTABLES = NativeLibrary.rocksdb("rocksdb_size_approximation_options_set_include_memtables",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_INCLUDE_MEMTABLES = NativeLibrary.lookup("rocksdb_size_approximation_options_get_include_memtables",
+		MH_GET_INCLUDE_MEMTABLES = NativeLibrary.rocksdb("rocksdb_size_approximation_options_get_include_memtables",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_INCLUDE_FILES = NativeLibrary.lookup("rocksdb_size_approximation_options_set_include_files",
+		MH_SET_INCLUDE_FILES = NativeLibrary.rocksdb("rocksdb_size_approximation_options_set_include_files",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_INCLUDE_FILES = NativeLibrary.lookup("rocksdb_size_approximation_options_get_include_files",
+		MH_GET_INCLUDE_FILES = NativeLibrary.rocksdb("rocksdb_size_approximation_options_get_include_files",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_INCLUDE_BLOB_FILES = NativeLibrary.lookup("rocksdb_size_approximation_options_set_include_blob_files",
+		MH_SET_INCLUDE_BLOB_FILES = NativeLibrary.rocksdb("rocksdb_size_approximation_options_set_include_blob_files",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_INCLUDE_BLOB_FILES = NativeLibrary.lookup("rocksdb_size_approximation_options_get_include_blob_files",
+		MH_GET_INCLUDE_BLOB_FILES = NativeLibrary.rocksdb("rocksdb_size_approximation_options_get_include_blob_files",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_FILES_SIZE_ERROR_MARGIN = NativeLibrary.lookup(
+		MH_SET_FILES_SIZE_ERROR_MARGIN = NativeLibrary.rocksdb(
 				"rocksdb_size_approximation_options_set_files_size_error_margin",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
 
-		MH_GET_FILES_SIZE_ERROR_MARGIN = NativeLibrary.lookup(
+		MH_GET_FILES_SIZE_ERROR_MARGIN = NativeLibrary.rocksdb(
 				"rocksdb_size_approximation_options_get_files_size_error_margin",
 				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
 	}
