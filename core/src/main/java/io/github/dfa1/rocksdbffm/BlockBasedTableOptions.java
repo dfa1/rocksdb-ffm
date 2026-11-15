@@ -1506,12 +1506,12 @@ public final class BlockBasedTableOptions extends NativeObject {
 	/// @return the activated factory's name, or [Optional#empty()] if none is activated
 	public Optional<String> getUserDefinedIndexFactoryName() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment lenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment lenSeg = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment namePtr = (MemorySegment) MH_GET_UDI_FACTORY_NAME.invokeExact(ptr(), lenSeg);
 			if (MemorySegment.NULL.equals(namePtr)) {
 				return Optional.empty();
 			}
-			long len = lenSeg.get(ValueLayout.JAVA_LONG, 0);
+			long len = lenSeg.get(NativeCalls.SIZE_T, 0);
 			return Optional.of(new String(NativeCalls.toByteArray(namePtr, len), StandardCharsets.UTF_8));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("getUserDefinedIndexFactoryName failed", t);

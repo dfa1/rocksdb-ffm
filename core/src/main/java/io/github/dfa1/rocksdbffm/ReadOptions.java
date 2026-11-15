@@ -484,12 +484,12 @@ public final class ReadOptions extends NativeObjectWithChildren {
 	/// @return the request identifier, or [Optional#empty()] if unset
 	public Optional<String> getRequestId() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment lenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment lenSeg = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment result = (MemorySegment) MH_GET_REQUEST_ID.invokeExact(ptr(), lenSeg);
 			if (MemorySegment.NULL.equals(result)) {
 				return Optional.empty();
 			}
-			long len = lenSeg.get(ValueLayout.JAVA_LONG, 0);
+			long len = lenSeg.get(NativeCalls.SIZE_T, 0);
 			byte[] bytes = NativeCalls.toByteArray(result, len);
 			return Optional.of(new String(bytes, StandardCharsets.UTF_8));
 		} catch (Throwable t) {

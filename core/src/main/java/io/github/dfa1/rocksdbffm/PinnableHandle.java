@@ -61,7 +61,7 @@ final class PinnableHandle extends NativeObject {
 	/// @return the value's bytes, copied into a new array
 	byte[] toByteArray(MemorySegment vallenOut) {
 		MemorySegment data = value(vallenOut);
-		return NativeCalls.toByteArray(data, vallenOut.get(ValueLayout.JAVA_LONG, 0));
+		return NativeCalls.toByteArray(data, vallenOut.get(NativeCalls.SIZE_T, 0));
 	}
 
 	/// Maps this handle's value to a result via `fn`, with no intermediate copy. The view
@@ -80,7 +80,7 @@ final class PinnableHandle extends NativeObject {
 		MemorySegment data = value(vallenOut);
 		// The `null` cleanup is deliberate: this view borrows from the handle, it does
 		// not own the memory, so closing `arena` must not attempt to free it.
-		MemorySegment view = data.reinterpret(vallenOut.get(ValueLayout.JAVA_LONG, 0), arena, null).asReadOnly();
+		MemorySegment view = data.reinterpret(vallenOut.get(NativeCalls.SIZE_T, 0), arena, null).asReadOnly();
 		R result = fn.map(view);
 		Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
 		return result;

@@ -89,9 +89,9 @@ public final class ColumnFamilyHandle extends NativeObject {
 	/// @return column family name
 	public ColumnFamilyName getName() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment lenSeg = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment lenSeg = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment namePtr = (MemorySegment) MH_GET_NAME.invokeExact(ptr(), lenSeg);
-			long nameLen = lenSeg.get(ValueLayout.JAVA_LONG, 0);
+			long nameLen = lenSeg.get(NativeCalls.SIZE_T, 0);
 			// namePtr is malloc'd by CopyString() on the C side (db/c.cc) -- unlike the other
 			// toByteArray() call sites in this codebase, this one owns the pointer and must free it.
 			byte[] bytes = NativeCalls.toByteArray(namePtr, nameLen);

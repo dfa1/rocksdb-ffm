@@ -203,9 +203,9 @@ public final class LiveFileStorageInfo {
 	/// @return the replacement contents, or an empty array if none
 	public byte[] replacementContents() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment sizeOut = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment sizeOut = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment p = (MemorySegment) MH_REPLACEMENT_CONTENTS.invokeExact(owner.ptr(), (long) index, sizeOut);
-			return NativeCalls.toByteArray(p, sizeOut.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toByteArray(p, sizeOut.get(NativeCalls.SIZE_T, 0));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("replacementContents failed", t);
 		}

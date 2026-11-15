@@ -170,9 +170,9 @@ public final class LiveFileInfo {
 	/// @return the smallest key
 	public byte[] smallestKey() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment sizeOut = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment sizeOut = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment p = (MemorySegment) MH_SMALLESTKEY.invokeExact(owner.ptr(), index, sizeOut);
-			return NativeCalls.toByteArray(p, sizeOut.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toByteArray(p, sizeOut.get(NativeCalls.SIZE_T, 0));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("smallestKey failed", t);
 		}
@@ -183,9 +183,9 @@ public final class LiveFileInfo {
 	/// @return the largest key
 	public byte[] largestKey() {
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment sizeOut = arena.allocate(ValueLayout.JAVA_LONG);
+			MemorySegment sizeOut = arena.allocate(NativeCalls.SIZE_T);
 			MemorySegment p = (MemorySegment) MH_LARGESTKEY.invokeExact(owner.ptr(), index, sizeOut);
-			return NativeCalls.toByteArray(p, sizeOut.get(ValueLayout.JAVA_LONG, 0));
+			return NativeCalls.toByteArray(p, sizeOut.get(NativeCalls.SIZE_T, 0));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("largestKey failed", t);
 		}

@@ -73,7 +73,7 @@ public final class ReadBatch implements AutoCloseable {
 		this.keySizesArr = arena.allocate(ValueLayout.JAVA_LONG, capacity);
 		this.valuesArr = arena.allocate(ValueLayout.ADDRESS, capacity);
 		this.errsArr = arena.allocate(ValueLayout.ADDRESS, capacity);
-		this.vallenOut = arena.allocate(ValueLayout.JAVA_LONG);
+		this.vallenOut = arena.allocate(NativeCalls.SIZE_T);
 	}
 
 	/// Creates a batch reading from `db`'s default column family, with room for up to

@@ -62,7 +62,7 @@ final class PinnableSlice extends NativeObject {
 	/// @return the value's bytes, copied into a new array
 	byte[] toByteArray(MemorySegment vallenOut) {
 		MemorySegment data = value(vallenOut);
-		return NativeCalls.toByteArray(data, vallenOut.get(ValueLayout.JAVA_LONG, 0));
+		return NativeCalls.toByteArray(data, vallenOut.get(NativeCalls.SIZE_T, 0));
 	}
 
 	/// Copies this slice's value into `dest`, or reports insufficient capacity without
@@ -76,7 +76,7 @@ final class PinnableSlice extends NativeObject {
 	/// @return [CopyResult.Copied] on success, [CopyResult.NotEnoughCapacity] if `dest` is too small
 	CopyResult copyInto(MemorySegment dest, long destCapacity, MemorySegment vallenOut) {
 		MemorySegment data = value(vallenOut);
-		long len = vallenOut.get(ValueLayout.JAVA_LONG, 0);
+		long len = vallenOut.get(NativeCalls.SIZE_T, 0);
 		if (len > destCapacity) {
 			return new CopyResult.NotEnoughCapacity(len);
 		}
@@ -94,7 +94,7 @@ final class PinnableSlice extends NativeObject {
 	/// @return [CopyResult.Copied] on success, [CopyResult.NotEnoughCapacity] if `dest` is too small
 	CopyResult copyInto(ByteBuffer dest, MemorySegment vallenOut) {
 		MemorySegment data = value(vallenOut);
-		long len = vallenOut.get(ValueLayout.JAVA_LONG, 0);
+		long len = vallenOut.get(NativeCalls.SIZE_T, 0);
 		if (len > dest.remaining()) {
 			return new CopyResult.NotEnoughCapacity(len);
 		}
@@ -119,7 +119,7 @@ final class PinnableSlice extends NativeObject {
 		MemorySegment data = value(vallenOut);
 		// The `null` cleanup is deliberate: this view borrows from the slice, it does
 		// not own the memory, so closing `arena` must not attempt to free it.
-		MemorySegment view = data.reinterpret(vallenOut.get(ValueLayout.JAVA_LONG, 0), arena, null).asReadOnly();
+		MemorySegment view = data.reinterpret(vallenOut.get(NativeCalls.SIZE_T, 0), arena, null).asReadOnly();
 		R result = fn.map(view);
 		Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
 		return result;
