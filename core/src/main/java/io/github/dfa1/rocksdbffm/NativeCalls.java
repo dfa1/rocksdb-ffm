@@ -27,9 +27,8 @@ final class NativeCalls {
 	/// `void rocksdb_free(void* ptr);`
 	private static final MethodHandle MH_FREE = NativeLibrary.lookup("rocksdb_free", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-	/// there is no rocksdb_malloc(size_t)
-	/// libc `void* malloc(size_t size)`: for native memory that has to outlive any arena and be freed from whichever
-	/// thread releases its owner, and for buffers handed back to RocksDB, which frees them with `rocksdb_free()`.
+	/// `void* malloc(size_t size);`
+	/// NB: there is no rocksdb_malloc(size_t)
 	private static final MethodHandle MH_MALLOC = NativeLibrary.lookup("malloc", FunctionDescriptor.of(ValueLayout.ADDRESS, SIZE_T));
 
 	private NativeCalls() {
