@@ -141,6 +141,7 @@ final class RocksDBWriteOperationsBindings {
 
 	/// byte[] put — slow path, allocates native memory.
 	static void putBytes(RocksDBWriteOperations db, WriteOptions writeOpts, byte[] key, byte[] value) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment k = NativeCalls.toNative(arena, key);
@@ -149,6 +150,8 @@ final class RocksDBWriteOperationsBindings {
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("put failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -168,12 +171,15 @@ final class RocksDBWriteOperationsBindings {
 	/// MemorySegment put — zero-copy, caller supplies pre-allocated native segments.
 	static void putSegment(RocksDBWriteOperations db, WriteOptions writeOpts,
 	                       MemorySegment key, MemorySegment val) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_PUT.invokeExact(db.dbPtr(), writeOpts.ptr(), key, key.byteSize(), val, val.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("put failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -225,6 +231,7 @@ final class RocksDBWriteOperationsBindings {
 
 	/// byte[] delete — slow path.
 	static void deleteBytes(RocksDBWriteOperations db, WriteOptions writeOpts, byte[] key) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment k = NativeCalls.toNative(arena, key);
@@ -232,48 +239,63 @@ final class RocksDBWriteOperationsBindings {
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	/// MemorySegment delete — zero-copy.
 	static void deleteSegment(RocksDBWriteOperations db, WriteOptions writeOpts, MemorySegment key) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE.invokeExact(db.dbPtr(), writeOpts.ptr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void flush(RocksDBWriteOperations db, FlushOptions flushOptions) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_FLUSH.invokeExact(db.dbPtr(), flushOptions.ptr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("flush failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void cancelAllBackgroundWork(RocksDBWriteOperations db, boolean wait) {
+		NativeDB guard = NativeDB.enter(db);
 		try {
 			MH_CANCEL_ALL_BACKGROUND_WORK.invokeExact(db.dbPtr(), NativeCalls.toByte(wait));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("cancelAllBackgroundWork failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static SequenceNumber getLatestSequenceNumber(RocksDBWriteOperations db) {
+		NativeDB guard = NativeDB.enter(db);
 		try {
 			long seq = (long) MH_GET_LATEST_SEQUENCE_NUMBER.invokeExact(db.dbPtr());
 			return SequenceNumber.of(seq);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("getLatestSequenceNumber failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static WalIterator getUpdatesSince(RocksDBWriteOperations db, SequenceNumber sequenceNumber) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment iterPtr = (MemorySegment) MH_GET_UPDATES_SINCE.invokeExact(
@@ -283,20 +305,26 @@ final class RocksDBWriteOperationsBindings {
 			return WalIterator.wrap((NativeObjectWithChildren) db, iterPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("getUpdatesSince failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void flushWal(RocksDBWriteOperations db, boolean sync) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_FLUSH_WAL.invokeExact(db.dbPtr(), NativeCalls.toByte(sync), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("flushWal failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void deleteRangeCfBytes(RocksDBWriteOperations db, WriteOptions writeOpts, byte[] startKey, byte[] endKey) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment cf = ((NativeDB) db).getColumnFamily(ColumnFamilyName.DEFAULT).ptr();
@@ -306,11 +334,14 @@ final class RocksDBWriteOperationsBindings {
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("deleteRange failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void deleteRangeCfBuffer(RocksDBWriteOperations db, WriteOptions writeOpts,
 	                                ByteBuffer startKey, ByteBuffer endKey) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment cf = ((NativeDB) db).getColumnFamily(ColumnFamilyName.DEFAULT).ptr();
@@ -320,11 +351,14 @@ final class RocksDBWriteOperationsBindings {
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("deleteRange failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void deleteRangeCfSegment(RocksDBWriteOperations db, WriteOptions writeOpts,
 	                                 MemorySegment startKey, MemorySegment endKey) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment cf = ((NativeDB) db).getColumnFamily(ColumnFamilyName.DEFAULT).ptr();
@@ -333,16 +367,21 @@ final class RocksDBWriteOperationsBindings {
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("deleteRange failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void writeBatch(RocksDBWriteOperations db, WriteOptions writeOpts, WriteBatch batch) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_WRITE.invokeExact(db.dbPtr(), writeOpts.ptr(), batch.ptr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("write failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -408,6 +447,7 @@ final class RocksDBWriteOperationsBindings {
 	/// byte[] put with explicit column family — slow path.
 	static void putCfBytes(RocksDBWriteOperations db, WriteOptions writeOpts, ColumnFamilyHandle cf,
 	                       byte[] key, byte[] value) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_PUT_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(),
@@ -416,18 +456,23 @@ final class RocksDBWriteOperationsBindings {
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("put failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	/// MemorySegment put with explicit column family — zero-copy.
 	static void putCfSegment(RocksDBWriteOperations db, WriteOptions writeOpts, ColumnFamilyHandle cf,
 	                         MemorySegment key, MemorySegment val) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_PUT_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(), key, key.byteSize(), val, val.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("put failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -470,6 +515,7 @@ final class RocksDBWriteOperationsBindings {
 	/// byte[] delete with explicit column family — slow path.
 	static void deleteCfBytes(RocksDBWriteOperations db, WriteOptions writeOpts, ColumnFamilyHandle cf,
 	                          byte[] key) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(),
@@ -477,18 +523,23 @@ final class RocksDBWriteOperationsBindings {
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	/// MemorySegment delete with explicit column family — zero-copy.
 	static void deleteCfSegment(RocksDBWriteOperations db, WriteOptions writeOpts, ColumnFamilyHandle cf,
 	                            MemorySegment key) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(), key, key.byteSize(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("delete failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -496,6 +547,7 @@ final class RocksDBWriteOperationsBindings {
 	static void deleteRangeCfBytesExplicit(RocksDBWriteOperations db, WriteOptions writeOpts,
 	                                       ColumnFamilyHandle cf,
 	                                       byte[] startKey, byte[] endKey) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE_RANGE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(),
@@ -504,6 +556,8 @@ final class RocksDBWriteOperationsBindings {
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("deleteRange failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -511,6 +565,7 @@ final class RocksDBWriteOperationsBindings {
 	static void deleteRangeCfBufferExplicit(RocksDBWriteOperations db, WriteOptions writeOpts,
 	                                        ColumnFamilyHandle cf,
 	                                        ByteBuffer startKey, ByteBuffer endKey) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE_RANGE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(),
@@ -519,6 +574,8 @@ final class RocksDBWriteOperationsBindings {
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("deleteRange failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -526,6 +583,7 @@ final class RocksDBWriteOperationsBindings {
 	static void deleteRangeCfSegmentExplicit(RocksDBWriteOperations db, WriteOptions writeOpts,
 	                                         ColumnFamilyHandle cf,
 	                                         MemorySegment startKey, MemorySegment endKey) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DELETE_RANGE_CF.invokeExact(db.dbPtr(), writeOpts.ptr(), cf.ptr(),
@@ -533,16 +591,21 @@ final class RocksDBWriteOperationsBindings {
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("deleteRange failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void flushCf(RocksDBWriteOperations db, FlushOptions flushOptions, ColumnFamilyHandle cf) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_FLUSH_CF.invokeExact(db.dbPtr(), flushOptions.ptr(), cf.ptr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("flush failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 }

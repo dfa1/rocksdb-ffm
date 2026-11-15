@@ -105,12 +105,15 @@ final class RocksDBTracingOperationsBindings {
 	}
 
 	static void endTrace(RocksDBTracingOperations db) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_END_TRACE.invokeExact(db.dbPtr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("endTrace failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -136,12 +139,15 @@ final class RocksDBTracingOperationsBindings {
 	}
 
 	static void endIoTrace(RocksDBTracingOperations db) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_END_IO_TRACE.invokeExact(db.dbPtr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("endIoTrace failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -194,12 +200,15 @@ final class RocksDBTracingOperationsBindings {
 	}
 
 	static void endBlockCacheTrace(RocksDBTracingOperations db) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_END_BLOCK_CACHE_TRACE.invokeExact(db.dbPtr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("endBlockCacheTrace failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 }

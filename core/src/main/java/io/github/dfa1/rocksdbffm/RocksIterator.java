@@ -107,6 +107,9 @@ public final class RocksIterator extends NativeObject {
 	// Reused across all key/value calls to avoid per-call Arena allocation.
 	private final MemorySegment lenSegment;
 
+	/// The database whose in-flight count covers this iterator's calls, or `null`.
+	private final NativeDB guard;
+
 	/// Package-private: created via [#create].
 	private RocksIterator(NativeObjectWithChildren owningDb, ReadOptions readOptions, MemorySegment ptr) {
 		super(ptr);
@@ -115,17 +118,35 @@ public final class RocksIterator extends NativeObject {
 		this.lenSegment = NativeCalls.malloc(NativeCalls.SIZE_T.byteSize());
 		// Two parents: the database or transaction, and the options, whose iterate bounds the native iterator keeps raw
 		// pointers into. Holding them also keeps the options' bounds memory reachable.
+		this.guard = owningDb instanceof NativeDB db ? db : null;
 		borrowedFrom(owningDb, readOptions);
+	}
+
+	/// Marks a call on this iterator as in flight on its database, so the database's close waits for it instead
+	/// of freeing the iterator under it. A transaction's iterator has no guard yet.
+	private void enter() {
+		if (guard != null) {
+			guard.enter();
+		}
+	}
+
+	private void exit() {
+		if (guard != null) {
+			guard.exit();
+		}
 	}
 
 	/// Package-private factory called by RocksDB.
 	static RocksIterator create(RocksDBReadOperations db, ReadOptions readOptions) {
+		NativeDB dbGuard = NativeDB.enter(db);
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE.invokeExact(db.dbPtr(), readOptions.readPtr());
 			// Every implementor extends NativeObjectWithChildren (see RocksDBReadOperations#getSnapshot()).
 			return new RocksIterator((NativeObjectWithChildren) db, readOptions, iterPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("iterator create failed", t);
+		} finally {
+			dbGuard.exit();
 		}
 	}
 
@@ -141,19 +162,25 @@ public final class RocksIterator extends NativeObject {
 
 	/// Positions the iterator at the first key in the database.
 	public void seekToFirst() {
+		enter();
 		try {
 			MH_SEEK_TO_FIRST.invokeExact(ptr());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("seekToFirst failed", t);
+		} finally {
+			exit();
 		}
 	}
 
 	/// Positions the iterator at the last key in the database.
 	public void seekToLast() {
+		enter();
 		try {
 			MH_SEEK_TO_LAST.invokeExact(ptr());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("seekToLast failed", t);
+		} finally {
+			exit();
 		}
 	}
 
@@ -161,10 +188,13 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param target the seek target key
 	public void seek(byte[] target) {
+		enter();
 		try (Arena arena = Arena.ofConfined()) {
 			MH_SEEK.invokeExact(ptr(), NativeCalls.toNative(arena, target), (long) target.length);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("seek failed", t);
+		} finally {
+			exit();
 		}
 	}
 
@@ -172,10 +202,13 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param target direct [ByteBuffer] containing the seek target key
 	public void seek(ByteBuffer target) {
+		enter();
 		try {
 			MH_SEEK.invokeExact(ptr(), MemorySegment.ofBuffer(target), (long) target.remaining());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("seek failed", t);
+		} finally {
+			exit();
 		}
 	}
 
@@ -183,10 +216,13 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param target native segment containing the seek target key
 	public void seek(MemorySegment target) {
+		enter();
 		try {
 			MH_SEEK.invokeExact(ptr(), target, target.byteSize());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("seek failed", t);
+		} finally {
+			exit();
 		}
 	}
 
@@ -194,10 +230,13 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param target the seek target key
 	public void seekForPrev(byte[] target) {
+		enter();
 		try (Arena arena = Arena.ofConfined()) {
 			MH_SEEK_FOR_PREV.invokeExact(ptr(), NativeCalls.toNative(arena, target), (long) target.length);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("seekForPrev failed", t);
+		} finally {
+			exit();
 		}
 	}
 
@@ -205,10 +244,13 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param target direct [ByteBuffer] containing the seek target key
 	public void seekForPrev(ByteBuffer target) {
+		enter();
 		try {
 			MH_SEEK_FOR_PREV.invokeExact(ptr(), MemorySegment.ofBuffer(target), (long) target.remaining());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("seekForPrev failed", t);
+		} finally {
+			exit();
 		}
 	}
 
@@ -216,28 +258,37 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @param target native segment containing the seek target key
 	public void seekForPrev(MemorySegment target) {
+		enter();
 		try {
 			MH_SEEK_FOR_PREV.invokeExact(ptr(), target, target.byteSize());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("seekForPrev failed", t);
+		} finally {
+			exit();
 		}
 	}
 
 	/// Moves to the next key. Only call when [#isValid()] is true.
 	public void next() {
+		enter();
 		try {
 			MH_NEXT.invokeExact(ptr());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("next failed", t);
+		} finally {
+			exit();
 		}
 	}
 
 	/// Moves to the previous key. Only call when [#isValid()] is true.
 	public void prev() {
+		enter();
 		try {
 			MH_PREV.invokeExact(ptr());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("prev failed", t);
+		} finally {
+			exit();
 		}
 	}
 
@@ -249,10 +300,13 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @return `true` if the iterator has a valid current position
 	public boolean isValid() {
+		enter();
 		try {
 			return NativeCalls.fromByte((byte) MH_VALID.invokeExact(ptr()));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("isValid failed", t);
+		} finally {
+			exit();
 		}
 	}
 
@@ -260,12 +314,15 @@ public final class RocksIterator extends NativeObject {
 	/// Always call after an iteration loop to detect background errors.
 	/// Throws [RocksDBException] if an error occurred.
 	public void checkError() {
+		enter();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_GET_ERROR.invokeExact(ptr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("getError failed", t);
+		} finally {
+			exit();
 		}
 	}
 
@@ -276,6 +333,7 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @return empty if no error, otherwise the error message
 	public Optional<String> error() {
+		enter();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_GET_ERROR.invokeExact(ptr(), err);
@@ -283,6 +341,8 @@ public final class RocksIterator extends NativeObject {
 			return NativeCalls.toOptionalString(errPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("error failed", t);
+		} finally {
+			exit();
 		}
 	}
 
@@ -290,12 +350,15 @@ public final class RocksIterator extends NativeObject {
 	/// The iterator is invalidated by this call regardless of the outcome; a subsequent
 	/// `seek*` call is required to reposition it before further navigation.
 	public void refresh() {
+		enter();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_REFRESH.invokeExact(ptr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("refresh failed", t);
+		} finally {
+			exit();
 		}
 	}
 
@@ -321,12 +384,17 @@ public final class RocksIterator extends NativeObject {
 	/// @throws NullPointerException if `fn` returns `null`
 	/// @return the result of `fn`
 	public <R> R key(Mapper<R> fn) {
-		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment raw = readKey();
-			MemorySegment view = raw.reinterpret(lenSegment.get(NativeCalls.SIZE_T, 0), arena, null).asReadOnly();
-			R result = fn.map(view);
-			Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
-			return result;
+		enter();
+		try {
+			try (Arena arena = Arena.ofConfined()) {
+				MemorySegment raw = readKey();
+				MemorySegment view = raw.reinterpret(lenSegment.get(NativeCalls.SIZE_T, 0), arena, null).asReadOnly();
+				R result = fn.map(view);
+				Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
+				return result;
+			}
+		} finally {
+			exit();
 		}
 	}
 
@@ -340,12 +408,17 @@ public final class RocksIterator extends NativeObject {
 	/// @throws NullPointerException if `fn` returns `null`
 	/// @return the result of `fn`
 	public <R> R value(Mapper<R> fn) {
-		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment raw = readValue();
-			MemorySegment view = raw.reinterpret(lenSegment.get(NativeCalls.SIZE_T, 0), arena, null).asReadOnly();
-			R result = fn.map(view);
-			Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
-			return result;
+		enter();
+		try {
+			try (Arena arena = Arena.ofConfined()) {
+				MemorySegment raw = readValue();
+				MemorySegment view = raw.reinterpret(lenSegment.get(NativeCalls.SIZE_T, 0), arena, null).asReadOnly();
+				R result = fn.map(view);
+				Objects.requireNonNull(result, "Mapper.map(MemorySegment) must not return null");
+				return result;
+			}
+		} finally {
+			exit();
 		}
 	}
 
@@ -404,14 +477,19 @@ public final class RocksIterator extends NativeObject {
 	/// @return [CopyResult.Copied] if copied, or [CopyResult.NotEnoughCapacity] if `dst` is too small
 	@CheckReturnValue
 	public CopyResult key(ByteBuffer dst) {
-		MemorySegment raw = readKey();
-		long len = lenSegment.get(NativeCalls.SIZE_T, 0);
-		if (len > dst.remaining()) {
-			return new CopyResult.NotEnoughCapacity(len);
+		enter();
+		try {
+			MemorySegment raw = readKey();
+			long len = lenSegment.get(NativeCalls.SIZE_T, 0);
+			if (len > dst.remaining()) {
+				return new CopyResult.NotEnoughCapacity(len);
+			}
+			MemorySegment.ofBuffer(dst).copyFrom(raw.reinterpret(len));
+			dst.position(dst.position() + (int) len);
+			return CopyResult.Copied.INSTANCE;
+		} finally {
+			exit();
 		}
-		MemorySegment.ofBuffer(dst).copyFrom(raw.reinterpret(len));
-		dst.position(dst.position() + (int) len);
-		return CopyResult.Copied.INSTANCE;
 	}
 
 	/// Copies the current value into `dst`. Copies nothing when `dst`'s remaining capacity is
@@ -425,14 +503,19 @@ public final class RocksIterator extends NativeObject {
 	/// @return [CopyResult.Copied] if copied, or [CopyResult.NotEnoughCapacity] if `dst` is too small
 	@CheckReturnValue
 	public CopyResult value(ByteBuffer dst) {
-		MemorySegment raw = readValue();
-		long len = lenSegment.get(NativeCalls.SIZE_T, 0);
-		if (len > dst.remaining()) {
-			return new CopyResult.NotEnoughCapacity(len);
+		enter();
+		try {
+			MemorySegment raw = readValue();
+			long len = lenSegment.get(NativeCalls.SIZE_T, 0);
+			if (len > dst.remaining()) {
+				return new CopyResult.NotEnoughCapacity(len);
+			}
+			MemorySegment.ofBuffer(dst).copyFrom(raw.reinterpret(len));
+			dst.position(dst.position() + (int) len);
+			return CopyResult.Copied.INSTANCE;
+		} finally {
+			exit();
 		}
-		MemorySegment.ofBuffer(dst).copyFrom(raw.reinterpret(len));
-		dst.position(dst.position() + (int) len);
-		return CopyResult.Copied.INSTANCE;
 	}
 
 	// -----------------------------------------------------------------------
@@ -445,8 +528,13 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @return current key as a newly allocated byte array
 	public byte[] key() {
-		MemorySegment raw = readKey();
-		return NativeCalls.toByteArray(raw, lenSegment.get(NativeCalls.SIZE_T, 0));
+		enter();
+		try {
+			MemorySegment raw = readKey();
+			return NativeCalls.toByteArray(raw, lenSegment.get(NativeCalls.SIZE_T, 0));
+		} finally {
+			exit();
+		}
 	}
 
 	/// Returns a copy of the current value as a byte array.
@@ -455,8 +543,13 @@ public final class RocksIterator extends NativeObject {
 	///
 	/// @return current value as a newly allocated byte array
 	public byte[] value() {
-		MemorySegment raw = readValue();
-		return NativeCalls.toByteArray(raw, lenSegment.get(NativeCalls.SIZE_T, 0));
+		enter();
+		try {
+			MemorySegment raw = readValue();
+			return NativeCalls.toByteArray(raw, lenSegment.get(NativeCalls.SIZE_T, 0));
+		} finally {
+			exit();
+		}
 	}
 
 	/// Invokes `MH_KEY`. Returns the raw, unsized key pointer — every caller reinterprets
