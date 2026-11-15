@@ -479,4 +479,22 @@ class MergeOperatorTest {
 			thrown.isInstanceOf(RocksDBException.class);
 		}
 	}
+
+	@Test
+	void custom_shorterResultAfterALongerOne_returnsOnlyItsOwnBytes(@TempDir Path dir) throws RocksDBException {
+		// Given: both merges run on this thread, so the second reuses the first's (larger) result buffer
+		try (var opts = Options.newOptions().setCreateIfMissing(true)
+				.setMergeOperator(MergeOperator.custom("string-max", STRING_MAX));
+		     var db = RocksDB.openReadWrite(dir, opts)) {
+			db.merge("long".getBytes(), "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz".getBytes());
+			db.merge("short".getBytes(), "a".getBytes());
+			db.get("long".getBytes());
+
+			// When
+			byte[] result = db.get("short".getBytes());
+
+			// Then
+			assertThat(result).isEqualTo("a".getBytes());
+		}
+	}
 }

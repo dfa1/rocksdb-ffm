@@ -2,12 +2,10 @@ package io.github.dfa1.rocksdbffm;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -68,66 +66,22 @@ final class EventNotifierBridge {
 	// One global upcall stub per callback, shared by every attached EventNotifier. Live for the
 	// JVM lifetime so the function pointers stay valid; dispatch is keyed off the `state` pointer,
 	// which carries a registry id rather than real memory (same trick as Logger/MergeOperator.Custom).
-	private static final MemorySegment FLUSH_BEGIN_STUB;
-	private static final MemorySegment FLUSH_COMPLETED_STUB;
-	private static final MemorySegment COMPACTION_BEGIN_STUB;
-	private static final MemorySegment COMPACTION_COMPLETED_STUB;
+	private static final MemorySegment FLUSH_BEGIN_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "flushBeginDispatch", DB_SCOPED_INFO_DESC);
+	private static final MemorySegment FLUSH_COMPLETED_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "flushCompletedDispatch", DB_SCOPED_INFO_DESC);
+	private static final MemorySegment COMPACTION_BEGIN_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "compactionBeginDispatch", DB_SCOPED_INFO_DESC);
+	private static final MemorySegment COMPACTION_COMPLETED_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "compactionCompletedDispatch", DB_SCOPED_INFO_DESC);
 	// RocksDB's C struct calls on_subcompaction_begin/on_subcompaction_completed unconditionally
 	// (db/c.cc has no null check), so both slots still need a valid function pointer even though
 	// EventNotifier does not expose subcompaction callbacks; one shared no-op stub covers both.
-	private static final MemorySegment SUBCOMPACTION_NOOP_STUB;
-	private static final MemorySegment EXTERNAL_FILE_INGESTED_STUB;
-	private static final MemorySegment BACKGROUND_ERROR_STUB;
-	private static final MemorySegment STALL_CONDITIONS_CHANGED_STUB;
-	private static final MemorySegment MEMTABLE_SEALED_STUB;
-	private static final MemorySegment DESTRUCTOR_STUB;
+	private static final MemorySegment SUBCOMPACTION_NOOP_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "subcompactionNoopDispatch", INFO_ONLY_DESC);
+	private static final MemorySegment EXTERNAL_FILE_INGESTED_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "externalFileIngestedDispatch", DB_SCOPED_INFO_DESC);
+	private static final MemorySegment BACKGROUND_ERROR_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "backgroundErrorDispatch", BACKGROUND_ERROR_DESC);
+	private static final MemorySegment STALL_CONDITIONS_CHANGED_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "stallConditionsChangedDispatch", INFO_ONLY_DESC);
+	private static final MemorySegment MEMTABLE_SEALED_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "memTableSealedDispatch", INFO_ONLY_DESC);
+	private static final MemorySegment DESTRUCTOR_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "destructorDispatch", DESTRUCTOR_DESC);
 
 	private static final UpcallRegistry<EventNotifier> REGISTRY = new UpcallRegistry<>();
 	private static final System.Logger LOG = System.getLogger(EventNotifierBridge.class.getName());
-
-	static {
-		try {
-			MethodHandles.Lookup lookup = MethodHandles.lookup();
-			MethodType dbScopedType = MethodType.methodType(
-					void.class, MemorySegment.class, MemorySegment.class, MemorySegment.class);
-			MethodType infoOnlyType = MethodType.methodType(void.class, MemorySegment.class, MemorySegment.class);
-
-			FLUSH_BEGIN_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(EventNotifierBridge.class, "flushBeginDispatch", dbScopedType),
-					DB_SCOPED_INFO_DESC, Arena.global());
-			FLUSH_COMPLETED_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(EventNotifierBridge.class, "flushCompletedDispatch", dbScopedType),
-					DB_SCOPED_INFO_DESC, Arena.global());
-			COMPACTION_BEGIN_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(EventNotifierBridge.class, "compactionBeginDispatch", dbScopedType),
-					DB_SCOPED_INFO_DESC, Arena.global());
-			COMPACTION_COMPLETED_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(EventNotifierBridge.class, "compactionCompletedDispatch", dbScopedType),
-					DB_SCOPED_INFO_DESC, Arena.global());
-			SUBCOMPACTION_NOOP_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(EventNotifierBridge.class, "subcompactionNoopDispatch", infoOnlyType),
-					INFO_ONLY_DESC, Arena.global());
-			EXTERNAL_FILE_INGESTED_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(EventNotifierBridge.class, "externalFileIngestedDispatch", dbScopedType),
-					DB_SCOPED_INFO_DESC, Arena.global());
-			BACKGROUND_ERROR_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(EventNotifierBridge.class, "backgroundErrorDispatch", MethodType.methodType(
-							void.class, MemorySegment.class, int.class, MemorySegment.class)),
-					BACKGROUND_ERROR_DESC, Arena.global());
-			STALL_CONDITIONS_CHANGED_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(EventNotifierBridge.class, "stallConditionsChangedDispatch", infoOnlyType),
-					INFO_ONLY_DESC, Arena.global());
-			MEMTABLE_SEALED_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(EventNotifierBridge.class, "memTableSealedDispatch", infoOnlyType),
-					INFO_ONLY_DESC, Arena.global());
-			DESTRUCTOR_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(EventNotifierBridge.class, "destructorDispatch",
-							MethodType.methodType(void.class, MemorySegment.class)),
-					DESTRUCTOR_DESC, Arena.global());
-		} catch (ReflectiveOperationException e) {
-			throw new ExceptionInInitializerError(e);
-		}
-	}
 
 	/// Creates a native `rocksdb_eventlistener_t*` dispatching to `notifier` and attaches it to
 	/// `optionsPtr`, transferring ownership to RocksDB in the same step.

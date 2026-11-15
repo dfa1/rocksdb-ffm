@@ -2,12 +2,10 @@ package io.github.dfa1.rocksdbffm;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.nio.charset.StandardCharsets;
 
 /// FFM wrapper for `rocksdb_logger_t`.
@@ -67,7 +65,7 @@ public final class Logger extends NativeObject {
 
 	// One global upcall stub shared by all callback loggers.
 	// Lives for the JVM lifetime so the function pointer is always valid.
-	private static final MemorySegment GLOBAL_STUB;
+	private static final MemorySegment GLOBAL_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "dispatch", CALLBACK_DESC);
 
 	static {
 		MH_CREATE_STDERR = NativeLibrary.rocksdb("rocksdb_logger_create_stderr_logger",
@@ -78,14 +76,6 @@ public final class Logger extends NativeObject {
 
 		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_logger_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		try {
-			MethodHandle dispatchMH = MethodHandles.lookup().findStatic(Logger.class, "dispatch",
-					MethodType.methodType(void.class, MemorySegment.class, int.class, MemorySegment.class, long.class));
-			GLOBAL_STUB = Linker.nativeLinker().upcallStub(dispatchMH, CALLBACK_DESC, Arena.global());
-		} catch (ReflectiveOperationException e) {
-			throw new ExceptionInInitializerError(e);
-		}
 	}
 
 	/// `-1` for stderr loggers; the registry key for callback loggers.
