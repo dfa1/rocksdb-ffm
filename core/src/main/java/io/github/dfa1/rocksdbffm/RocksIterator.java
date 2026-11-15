@@ -3,6 +3,7 @@ package io.github.dfa1.rocksdbffm;
 import javax.annotation.CheckReturnValue;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
@@ -59,60 +60,62 @@ public final class RocksIterator extends NativeObject {
 	private static final MethodHandle MH_REFRESH;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_create_iterator",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_create_iterator",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_iter_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_iter_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_VALID = NativeLibrary.rocksdb("rocksdb_iter_valid",
+		MH_VALID = NativeLibrary.downcall("rocksdb_iter_valid",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SEEK_TO_FIRST = NativeLibrary.rocksdb("rocksdb_iter_seek_to_first",
+		MH_SEEK_TO_FIRST = NativeLibrary.downcall("rocksdb_iter_seek_to_first",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SEEK_TO_LAST = NativeLibrary.rocksdb("rocksdb_iter_seek_to_last",
+		MH_SEEK_TO_LAST = NativeLibrary.downcall("rocksdb_iter_seek_to_last",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SEEK = NativeLibrary.rocksdb("rocksdb_iter_seek",
+		MH_SEEK = NativeLibrary.downcall("rocksdb_iter_seek",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_SEEK_FOR_PREV = NativeLibrary.rocksdb("rocksdb_iter_seek_for_prev",
+		MH_SEEK_FOR_PREV = NativeLibrary.downcall("rocksdb_iter_seek_for_prev",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_NEXT = NativeLibrary.rocksdb("rocksdb_iter_next",
+		MH_NEXT = NativeLibrary.downcall("rocksdb_iter_next",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_PREV = NativeLibrary.rocksdb("rocksdb_iter_prev",
+		MH_PREV = NativeLibrary.downcall("rocksdb_iter_prev",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_KEY = NativeLibrary.rocksdb("rocksdb_iter_key",
+		// key/value only read the current entry's Slice (db/c.cc), so they are critical, with heap access for the
+		// on-heap lenSegment.
+		MH_KEY = NativeLibrary.downcall("rocksdb_iter_key",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+				Linker.Option.critical(true));
 
-		MH_VALUE = NativeLibrary.rocksdb("rocksdb_iter_value",
+		MH_VALUE = NativeLibrary.downcall("rocksdb_iter_value",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+						ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+				Linker.Option.critical(true));
 
-		MH_GET_ERROR = NativeLibrary.rocksdb("rocksdb_iter_get_error",
+		MH_GET_ERROR = NativeLibrary.downcall("rocksdb_iter_get_error",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_REFRESH = NativeLibrary.rocksdb("rocksdb_iter_refresh",
+		MH_REFRESH = NativeLibrary.downcall("rocksdb_iter_refresh",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
-	// Reused across all key/value calls to avoid per-call Arena allocation.
-	private final MemorySegment lenSegment;
+	// The key/value length out-param, reused across calls. On the heap (a long[] is size_t-aligned), so there is no
+	// native memory to free, from whichever thread a parent's close releases this iterator.
+	private final MemorySegment lenSegment = MemorySegment.ofArray(new long[1]);
 
 	/// Package-private: created via [#create].
 	private RocksIterator(NativeObjectWithChildren owningDb, ReadOptions readOptions, MemorySegment ptr) {
 		super(ptr);
-		// malloc'd, not an arena: a parent's close releases this iterator from whichever thread closes the parent, which
-		// rules out a confined arena, and a garbage-collected one costs a cleaner registration per iterator.
-		this.lenSegment = NativeCalls.malloc(NativeCalls.SIZE_T.byteSize());
 		// Two parents: the database or transaction, and the options, whose iterate bounds the native iterator keeps raw
 		// pointers into. Holding them also keeps the options' bounds memory reachable.
 		borrowedFrom(owningDb, readOptions);
@@ -494,6 +497,5 @@ public final class RocksIterator extends NativeObject {
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
 		MH_DESTROY.invokeExact(ptr);
-		NativeCalls.free(lenSegment);
 	}
 }

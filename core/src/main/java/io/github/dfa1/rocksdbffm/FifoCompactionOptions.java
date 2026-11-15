@@ -46,39 +46,39 @@ public final class FifoCompactionOptions extends NativeObject {
 	private static final MethodHandle MH_GET_USE_KV_RATIO_COMPACTION;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_fifo_compaction_options_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_fifo_compaction_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_fifo_compaction_options_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_fifo_compaction_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_ALLOW_COMPACTION = NativeLibrary.rocksdb("rocksdb_fifo_compaction_options_set_allow_compaction",
+		MH_SET_ALLOW_COMPACTION = NativeLibrary.downcall("rocksdb_fifo_compaction_options_set_allow_compaction",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_ALLOW_COMPACTION = NativeLibrary.rocksdb("rocksdb_fifo_compaction_options_get_allow_compaction",
+		MH_GET_ALLOW_COMPACTION = NativeLibrary.downcall("rocksdb_fifo_compaction_options_get_allow_compaction",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_TABLE_FILES_SIZE = NativeLibrary.rocksdb(
+		MH_SET_MAX_TABLE_FILES_SIZE = NativeLibrary.downcall(
 				"rocksdb_fifo_compaction_options_set_max_table_files_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_MAX_TABLE_FILES_SIZE = NativeLibrary.rocksdb(
+		MH_GET_MAX_TABLE_FILES_SIZE = NativeLibrary.downcall(
 				"rocksdb_fifo_compaction_options_get_max_table_files_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_DATA_FILES_SIZE = NativeLibrary.rocksdb(
+		MH_SET_MAX_DATA_FILES_SIZE = NativeLibrary.downcall(
 				"rocksdb_fifo_compaction_options_set_max_data_files_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_MAX_DATA_FILES_SIZE = NativeLibrary.rocksdb(
+		MH_GET_MAX_DATA_FILES_SIZE = NativeLibrary.downcall(
 				"rocksdb_fifo_compaction_options_get_max_data_files_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_USE_KV_RATIO_COMPACTION = NativeLibrary.rocksdb(
+		MH_SET_USE_KV_RATIO_COMPACTION = NativeLibrary.downcall(
 				"rocksdb_fifo_compaction_options_set_use_kv_ratio_compaction",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_USE_KV_RATIO_COMPACTION = NativeLibrary.rocksdb(
+		MH_GET_USE_KV_RATIO_COMPACTION = NativeLibrary.downcall(
 				"rocksdb_fifo_compaction_options_get_use_kv_ratio_compaction",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 	}

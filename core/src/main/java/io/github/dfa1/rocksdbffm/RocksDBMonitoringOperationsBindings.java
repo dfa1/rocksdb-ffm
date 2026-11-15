@@ -35,7 +35,7 @@ final class RocksDBMonitoringOperationsBindings {
     private static final MethodHandle MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS;
 
 	static {
-		MH_APPROXIMATE_SIZES = NativeLibrary.rocksdb("rocksdb_approximate_sizes",
+		MH_APPROXIMATE_SIZES = NativeLibrary.downcall("rocksdb_approximate_sizes",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,   // db
 						ValueLayout.JAVA_INT,  // num_ranges
@@ -46,7 +46,7 @@ final class RocksDBMonitoringOperationsBindings {
 						ValueLayout.ADDRESS,   // sizes
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_APPROXIMATE_SIZES_CF = NativeLibrary.rocksdb("rocksdb_approximate_sizes_cf",
+		MH_APPROXIMATE_SIZES_CF = NativeLibrary.downcall("rocksdb_approximate_sizes_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,   // db
 						ValueLayout.ADDRESS,   // column_family
@@ -58,7 +58,7 @@ final class RocksDBMonitoringOperationsBindings {
 						ValueLayout.ADDRESS,   // sizes
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_APPROXIMATE_SIZES_WITH_OPTIONS = NativeLibrary.rocksdb("rocksdb_approximate_sizes_with_options",
+		MH_APPROXIMATE_SIZES_WITH_OPTIONS = NativeLibrary.downcall("rocksdb_approximate_sizes_with_options",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,   // db
 						ValueLayout.ADDRESS,   // options
@@ -70,7 +70,7 @@ final class RocksDBMonitoringOperationsBindings {
 						ValueLayout.ADDRESS,   // sizes
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_APPROXIMATE_SIZES_CF_WITH_OPTIONS = NativeLibrary.rocksdb("rocksdb_approximate_sizes_cf_with_options",
+		MH_APPROXIMATE_SIZES_CF_WITH_OPTIONS = NativeLibrary.downcall("rocksdb_approximate_sizes_cf_with_options",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,   // db
 						ValueLayout.ADDRESS,   // column_family
@@ -83,20 +83,20 @@ final class RocksDBMonitoringOperationsBindings {
 						ValueLayout.ADDRESS,   // sizes
 						ValueLayout.ADDRESS)); // errptr
 
-        MH_VERIFY_CHECKSUM = NativeLibrary.rocksdb(
+        MH_VERIFY_CHECKSUM = NativeLibrary.downcall(
                 "rocksdb_verify_checksum",
                 FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-        MH_VERIFY_CHECKSUM_WITH_OPTIONS = NativeLibrary.rocksdb(
+        MH_VERIFY_CHECKSUM_WITH_OPTIONS = NativeLibrary.downcall(
                 "rocksdb_verify_checksum_with_options",
                 FunctionDescriptor.ofVoid(
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-        MH_VERIFY_FILE_CHECKSUMS = NativeLibrary.rocksdb(
+        MH_VERIFY_FILE_CHECKSUMS = NativeLibrary.downcall(
                 "rocksdb_verify_file_checksums",
                 FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-        MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS = NativeLibrary.rocksdb(
+        MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS = NativeLibrary.downcall(
                 "rocksdb_verify_file_checksums_with_options",
                 FunctionDescriptor.ofVoid(
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));

@@ -26,10 +26,10 @@ public final class SliceTransform extends NativeObject {
 	private static final MethodHandle MH_DESTROY;
 
 	static {
-		MH_CREATE_FIXED_PREFIX = NativeLibrary.rocksdb("rocksdb_slicetransform_create_fixed_prefix",
+		MH_CREATE_FIXED_PREFIX = NativeLibrary.downcall("rocksdb_slicetransform_create_fixed_prefix",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_slicetransform_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_slicetransform_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

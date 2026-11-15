@@ -28,7 +28,7 @@ final class EventNotifierBridge {
 	}
 
 	/// `rocksdb_eventlistener_t* rocksdb_eventlistener_create(void* state_, void (*destructor_)(void*), on_flush_begin_cb on_flush_begin, on_flush_completed_cb on_flush_completed, on_compaction_begin_cb on_compaction_begin, on_compaction_completed_cb on_compaction_completed, on_subcompaction_begin_cb on_subcompaction_begin, on_subcompaction_completed_cb on_subcompaction_completed, on_external_file_ingested_cb on_external_file_ingested, on_background_error_cb on_background_error, on_stall_conditions_changed_cb on_stall_conditions_changed, on_memtable_sealed_cb on_memtable_sealed);`
-	private static final MethodHandle MH_EVENTLISTENER_CREATE = NativeLibrary.rocksdb(
+	private static final MethodHandle MH_EVENTLISTENER_CREATE = NativeLibrary.downcall(
 			"rocksdb_eventlistener_create",
 			FunctionDescriptor.of(ValueLayout.ADDRESS,
 					ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
@@ -36,12 +36,12 @@ final class EventNotifierBridge {
 					ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 	/// `void rocksdb_options_add_eventlistener(rocksdb_options_t*, rocksdb_eventlistener_t*);`
-	private static final MethodHandle MH_OPTIONS_ADD_EVENTLISTENER = NativeLibrary.rocksdb(
+	private static final MethodHandle MH_OPTIONS_ADD_EVENTLISTENER = NativeLibrary.downcall(
 			"rocksdb_options_add_eventlistener",
 			FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 	/// `void rocksdb_status_ptr_get_error(rocksdb_status_ptr_t* status, char** errptr);`
-	private static final MethodHandle MH_STATUS_PTR_GET_ERROR = NativeLibrary.rocksdb(
+	private static final MethodHandle MH_STATUS_PTR_GET_ERROR = NativeLibrary.downcall(
 			"rocksdb_status_ptr_get_error", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 	private static final FunctionDescriptor DB_SCOPED_INFO_DESC = FunctionDescriptor.ofVoid(

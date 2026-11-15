@@ -40,7 +40,7 @@ public final class Replayer extends NativeObject {
 	private static final MethodHandle MH_DESTROY;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_new_default_replayer",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_new_default_replayer",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS,   // db
 						ValueLayout.ADDRESS,   // column_families
@@ -50,16 +50,16 @@ public final class Replayer extends NativeObject {
 						ValueLayout.ADDRESS,   // trace_path
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_PREPARE = NativeLibrary.rocksdb("rocksdb_replayer_prepare",
+		MH_PREPARE = NativeLibrary.downcall("rocksdb_replayer_prepare",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_GET_HEADER_TIMESTAMP = NativeLibrary.rocksdb("rocksdb_replayer_get_header_timestamp",
+		MH_GET_HEADER_TIMESTAMP = NativeLibrary.downcall("rocksdb_replayer_get_header_timestamp",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_REPLAY = NativeLibrary.rocksdb("rocksdb_replayer_replay",
+		MH_REPLAY = NativeLibrary.downcall("rocksdb_replayer_replay",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_replayer_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_replayer_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

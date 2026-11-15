@@ -21,17 +21,17 @@ public final class OptimisticTransactionOptions extends NativeObject {
 	private static final MethodHandle MH_GET_SET_SNAPSHOT;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_optimistictransaction_options_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_optimistictransaction_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_optimistictransaction_options_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_optimistictransaction_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_SET_SNAPSHOT = NativeLibrary.rocksdb(
+		MH_SET_SET_SNAPSHOT = NativeLibrary.downcall(
 				"rocksdb_optimistictransaction_options_set_set_snapshot",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_SET_SNAPSHOT = NativeLibrary.rocksdb(
+		MH_GET_SET_SNAPSHOT = NativeLibrary.downcall(
 				"rocksdb_optimistictransaction_options_get_set_snapshot",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 	}

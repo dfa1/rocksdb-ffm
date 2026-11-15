@@ -31,25 +31,25 @@ public final class LRUCache extends Cache {
 	private static final MethodHandle MH_CREATE_OPTS;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_cache_create_lru",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_cache_create_lru",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_CREATE_STRICT = NativeLibrary.rocksdb("rocksdb_cache_create_lru_with_strict_capacity_limit",
+		MH_CREATE_STRICT = NativeLibrary.downcall("rocksdb_cache_create_lru_with_strict_capacity_limit",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_OPTS_CREATE = NativeLibrary.rocksdb("rocksdb_lru_cache_options_create",
+		MH_OPTS_CREATE = NativeLibrary.downcall("rocksdb_lru_cache_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_OPTS_DESTROY = NativeLibrary.rocksdb("rocksdb_lru_cache_options_destroy",
+		MH_OPTS_DESTROY = NativeLibrary.downcall("rocksdb_lru_cache_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_OPTS_SET_CAPACITY = NativeLibrary.rocksdb("rocksdb_lru_cache_options_set_capacity",
+		MH_OPTS_SET_CAPACITY = NativeLibrary.downcall("rocksdb_lru_cache_options_set_capacity",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_OPTS_SET_NUM_SHARD_BITS = NativeLibrary.rocksdb("rocksdb_lru_cache_options_set_num_shard_bits",
+		MH_OPTS_SET_NUM_SHARD_BITS = NativeLibrary.downcall("rocksdb_lru_cache_options_set_num_shard_bits",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_CREATE_OPTS = NativeLibrary.rocksdb("rocksdb_cache_create_lru_opts",
+		MH_CREATE_OPTS = NativeLibrary.downcall("rocksdb_cache_create_lru_opts",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 

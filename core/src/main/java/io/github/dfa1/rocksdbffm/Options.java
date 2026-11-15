@@ -133,7 +133,7 @@ public final class Options extends NativeObject {
 	/// `void rocksdb_options_set_sst_partitioner_factory(rocksdb_options_t*, rocksdb_sst_partitioner_factory_t*);`
 	private static final MethodHandle MH_SET_SST_PARTITIONER_FACTORY;
 	/// `void rocksdb_options_set_prefix_extractor(rocksdb_options_t*, rocksdb_slicetransform_t*);`
-    private static final MethodHandle MH_SET_FILE_CHECKSUM_GEN_FACTORY = NativeLibrary.rocksdb("rocksdb_options_set_file_checksum_gen_factory", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+    private static final MethodHandle MH_SET_FILE_CHECKSUM_GEN_FACTORY = NativeLibrary.downcall("rocksdb_options_set_file_checksum_gen_factory", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
     /// `void rocksdb_options_set_file_checksum_gen_factory(rocksdb_options_t*, rocksdb_file_checksum_gen_factory_t*);`
 	private static final MethodHandle MH_SET_PREFIX_EXTRACTOR;
 	/// `rocksdb_dbpath_t* rocksdb_dbpath_create(const char* path, uint64_t target_size);`
@@ -281,409 +281,409 @@ public final class Options extends NativeObject {
     /// `uint32_t rocksdb_options_get_memtable_avg_op_scan_flush_trigger(rocksdb_options_t*);`
     private static final MethodHandle MH_GET_MEMTABLE_AVG_OP_SCAN_FLUSH_TRIGGER;
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_options_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_options_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_CREATE_COPY = NativeLibrary.rocksdb("rocksdb_options_create_copy",
+		MH_CREATE_COPY = NativeLibrary.downcall("rocksdb_options_create_copy",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_GET_OPTIONS_FROM_STRING = NativeLibrary.rocksdb("rocksdb_get_options_from_string",
+		MH_GET_OPTIONS_FROM_STRING = NativeLibrary.downcall("rocksdb_get_options_from_string",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_CREATE_IF_MISSING = NativeLibrary.rocksdb("rocksdb_options_set_create_if_missing",
+		MH_SET_CREATE_IF_MISSING = NativeLibrary.downcall("rocksdb_options_set_create_if_missing",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_CREATE_IF_MISSING = NativeLibrary.rocksdb("rocksdb_options_get_create_if_missing",
+		MH_GET_CREATE_IF_MISSING = NativeLibrary.downcall("rocksdb_options_get_create_if_missing",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-				MH_SET_MAX_SUCCESSIVE_MERGES = NativeLibrary.rocksdb("rocksdb_options_set_max_successive_merges",
+				MH_SET_MAX_SUCCESSIVE_MERGES = NativeLibrary.downcall("rocksdb_options_set_max_successive_merges",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_GET_MAX_SUCCESSIVE_MERGES = NativeLibrary.rocksdb("rocksdb_options_get_max_successive_merges",
+		MH_GET_MAX_SUCCESSIVE_MERGES = NativeLibrary.downcall("rocksdb_options_get_max_successive_merges",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_SET_STRICT_MAX_SUCCESSIVE_MERGES = NativeLibrary.rocksdb("rocksdb_options_set_strict_max_successive_merges",
+		MH_SET_STRICT_MAX_SUCCESSIVE_MERGES = NativeLibrary.downcall("rocksdb_options_set_strict_max_successive_merges",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_STRICT_MAX_SUCCESSIVE_MERGES = NativeLibrary.rocksdb("rocksdb_options_get_strict_max_successive_merges",
+		MH_GET_STRICT_MAX_SUCCESSIVE_MERGES = NativeLibrary.downcall("rocksdb_options_get_strict_max_successive_merges",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_BLOCK_BASED_TABLE_FACTORY = NativeLibrary.rocksdb(
+		MH_SET_BLOCK_BASED_TABLE_FACTORY = NativeLibrary.downcall(
 				"rocksdb_options_set_block_based_table_factory",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_CUCKOO_TABLE_FACTORY = NativeLibrary.rocksdb(
+		MH_SET_CUCKOO_TABLE_FACTORY = NativeLibrary.downcall(
 				"rocksdb_options_set_cuckoo_table_factory",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_PLAIN_TABLE_FACTORY = NativeLibrary.rocksdb(
+		MH_SET_PLAIN_TABLE_FACTORY = NativeLibrary.downcall(
 				"rocksdb_options_set_plain_table_factory",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
 						ValueLayout.JAVA_DOUBLE, NativeCalls.SIZE_T, NativeCalls.SIZE_T,
 						ValueLayout.JAVA_BYTE, ValueLayout.JAVA_BYTE, ValueLayout.JAVA_BYTE));
 
-		MH_ENABLE_STATISTICS = NativeLibrary.rocksdb("rocksdb_options_enable_statistics",
+		MH_ENABLE_STATISTICS = NativeLibrary.downcall("rocksdb_options_enable_statistics",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_STATISTICS_LEVEL = NativeLibrary.rocksdb("rocksdb_options_set_statistics_level",
+		MH_SET_STATISTICS_LEVEL = NativeLibrary.downcall("rocksdb_options_set_statistics_level",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_STATISTICS_LEVEL = NativeLibrary.rocksdb("rocksdb_options_get_statistics_level",
+		MH_GET_STATISTICS_LEVEL = NativeLibrary.downcall("rocksdb_options_get_statistics_level",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_STATISTICS_GET_STRING = NativeLibrary.rocksdb("rocksdb_options_statistics_get_string",
+		MH_STATISTICS_GET_STRING = NativeLibrary.downcall("rocksdb_options_statistics_get_string",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_STATISTICS_GET_TICKER_COUNT = NativeLibrary.rocksdb("rocksdb_options_statistics_get_ticker_count",
+		MH_STATISTICS_GET_TICKER_COUNT = NativeLibrary.downcall("rocksdb_options_statistics_get_ticker_count",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_STATISTICS_GET_HISTOGRAM_DATA = NativeLibrary.rocksdb("rocksdb_options_statistics_get_histogram_data",
+		MH_STATISTICS_GET_HISTOGRAM_DATA = NativeLibrary.downcall("rocksdb_options_statistics_get_histogram_data",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_COMPRESSION = NativeLibrary.rocksdb("rocksdb_options_set_compression",
+		MH_SET_COMPRESSION = NativeLibrary.downcall("rocksdb_options_set_compression",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_COMPRESSION = NativeLibrary.rocksdb("rocksdb_options_get_compression",
+		MH_GET_COMPRESSION = NativeLibrary.downcall("rocksdb_options_get_compression",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_COMPACTION_STYLE = NativeLibrary.rocksdb("rocksdb_options_set_compaction_style",
+		MH_SET_COMPACTION_STYLE = NativeLibrary.downcall("rocksdb_options_set_compaction_style",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_COMPACTION_STYLE = NativeLibrary.rocksdb("rocksdb_options_get_compaction_style",
+		MH_GET_COMPACTION_STYLE = NativeLibrary.downcall("rocksdb_options_get_compaction_style",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_FIFO_COMPACTION_OPTIONS = NativeLibrary.rocksdb("rocksdb_options_set_fifo_compaction_options",
+		MH_SET_FIFO_COMPACTION_OPTIONS = NativeLibrary.downcall("rocksdb_options_set_fifo_compaction_options",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_UNIVERSAL_COMPACTION_OPTIONS = NativeLibrary.rocksdb(
+		MH_SET_UNIVERSAL_COMPACTION_OPTIONS = NativeLibrary.downcall(
 				"rocksdb_options_set_universal_compaction_options",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_ENABLE_BLOB_FILES = NativeLibrary.rocksdb("rocksdb_options_set_enable_blob_files",
+		MH_SET_ENABLE_BLOB_FILES = NativeLibrary.downcall("rocksdb_options_set_enable_blob_files",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_ENABLE_BLOB_FILES = NativeLibrary.rocksdb("rocksdb_options_get_enable_blob_files",
+		MH_GET_ENABLE_BLOB_FILES = NativeLibrary.downcall("rocksdb_options_get_enable_blob_files",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_MIN_BLOB_SIZE = NativeLibrary.rocksdb("rocksdb_options_set_min_blob_size",
+		MH_SET_MIN_BLOB_SIZE = NativeLibrary.downcall("rocksdb_options_set_min_blob_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_MIN_BLOB_SIZE = NativeLibrary.rocksdb("rocksdb_options_get_min_blob_size",
+		MH_GET_MIN_BLOB_SIZE = NativeLibrary.downcall("rocksdb_options_get_min_blob_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_BLOB_FILE_SIZE = NativeLibrary.rocksdb("rocksdb_options_set_blob_file_size",
+		MH_SET_BLOB_FILE_SIZE = NativeLibrary.downcall("rocksdb_options_set_blob_file_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_BLOB_FILE_SIZE = NativeLibrary.rocksdb("rocksdb_options_get_blob_file_size",
+		MH_GET_BLOB_FILE_SIZE = NativeLibrary.downcall("rocksdb_options_get_blob_file_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_BLOB_COMPRESSION_TYPE = NativeLibrary.rocksdb("rocksdb_options_set_blob_compression_type",
+		MH_SET_BLOB_COMPRESSION_TYPE = NativeLibrary.downcall("rocksdb_options_set_blob_compression_type",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_BLOB_COMPRESSION_TYPE = NativeLibrary.rocksdb("rocksdb_options_get_blob_compression_type",
+		MH_GET_BLOB_COMPRESSION_TYPE = NativeLibrary.downcall("rocksdb_options_get_blob_compression_type",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_ENABLE_BLOB_GC = NativeLibrary.rocksdb("rocksdb_options_set_enable_blob_gc",
+		MH_SET_ENABLE_BLOB_GC = NativeLibrary.downcall("rocksdb_options_set_enable_blob_gc",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_ENABLE_BLOB_GC = NativeLibrary.rocksdb("rocksdb_options_get_enable_blob_gc",
+		MH_GET_ENABLE_BLOB_GC = NativeLibrary.downcall("rocksdb_options_get_enable_blob_gc",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_BLOB_GC_AGE_CUTOFF = NativeLibrary.rocksdb("rocksdb_options_set_blob_gc_age_cutoff",
+		MH_SET_BLOB_GC_AGE_CUTOFF = NativeLibrary.downcall("rocksdb_options_set_blob_gc_age_cutoff",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
 
-		MH_GET_BLOB_GC_AGE_CUTOFF = NativeLibrary.rocksdb("rocksdb_options_get_blob_gc_age_cutoff",
+		MH_GET_BLOB_GC_AGE_CUTOFF = NativeLibrary.downcall("rocksdb_options_get_blob_gc_age_cutoff",
 				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
 
-		MH_SET_BLOB_GC_FORCE_THRESHOLD = NativeLibrary.rocksdb("rocksdb_options_set_blob_gc_force_threshold",
+		MH_SET_BLOB_GC_FORCE_THRESHOLD = NativeLibrary.downcall("rocksdb_options_set_blob_gc_force_threshold",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
 
-		MH_GET_BLOB_GC_FORCE_THRESHOLD = NativeLibrary.rocksdb("rocksdb_options_get_blob_gc_force_threshold",
+		MH_GET_BLOB_GC_FORCE_THRESHOLD = NativeLibrary.downcall("rocksdb_options_get_blob_gc_force_threshold",
 				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
 
-		MH_SET_BLOB_COMPACTION_READAHEAD_SIZE = NativeLibrary.rocksdb(
+		MH_SET_BLOB_COMPACTION_READAHEAD_SIZE = NativeLibrary.downcall(
 				"rocksdb_options_set_blob_compaction_readahead_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_BLOB_COMPACTION_READAHEAD_SIZE = NativeLibrary.rocksdb(
+		MH_GET_BLOB_COMPACTION_READAHEAD_SIZE = NativeLibrary.downcall(
 				"rocksdb_options_get_blob_compaction_readahead_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_BLOB_FILE_STARTING_LEVEL = NativeLibrary.rocksdb("rocksdb_options_set_blob_file_starting_level",
+		MH_SET_BLOB_FILE_STARTING_LEVEL = NativeLibrary.downcall("rocksdb_options_set_blob_file_starting_level",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_BLOB_FILE_STARTING_LEVEL = NativeLibrary.rocksdb("rocksdb_options_get_blob_file_starting_level",
+		MH_GET_BLOB_FILE_STARTING_LEVEL = NativeLibrary.downcall("rocksdb_options_get_blob_file_starting_level",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_BLOB_CACHE = NativeLibrary.rocksdb("rocksdb_options_set_blob_cache",
+		MH_SET_BLOB_CACHE = NativeLibrary.downcall("rocksdb_options_set_blob_cache",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_PREPOPULATE_BLOB_CACHE = NativeLibrary.rocksdb("rocksdb_options_set_prepopulate_blob_cache",
+		MH_SET_PREPOPULATE_BLOB_CACHE = NativeLibrary.downcall("rocksdb_options_set_prepopulate_blob_cache",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_PREPOPULATE_BLOB_CACHE = NativeLibrary.rocksdb("rocksdb_options_get_prepopulate_blob_cache",
+		MH_GET_PREPOPULATE_BLOB_CACHE = NativeLibrary.downcall("rocksdb_options_get_prepopulate_blob_cache",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_INFO_LOG = NativeLibrary.rocksdb("rocksdb_options_set_info_log",
+		MH_SET_INFO_LOG = NativeLibrary.downcall("rocksdb_options_set_info_log",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_INFO_LOG_LEVEL = NativeLibrary.rocksdb("rocksdb_options_set_info_log_level",
+		MH_SET_INFO_LOG_LEVEL = NativeLibrary.downcall("rocksdb_options_set_info_log_level",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_INFO_LOG_LEVEL = NativeLibrary.rocksdb("rocksdb_options_get_info_log_level",
+		MH_GET_INFO_LOG_LEVEL = NativeLibrary.downcall("rocksdb_options_get_info_log_level",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_RATELIMITER = NativeLibrary.rocksdb("rocksdb_options_set_ratelimiter",
+		MH_SET_RATELIMITER = NativeLibrary.downcall("rocksdb_options_set_ratelimiter",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_WRITE_BUFFER_MANAGER = NativeLibrary.rocksdb("rocksdb_options_set_write_buffer_manager",
+		MH_SET_WRITE_BUFFER_MANAGER = NativeLibrary.downcall("rocksdb_options_set_write_buffer_manager",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_ENV = NativeLibrary.rocksdb("rocksdb_options_set_env",
+		MH_SET_ENV = NativeLibrary.downcall("rocksdb_options_set_env",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_SST_FILE_MANAGER = NativeLibrary.rocksdb("rocksdb_options_set_sst_file_manager",
+		MH_SET_SST_FILE_MANAGER = NativeLibrary.downcall("rocksdb_options_set_sst_file_manager",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_SST_PARTITIONER_FACTORY = NativeLibrary.rocksdb("rocksdb_options_set_sst_partitioner_factory",
+		MH_SET_SST_PARTITIONER_FACTORY = NativeLibrary.downcall("rocksdb_options_set_sst_partitioner_factory",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_PREFIX_EXTRACTOR = NativeLibrary.rocksdb("rocksdb_options_set_prefix_extractor",
+		MH_SET_PREFIX_EXTRACTOR = NativeLibrary.downcall("rocksdb_options_set_prefix_extractor",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_DBPATH_CREATE = NativeLibrary.rocksdb("rocksdb_dbpath_create",
+		MH_DBPATH_CREATE = NativeLibrary.downcall("rocksdb_dbpath_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_DBPATH_DESTROY = NativeLibrary.rocksdb("rocksdb_dbpath_destroy",
+		MH_DBPATH_DESTROY = NativeLibrary.downcall("rocksdb_dbpath_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_DB_PATHS = NativeLibrary.rocksdb("rocksdb_options_set_db_paths",
+		MH_SET_DB_PATHS = NativeLibrary.downcall("rocksdb_options_set_db_paths",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_SET_CF_PATHS = NativeLibrary.rocksdb("rocksdb_options_set_cf_paths",
+		MH_SET_CF_PATHS = NativeLibrary.downcall("rocksdb_options_set_cf_paths",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_SET_METADATA_WRITE_TEMPERATURE = NativeLibrary.rocksdb("rocksdb_options_set_metadata_write_temperature",
+		MH_SET_METADATA_WRITE_TEMPERATURE = NativeLibrary.downcall("rocksdb_options_set_metadata_write_temperature",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_METADATA_WRITE_TEMPERATURE = NativeLibrary.rocksdb("rocksdb_options_get_metadata_write_temperature",
+		MH_GET_METADATA_WRITE_TEMPERATURE = NativeLibrary.downcall("rocksdb_options_get_metadata_write_temperature",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_WAL_WRITE_TEMPERATURE = NativeLibrary.rocksdb("rocksdb_options_set_wal_write_temperature",
+		MH_SET_WAL_WRITE_TEMPERATURE = NativeLibrary.downcall("rocksdb_options_set_wal_write_temperature",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_WAL_WRITE_TEMPERATURE = NativeLibrary.rocksdb("rocksdb_options_get_wal_write_temperature",
+		MH_GET_WAL_WRITE_TEMPERATURE = NativeLibrary.downcall("rocksdb_options_get_wal_write_temperature",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_LAST_LEVEL_TEMPERATURE = NativeLibrary.rocksdb("rocksdb_options_set_last_level_temperature",
+		MH_SET_LAST_LEVEL_TEMPERATURE = NativeLibrary.downcall("rocksdb_options_set_last_level_temperature",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_LAST_LEVEL_TEMPERATURE = NativeLibrary.rocksdb("rocksdb_options_get_last_level_temperature",
+		MH_GET_LAST_LEVEL_TEMPERATURE = NativeLibrary.downcall("rocksdb_options_get_last_level_temperature",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_DEFAULT_WRITE_TEMPERATURE = NativeLibrary.rocksdb("rocksdb_options_set_default_write_temperature",
+		MH_SET_DEFAULT_WRITE_TEMPERATURE = NativeLibrary.downcall("rocksdb_options_set_default_write_temperature",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_DEFAULT_WRITE_TEMPERATURE = NativeLibrary.rocksdb("rocksdb_options_get_default_write_temperature",
+		MH_GET_DEFAULT_WRITE_TEMPERATURE = NativeLibrary.downcall("rocksdb_options_get_default_write_temperature",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_DEFAULT_TEMPERATURE = NativeLibrary.rocksdb("rocksdb_options_set_default_temperature",
+		MH_SET_DEFAULT_TEMPERATURE = NativeLibrary.downcall("rocksdb_options_set_default_temperature",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_DEFAULT_TEMPERATURE = NativeLibrary.rocksdb("rocksdb_options_get_default_temperature",
+		MH_GET_DEFAULT_TEMPERATURE = NativeLibrary.downcall("rocksdb_options_get_default_temperature",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_WRITE_BUFFER_SIZE = NativeLibrary.rocksdb("rocksdb_options_set_write_buffer_size",
+		MH_SET_WRITE_BUFFER_SIZE = NativeLibrary.downcall("rocksdb_options_set_write_buffer_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_GET_WRITE_BUFFER_SIZE = NativeLibrary.rocksdb("rocksdb_options_get_write_buffer_size",
+		MH_GET_WRITE_BUFFER_SIZE = NativeLibrary.downcall("rocksdb_options_get_write_buffer_size",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_SET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY = NativeLibrary.rocksdb("rocksdb_options_set_enforce_write_buffer_manager_during_recovery",
+		MH_SET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY = NativeLibrary.downcall("rocksdb_options_set_enforce_write_buffer_manager_during_recovery",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY = NativeLibrary.rocksdb("rocksdb_options_get_enforce_write_buffer_manager_during_recovery",
+		MH_GET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY = NativeLibrary.downcall("rocksdb_options_get_enforce_write_buffer_manager_during_recovery",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_NUM_LEVELS = NativeLibrary.rocksdb("rocksdb_options_set_num_levels",
+		MH_SET_NUM_LEVELS = NativeLibrary.downcall("rocksdb_options_set_num_levels",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_NUM_LEVELS = NativeLibrary.rocksdb("rocksdb_options_get_num_levels",
+		MH_GET_NUM_LEVELS = NativeLibrary.downcall("rocksdb_options_get_num_levels",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_WRITE_BUFFER_NUMBER = NativeLibrary.rocksdb("rocksdb_options_set_max_write_buffer_number",
+		MH_SET_MAX_WRITE_BUFFER_NUMBER = NativeLibrary.downcall("rocksdb_options_set_max_write_buffer_number",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_MAX_WRITE_BUFFER_NUMBER = NativeLibrary.rocksdb("rocksdb_options_get_max_write_buffer_number",
+		MH_GET_MAX_WRITE_BUFFER_NUMBER = NativeLibrary.downcall("rocksdb_options_get_max_write_buffer_number",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_HASH_SKIP_LIST_REP = NativeLibrary.rocksdb("rocksdb_options_set_hash_skip_list_rep",
+		MH_SET_HASH_SKIP_LIST_REP = NativeLibrary.downcall("rocksdb_options_set_hash_skip_list_rep",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
 
-		MH_SET_HASH_LINK_LIST_REP = NativeLibrary.rocksdb("rocksdb_options_set_hash_link_list_rep",
+		MH_SET_HASH_LINK_LIST_REP = NativeLibrary.downcall("rocksdb_options_set_hash_link_list_rep",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_SET_MEMTABLE_VECTOR_REP = NativeLibrary.rocksdb("rocksdb_options_set_memtable_vector_rep",
+		MH_SET_MEMTABLE_VECTOR_REP = NativeLibrary.downcall("rocksdb_options_set_memtable_vector_rep",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER = NativeLibrary.rocksdb(
+		MH_SET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER = NativeLibrary.downcall(
 				"rocksdb_options_set_level0_file_num_compaction_trigger",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER = NativeLibrary.rocksdb(
+		MH_GET_LEVEL0_FILE_NUM_COMPACTION_TRIGGER = NativeLibrary.downcall(
 				"rocksdb_options_get_level0_file_num_compaction_trigger",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_LEVEL0_SLOWDOWN_WRITES_TRIGGER = NativeLibrary.rocksdb(
+		MH_SET_LEVEL0_SLOWDOWN_WRITES_TRIGGER = NativeLibrary.downcall(
 				"rocksdb_options_set_level0_slowdown_writes_trigger",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_LEVEL0_SLOWDOWN_WRITES_TRIGGER = NativeLibrary.rocksdb(
+		MH_GET_LEVEL0_SLOWDOWN_WRITES_TRIGGER = NativeLibrary.downcall(
 				"rocksdb_options_get_level0_slowdown_writes_trigger",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_LEVEL0_STOP_WRITES_TRIGGER = NativeLibrary.rocksdb(
+		MH_SET_LEVEL0_STOP_WRITES_TRIGGER = NativeLibrary.downcall(
 				"rocksdb_options_set_level0_stop_writes_trigger",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_LEVEL0_STOP_WRITES_TRIGGER = NativeLibrary.rocksdb(
+		MH_GET_LEVEL0_STOP_WRITES_TRIGGER = NativeLibrary.downcall(
 				"rocksdb_options_get_level0_stop_writes_trigger",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_DISABLE_AUTO_COMPACTIONS = NativeLibrary.rocksdb(
+		MH_SET_DISABLE_AUTO_COMPACTIONS = NativeLibrary.downcall(
 				"rocksdb_options_set_disable_auto_compactions",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_DISABLE_AUTO_COMPACTIONS = NativeLibrary.rocksdb(
+		MH_GET_DISABLE_AUTO_COMPACTIONS = NativeLibrary.downcall(
 				"rocksdb_options_get_disable_auto_compactions",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_TARGET_FILE_SIZE_BASE = NativeLibrary.rocksdb("rocksdb_options_set_target_file_size_base",
+		MH_SET_TARGET_FILE_SIZE_BASE = NativeLibrary.downcall("rocksdb_options_set_target_file_size_base",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_TARGET_FILE_SIZE_BASE = NativeLibrary.rocksdb("rocksdb_options_get_target_file_size_base",
+		MH_GET_TARGET_FILE_SIZE_BASE = NativeLibrary.downcall("rocksdb_options_get_target_file_size_base",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_BYTES_FOR_LEVEL_BASE = NativeLibrary.rocksdb("rocksdb_options_set_max_bytes_for_level_base",
+		MH_SET_MAX_BYTES_FOR_LEVEL_BASE = NativeLibrary.downcall("rocksdb_options_set_max_bytes_for_level_base",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_MAX_BYTES_FOR_LEVEL_BASE = NativeLibrary.rocksdb("rocksdb_options_get_max_bytes_for_level_base",
+		MH_GET_MAX_BYTES_FOR_LEVEL_BASE = NativeLibrary.downcall("rocksdb_options_get_max_bytes_for_level_base",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_BACKGROUND_JOBS = NativeLibrary.rocksdb("rocksdb_options_set_max_background_jobs",
+		MH_SET_MAX_BACKGROUND_JOBS = NativeLibrary.downcall("rocksdb_options_set_max_background_jobs",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_MAX_BACKGROUND_JOBS = NativeLibrary.rocksdb("rocksdb_options_get_max_background_jobs",
+		MH_GET_MAX_BACKGROUND_JOBS = NativeLibrary.downcall("rocksdb_options_get_max_background_jobs",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_OPEN_FILES = NativeLibrary.rocksdb("rocksdb_options_set_max_open_files",
+		MH_SET_MAX_OPEN_FILES = NativeLibrary.downcall("rocksdb_options_set_max_open_files",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_MAX_OPEN_FILES = NativeLibrary.rocksdb("rocksdb_options_get_max_open_files",
+		MH_GET_MAX_OPEN_FILES = NativeLibrary.downcall("rocksdb_options_get_max_open_files",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_FILE_OPENING_THREADS = NativeLibrary.rocksdb("rocksdb_options_set_max_file_opening_threads",
+		MH_SET_MAX_FILE_OPENING_THREADS = NativeLibrary.downcall("rocksdb_options_set_max_file_opening_threads",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_MAX_FILE_OPENING_THREADS = NativeLibrary.rocksdb("rocksdb_options_get_max_file_opening_threads",
+		MH_GET_MAX_FILE_OPENING_THREADS = NativeLibrary.downcall("rocksdb_options_get_max_file_opening_threads",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_ADVISE_RANDOM_ON_OPEN = NativeLibrary.rocksdb("rocksdb_options_set_advise_random_on_open",
+		MH_SET_ADVISE_RANDOM_ON_OPEN = NativeLibrary.downcall("rocksdb_options_set_advise_random_on_open",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_ADVISE_RANDOM_ON_OPEN = NativeLibrary.rocksdb("rocksdb_options_get_advise_random_on_open",
+		MH_GET_ADVISE_RANDOM_ON_OPEN = NativeLibrary.downcall("rocksdb_options_get_advise_random_on_open",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_SKIP_STATS_UPDATE_ON_DB_OPEN = NativeLibrary.rocksdb(
+		MH_SET_SKIP_STATS_UPDATE_ON_DB_OPEN = NativeLibrary.downcall(
 				"rocksdb_options_set_skip_stats_update_on_db_open",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_SKIP_STATS_UPDATE_ON_DB_OPEN = NativeLibrary.rocksdb(
+		MH_GET_SKIP_STATS_UPDATE_ON_DB_OPEN = NativeLibrary.downcall(
 				"rocksdb_options_get_skip_stats_update_on_db_open",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_INCREASE_PARALLELISM = NativeLibrary.rocksdb("rocksdb_options_increase_parallelism",
+		MH_INCREASE_PARALLELISM = NativeLibrary.downcall("rocksdb_options_increase_parallelism",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_SET_UNORDERED_WRITE = NativeLibrary.rocksdb("rocksdb_options_set_unordered_write",
+		MH_SET_UNORDERED_WRITE = NativeLibrary.downcall("rocksdb_options_set_unordered_write",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_UNORDERED_WRITE = NativeLibrary.rocksdb("rocksdb_options_get_unordered_write",
+		MH_GET_UNORDERED_WRITE = NativeLibrary.downcall("rocksdb_options_get_unordered_write",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_BYTES_PER_SYNC = NativeLibrary.rocksdb("rocksdb_options_set_bytes_per_sync",
+		MH_SET_BYTES_PER_SYNC = NativeLibrary.downcall("rocksdb_options_set_bytes_per_sync",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_BYTES_PER_SYNC = NativeLibrary.rocksdb("rocksdb_options_get_bytes_per_sync",
+		MH_GET_BYTES_PER_SYNC = NativeLibrary.downcall("rocksdb_options_get_bytes_per_sync",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_USE_DIRECT_READS = NativeLibrary.rocksdb("rocksdb_options_set_use_direct_reads",
+		MH_SET_USE_DIRECT_READS = NativeLibrary.downcall("rocksdb_options_set_use_direct_reads",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_USE_DIRECT_READS = NativeLibrary.rocksdb("rocksdb_options_get_use_direct_reads",
+		MH_GET_USE_DIRECT_READS = NativeLibrary.downcall("rocksdb_options_get_use_direct_reads",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_USE_DIRECT_IO_FOR_FLUSH_AND_COMPACTION = NativeLibrary.rocksdb(
+		MH_SET_USE_DIRECT_IO_FOR_FLUSH_AND_COMPACTION = NativeLibrary.downcall(
 				"rocksdb_options_set_use_direct_io_for_flush_and_compaction",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_USE_DIRECT_IO_FOR_FLUSH_AND_COMPACTION = NativeLibrary.rocksdb(
+		MH_GET_USE_DIRECT_IO_FOR_FLUSH_AND_COMPACTION = NativeLibrary.downcall(
 				"rocksdb_options_get_use_direct_io_for_flush_and_compaction",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_COMPACTION_PRI = NativeLibrary.rocksdb("rocksdb_options_set_compaction_pri",
+		MH_SET_COMPACTION_PRI = NativeLibrary.downcall("rocksdb_options_set_compaction_pri",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_COMPACTION_PRI = NativeLibrary.rocksdb("rocksdb_options_get_compaction_pri",
+		MH_GET_COMPACTION_PRI = NativeLibrary.downcall("rocksdb_options_get_compaction_pri",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_BOTTOMMOST_COMPRESSION = NativeLibrary.rocksdb("rocksdb_options_set_bottommost_compression",
+		MH_SET_BOTTOMMOST_COMPRESSION = NativeLibrary.downcall("rocksdb_options_set_bottommost_compression",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_BOTTOMMOST_COMPRESSION = NativeLibrary.rocksdb("rocksdb_options_get_bottommost_compression",
+		MH_GET_BOTTOMMOST_COMPRESSION = NativeLibrary.downcall("rocksdb_options_get_bottommost_compression",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_MEMTABLE_PREFIX_BLOOM_SIZE_RATIO = NativeLibrary.rocksdb(
+		MH_SET_MEMTABLE_PREFIX_BLOOM_SIZE_RATIO = NativeLibrary.downcall(
 				"rocksdb_options_set_memtable_prefix_bloom_size_ratio",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
 
-		MH_GET_MEMTABLE_PREFIX_BLOOM_SIZE_RATIO = NativeLibrary.rocksdb(
+		MH_GET_MEMTABLE_PREFIX_BLOOM_SIZE_RATIO = NativeLibrary.downcall(
 				"rocksdb_options_get_memtable_prefix_bloom_size_ratio",
 				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
 
-		MH_SET_MEMTABLE_WHOLE_KEY_FILTERING = NativeLibrary.rocksdb(
+		MH_SET_MEMTABLE_WHOLE_KEY_FILTERING = NativeLibrary.downcall(
 				"rocksdb_options_set_memtable_whole_key_filtering",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_MEMTABLE_WHOLE_KEY_FILTERING = NativeLibrary.rocksdb(
+		MH_GET_MEMTABLE_WHOLE_KEY_FILTERING = NativeLibrary.downcall(
 				"rocksdb_options_get_memtable_whole_key_filtering",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_MEMTABLE_HUGE_PAGE_SIZE = NativeLibrary.rocksdb("rocksdb_options_set_memtable_huge_page_size",
+		MH_SET_MEMTABLE_HUGE_PAGE_SIZE = NativeLibrary.downcall("rocksdb_options_set_memtable_huge_page_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_SET_MEMTABLE_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.rocksdb("rocksdb_options_set_memtable_op_scan_flush_trigger",
+		MH_SET_MEMTABLE_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.downcall("rocksdb_options_set_memtable_op_scan_flush_trigger",
                 FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-        MH_GET_MEMTABLE_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.rocksdb("rocksdb_options_get_memtable_op_scan_flush_trigger",
+        MH_GET_MEMTABLE_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.downcall("rocksdb_options_get_memtable_op_scan_flush_trigger",
                 FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-        MH_SET_MEMTABLE_AVG_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.rocksdb("rocksdb_options_set_memtable_avg_op_scan_flush_trigger",
+        MH_SET_MEMTABLE_AVG_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.downcall("rocksdb_options_set_memtable_avg_op_scan_flush_trigger",
                 FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-        MH_GET_MEMTABLE_AVG_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.rocksdb("rocksdb_options_get_memtable_avg_op_scan_flush_trigger",
+        MH_GET_MEMTABLE_AVG_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.downcall("rocksdb_options_get_memtable_avg_op_scan_flush_trigger",
                 FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_GET_MEMTABLE_HUGE_PAGE_SIZE = NativeLibrary.rocksdb("rocksdb_options_get_memtable_huge_page_size",
+		MH_GET_MEMTABLE_HUGE_PAGE_SIZE = NativeLibrary.downcall("rocksdb_options_get_memtable_huge_page_size",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_SET_BLOOM_LOCALITY = NativeLibrary.rocksdb("rocksdb_options_set_bloom_locality",
+		MH_SET_BLOOM_LOCALITY = NativeLibrary.downcall("rocksdb_options_set_bloom_locality",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_BLOOM_LOCALITY = NativeLibrary.rocksdb("rocksdb_options_get_bloom_locality",
+		MH_GET_BLOOM_LOCALITY = NativeLibrary.downcall("rocksdb_options_get_bloom_locality",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 	}
 

@@ -56,48 +56,48 @@ public final class SstFileManager extends NativeObject {
 	private static final MethodHandle MH_GET_TOTAL_TRASH_SIZE;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_sst_file_manager_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_sst_file_manager_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_sst_file_manager_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_sst_file_manager_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_MAX_ALLOWED_SPACE_USAGE = NativeLibrary.rocksdb(
+		MH_SET_MAX_ALLOWED_SPACE_USAGE = NativeLibrary.downcall(
 				"rocksdb_sst_file_manager_set_max_allowed_space_usage",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_SET_COMPACTION_BUFFER_SIZE = NativeLibrary.rocksdb(
+		MH_SET_COMPACTION_BUFFER_SIZE = NativeLibrary.downcall(
 				"rocksdb_sst_file_manager_set_compaction_buffer_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_IS_MAX_ALLOWED_SPACE_REACHED = NativeLibrary.rocksdb(
+		MH_IS_MAX_ALLOWED_SPACE_REACHED = NativeLibrary.downcall(
 				"rocksdb_sst_file_manager_is_max_allowed_space_reached",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_IS_MAX_ALLOWED_SPACE_REACHED_INCLUDING_COMPACTIONS = NativeLibrary.rocksdb(
+		MH_IS_MAX_ALLOWED_SPACE_REACHED_INCLUDING_COMPACTIONS = NativeLibrary.downcall(
 				"rocksdb_sst_file_manager_is_max_allowed_space_reached_including_compactions",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_GET_TOTAL_SIZE = NativeLibrary.rocksdb("rocksdb_sst_file_manager_get_total_size",
+		MH_GET_TOTAL_SIZE = NativeLibrary.downcall("rocksdb_sst_file_manager_get_total_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_GET_DELETE_RATE_BYTES_PER_SECOND = NativeLibrary.rocksdb(
+		MH_GET_DELETE_RATE_BYTES_PER_SECOND = NativeLibrary.downcall(
 				"rocksdb_sst_file_manager_get_delete_rate_bytes_per_second",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_DELETE_RATE_BYTES_PER_SECOND = NativeLibrary.rocksdb(
+		MH_SET_DELETE_RATE_BYTES_PER_SECOND = NativeLibrary.downcall(
 				"rocksdb_sst_file_manager_set_delete_rate_bytes_per_second",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_MAX_TRASH_DB_RATIO = NativeLibrary.rocksdb(
+		MH_GET_MAX_TRASH_DB_RATIO = NativeLibrary.downcall(
 				"rocksdb_sst_file_manager_get_max_trash_db_ratio",
 				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_TRASH_DB_RATIO = NativeLibrary.rocksdb(
+		MH_SET_MAX_TRASH_DB_RATIO = NativeLibrary.downcall(
 				"rocksdb_sst_file_manager_set_max_trash_db_ratio",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
 
-		MH_GET_TOTAL_TRASH_SIZE = NativeLibrary.rocksdb(
+		MH_GET_TOTAL_TRASH_SIZE = NativeLibrary.downcall(
 				"rocksdb_sst_file_manager_get_total_trash_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 	}
