@@ -29,11 +29,20 @@ public class NativeLibrary {
 	private static final Linker LINKER = Linker.nativeLinker();
 	private static final SymbolLookup LIB = SymbolLookup.libraryLookup(resolveLibPath(), Arena.ofAuto());
 
-	static MethodHandle lookup(String name, FunctionDescriptor fd, Linker.Option... options) {
+	static MethodHandle rocksdb(String name, FunctionDescriptor fd, Linker.Option... options) {
 		return LINKER.downcallHandle(
 				LIB.find(name).orElseThrow(() ->
 						new UnsatisfiedLinkError("Symbol not found: " + name)),
 				fd, options);
+	}
+
+	/// Like [#rocksdb(String, FunctionDescriptor, Linker.Option...)] but for a libc symbol (e.g. `malloc`), which the
+	/// bundled RocksDB library does not export on every platform: resolved through the platform's default lookup.
+	static MethodHandle libc(String name, FunctionDescriptor fd) {
+		return LINKER.downcallHandle(
+				LINKER.defaultLookup().find(name).orElseThrow(() ->
+						new UnsatisfiedLinkError("Symbol not found: " + name)),
+				fd);
 	}
 
 	private static Path resolveLibPath() {

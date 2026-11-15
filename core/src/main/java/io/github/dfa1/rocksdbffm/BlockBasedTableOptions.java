@@ -459,285 +459,285 @@ public final class BlockBasedTableOptions extends NativeObject {
 	private static final MethodHandle MH_GET_UDI_FACTORY_NAME;
 
 	static {
-		MH_CREATE = NativeLibrary.lookup("rocksdb_block_based_options_create",
+		MH_CREATE = NativeLibrary.rocksdb("rocksdb_block_based_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_block_based_options_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_block_based_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_BLOCK_SIZE = NativeLibrary.lookup("rocksdb_block_based_options_set_block_size",
+		MH_SET_BLOCK_SIZE = NativeLibrary.rocksdb("rocksdb_block_based_options_set_block_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_SET_FILTER_POLICY = NativeLibrary.lookup("rocksdb_block_based_options_set_filter_policy",
+		MH_SET_FILTER_POLICY = NativeLibrary.rocksdb("rocksdb_block_based_options_set_filter_policy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_NO_BLOCK_CACHE = NativeLibrary.lookup("rocksdb_block_based_options_set_no_block_cache",
+		MH_SET_NO_BLOCK_CACHE = NativeLibrary.rocksdb("rocksdb_block_based_options_set_no_block_cache",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_SET_BLOCK_CACHE = NativeLibrary.lookup("rocksdb_block_based_options_set_block_cache",
+		MH_SET_BLOCK_CACHE = NativeLibrary.rocksdb("rocksdb_block_based_options_set_block_cache",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS = NativeLibrary.lookup(
+		MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_cache_index_and_filter_blocks",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_SET_INDEX_TYPE = NativeLibrary.lookup("rocksdb_block_based_options_set_index_type",
+		MH_SET_INDEX_TYPE = NativeLibrary.rocksdb("rocksdb_block_based_options_set_index_type",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_SET_FORMAT_VERSION = NativeLibrary.lookup("rocksdb_block_based_options_set_format_version",
+		MH_SET_FORMAT_VERSION = NativeLibrary.rocksdb("rocksdb_block_based_options_set_format_version",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_FORMAT_VERSION = NativeLibrary.lookup("rocksdb_block_based_options_get_format_version",
+		MH_GET_FORMAT_VERSION = NativeLibrary.rocksdb("rocksdb_block_based_options_get_format_version",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_WHOLE_KEY_FILTERING = NativeLibrary.lookup(
+		MH_SET_WHOLE_KEY_FILTERING = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_whole_key_filtering",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_SET_PARTITION_FILTERS = NativeLibrary.lookup(
+		MH_SET_PARTITION_FILTERS = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_partition_filters",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_SET_MAX_AUTO_READAHEAD_SIZE = NativeLibrary.lookup(
+		MH_SET_MAX_AUTO_READAHEAD_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_max_auto_readahead_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_GET_MAX_AUTO_READAHEAD_SIZE = NativeLibrary.lookup(
+		MH_GET_MAX_AUTO_READAHEAD_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_max_auto_readahead_size",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_SET_INITIAL_AUTO_READAHEAD_SIZE = NativeLibrary.lookup(
+		MH_SET_INITIAL_AUTO_READAHEAD_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_initial_auto_readahead_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_GET_INITIAL_AUTO_READAHEAD_SIZE = NativeLibrary.lookup(
+		MH_GET_INITIAL_AUTO_READAHEAD_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_initial_auto_readahead_size",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_SET_NUM_FILE_READS_FOR_AUTO_READAHEAD = NativeLibrary.lookup(
+		MH_SET_NUM_FILE_READS_FOR_AUTO_READAHEAD = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_num_file_reads_for_auto_readahead",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_NUM_FILE_READS_FOR_AUTO_READAHEAD = NativeLibrary.lookup(
+		MH_GET_NUM_FILE_READS_FOR_AUTO_READAHEAD = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_num_file_reads_for_auto_readahead",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY = NativeLibrary.lookup(
+		MH_SET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_cache_index_and_filter_blocks_with_high_priority",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY = NativeLibrary.lookup(
+		MH_GET_CACHE_INDEX_AND_FILTER_BLOCKS_WITH_HIGH_PRIORITY = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_cache_index_and_filter_blocks_with_high_priority",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE = NativeLibrary.lookup(
+		MH_SET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_pin_l0_filter_and_index_blocks_in_cache",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE = NativeLibrary.lookup(
+		MH_GET_PIN_L0_FILTER_AND_INDEX_BLOCKS_IN_CACHE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_pin_l0_filter_and_index_blocks_in_cache",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_PIN_TOP_LEVEL_INDEX_AND_FILTER = NativeLibrary.lookup(
+		MH_SET_PIN_TOP_LEVEL_INDEX_AND_FILTER = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_pin_top_level_index_and_filter",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_PIN_TOP_LEVEL_INDEX_AND_FILTER = NativeLibrary.lookup(
+		MH_GET_PIN_TOP_LEVEL_INDEX_AND_FILTER = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_pin_top_level_index_and_filter",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_TOP_LEVEL_INDEX_PINNING_TIER = NativeLibrary.lookup(
+		MH_SET_TOP_LEVEL_INDEX_PINNING_TIER = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_top_level_index_pinning_tier",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_SET_PARTITION_PINNING_TIER = NativeLibrary.lookup(
+		MH_SET_PARTITION_PINNING_TIER = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_partition_pinning_tier",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_SET_UNPARTITIONED_PINNING_TIER = NativeLibrary.lookup(
+		MH_SET_UNPARTITIONED_PINNING_TIER = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_unpartitioned_pinning_tier",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_SET_BLOCK_RESTART_INTERVAL = NativeLibrary.lookup(
+		MH_SET_BLOCK_RESTART_INTERVAL = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_block_restart_interval",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_BLOCK_RESTART_INTERVAL = NativeLibrary.lookup(
+		MH_GET_BLOCK_RESTART_INTERVAL = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_block_restart_interval",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_INDEX_BLOCK_RESTART_INTERVAL = NativeLibrary.lookup(
+		MH_SET_INDEX_BLOCK_RESTART_INTERVAL = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_index_block_restart_interval",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_INDEX_BLOCK_RESTART_INTERVAL = NativeLibrary.lookup(
+		MH_GET_INDEX_BLOCK_RESTART_INTERVAL = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_index_block_restart_interval",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_METADATA_BLOCK_SIZE = NativeLibrary.lookup(
+		MH_SET_METADATA_BLOCK_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_metadata_block_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_METADATA_BLOCK_SIZE = NativeLibrary.lookup(
+		MH_GET_METADATA_BLOCK_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_metadata_block_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_BLOCK_SIZE_DEVIATION = NativeLibrary.lookup(
+		MH_SET_BLOCK_SIZE_DEVIATION = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_block_size_deviation",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_BLOCK_SIZE_DEVIATION = NativeLibrary.lookup(
+		MH_GET_BLOCK_SIZE_DEVIATION = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_block_size_deviation",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_USE_DELTA_ENCODING = NativeLibrary.lookup(
+		MH_SET_USE_DELTA_ENCODING = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_use_delta_encoding",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_USE_DELTA_ENCODING = NativeLibrary.lookup(
+		MH_GET_USE_DELTA_ENCODING = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_use_delta_encoding",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK = NativeLibrary.lookup(
+		MH_SET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_separate_key_value_in_data_block",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK = NativeLibrary.lookup(
+		MH_GET_SEPARATE_KEY_VALUE_IN_DATA_BLOCK = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_separate_key_value_in_data_block",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_OPTIMIZE_FILTERS_FOR_MEMORY = NativeLibrary.lookup(
+		MH_SET_OPTIMIZE_FILTERS_FOR_MEMORY = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_optimize_filters_for_memory",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_OPTIMIZE_FILTERS_FOR_MEMORY = NativeLibrary.lookup(
+		MH_GET_OPTIMIZE_FILTERS_FOR_MEMORY = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_optimize_filters_for_memory",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_DECOUPLE_PARTITIONED_FILTERS = NativeLibrary.lookup(
+		MH_SET_DECOUPLE_PARTITIONED_FILTERS = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_decouple_partitioned_filters",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_DECOUPLE_PARTITIONED_FILTERS = NativeLibrary.lookup(
+		MH_GET_DECOUPLE_PARTITIONED_FILTERS = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_decouple_partitioned_filters",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO = NativeLibrary.lookup(
+		MH_SET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_data_block_hash_table_util_ratio",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
 
-		MH_GET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO = NativeLibrary.lookup(
+		MH_GET_DATA_BLOCK_HASH_TABLE_UTIL_RATIO = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_data_block_hash_table_util_ratio",
 				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
 
-		MH_SET_INDEX_SHORTENING = NativeLibrary.lookup("rocksdb_block_based_options_set_index_shortening",
+		MH_SET_INDEX_SHORTENING = NativeLibrary.rocksdb("rocksdb_block_based_options_set_index_shortening",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_INDEX_SHORTENING = NativeLibrary.lookup("rocksdb_block_based_options_get_index_shortening",
+		MH_GET_INDEX_SHORTENING = NativeLibrary.rocksdb("rocksdb_block_based_options_get_index_shortening",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_DATA_BLOCK_INDEX_TYPE = NativeLibrary.lookup("rocksdb_block_based_options_set_data_block_index_type",
+		MH_SET_DATA_BLOCK_INDEX_TYPE = NativeLibrary.rocksdb("rocksdb_block_based_options_set_data_block_index_type",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_DATA_BLOCK_INDEX_TYPE = NativeLibrary.lookup("rocksdb_block_based_options_get_data_block_index_type",
+		MH_GET_DATA_BLOCK_INDEX_TYPE = NativeLibrary.rocksdb("rocksdb_block_based_options_get_data_block_index_type",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_OPTIMIZE_KEY_COMMON_PREFIX = NativeLibrary.lookup("rocksdb_block_based_options_set_optimize_key_common_prefix",
+		MH_SET_OPTIMIZE_KEY_COMMON_PREFIX = NativeLibrary.rocksdb("rocksdb_block_based_options_set_optimize_key_common_prefix",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_OPTIMIZE_KEY_COMMON_PREFIX = NativeLibrary.lookup("rocksdb_block_based_options_get_optimize_key_common_prefix",
+		MH_GET_OPTIMIZE_KEY_COMMON_PREFIX = NativeLibrary.rocksdb("rocksdb_block_based_options_get_optimize_key_common_prefix",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_INDEX_BLOCK_SEARCH_TYPE = NativeLibrary.lookup(
+		MH_SET_INDEX_BLOCK_SEARCH_TYPE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_index_block_search_type",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_INDEX_BLOCK_SEARCH_TYPE = NativeLibrary.lookup(
+		MH_GET_INDEX_BLOCK_SEARCH_TYPE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_index_block_search_type",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_ENABLE_INDEX_COMPRESSION = NativeLibrary.lookup(
+		MH_SET_ENABLE_INDEX_COMPRESSION = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_enable_index_compression",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_ENABLE_INDEX_COMPRESSION = NativeLibrary.lookup(
+		MH_GET_ENABLE_INDEX_COMPRESSION = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_enable_index_compression",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_UNIFORM_CV_THRESHOLD = NativeLibrary.lookup("rocksdb_block_based_options_set_uniform_cv_threshold",
+		MH_SET_UNIFORM_CV_THRESHOLD = NativeLibrary.rocksdb("rocksdb_block_based_options_set_uniform_cv_threshold",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
 
-		MH_GET_UNIFORM_CV_THRESHOLD = NativeLibrary.lookup("rocksdb_block_based_options_get_uniform_cv_threshold",
+		MH_GET_UNIFORM_CV_THRESHOLD = NativeLibrary.rocksdb("rocksdb_block_based_options_get_uniform_cv_threshold",
 				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
 
-		MH_SET_CHECKSUM = NativeLibrary.lookup("rocksdb_block_based_options_set_checksum",
+		MH_SET_CHECKSUM = NativeLibrary.rocksdb("rocksdb_block_based_options_set_checksum",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_CHECKSUM = NativeLibrary.lookup("rocksdb_block_based_options_get_checksum",
+		MH_GET_CHECKSUM = NativeLibrary.rocksdb("rocksdb_block_based_options_get_checksum",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_VERIFY_COMPRESSION = NativeLibrary.lookup("rocksdb_block_based_options_set_verify_compression",
+		MH_SET_VERIFY_COMPRESSION = NativeLibrary.rocksdb("rocksdb_block_based_options_set_verify_compression",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_VERIFY_COMPRESSION = NativeLibrary.lookup("rocksdb_block_based_options_get_verify_compression",
+		MH_GET_VERIFY_COMPRESSION = NativeLibrary.rocksdb("rocksdb_block_based_options_get_verify_compression",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_DETECT_FILTER_CONSTRUCT_CORRUPTION = NativeLibrary.lookup(
+		MH_SET_DETECT_FILTER_CONSTRUCT_CORRUPTION = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_detect_filter_construct_corruption",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_DETECT_FILTER_CONSTRUCT_CORRUPTION = NativeLibrary.lookup(
+		MH_GET_DETECT_FILTER_CONSTRUCT_CORRUPTION = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_detect_filter_construct_corruption",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_READ_AMP_BYTES_PER_BIT = NativeLibrary.lookup(
+		MH_SET_READ_AMP_BYTES_PER_BIT = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_read_amp_bytes_per_bit",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_READ_AMP_BYTES_PER_BIT = NativeLibrary.lookup(
+		MH_GET_READ_AMP_BYTES_PER_BIT = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_read_amp_bytes_per_bit",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_BLOCK_ALIGN = NativeLibrary.lookup("rocksdb_block_based_options_set_block_align",
+		MH_SET_BLOCK_ALIGN = NativeLibrary.rocksdb("rocksdb_block_based_options_set_block_align",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_BLOCK_ALIGN = NativeLibrary.lookup("rocksdb_block_based_options_get_block_align",
+		MH_GET_BLOCK_ALIGN = NativeLibrary.rocksdb("rocksdb_block_based_options_get_block_align",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_SUPER_BLOCK_ALIGNMENT_SIZE = NativeLibrary.lookup(
+		MH_SET_SUPER_BLOCK_ALIGNMENT_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_super_block_alignment_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_GET_SUPER_BLOCK_ALIGNMENT_SIZE = NativeLibrary.lookup(
+		MH_GET_SUPER_BLOCK_ALIGNMENT_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_super_block_alignment_size",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_SET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO = NativeLibrary.lookup(
+		MH_SET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_super_block_alignment_space_overhead_ratio",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_GET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO = NativeLibrary.lookup(
+		MH_GET_SUPER_BLOCK_ALIGNMENT_SPACE_OVERHEAD_RATIO = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_super_block_alignment_space_overhead_ratio",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_SET_PREPOPULATE_BLOCK_CACHE = NativeLibrary.lookup(
+		MH_SET_PREPOPULATE_BLOCK_CACHE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_prepopulate_block_cache",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_PREPOPULATE_BLOCK_CACHE = NativeLibrary.lookup(
+		MH_GET_PREPOPULATE_BLOCK_CACHE = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_prepopulate_block_cache",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_UDI_FACTORY_FROM_STRING = NativeLibrary.lookup(
+		MH_SET_UDI_FACTORY_FROM_STRING = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_set_user_defined_index_factory_from_string",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_CLEAR_UDI_FACTORY = NativeLibrary.lookup(
+		MH_CLEAR_UDI_FACTORY = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_clear_user_defined_index_factory",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_GET_UDI_FACTORY_NAME = NativeLibrary.lookup(
+		MH_GET_UDI_FACTORY_NAME = NativeLibrary.rocksdb(
 				"rocksdb_block_based_options_get_user_defined_index_factory_name",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}

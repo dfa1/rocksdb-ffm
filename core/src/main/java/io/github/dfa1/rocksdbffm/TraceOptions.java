@@ -46,34 +46,34 @@ public final class TraceOptions extends NativeObject {
 	private static final MethodHandle MH_GET_PRESERVE_WRITE_ORDER;
 
 	static {
-		MH_CREATE = NativeLibrary.lookup("rocksdb_trace_options_create",
+		MH_CREATE = NativeLibrary.rocksdb("rocksdb_trace_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_trace_options_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_trace_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_MAX_TRACE_FILE_SIZE = NativeLibrary.lookup("rocksdb_trace_options_set_max_trace_file_size",
+		MH_SET_MAX_TRACE_FILE_SIZE = NativeLibrary.rocksdb("rocksdb_trace_options_set_max_trace_file_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_MAX_TRACE_FILE_SIZE = NativeLibrary.lookup("rocksdb_trace_options_get_max_trace_file_size",
+		MH_GET_MAX_TRACE_FILE_SIZE = NativeLibrary.rocksdb("rocksdb_trace_options_get_max_trace_file_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_SAMPLING_FREQUENCY = NativeLibrary.lookup("rocksdb_trace_options_set_sampling_frequency",
+		MH_SET_SAMPLING_FREQUENCY = NativeLibrary.rocksdb("rocksdb_trace_options_set_sampling_frequency",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_SAMPLING_FREQUENCY = NativeLibrary.lookup("rocksdb_trace_options_get_sampling_frequency",
+		MH_GET_SAMPLING_FREQUENCY = NativeLibrary.rocksdb("rocksdb_trace_options_get_sampling_frequency",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_FILTER = NativeLibrary.lookup("rocksdb_trace_options_set_filter",
+		MH_SET_FILTER = NativeLibrary.rocksdb("rocksdb_trace_options_set_filter",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_FILTER = NativeLibrary.lookup("rocksdb_trace_options_get_filter",
+		MH_GET_FILTER = NativeLibrary.rocksdb("rocksdb_trace_options_get_filter",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_PRESERVE_WRITE_ORDER = NativeLibrary.lookup("rocksdb_trace_options_set_preserve_write_order",
+		MH_SET_PRESERVE_WRITE_ORDER = NativeLibrary.rocksdb("rocksdb_trace_options_set_preserve_write_order",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_PRESERVE_WRITE_ORDER = NativeLibrary.lookup("rocksdb_trace_options_get_preserve_write_order",
+		MH_GET_PRESERVE_WRITE_ORDER = NativeLibrary.rocksdb("rocksdb_trace_options_get_preserve_write_order",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 	}
 

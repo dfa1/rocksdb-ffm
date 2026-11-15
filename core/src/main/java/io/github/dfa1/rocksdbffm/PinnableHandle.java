@@ -29,11 +29,11 @@ final class PinnableHandle extends NativeObject {
 	static {
 		// get_value/destroy are pure in-memory pointer arithmetic — safe and worth
 		// marking critical(false) (no heap-array access) to skip transition overhead.
-		MH_GET_VALUE = NativeLibrary.lookup("rocksdb_pinnable_handle_get_value",
+		MH_GET_VALUE = NativeLibrary.rocksdb("rocksdb_pinnable_handle_get_value",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS),
 				Linker.Option.critical(false));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_pinnable_handle_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_pinnable_handle_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
 				Linker.Option.critical(false));
 	}

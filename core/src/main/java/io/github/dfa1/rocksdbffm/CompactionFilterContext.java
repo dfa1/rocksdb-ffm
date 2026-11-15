@@ -14,12 +14,12 @@ import java.lang.invoke.MethodHandle;
 public final class CompactionFilterContext {
 
 	/// `unsigned char rocksdb_compactionfiltercontext_is_full_compaction(rocksdb_compactionfiltercontext_t* context);`
-	private static final MethodHandle MH_IS_FULL_COMPACTION = NativeLibrary.lookup(
+	private static final MethodHandle MH_IS_FULL_COMPACTION = NativeLibrary.rocksdb(
 			"rocksdb_compactionfiltercontext_is_full_compaction",
 			FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
 	/// `unsigned char rocksdb_compactionfiltercontext_is_manual_compaction(rocksdb_compactionfiltercontext_t* context);`
-	private static final MethodHandle MH_IS_MANUAL_COMPACTION = NativeLibrary.lookup(
+	private static final MethodHandle MH_IS_MANUAL_COMPACTION = NativeLibrary.rocksdb(
 			"rocksdb_compactionfiltercontext_is_manual_compaction",
 			FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 

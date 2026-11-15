@@ -46,62 +46,62 @@ public final class WriteOptions extends NativeObject {
 	private static final MethodHandle MH_GET_IO_ACTIVITY;
 
 	static {
-		MH_CREATE = NativeLibrary.lookup("rocksdb_writeoptions_create",
+		MH_CREATE = NativeLibrary.rocksdb("rocksdb_writeoptions_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_writeoptions_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_writeoptions_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_SYNC = NativeLibrary.lookup("rocksdb_writeoptions_set_sync",
+		MH_SET_SYNC = NativeLibrary.rocksdb("rocksdb_writeoptions_set_sync",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_SYNC = NativeLibrary.lookup("rocksdb_writeoptions_get_sync",
+		MH_GET_SYNC = NativeLibrary.rocksdb("rocksdb_writeoptions_get_sync",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_DISABLE_WAL = NativeLibrary.lookup("rocksdb_writeoptions_disable_WAL",
+		MH_DISABLE_WAL = NativeLibrary.rocksdb("rocksdb_writeoptions_disable_WAL",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_DISABLE_WAL = NativeLibrary.lookup("rocksdb_writeoptions_get_disable_WAL",
+		MH_GET_DISABLE_WAL = NativeLibrary.rocksdb("rocksdb_writeoptions_get_disable_WAL",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_IGNORE_MISSING_COLUMN_FAMILIES = NativeLibrary.lookup(
+		MH_SET_IGNORE_MISSING_COLUMN_FAMILIES = NativeLibrary.rocksdb(
 				"rocksdb_writeoptions_set_ignore_missing_column_families",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_IGNORE_MISSING_COLUMN_FAMILIES = NativeLibrary.lookup(
+		MH_GET_IGNORE_MISSING_COLUMN_FAMILIES = NativeLibrary.rocksdb(
 				"rocksdb_writeoptions_get_ignore_missing_column_families",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_NO_SLOWDOWN = NativeLibrary.lookup("rocksdb_writeoptions_set_no_slowdown",
+		MH_SET_NO_SLOWDOWN = NativeLibrary.rocksdb("rocksdb_writeoptions_set_no_slowdown",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_NO_SLOWDOWN = NativeLibrary.lookup("rocksdb_writeoptions_get_no_slowdown",
+		MH_GET_NO_SLOWDOWN = NativeLibrary.rocksdb("rocksdb_writeoptions_get_no_slowdown",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_LOW_PRI = NativeLibrary.lookup("rocksdb_writeoptions_set_low_pri",
+		MH_SET_LOW_PRI = NativeLibrary.rocksdb("rocksdb_writeoptions_set_low_pri",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_LOW_PRI = NativeLibrary.lookup("rocksdb_writeoptions_get_low_pri",
+		MH_GET_LOW_PRI = NativeLibrary.rocksdb("rocksdb_writeoptions_get_low_pri",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_MEMTABLE_INSERT_HINT_PER_BATCH = NativeLibrary.lookup(
+		MH_SET_MEMTABLE_INSERT_HINT_PER_BATCH = NativeLibrary.rocksdb(
 				"rocksdb_writeoptions_set_memtable_insert_hint_per_batch",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_MEMTABLE_INSERT_HINT_PER_BATCH = NativeLibrary.lookup(
+		MH_GET_MEMTABLE_INSERT_HINT_PER_BATCH = NativeLibrary.rocksdb(
 				"rocksdb_writeoptions_get_memtable_insert_hint_per_batch",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_RATE_LIMITER_PRIORITY = NativeLibrary.lookup("rocksdb_writeoptions_set_rate_limiter_priority",
+		MH_SET_RATE_LIMITER_PRIORITY = NativeLibrary.rocksdb("rocksdb_writeoptions_set_rate_limiter_priority",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_RATE_LIMITER_PRIORITY = NativeLibrary.lookup("rocksdb_writeoptions_get_rate_limiter_priority",
+		MH_GET_RATE_LIMITER_PRIORITY = NativeLibrary.rocksdb("rocksdb_writeoptions_get_rate_limiter_priority",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_IO_ACTIVITY = NativeLibrary.lookup("rocksdb_writeoptions_set_io_activity",
+		MH_SET_IO_ACTIVITY = NativeLibrary.rocksdb("rocksdb_writeoptions_set_io_activity",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_IO_ACTIVITY = NativeLibrary.lookup("rocksdb_writeoptions_get_io_activity",
+		MH_GET_IO_ACTIVITY = NativeLibrary.rocksdb("rocksdb_writeoptions_get_io_activity",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 	}
 

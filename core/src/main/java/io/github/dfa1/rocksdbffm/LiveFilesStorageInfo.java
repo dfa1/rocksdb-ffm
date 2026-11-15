@@ -37,14 +37,14 @@ public final class LiveFilesStorageInfo extends NativeObject implements Iterable
 	private static final MethodHandle MH_DESTROY;
 
 	static {
-		MH_GET = NativeLibrary.lookup("rocksdb_get_livefiles_storage_info",
+		MH_GET = NativeLibrary.rocksdb("rocksdb_get_livefiles_storage_info",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_COUNT = NativeLibrary.lookup("rocksdb_livefiles_storage_info_count",
+		MH_COUNT = NativeLibrary.rocksdb("rocksdb_livefiles_storage_info_count",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_livefiles_storage_info_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_livefiles_storage_info_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

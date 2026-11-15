@@ -84,98 +84,98 @@ public final class RocksDB {
 	private static final MethodHandle MH_TRANSACTION_GET_BASE_DB;
 
 	static {
-		MH_OPEN = NativeLibrary.lookup("rocksdb_open",
+		MH_OPEN = NativeLibrary.rocksdb("rocksdb_open",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_OPEN_WITH_TTL = NativeLibrary.lookup("rocksdb_open_with_ttl",
+		MH_OPEN_WITH_TTL = NativeLibrary.rocksdb("rocksdb_open_with_ttl",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_OPEN_FOR_READ_ONLY = NativeLibrary.lookup("rocksdb_open_for_read_only",
+		MH_OPEN_FOR_READ_ONLY = NativeLibrary.rocksdb("rocksdb_open_for_read_only",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_OPEN_SECONDARY = NativeLibrary.lookup("rocksdb_open_as_secondary",
+		MH_OPEN_SECONDARY = NativeLibrary.rocksdb("rocksdb_open_as_secondary",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_OPEN_TRANSACTION = NativeLibrary.lookup("rocksdb_transactiondb_open",
+		MH_OPEN_TRANSACTION = NativeLibrary.rocksdb("rocksdb_transactiondb_open",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_OPEN_OPTIMISTIC = NativeLibrary.lookup("rocksdb_optimistictransactiondb_open",
+		MH_OPEN_OPTIMISTIC = NativeLibrary.rocksdb("rocksdb_optimistictransactiondb_open",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_OPTIMISTIC_GET_BASE_DB = NativeLibrary.lookup("rocksdb_optimistictransactiondb_get_base_db",
+		MH_OPTIMISTIC_GET_BASE_DB = NativeLibrary.rocksdb("rocksdb_optimistictransactiondb_get_base_db",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_OPEN_CF = NativeLibrary.lookup("rocksdb_open_column_families",
+		MH_OPEN_CF = NativeLibrary.rocksdb("rocksdb_open_column_families",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.JAVA_INT,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_LIST_CF = NativeLibrary.lookup("rocksdb_list_column_families",
+		MH_LIST_CF = NativeLibrary.rocksdb("rocksdb_list_column_families",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_LIST_CF_DESTROY = NativeLibrary.lookup("rocksdb_list_column_families_destroy",
+		MH_LIST_CF_DESTROY = NativeLibrary.rocksdb("rocksdb_list_column_families_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_LOAD_LATEST_OPTIONS = NativeLibrary.lookup("rocksdb_load_latest_options",
+		MH_LOAD_LATEST_OPTIONS = NativeLibrary.rocksdb("rocksdb_load_latest_options",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_BOOLEAN,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_LOAD_LATEST_OPTIONS_DESTROY = NativeLibrary.lookup("rocksdb_load_latest_options_destroy",
+		MH_LOAD_LATEST_OPTIONS_DESTROY = NativeLibrary.rocksdb("rocksdb_load_latest_options_destroy",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_OPEN_FOR_READ_ONLY_CF = NativeLibrary.lookup("rocksdb_open_for_read_only_column_families",
+		MH_OPEN_FOR_READ_ONLY_CF = NativeLibrary.rocksdb("rocksdb_open_for_read_only_column_families",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.JAVA_INT,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_OPEN_SECONDARY_CF = NativeLibrary.lookup("rocksdb_open_as_secondary_column_families",
+		MH_OPEN_SECONDARY_CF = NativeLibrary.rocksdb("rocksdb_open_as_secondary_column_families",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.JAVA_INT,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_OPEN_CF_WITH_TTL = NativeLibrary.lookup("rocksdb_open_column_families_with_ttl",
+		MH_OPEN_CF_WITH_TTL = NativeLibrary.rocksdb("rocksdb_open_column_families_with_ttl",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.JAVA_INT,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_OPEN_TRANSACTION_CF = NativeLibrary.lookup("rocksdb_transactiondb_open_column_families",
+		MH_OPEN_TRANSACTION_CF = NativeLibrary.rocksdb("rocksdb_transactiondb_open_column_families",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.JAVA_INT,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_OPEN_OPTIMISTIC_CF = NativeLibrary.lookup("rocksdb_optimistictransactiondb_open_column_families",
+		MH_OPEN_OPTIMISTIC_CF = NativeLibrary.rocksdb("rocksdb_optimistictransactiondb_open_column_families",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.JAVA_INT,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_TRANSACTION_GET_BASE_DB = NativeLibrary.lookup("rocksdb_transactiondb_get_base_db",
+		MH_TRANSACTION_GET_BASE_DB = NativeLibrary.rocksdb("rocksdb_transactiondb_get_base_db",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 

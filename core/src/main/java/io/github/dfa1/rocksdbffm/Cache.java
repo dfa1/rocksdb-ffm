@@ -30,28 +30,28 @@ public abstract class Cache extends NativeObject {
 	private static final MethodHandle MH_DISOWN_DATA;
 
 	static {
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_cache_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_cache_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_CAPACITY = NativeLibrary.lookup("rocksdb_cache_set_capacity",
+		MH_SET_CAPACITY = NativeLibrary.rocksdb("rocksdb_cache_set_capacity",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_GET_CAPACITY = NativeLibrary.lookup("rocksdb_cache_get_capacity",
+		MH_GET_CAPACITY = NativeLibrary.rocksdb("rocksdb_cache_get_capacity",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_GET_USAGE = NativeLibrary.lookup("rocksdb_cache_get_usage",
+		MH_GET_USAGE = NativeLibrary.rocksdb("rocksdb_cache_get_usage",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_GET_PINNED_USAGE = NativeLibrary.lookup("rocksdb_cache_get_pinned_usage",
+		MH_GET_PINNED_USAGE = NativeLibrary.rocksdb("rocksdb_cache_get_pinned_usage",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_GET_TABLE_ADDRESS_COUNT = NativeLibrary.lookup("rocksdb_cache_get_table_address_count",
+		MH_GET_TABLE_ADDRESS_COUNT = NativeLibrary.rocksdb("rocksdb_cache_get_table_address_count",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_GET_OCCUPANCY_COUNT = NativeLibrary.lookup("rocksdb_cache_get_occupancy_count",
+		MH_GET_OCCUPANCY_COUNT = NativeLibrary.rocksdb("rocksdb_cache_get_occupancy_count",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_DISOWN_DATA = NativeLibrary.lookup("rocksdb_cache_disown_data",
+		MH_DISOWN_DATA = NativeLibrary.rocksdb("rocksdb_cache_disown_data",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

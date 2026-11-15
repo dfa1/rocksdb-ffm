@@ -32,10 +32,10 @@ final class PinnableSlice extends NativeObject {
 	private static final MethodHandle MH_DESTROY;
 
 	static {
-		MH_VALUE = NativeLibrary.lookup("rocksdb_pinnableslice_value",
+		MH_VALUE = NativeLibrary.rocksdb("rocksdb_pinnableslice_value",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_pinnableslice_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_pinnableslice_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

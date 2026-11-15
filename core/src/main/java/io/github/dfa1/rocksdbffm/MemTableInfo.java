@@ -15,28 +15,28 @@ import java.lang.invoke.MethodHandle;
 public final class MemTableInfo {
 
 	/// `const char* rocksdb_memtableinfo_cf_name(const rocksdb_memtableinfo_t*, size_t* size);`
-	private static final MethodHandle MH_CF_NAME = NativeLibrary.lookup(
+	private static final MethodHandle MH_CF_NAME = NativeLibrary.rocksdb(
 			"rocksdb_memtableinfo_cf_name",
 			FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 	/// `uint64_t rocksdb_memtableinfo_first_seqno(const rocksdb_memtableinfo_t*);`
-	private static final MethodHandle MH_FIRST_SEQNO = NativeLibrary.lookup(
+	private static final MethodHandle MH_FIRST_SEQNO = NativeLibrary.rocksdb(
 			"rocksdb_memtableinfo_first_seqno", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
 	/// `uint64_t rocksdb_memtableinfo_earliest_seqno(const rocksdb_memtableinfo_t*);`
-	private static final MethodHandle MH_EARLIEST_SEQNO = NativeLibrary.lookup(
+	private static final MethodHandle MH_EARLIEST_SEQNO = NativeLibrary.rocksdb(
 			"rocksdb_memtableinfo_earliest_seqno", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
 	/// `uint64_t rocksdb_memtableinfo_num_entries(const rocksdb_memtableinfo_t*);`
-	private static final MethodHandle MH_NUM_ENTRIES = NativeLibrary.lookup(
+	private static final MethodHandle MH_NUM_ENTRIES = NativeLibrary.rocksdb(
 			"rocksdb_memtableinfo_num_entries", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
 	/// `uint64_t rocksdb_memtableinfo_num_deletes(const rocksdb_memtableinfo_t*);`
-	private static final MethodHandle MH_NUM_DELETES = NativeLibrary.lookup(
+	private static final MethodHandle MH_NUM_DELETES = NativeLibrary.rocksdb(
 			"rocksdb_memtableinfo_num_deletes", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
 	/// `const char* rocksdb_memtableinfo_newest_udt(const rocksdb_memtableinfo_t*, size_t* size);`
-	private static final MethodHandle MH_NEWEST_UDT = NativeLibrary.lookup(
+	private static final MethodHandle MH_NEWEST_UDT = NativeLibrary.rocksdb(
 			"rocksdb_memtableinfo_newest_udt",
 			FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 

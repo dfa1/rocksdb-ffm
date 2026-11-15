@@ -40,20 +40,20 @@ public final class WalIterator extends NativeObject {
 	private static final MethodHandle MH_DESTROY;
 
 	static {
-		MH_NEXT = NativeLibrary.lookup("rocksdb_wal_iter_next",
+		MH_NEXT = NativeLibrary.rocksdb("rocksdb_wal_iter_next",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_VALID = NativeLibrary.lookup("rocksdb_wal_iter_valid",
+		MH_VALID = NativeLibrary.rocksdb("rocksdb_wal_iter_valid",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_STATUS = NativeLibrary.lookup("rocksdb_wal_iter_status",
+		MH_STATUS = NativeLibrary.rocksdb("rocksdb_wal_iter_status",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_GET_BATCH = NativeLibrary.lookup("rocksdb_wal_iter_get_batch",
+		MH_GET_BATCH = NativeLibrary.rocksdb("rocksdb_wal_iter_get_batch",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_wal_iter_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_wal_iter_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

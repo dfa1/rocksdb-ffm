@@ -74,83 +74,83 @@ public final class EnvOptions extends NativeObjectWithChildren {
 	private static final MethodHandle MH_SET_RATE_LIMITER;
 
 	static {
-		MH_CREATE = NativeLibrary.lookup("rocksdb_envoptions_create",
+		MH_CREATE = NativeLibrary.rocksdb("rocksdb_envoptions_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.lookup("rocksdb_envoptions_destroy",
+		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_envoptions_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_USE_MMAP_READS = NativeLibrary.lookup("rocksdb_envoptions_set_use_mmap_reads",
+		MH_SET_USE_MMAP_READS = NativeLibrary.rocksdb("rocksdb_envoptions_set_use_mmap_reads",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_USE_MMAP_READS = NativeLibrary.lookup("rocksdb_envoptions_get_use_mmap_reads",
+		MH_GET_USE_MMAP_READS = NativeLibrary.rocksdb("rocksdb_envoptions_get_use_mmap_reads",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_USE_MMAP_WRITES = NativeLibrary.lookup("rocksdb_envoptions_set_use_mmap_writes",
+		MH_SET_USE_MMAP_WRITES = NativeLibrary.rocksdb("rocksdb_envoptions_set_use_mmap_writes",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_USE_MMAP_WRITES = NativeLibrary.lookup("rocksdb_envoptions_get_use_mmap_writes",
+		MH_GET_USE_MMAP_WRITES = NativeLibrary.rocksdb("rocksdb_envoptions_get_use_mmap_writes",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_USE_DIRECT_READS = NativeLibrary.lookup("rocksdb_envoptions_set_use_direct_reads",
+		MH_SET_USE_DIRECT_READS = NativeLibrary.rocksdb("rocksdb_envoptions_set_use_direct_reads",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_USE_DIRECT_READS = NativeLibrary.lookup("rocksdb_envoptions_get_use_direct_reads",
+		MH_GET_USE_DIRECT_READS = NativeLibrary.rocksdb("rocksdb_envoptions_get_use_direct_reads",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_USE_DIRECT_WRITES = NativeLibrary.lookup("rocksdb_envoptions_set_use_direct_writes",
+		MH_SET_USE_DIRECT_WRITES = NativeLibrary.rocksdb("rocksdb_envoptions_set_use_direct_writes",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_USE_DIRECT_WRITES = NativeLibrary.lookup("rocksdb_envoptions_get_use_direct_writes",
+		MH_GET_USE_DIRECT_WRITES = NativeLibrary.rocksdb("rocksdb_envoptions_get_use_direct_writes",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_ALLOW_FALLOCATE = NativeLibrary.lookup("rocksdb_envoptions_set_allow_fallocate",
+		MH_SET_ALLOW_FALLOCATE = NativeLibrary.rocksdb("rocksdb_envoptions_set_allow_fallocate",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_ALLOW_FALLOCATE = NativeLibrary.lookup("rocksdb_envoptions_get_allow_fallocate",
+		MH_GET_ALLOW_FALLOCATE = NativeLibrary.rocksdb("rocksdb_envoptions_get_allow_fallocate",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_FD_CLOEXEC = NativeLibrary.lookup("rocksdb_envoptions_set_fd_cloexec",
+		MH_SET_FD_CLOEXEC = NativeLibrary.rocksdb("rocksdb_envoptions_set_fd_cloexec",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_FD_CLOEXEC = NativeLibrary.lookup("rocksdb_envoptions_get_fd_cloexec",
+		MH_GET_FD_CLOEXEC = NativeLibrary.rocksdb("rocksdb_envoptions_get_fd_cloexec",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_BYTES_PER_SYNC = NativeLibrary.lookup("rocksdb_envoptions_set_bytes_per_sync",
+		MH_SET_BYTES_PER_SYNC = NativeLibrary.rocksdb("rocksdb_envoptions_set_bytes_per_sync",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_BYTES_PER_SYNC = NativeLibrary.lookup("rocksdb_envoptions_get_bytes_per_sync",
+		MH_GET_BYTES_PER_SYNC = NativeLibrary.rocksdb("rocksdb_envoptions_get_bytes_per_sync",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_STRICT_BYTES_PER_SYNC = NativeLibrary.lookup("rocksdb_envoptions_set_strict_bytes_per_sync",
+		MH_SET_STRICT_BYTES_PER_SYNC = NativeLibrary.rocksdb("rocksdb_envoptions_set_strict_bytes_per_sync",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_STRICT_BYTES_PER_SYNC = NativeLibrary.lookup("rocksdb_envoptions_get_strict_bytes_per_sync",
+		MH_GET_STRICT_BYTES_PER_SYNC = NativeLibrary.rocksdb("rocksdb_envoptions_get_strict_bytes_per_sync",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_FALLOCATE_WITH_KEEP_SIZE = NativeLibrary.lookup("rocksdb_envoptions_set_fallocate_with_keep_size",
+		MH_SET_FALLOCATE_WITH_KEEP_SIZE = NativeLibrary.rocksdb("rocksdb_envoptions_set_fallocate_with_keep_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_FALLOCATE_WITH_KEEP_SIZE = NativeLibrary.lookup("rocksdb_envoptions_get_fallocate_with_keep_size",
+		MH_GET_FALLOCATE_WITH_KEEP_SIZE = NativeLibrary.rocksdb("rocksdb_envoptions_get_fallocate_with_keep_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_COMPACTION_READAHEAD_SIZE = NativeLibrary.lookup(
+		MH_SET_COMPACTION_READAHEAD_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_envoptions_set_compaction_readahead_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_GET_COMPACTION_READAHEAD_SIZE = NativeLibrary.lookup(
+		MH_GET_COMPACTION_READAHEAD_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_envoptions_get_compaction_readahead_size",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_SET_WRITABLE_FILE_MAX_BUFFER_SIZE = NativeLibrary.lookup(
+		MH_SET_WRITABLE_FILE_MAX_BUFFER_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_envoptions_set_writable_file_max_buffer_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_GET_WRITABLE_FILE_MAX_BUFFER_SIZE = NativeLibrary.lookup(
+		MH_GET_WRITABLE_FILE_MAX_BUFFER_SIZE = NativeLibrary.rocksdb(
 				"rocksdb_envoptions_get_writable_file_max_buffer_size",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_SET_RATE_LIMITER = NativeLibrary.lookup("rocksdb_envoptions_set_rate_limiter",
+		MH_SET_RATE_LIMITER = NativeLibrary.rocksdb("rocksdb_envoptions_set_rate_limiter",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 

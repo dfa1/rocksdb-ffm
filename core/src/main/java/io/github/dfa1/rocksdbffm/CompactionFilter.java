@@ -56,7 +56,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class CompactionFilter extends NativeObject {
 
 	/// `rocksdb_compactionfilter_t* rocksdb_compactionfilter_create(void* state, void (*destructor)(void*), unsigned char (*filter)(void*, int level, const char* key, size_t key_length, const char* existing_value, size_t value_length, char** new_value, size_t* new_value_length, unsigned char* value_changed), const char* (*name)(void*));`
-	private static final MethodHandle MH_COMPACTIONFILTER_CREATE = NativeLibrary.lookup(
+	private static final MethodHandle MH_COMPACTIONFILTER_CREATE = NativeLibrary.rocksdb(
 			"rocksdb_compactionfilter_create",
 			FunctionDescriptor.of(ValueLayout.ADDRESS,
 					ValueLayout.ADDRESS,  // state
@@ -65,17 +65,17 @@ public final class CompactionFilter extends NativeObject {
 					ValueLayout.ADDRESS)); // name
 
 	/// `void rocksdb_compactionfilter_set_ignore_snapshots(rocksdb_compactionfilter_t*, unsigned char);`
-	private static final MethodHandle MH_SET_IGNORE_SNAPSHOTS = NativeLibrary.lookup(
+	private static final MethodHandle MH_SET_IGNORE_SNAPSHOTS = NativeLibrary.rocksdb(
 			"rocksdb_compactionfilter_set_ignore_snapshots",
 			FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
 	/// `void rocksdb_compactionfilter_destroy(rocksdb_compactionfilter_t*);`
-	private static final MethodHandle MH_COMPACTIONFILTER_DESTROY = NativeLibrary.lookup(
+	private static final MethodHandle MH_COMPACTIONFILTER_DESTROY = NativeLibrary.rocksdb(
 			"rocksdb_compactionfilter_destroy",
 			FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
 	/// `void rocksdb_options_set_compaction_filter(rocksdb_options_t*, rocksdb_compactionfilter_t*);`
-	private static final MethodHandle MH_SET_COMPACTION_FILTER = NativeLibrary.lookup(
+	private static final MethodHandle MH_SET_COMPACTION_FILTER = NativeLibrary.rocksdb(
 			"rocksdb_options_set_compaction_filter",
 			FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
