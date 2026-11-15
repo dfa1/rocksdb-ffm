@@ -34,22 +34,22 @@ public abstract class Cache extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
 		MH_SET_CAPACITY = NativeLibrary.lookup("rocksdb_cache_set_capacity",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_GET_CAPACITY = NativeLibrary.lookup("rocksdb_cache_get_capacity",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_GET_USAGE = NativeLibrary.lookup("rocksdb_cache_get_usage",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_GET_PINNED_USAGE = NativeLibrary.lookup("rocksdb_cache_get_pinned_usage",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_GET_TABLE_ADDRESS_COUNT = NativeLibrary.lookup("rocksdb_cache_get_table_address_count",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_GET_OCCUPANCY_COUNT = NativeLibrary.lookup("rocksdb_cache_get_occupancy_count",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_DISOWN_DATA = NativeLibrary.lookup("rocksdb_cache_disown_data",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));

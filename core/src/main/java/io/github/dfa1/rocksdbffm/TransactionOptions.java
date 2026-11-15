@@ -129,10 +129,10 @@ public final class TransactionOptions extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
 		MH_SET_MAX_WRITE_BATCH_SIZE = NativeLibrary.lookup("rocksdb_transaction_options_set_max_write_batch_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_GET_MAX_WRITE_BATCH_SIZE = NativeLibrary.lookup("rocksdb_transaction_options_get_max_write_batch_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_SKIP_CONCURRENCY_CONTROL = NativeLibrary.lookup(
 				"rocksdb_transaction_options_set_skip_concurrency_control",

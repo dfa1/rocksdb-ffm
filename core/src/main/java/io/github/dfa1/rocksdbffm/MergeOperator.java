@@ -127,9 +127,9 @@ public sealed interface MergeOperator {
 		private static final FunctionDescriptor FULL_MERGE_DESC = FunctionDescriptor.of(ValueLayout.ADDRESS,
 				ValueLayout.ADDRESS,   // state
 				ValueLayout.ADDRESS,   // key
-				ValueLayout.JAVA_LONG, // key_length
+				NativeCalls.SIZE_T, // key_length
 				ValueLayout.ADDRESS,   // existing_value
-				ValueLayout.JAVA_LONG, // existing_value_length
+				NativeCalls.SIZE_T, // existing_value_length
 				ValueLayout.ADDRESS,   // operands_list
 				ValueLayout.ADDRESS,   // operands_list_length
 				ValueLayout.JAVA_INT,  // num_operands
@@ -139,7 +139,7 @@ public sealed interface MergeOperator {
 		private static final FunctionDescriptor PARTIAL_MERGE_DESC = FunctionDescriptor.of(ValueLayout.ADDRESS,
 				ValueLayout.ADDRESS,   // state
 				ValueLayout.ADDRESS,   // key
-				ValueLayout.JAVA_LONG, // key_length
+				NativeCalls.SIZE_T, // key_length
 				ValueLayout.ADDRESS,   // operands_list
 				ValueLayout.ADDRESS,   // operands_list_length
 				ValueLayout.JAVA_INT,  // num_operands
@@ -269,7 +269,7 @@ public sealed interface MergeOperator {
 
 		private static void writeMergeFailure(MemorySegment successPtr, MemorySegment newValueLenPtr) {
 			successPtr.set(ValueLayout.JAVA_BYTE, 0, (byte) 0);
-			newValueLenPtr.set(ValueLayout.JAVA_LONG, 0, 0L);
+			newValueLenPtr.set(NativeCalls.SIZE_T, 0, 0L);
 		}
 
 		private static List<MemorySegment> readOperandViews(MemorySegment operandsList, MemorySegment operandsLen,
@@ -279,9 +279,9 @@ public sealed interface MergeOperator {
 				return operands;
 			}
 			MemorySegment listArr = operandsList.reinterpret(ValueLayout.ADDRESS.byteSize() * numOperands);
-			MemorySegment lenArr = operandsLen.reinterpret(ValueLayout.JAVA_LONG.byteSize() * numOperands);
+			MemorySegment lenArr = operandsLen.reinterpret(NativeCalls.SIZE_T.byteSize() * numOperands);
 			for (int i = 0; i < numOperands; i++) {
-				operands.add(view(listArr.getAtIndex(ValueLayout.ADDRESS, i), lenArr.getAtIndex(ValueLayout.JAVA_LONG, i), arena));
+				operands.add(view(listArr.getAtIndex(ValueLayout.ADDRESS, i), lenArr.getAtIndex(NativeCalls.SIZE_T, i), arena));
 			}
 			return operands;
 		}
@@ -292,7 +292,7 @@ public sealed interface MergeOperator {
 				MemorySegment operandsLen, int numOperands, MemorySegment success, MemorySegment newValueLen) {
 			BackgroundUpcallThreads.track();
 			MemorySegment successPtr = success.reinterpret(ValueLayout.JAVA_BYTE.byteSize());
-			MemorySegment newValueLenPtr = newValueLen.reinterpret(ValueLayout.JAVA_LONG.byteSize());
+			MemorySegment newValueLenPtr = newValueLen.reinterpret(NativeCalls.SIZE_T.byteSize());
 			try (Arena arena = Arena.ofConfined()) {
 				State s = REGISTRY.get(state);
 				MemorySegment keyView = view(key, keyLen, arena);
@@ -300,7 +300,7 @@ public sealed interface MergeOperator {
 				List<MemorySegment> operandViews = readOperandViews(operandsList, operandsLen, numOperands, arena);
 				byte[] result = s.fn().fullMerge(keyView, existingView, operandViews);
 				successPtr.set(ValueLayout.JAVA_BYTE, 0, (byte) 1);
-				newValueLenPtr.set(ValueLayout.JAVA_LONG, 0, result.length);
+				newValueLenPtr.set(NativeCalls.SIZE_T, 0, result.length);
 				return requireNonNullUpcallResult(mallocCopy(result), "fullMergeDispatch");
 			} catch (Throwable t) {
 				// must not throw across the upcall boundary — an escaping AssertionError here
@@ -319,7 +319,7 @@ public sealed interface MergeOperator {
 				MemorySegment success, MemorySegment newValueLen) {
 			BackgroundUpcallThreads.track();
 			MemorySegment successPtr = success.reinterpret(ValueLayout.JAVA_BYTE.byteSize());
-			MemorySegment newValueLenPtr = newValueLen.reinterpret(ValueLayout.JAVA_LONG.byteSize());
+			MemorySegment newValueLenPtr = newValueLen.reinterpret(NativeCalls.SIZE_T.byteSize());
 			try {
 				writeMergeFailure(successPtr, newValueLenPtr);
 				return mallocCopy(new byte[0]);

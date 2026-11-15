@@ -84,10 +84,10 @@ public final class TransactionDBOptions extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
 		MH_SET_NUM_STRIPES = NativeLibrary.lookup("rocksdb_transactiondb_options_set_num_stripes",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_GET_NUM_STRIPES = NativeLibrary.lookup("rocksdb_transactiondb_options_get_num_stripes",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_TRANSACTION_LOCK_TIMEOUT = NativeLibrary.lookup(
 				"rocksdb_transactiondb_options_set_transaction_lock_timeout",

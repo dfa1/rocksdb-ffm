@@ -32,7 +32,7 @@ public final class SstPartitionerFactory extends NativeObject {
 
 	static {
 		MH_CREATE_FIXED_PREFIX = NativeLibrary.lookup("rocksdb_sst_partitioner_fixed_prefix_factory_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_DESTROY = NativeLibrary.lookup("rocksdb_sst_partitioner_factory_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));

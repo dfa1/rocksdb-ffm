@@ -115,15 +115,15 @@ final class RocksDBMonitoringOperationsBindings {
 	private static RangeArrays buildRangeArrays(Arena arena, List<Range> ranges) {
 		int n = ranges.size();
 		MemorySegment starts = arena.allocate(ValueLayout.ADDRESS, n);
-		MemorySegment startLens = arena.allocate(ValueLayout.JAVA_LONG, n);
+		MemorySegment startLens = arena.allocate(NativeCalls.SIZE_T, n);
 		MemorySegment limits = arena.allocate(ValueLayout.ADDRESS, n);
-		MemorySegment limitLens = arena.allocate(ValueLayout.JAVA_LONG, n);
+		MemorySegment limitLens = arena.allocate(NativeCalls.SIZE_T, n);
 		for (int i = 0; i < n; i++) {
 			Range range = ranges.get(i);
 			starts.setAtIndex(ValueLayout.ADDRESS, i, NativeCalls.toNative(arena, range.startKey()));
-			startLens.setAtIndex(ValueLayout.JAVA_LONG, i, range.startKey().length);
+			startLens.setAtIndex(NativeCalls.SIZE_T, i, range.startKey().length);
 			limits.setAtIndex(ValueLayout.ADDRESS, i, NativeCalls.toNative(arena, range.endKey()));
-			limitLens.setAtIndex(ValueLayout.JAVA_LONG, i, range.endKey().length);
+			limitLens.setAtIndex(NativeCalls.SIZE_T, i, range.endKey().length);
 		}
 		return new RangeArrays(starts, startLens, limits, limitLens);
 	}

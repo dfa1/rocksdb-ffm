@@ -299,10 +299,10 @@ public final class Options extends NativeObject {
 		MH_GET_CREATE_IF_MISSING = NativeLibrary.lookup("rocksdb_options_get_create_if_missing",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 				MH_SET_MAX_SUCCESSIVE_MERGES = NativeLibrary.lookup("rocksdb_options_set_max_successive_merges",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_GET_MAX_SUCCESSIVE_MERGES = NativeLibrary.lookup("rocksdb_options_get_max_successive_merges",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_STRICT_MAX_SUCCESSIVE_MERGES = NativeLibrary.lookup("rocksdb_options_set_strict_max_successive_merges",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
@@ -321,7 +321,7 @@ public final class Options extends NativeObject {
 		MH_SET_PLAIN_TABLE_FACTORY = NativeLibrary.lookup(
 				"rocksdb_options_set_plain_table_factory",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
-						ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG,
+						ValueLayout.JAVA_DOUBLE, NativeCalls.SIZE_T, NativeCalls.SIZE_T,
 						ValueLayout.JAVA_BYTE, ValueLayout.JAVA_BYTE, ValueLayout.JAVA_BYTE));
 
 		MH_ENABLE_STATISTICS = NativeLibrary.lookup("rocksdb_options_enable_statistics",
@@ -460,10 +460,10 @@ public final class Options extends NativeObject {
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
 		MH_SET_DB_PATHS = NativeLibrary.lookup("rocksdb_options_set_db_paths",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_SET_CF_PATHS = NativeLibrary.lookup("rocksdb_options_set_cf_paths",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_SET_METADATA_WRITE_TEMPERATURE = NativeLibrary.lookup("rocksdb_options_set_metadata_write_temperature",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
@@ -496,10 +496,10 @@ public final class Options extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
 		MH_SET_WRITE_BUFFER_SIZE = NativeLibrary.lookup("rocksdb_options_set_write_buffer_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_GET_WRITE_BUFFER_SIZE = NativeLibrary.lookup("rocksdb_options_get_write_buffer_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_ENFORCE_WRITE_BUFFER_MANAGER_DURING_RECOVERY = NativeLibrary.lookup("rocksdb_options_set_enforce_write_buffer_manager_during_recovery",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
@@ -520,11 +520,11 @@ public final class Options extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
 		MH_SET_HASH_SKIP_LIST_REP = NativeLibrary.lookup("rocksdb_options_set_hash_skip_list_rep",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
 
 		MH_SET_HASH_LINK_LIST_REP = NativeLibrary.lookup("rocksdb_options_set_hash_link_list_rep",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_SET_MEMTABLE_VECTOR_REP = NativeLibrary.lookup("rocksdb_options_set_memtable_vector_rep",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
@@ -663,7 +663,7 @@ public final class Options extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
 		MH_SET_MEMTABLE_HUGE_PAGE_SIZE = NativeLibrary.lookup("rocksdb_options_set_memtable_huge_page_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
 		MH_SET_MEMTABLE_OP_SCAN_FLUSH_TRIGGER = NativeLibrary.lookup("rocksdb_options_set_memtable_op_scan_flush_trigger",
                 FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
@@ -678,7 +678,7 @@ public final class Options extends NativeObject {
                 FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
 		MH_GET_MEMTABLE_HUGE_PAGE_SIZE = NativeLibrary.lookup("rocksdb_options_get_memtable_huge_page_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
 		MH_SET_BLOOM_LOCALITY = NativeLibrary.lookup("rocksdb_options_set_bloom_locality",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));

@@ -44,7 +44,7 @@ public final class Replayer extends NativeObject {
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS,   // db
 						ValueLayout.ADDRESS,   // column_families
-						ValueLayout.JAVA_LONG, // num_column_families
+						NativeCalls.SIZE_T, // num_column_families
 						ValueLayout.ADDRESS,   // env
 						ValueLayout.ADDRESS,   // env_options
 						ValueLayout.ADDRESS,   // trace_path
