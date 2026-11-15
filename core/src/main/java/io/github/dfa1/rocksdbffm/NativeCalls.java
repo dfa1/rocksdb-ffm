@@ -25,11 +25,7 @@ final class NativeCalls {
 	static final ValueLayout.OfLong SIZE_T = (ValueLayout.OfLong) Linker.nativeLinker().canonicalLayouts().get("size_t");
 
 	/// `void rocksdb_free(void* ptr);`
-	private static final MethodHandle MH_FREE = NativeLibrary.rocksdb("rocksdb_free", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-	/// libc `void* malloc(size_t size)`: for native memory that has to outlive any arena and be freed from whichever
-	/// thread releases its owner, and for buffers handed back to RocksDB, which frees them with plain `free()`.
-	private static final MethodHandle MH_MALLOC = NativeLibrary.libc("malloc", FunctionDescriptor.of(ValueLayout.ADDRESS, SIZE_T));
+	private static final MethodHandle MH_FREE = NativeLibrary.downcall("rocksdb_free", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
 	private NativeCalls() {
 	}
@@ -57,31 +53,9 @@ final class NativeCalls {
 		return seg;
 	}
 
-	/// Allocates `size` bytes of native memory with libc `malloc`, to be released with [#free(MemorySegment)].
-	/// At least one byte is allocated, so the result is never a zero-length (possibly NULL) segment.
+	/// Frees a malloc'd pointer returned by the RocksDB C API.
 	///
-	/// @param size number of bytes needed
-	/// @return a segment of exactly `max(1, size)` bytes
-	/// @throws OutOfMemoryError if `malloc` fails
-	static MemorySegment malloc(long size) {
-		long length = Math.max(1, size);
-		try {
-			MemorySegment ptr = (MemorySegment) MH_MALLOC.invokeExact(length);
-			if (MemorySegment.NULL.equals(ptr)) {
-				throw new OutOfMemoryError("malloc(" + length + ") failed");
-			}
-			return ptr.reinterpret(length);
-		} catch (Throwable t) {
-			if (t instanceof OutOfMemoryError oom) {
-				throw oom;
-			}
-			throw new AssertionError(t);
-		}
-	}
-
-	/// Frees a malloc'd pointer: one returned by the RocksDB C API, or by [#malloc(long)].
-	///
-	/// @param ptr pointer to free; must have been allocated by RocksDB or by [#malloc(long)]
+	/// @param ptr pointer to free; must have been allocated by RocksDB
 	static void free(MemorySegment ptr) {
 		try {
 			MH_FREE.invokeExact(ptr);

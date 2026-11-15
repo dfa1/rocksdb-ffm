@@ -61,6 +61,13 @@ To ensure type safety and consistent units across the API:
 - **Library loading:** `NativeLibrary.java` loads the native library from the classpath resource
   `/native/<os>-<arch>/librocksdb.<ext>` (bundled by each `native/*` module's `exec-maven-plugin` execution). There is
   no brew/system fallback. NEVER add hardcoded system paths back.
+- **No C `malloc`:** NEVER bind libc (`malloc`/`free`): every downcall goes through `NativeLibrary.downcall` into
+  `librocksdb`. Native memory comes from an `Arena`; a small out-param that must outlive any arena lives on the heap,
+  passed through a `Linker.Option.critical(true)` downcall when the call is a pure accessor (`RocksIterator`'s length
+  slot); a buffer handed back to RocksDB from a callback stays Java-owned, with a no-op `delete_value`-style hook so
+  RocksDB never `free()`s it (`MergeOperator`). Pointers RocksDB allocates are released with `rocksdb_free`
+  (`NativeCalls.free`). Why: `librocksdb` does not export libc on Windows, and memory `malloc`'d by one C runtime and
+  `free()`d by another corrupts the heap.
 - **Paths:** Never use raw `String` for file system paths. Always use `java.nio.file.Path` for any API surface that
   accepts paths (open, backup, checkpoint).
 - **Memory Sizes:** Never use raw `long` for byte counts (e.g., cache size, write buffer size). Always use the project's

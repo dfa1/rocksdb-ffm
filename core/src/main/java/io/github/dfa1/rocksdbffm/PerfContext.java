@@ -59,26 +59,26 @@ public final class PerfContext extends NativeObject {
 	private static final MethodHandle MH_DESTROY;
 
 	static {
-		MH_SET_PERF_LEVEL = NativeLibrary.rocksdb("rocksdb_set_perf_level",
+		MH_SET_PERF_LEVEL = NativeLibrary.downcall("rocksdb_set_perf_level",
 				FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT));
 
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_perfcontext_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_perfcontext_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_RESET = NativeLibrary.rocksdb("rocksdb_perfcontext_reset",
+		MH_RESET = NativeLibrary.downcall("rocksdb_perfcontext_reset",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_REPORT = NativeLibrary.rocksdb("rocksdb_perfcontext_report",
+		MH_REPORT = NativeLibrary.downcall("rocksdb_perfcontext_report",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS,   // context
 						ValueLayout.JAVA_BYTE)); // exclude_zero_counters
 
-		MH_METRIC = NativeLibrary.rocksdb("rocksdb_perfcontext_metric",
+		MH_METRIC = NativeLibrary.downcall("rocksdb_perfcontext_metric",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS,  // context
 						ValueLayout.JAVA_INT)); // metric
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_perfcontext_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_perfcontext_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

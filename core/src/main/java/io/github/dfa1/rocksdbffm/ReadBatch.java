@@ -41,7 +41,7 @@ public final class ReadBatch implements AutoCloseable {
 	private static final MethodHandle MH_BATCHED_MULTI_GET_CF;
 
 	static {
-		MH_BATCHED_MULTI_GET_CF = NativeLibrary.rocksdb("rocksdb_batched_multi_get_cf",
+		MH_BATCHED_MULTI_GET_CF = NativeLibrary.downcall("rocksdb_batched_multi_get_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,

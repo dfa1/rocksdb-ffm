@@ -32,7 +32,7 @@ final class RocksDBTracingOperationsBindings {
 	private static final MethodHandle MH_END_BLOCK_CACHE_TRACE;
 
 	static {
-		MH_START_TRACE = NativeLibrary.rocksdb("rocksdb_start_trace",
+		MH_START_TRACE = NativeLibrary.downcall("rocksdb_start_trace",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,  // db
 						ValueLayout.ADDRESS,  // env
@@ -41,10 +41,10 @@ final class RocksDBTracingOperationsBindings {
 						ValueLayout.ADDRESS,  // trace_path
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_END_TRACE = NativeLibrary.rocksdb("rocksdb_end_trace",
+		MH_END_TRACE = NativeLibrary.downcall("rocksdb_end_trace",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_START_IO_TRACE = NativeLibrary.rocksdb("rocksdb_start_io_trace",
+		MH_START_IO_TRACE = NativeLibrary.downcall("rocksdb_start_io_trace",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,  // db
 						ValueLayout.ADDRESS,  // env
@@ -53,10 +53,10 @@ final class RocksDBTracingOperationsBindings {
 						ValueLayout.ADDRESS,  // trace_path
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_END_IO_TRACE = NativeLibrary.rocksdb("rocksdb_end_io_trace",
+		MH_END_IO_TRACE = NativeLibrary.downcall("rocksdb_end_io_trace",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_START_BLOCK_CACHE_TRACE = NativeLibrary.rocksdb("rocksdb_start_block_cache_trace",
+		MH_START_BLOCK_CACHE_TRACE = NativeLibrary.downcall("rocksdb_start_block_cache_trace",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,  // db
 						ValueLayout.ADDRESS,  // env
@@ -65,7 +65,7 @@ final class RocksDBTracingOperationsBindings {
 						ValueLayout.ADDRESS,  // trace_path
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_START_BLOCK_CACHE_TRACE_WITH_OPTIONS = NativeLibrary.rocksdb(
+		MH_START_BLOCK_CACHE_TRACE_WITH_OPTIONS = NativeLibrary.downcall(
 				"rocksdb_start_block_cache_trace_with_options",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,  // db
@@ -76,7 +76,7 @@ final class RocksDBTracingOperationsBindings {
 						ValueLayout.ADDRESS,  // trace_path
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_END_BLOCK_CACHE_TRACE = NativeLibrary.rocksdb("rocksdb_end_block_cache_trace",
+		MH_END_BLOCK_CACHE_TRACE = NativeLibrary.downcall("rocksdb_end_block_cache_trace",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 

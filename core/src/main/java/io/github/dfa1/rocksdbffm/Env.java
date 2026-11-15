@@ -39,26 +39,26 @@ public final class Env extends NativeObject {
 	private static final MethodHandle MH_GET_HIGH_PRIORITY_BACKGROUND_THREADS;
 
 	static {
-		MH_CREATE_DEFAULT = NativeLibrary.rocksdb("rocksdb_create_default_env",
+		MH_CREATE_DEFAULT = NativeLibrary.downcall("rocksdb_create_default_env",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_CREATE_MEM = NativeLibrary.rocksdb("rocksdb_create_mem_env",
+		MH_CREATE_MEM = NativeLibrary.downcall("rocksdb_create_mem_env",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_env_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_env_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_BACKGROUND_THREADS = NativeLibrary.rocksdb("rocksdb_env_set_background_threads",
+		MH_SET_BACKGROUND_THREADS = NativeLibrary.downcall("rocksdb_env_set_background_threads",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_BACKGROUND_THREADS = NativeLibrary.rocksdb("rocksdb_env_get_background_threads",
+		MH_GET_BACKGROUND_THREADS = NativeLibrary.downcall("rocksdb_env_get_background_threads",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_HIGH_PRIORITY_BACKGROUND_THREADS = NativeLibrary.rocksdb(
+		MH_SET_HIGH_PRIORITY_BACKGROUND_THREADS = NativeLibrary.downcall(
 				"rocksdb_env_set_high_priority_background_threads",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_HIGH_PRIORITY_BACKGROUND_THREADS = NativeLibrary.rocksdb(
+		MH_GET_HIGH_PRIORITY_BACKGROUND_THREADS = NativeLibrary.downcall(
 				"rocksdb_env_get_high_priority_background_threads",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 	}

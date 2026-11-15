@@ -63,76 +63,76 @@ public final class ReadOptions extends NativeObjectWithChildren {
 	private static final MethodHandle MH_GET_REQUEST_ID;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_readoptions_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_readoptions_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_readoptions_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_readoptions_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_SNAPSHOT = NativeLibrary.rocksdb("rocksdb_readoptions_set_snapshot",
+		MH_SET_SNAPSHOT = NativeLibrary.downcall("rocksdb_readoptions_set_snapshot",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_VERIFY_CHECKSUMS = NativeLibrary.rocksdb("rocksdb_readoptions_set_verify_checksums",
+		MH_SET_VERIFY_CHECKSUMS = NativeLibrary.downcall("rocksdb_readoptions_set_verify_checksums",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_VERIFY_CHECKSUMS = NativeLibrary.rocksdb("rocksdb_readoptions_get_verify_checksums",
+		MH_GET_VERIFY_CHECKSUMS = NativeLibrary.downcall("rocksdb_readoptions_get_verify_checksums",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_FILL_CACHE = NativeLibrary.rocksdb("rocksdb_readoptions_set_fill_cache",
+		MH_SET_FILL_CACHE = NativeLibrary.downcall("rocksdb_readoptions_set_fill_cache",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_FILL_CACHE = NativeLibrary.rocksdb("rocksdb_readoptions_get_fill_cache",
+		MH_GET_FILL_CACHE = NativeLibrary.downcall("rocksdb_readoptions_get_fill_cache",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_PIN_DATA = NativeLibrary.rocksdb("rocksdb_readoptions_set_pin_data",
+		MH_SET_PIN_DATA = NativeLibrary.downcall("rocksdb_readoptions_set_pin_data",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_PIN_DATA = NativeLibrary.rocksdb("rocksdb_readoptions_get_pin_data",
+		MH_GET_PIN_DATA = NativeLibrary.downcall("rocksdb_readoptions_get_pin_data",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_TAILING = NativeLibrary.rocksdb("rocksdb_readoptions_set_tailing",
+		MH_SET_TAILING = NativeLibrary.downcall("rocksdb_readoptions_set_tailing",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_TAILING = NativeLibrary.rocksdb("rocksdb_readoptions_get_tailing",
+		MH_GET_TAILING = NativeLibrary.downcall("rocksdb_readoptions_get_tailing",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_TOTAL_ORDER_SEEK = NativeLibrary.rocksdb("rocksdb_readoptions_set_total_order_seek",
+		MH_SET_TOTAL_ORDER_SEEK = NativeLibrary.downcall("rocksdb_readoptions_set_total_order_seek",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_TOTAL_ORDER_SEEK = NativeLibrary.rocksdb("rocksdb_readoptions_get_total_order_seek",
+		MH_GET_TOTAL_ORDER_SEEK = NativeLibrary.downcall("rocksdb_readoptions_get_total_order_seek",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_AUTO_PREFIX_MODE = NativeLibrary.rocksdb("rocksdb_readoptions_set_auto_prefix_mode",
+		MH_SET_AUTO_PREFIX_MODE = NativeLibrary.downcall("rocksdb_readoptions_set_auto_prefix_mode",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_AUTO_PREFIX_MODE = NativeLibrary.rocksdb("rocksdb_readoptions_get_auto_prefix_mode",
+		MH_GET_AUTO_PREFIX_MODE = NativeLibrary.downcall("rocksdb_readoptions_get_auto_prefix_mode",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_PREFIX_SAME_AS_START = NativeLibrary.rocksdb("rocksdb_readoptions_set_prefix_same_as_start",
+		MH_SET_PREFIX_SAME_AS_START = NativeLibrary.downcall("rocksdb_readoptions_set_prefix_same_as_start",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_PREFIX_SAME_AS_START = NativeLibrary.rocksdb("rocksdb_readoptions_get_prefix_same_as_start",
+		MH_GET_PREFIX_SAME_AS_START = NativeLibrary.downcall("rocksdb_readoptions_get_prefix_same_as_start",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_READAHEAD_SIZE = NativeLibrary.rocksdb("rocksdb_readoptions_set_readahead_size",
+		MH_SET_READAHEAD_SIZE = NativeLibrary.downcall("rocksdb_readoptions_set_readahead_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_GET_READAHEAD_SIZE = NativeLibrary.rocksdb("rocksdb_readoptions_get_readahead_size",
+		MH_GET_READAHEAD_SIZE = NativeLibrary.downcall("rocksdb_readoptions_get_readahead_size",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_SET_ITERATE_LOWER_BOUND = NativeLibrary.rocksdb("rocksdb_readoptions_set_iterate_lower_bound",
+		MH_SET_ITERATE_LOWER_BOUND = NativeLibrary.downcall("rocksdb_readoptions_set_iterate_lower_bound",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_SET_ITERATE_UPPER_BOUND = NativeLibrary.rocksdb("rocksdb_readoptions_set_iterate_upper_bound",
+		MH_SET_ITERATE_UPPER_BOUND = NativeLibrary.downcall("rocksdb_readoptions_set_iterate_upper_bound",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_SET_REQUEST_ID = NativeLibrary.rocksdb("rocksdb_readoptions_set_request_id",
+		MH_SET_REQUEST_ID = NativeLibrary.downcall("rocksdb_readoptions_set_request_id",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_CLEAR_REQUEST_ID = NativeLibrary.rocksdb("rocksdb_readoptions_clear_request_id",
+		MH_CLEAR_REQUEST_ID = NativeLibrary.downcall("rocksdb_readoptions_clear_request_id",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_GET_REQUEST_ID = NativeLibrary.rocksdb("rocksdb_readoptions_get_request_id",
+		MH_GET_REQUEST_ID = NativeLibrary.downcall("rocksdb_readoptions_get_request_id",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 

@@ -78,93 +78,93 @@ public final class BackupEngineOptions extends NativeObject {
 	private static final MethodHandle MH_GET_SHARE_FILES_WITH_CHECKSUM_NAMING;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_backup_engine_options_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_backup_engine_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_backup_engine_options_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_backup_engine_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_BACKUP_DIR = NativeLibrary.rocksdb("rocksdb_backup_engine_options_set_backup_dir",
+		MH_SET_BACKUP_DIR = NativeLibrary.downcall("rocksdb_backup_engine_options_set_backup_dir",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_ENV = NativeLibrary.rocksdb("rocksdb_backup_engine_options_set_env",
+		MH_SET_ENV = NativeLibrary.downcall("rocksdb_backup_engine_options_set_env",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_SET_SHARE_TABLE_FILES = NativeLibrary.rocksdb(
+		MH_SET_SHARE_TABLE_FILES = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_set_share_table_files",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_SHARE_TABLE_FILES = NativeLibrary.rocksdb(
+		MH_GET_SHARE_TABLE_FILES = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_get_share_table_files",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_SYNC = NativeLibrary.rocksdb("rocksdb_backup_engine_options_set_sync",
+		MH_SET_SYNC = NativeLibrary.downcall("rocksdb_backup_engine_options_set_sync",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_SYNC = NativeLibrary.rocksdb("rocksdb_backup_engine_options_get_sync",
+		MH_GET_SYNC = NativeLibrary.downcall("rocksdb_backup_engine_options_get_sync",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_DESTROY_OLD_DATA = NativeLibrary.rocksdb(
+		MH_SET_DESTROY_OLD_DATA = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_set_destroy_old_data",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_DESTROY_OLD_DATA = NativeLibrary.rocksdb(
+		MH_GET_DESTROY_OLD_DATA = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_get_destroy_old_data",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_BACKUP_LOG_FILES = NativeLibrary.rocksdb(
+		MH_SET_BACKUP_LOG_FILES = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_set_backup_log_files",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_BACKUP_LOG_FILES = NativeLibrary.rocksdb(
+		MH_GET_BACKUP_LOG_FILES = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_get_backup_log_files",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_BACKUP_RATE_LIMIT = NativeLibrary.rocksdb(
+		MH_SET_BACKUP_RATE_LIMIT = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_set_backup_rate_limit",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_BACKUP_RATE_LIMIT = NativeLibrary.rocksdb(
+		MH_GET_BACKUP_RATE_LIMIT = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_get_backup_rate_limit",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_RESTORE_RATE_LIMIT = NativeLibrary.rocksdb(
+		MH_SET_RESTORE_RATE_LIMIT = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_set_restore_rate_limit",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_RESTORE_RATE_LIMIT = NativeLibrary.rocksdb(
+		MH_GET_RESTORE_RATE_LIMIT = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_get_restore_rate_limit",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_BACKGROUND_OPERATIONS = NativeLibrary.rocksdb(
+		MH_SET_MAX_BACKGROUND_OPERATIONS = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_set_max_background_operations",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_MAX_BACKGROUND_OPERATIONS = NativeLibrary.rocksdb(
+		MH_GET_MAX_BACKGROUND_OPERATIONS = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_get_max_background_operations",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_CALLBACK_TRIGGER_INTERVAL_SIZE = NativeLibrary.rocksdb(
+		MH_SET_CALLBACK_TRIGGER_INTERVAL_SIZE = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_set_callback_trigger_interval_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_CALLBACK_TRIGGER_INTERVAL_SIZE = NativeLibrary.rocksdb(
+		MH_GET_CALLBACK_TRIGGER_INTERVAL_SIZE = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_get_callback_trigger_interval_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_VALID_BACKUPS_TO_OPEN = NativeLibrary.rocksdb(
+		MH_SET_MAX_VALID_BACKUPS_TO_OPEN = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_set_max_valid_backups_to_open",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_MAX_VALID_BACKUPS_TO_OPEN = NativeLibrary.rocksdb(
+		MH_GET_MAX_VALID_BACKUPS_TO_OPEN = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_get_max_valid_backups_to_open",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_SHARE_FILES_WITH_CHECKSUM_NAMING = NativeLibrary.rocksdb(
+		MH_SET_SHARE_FILES_WITH_CHECKSUM_NAMING = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_set_share_files_with_checksum_naming",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_SHARE_FILES_WITH_CHECKSUM_NAMING = NativeLibrary.rocksdb(
+		MH_GET_SHARE_FILES_WITH_CHECKSUM_NAMING = NativeLibrary.downcall(
 				"rocksdb_backup_engine_options_get_share_files_with_checksum_naming",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 	}

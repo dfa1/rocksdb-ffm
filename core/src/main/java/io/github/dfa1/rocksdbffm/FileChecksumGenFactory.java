@@ -14,12 +14,12 @@ import java.lang.invoke.MethodHandle;
 public final class FileChecksumGenFactory extends NativeObject {
 
     /// `rocksdb_file_checksum_gen_factory_t* rocksdb_file_checksum_gen_crc32c_factory_create(void);`
-    private static final MethodHandle MH_CREATE = NativeLibrary.rocksdb(
+    private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
             "rocksdb_file_checksum_gen_crc32c_factory_create",
             FunctionDescriptor.of(ValueLayout.ADDRESS));
 
     /// `void rocksdb_file_checksum_gen_factory_destroy(rocksdb_file_checksum_gen_factory_t* factory);`
-    private static final MethodHandle MH_DESTROY = NativeLibrary.rocksdb(
+    private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
             "rocksdb_file_checksum_gen_factory_destroy",
             FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 

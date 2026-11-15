@@ -25,13 +25,13 @@ public final class RestoreOptions extends NativeObject {
 	private static final MethodHandle MH_SET_KEEP_LOG_FILES;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_restore_options_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_restore_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_restore_options_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_restore_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_KEEP_LOG_FILES = NativeLibrary.rocksdb("rocksdb_restore_options_set_keep_log_files",
+		MH_SET_KEEP_LOG_FILES = NativeLibrary.downcall("rocksdb_restore_options_set_keep_log_files",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 	}
 

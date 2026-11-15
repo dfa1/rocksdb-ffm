@@ -33,33 +33,33 @@ public final class LiveFilesStorageInfoOptions extends NativeObject {
 	private static final MethodHandle MH_GET_ATOMIC_FLUSH;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_livefiles_storage_info_options_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_livefiles_storage_info_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_livefiles_storage_info_options_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_livefiles_storage_info_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_INCLUDE_CHECKSUM_INFO = NativeLibrary.rocksdb(
+		MH_SET_INCLUDE_CHECKSUM_INFO = NativeLibrary.downcall(
 				"rocksdb_livefiles_storage_info_options_set_include_checksum_info",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_INCLUDE_CHECKSUM_INFO = NativeLibrary.rocksdb(
+		MH_GET_INCLUDE_CHECKSUM_INFO = NativeLibrary.downcall(
 				"rocksdb_livefiles_storage_info_options_get_include_checksum_info",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_WAL_SIZE_FOR_FLUSH = NativeLibrary.rocksdb(
+		MH_SET_WAL_SIZE_FOR_FLUSH = NativeLibrary.downcall(
 				"rocksdb_livefiles_storage_info_options_set_wal_size_for_flush",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_WAL_SIZE_FOR_FLUSH = NativeLibrary.rocksdb(
+		MH_GET_WAL_SIZE_FOR_FLUSH = NativeLibrary.downcall(
 				"rocksdb_livefiles_storage_info_options_get_wal_size_for_flush",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_SET_ATOMIC_FLUSH = NativeLibrary.rocksdb(
+		MH_SET_ATOMIC_FLUSH = NativeLibrary.downcall(
 				"rocksdb_livefiles_storage_info_options_set_atomic_flush",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_ATOMIC_FLUSH = NativeLibrary.rocksdb(
+		MH_GET_ATOMIC_FLUSH = NativeLibrary.downcall(
 				"rocksdb_livefiles_storage_info_options_get_atomic_flush",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 	}
