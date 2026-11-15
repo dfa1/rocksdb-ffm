@@ -19,28 +19,18 @@ import java.util.Optional;
 /// companion. See [#131](https://github.com/dfa1/rocksdb-ffm/issues/131).
 final class NativeCalls {
 
-	/// `void rocksdb_close(rocksdb_t* db);`
-	private static final MethodHandle MH_CLOSE;
-	/// `void rocksdb_free(void* ptr);`
-	static final MethodHandle MH_FREE = NativeLibrary.lookup("rocksdb_free",
-			FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
 	/// The platform's own `size_t`, for every `size_t` of the C API (by-value parameters and return values, `size_t*`
 	/// slots, arrays): its size is a fact of the target, not an assumption of ours. Every platform with a bundled native library is 64-bit; on one where
 	/// `size_t` is not a `long`, this fails class initialization with a clear error instead of misreading lengths.
 	static final ValueLayout.OfLong SIZE_T = (ValueLayout.OfLong) Linker.nativeLinker().canonicalLayouts().get("size_t");
 
+	/// `void rocksdb_close(rocksdb_t* db);`
+	private static final MethodHandle MH_CLOSE = NativeLibrary.lookup("rocksdb_close", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+	/// `void rocksdb_free(void* ptr);`
+	private static final MethodHandle MH_FREE = NativeLibrary.lookup("rocksdb_free", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	/// libc `void* malloc(size_t size)`: for native memory that has to outlive any arena and be freed from whichever
 	/// thread releases its owner, and for buffers handed back to RocksDB, which frees them with plain `free()`.
-	private static final MethodHandle MH_MALLOC = Linker.nativeLinker().downcallHandle(
-			Linker.nativeLinker().defaultLookup().find("malloc")
-					.orElseThrow(() -> new UnsatisfiedLinkError("Symbol not found: malloc")),
-			FunctionDescriptor.of(ValueLayout.ADDRESS, SIZE_T));
-
-	static {
-		MH_CLOSE = NativeLibrary.lookup("rocksdb_close",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_MALLOC = NativeLibrary.lookup("malloc", FunctionDescriptor.of(ValueLayout.ADDRESS, SIZE_T));
 
 	private NativeCalls() {
 	}
