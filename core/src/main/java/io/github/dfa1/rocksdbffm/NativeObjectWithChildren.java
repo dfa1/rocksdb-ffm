@@ -114,10 +114,16 @@ abstract class NativeObjectWithChildren extends NativeObject {
 		// own; anything still present after this loop is exactly the registerChild-added-during-
 		// this-very-sweep stragglers described there, and registerChild's own recheck cleans
 		// those up (whether that happens before or after this method returns).
+		awaitInFlightCalls();
 		for (NativeObject child : children) {
 			child.release();
 		}
 		tryCloseResource(ptr);
+	}
+
+	/// Runs after this object's pointer has been swapped to NULL and before anything is released: a subclass that
+	/// tracks calls in flight on other threads waits here until they have returned.
+	void awaitInFlightCalls() {
 	}
 
 	/// Closes this object's own native resource. Same contract as
