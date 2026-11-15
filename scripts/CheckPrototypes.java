@@ -19,7 +19,9 @@ import java.util.regex.Pattern;
 /// `ADDRESS`; its slot is allocated and read with `NativeCalls.SIZE_T` where it is used.)
 ///
 /// Exits 1 if a comment is missing, names a symbol `c.h` no longer declares, differs from it, or spells a `size_t`
-/// descriptor argument with anything but `SIZE_T`.
+/// descriptor argument with anything but `SIZE_T`, or has a different number of parameters than `c.h`. Only `MH_`
+/// fields are covered: the upcall descriptors (`MergeOperator`, `CompactionFilter`, `Logger`, ...) and the `size_t*`
+/// slots are not, and stay a review concern.
 ///
 /// Run from the repository root: `java scripts/CheckPrototypes.java`.
 
@@ -66,16 +68,14 @@ static List<String> topLevelArgs(String text) {
 	return args;
 }
 
-/// The argument list of the `FunctionDescriptor` that follows the `"symbol"` literal in `source`, return layout
-/// first for `of(...)` (and `null` for `ofVoid(...)`), or `null` if there is none.
+/// The argument list of the literal `FunctionDescriptor` passed to `lookup("symbol", ...)` in `source` (comments
+/// already stripped), return layout first for `of(...)` and `null` for `ofVoid(...)`, or `null` if there is none.
 static List<String> descriptorArgs(String source, String symbol) {
-	int at = source.indexOf("\"" + symbol + "\"");
-	int of = at < 0 ? -1 : source.indexOf("FunctionDescriptor.of", at);
-	if (of < 0) {
+	Matcher start = Pattern.compile("lookup\\(\\s*\"" + symbol + "\"\\s*,\\s*FunctionDescriptor\\.(of|ofVoid)\\(").matcher(source);
+	if (!start.find()) {
 		return null;
 	}
-	boolean isVoid = source.startsWith("FunctionDescriptor.ofVoid(", of);
-	int open = source.indexOf('(', of);
+	int open = start.end() - 1;
 	int depth = 0;
 	int close = open;
 	for (; close < source.length(); close++) {
@@ -86,7 +86,7 @@ static List<String> descriptorArgs(String source, String symbol) {
 		}
 	}
 	List<String> args = new ArrayList<>(topLevelArgs(source.substring(open + 1, close)));
-	if (isVoid) {
+	if (start.group(1).equals("ofVoid")) {
 		args.addFirst(null);
 	}
 	return args;
@@ -97,6 +97,7 @@ static List<String> sizeTProblems(String source, String symbol, String declared)
 	List<String> args = descriptorArgs(source, symbol);
 	List<String> problems = new ArrayList<>();
 	if (args == null) {
+		problems.add("no literal FunctionDescriptor in lookup(\"" + symbol + "\", ...)");
 		return problems;
 	}
 	int open = declared.indexOf('(');
@@ -106,9 +107,10 @@ static List<String> sizeTProblems(String source, String symbol, String declared)
 		params = List.of();
 	}
 	if (args.size() != params.size() + 1) {
-		return problems; // an arity mismatch is not this check's concern
+		problems.add("descriptor has " + (args.size() - 1) + " parameters, c.h declares " + params.size());
+		return problems;
 	}
-	if (ret.equals("size_t") && !args.getFirst().endsWith("SIZE_T")) {
+	if (ret.equals("size_t") && (args.getFirst() == null || !args.getFirst().endsWith("SIZE_T"))) {
 		problems.add("return value is size_t but the descriptor says " + args.getFirst());
 	}
 	for (int p = 0; p < params.size(); p++) {
@@ -152,7 +154,7 @@ void main() throws Exception {
 	int checked = 0;
 	for (Path source : sources) {
 		List<String> lines = Files.readAllLines(source);
-		String text = String.join("\n", lines);
+		String text = String.join("\n", lines).replaceAll("(?s)/\\*.*?\\*/|//[^\n]*", "");
 		for (int i = 0; i < lines.size(); i++) {
 			if (!MH_FIELD.matcher(lines.get(i)).find()) {
 				continue;

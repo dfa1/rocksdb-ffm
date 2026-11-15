@@ -127,9 +127,9 @@ public sealed interface MergeOperator {
 		private static final FunctionDescriptor FULL_MERGE_DESC = FunctionDescriptor.of(ValueLayout.ADDRESS,
 				ValueLayout.ADDRESS,   // state
 				ValueLayout.ADDRESS,   // key
-				NativeCalls.SIZE_T, // key_length
+				NativeCalls.SIZE_T,    // key_length
 				ValueLayout.ADDRESS,   // existing_value
-				NativeCalls.SIZE_T, // existing_value_length
+				NativeCalls.SIZE_T,    // existing_value_length
 				ValueLayout.ADDRESS,   // operands_list
 				ValueLayout.ADDRESS,   // operands_list_length
 				ValueLayout.JAVA_INT,  // num_operands
@@ -139,7 +139,7 @@ public sealed interface MergeOperator {
 		private static final FunctionDescriptor PARTIAL_MERGE_DESC = FunctionDescriptor.of(ValueLayout.ADDRESS,
 				ValueLayout.ADDRESS,   // state
 				ValueLayout.ADDRESS,   // key
-				NativeCalls.SIZE_T, // key_length
+				NativeCalls.SIZE_T,    // key_length
 				ValueLayout.ADDRESS,   // operands_list
 				ValueLayout.ADDRESS,   // operands_list_length
 				ValueLayout.JAVA_INT,  // num_operands

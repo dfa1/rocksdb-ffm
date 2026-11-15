@@ -83,9 +83,9 @@ public final class CompactionFilter extends NativeObject {
 			ValueLayout.ADDRESS,   // state
 			ValueLayout.JAVA_INT,  // level
 			ValueLayout.ADDRESS,   // key
-			NativeCalls.SIZE_T, // key_length
+			NativeCalls.SIZE_T,    // key_length
 			ValueLayout.ADDRESS,   // existing_value
-			NativeCalls.SIZE_T, // value_length
+			NativeCalls.SIZE_T,    // value_length
 			ValueLayout.ADDRESS,   // new_value
 			ValueLayout.ADDRESS,   // new_value_length
 			ValueLayout.ADDRESS);  // value_changed
