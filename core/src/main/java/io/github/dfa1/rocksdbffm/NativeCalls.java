@@ -30,7 +30,12 @@ final class NativeCalls {
 	private static final MethodHandle MH_FREE = NativeLibrary.lookup("rocksdb_free", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	/// libc `void* malloc(size_t size)`: for native memory that has to outlive any arena and be freed from whichever
 	/// thread releases its owner, and for buffers handed back to RocksDB, which frees them with plain `free()`.
-	private static final MethodHandle MH_MALLOC = NativeLibrary.lookup("malloc", FunctionDescriptor.of(ValueLayout.ADDRESS, SIZE_T));
+	/// Resolved through the linker's default lookup, not [NativeLibrary#lookup]: on Windows a library lookup sees
+	/// only the RocksDB DLL's own exports, and `malloc` is not one of them.
+	private static final MethodHandle MH_MALLOC = Linker.nativeLinker().downcallHandle(
+			Linker.nativeLinker().defaultLookup().find("malloc")
+					.orElseThrow(() -> new UnsatisfiedLinkError("Symbol not found: malloc")),
+			FunctionDescriptor.of(ValueLayout.ADDRESS, SIZE_T));
 
 	private NativeCalls() {
 	}
