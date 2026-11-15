@@ -80,50 +80,50 @@ public final class UniversalCompactionOptions extends NativeObject {
 	private static final MethodHandle MH_GET_STOP_STYLE;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_universal_compaction_options_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_universal_compaction_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_universal_compaction_options_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_universal_compaction_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_SIZE_RATIO = NativeLibrary.rocksdb("rocksdb_universal_compaction_options_set_size_ratio",
+		MH_SET_SIZE_RATIO = NativeLibrary.downcall("rocksdb_universal_compaction_options_set_size_ratio",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_SIZE_RATIO = NativeLibrary.rocksdb("rocksdb_universal_compaction_options_get_size_ratio",
+		MH_GET_SIZE_RATIO = NativeLibrary.downcall("rocksdb_universal_compaction_options_get_size_ratio",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_MIN_MERGE_WIDTH = NativeLibrary.rocksdb("rocksdb_universal_compaction_options_set_min_merge_width",
+		MH_SET_MIN_MERGE_WIDTH = NativeLibrary.downcall("rocksdb_universal_compaction_options_set_min_merge_width",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_MIN_MERGE_WIDTH = NativeLibrary.rocksdb("rocksdb_universal_compaction_options_get_min_merge_width",
+		MH_GET_MIN_MERGE_WIDTH = NativeLibrary.downcall("rocksdb_universal_compaction_options_get_min_merge_width",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_MERGE_WIDTH = NativeLibrary.rocksdb("rocksdb_universal_compaction_options_set_max_merge_width",
+		MH_SET_MAX_MERGE_WIDTH = NativeLibrary.downcall("rocksdb_universal_compaction_options_set_max_merge_width",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_MAX_MERGE_WIDTH = NativeLibrary.rocksdb("rocksdb_universal_compaction_options_get_max_merge_width",
+		MH_GET_MAX_MERGE_WIDTH = NativeLibrary.downcall("rocksdb_universal_compaction_options_get_max_merge_width",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_SIZE_AMPLIFICATION_PERCENT = NativeLibrary.rocksdb(
+		MH_SET_MAX_SIZE_AMPLIFICATION_PERCENT = NativeLibrary.downcall(
 				"rocksdb_universal_compaction_options_set_max_size_amplification_percent",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_MAX_SIZE_AMPLIFICATION_PERCENT = NativeLibrary.rocksdb(
+		MH_GET_MAX_SIZE_AMPLIFICATION_PERCENT = NativeLibrary.downcall(
 				"rocksdb_universal_compaction_options_get_max_size_amplification_percent",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_COMPRESSION_SIZE_PERCENT = NativeLibrary.rocksdb(
+		MH_SET_COMPRESSION_SIZE_PERCENT = NativeLibrary.downcall(
 				"rocksdb_universal_compaction_options_set_compression_size_percent",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_COMPRESSION_SIZE_PERCENT = NativeLibrary.rocksdb(
+		MH_GET_COMPRESSION_SIZE_PERCENT = NativeLibrary.downcall(
 				"rocksdb_universal_compaction_options_get_compression_size_percent",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_STOP_STYLE = NativeLibrary.rocksdb("rocksdb_universal_compaction_options_set_stop_style",
+		MH_SET_STOP_STYLE = NativeLibrary.downcall("rocksdb_universal_compaction_options_set_stop_style",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_STOP_STYLE = NativeLibrary.rocksdb("rocksdb_universal_compaction_options_get_stop_style",
+		MH_GET_STOP_STYLE = NativeLibrary.downcall("rocksdb_universal_compaction_options_get_stop_style",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 	}
 

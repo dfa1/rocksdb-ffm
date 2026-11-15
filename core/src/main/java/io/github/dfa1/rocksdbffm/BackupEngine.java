@@ -70,19 +70,19 @@ public final class BackupEngine extends NativeObject {
 	private static final MethodHandle MH_CLOSE;
 
 	static {
-		MH_OPEN = NativeLibrary.rocksdb("rocksdb_backup_engine_open",
+		MH_OPEN = NativeLibrary.downcall("rocksdb_backup_engine_open",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS,   // options
 						ValueLayout.ADDRESS,   // path
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_OPEN_OPTS = NativeLibrary.rocksdb("rocksdb_backup_engine_open_opts",
+		MH_OPEN_OPTS = NativeLibrary.downcall("rocksdb_backup_engine_open_opts",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS,   // options
 						ValueLayout.ADDRESS,   // env
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_CREATE_NEW_BACKUP_FLUSH = NativeLibrary.rocksdb(
+		MH_CREATE_NEW_BACKUP_FLUSH = NativeLibrary.downcall(
 				"rocksdb_backup_engine_create_new_backup_flush",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,   // be
@@ -90,19 +90,19 @@ public final class BackupEngine extends NativeObject {
 						ValueLayout.JAVA_BYTE, // flush_before_backup
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_PURGE_OLD_BACKUPS = NativeLibrary.rocksdb("rocksdb_backup_engine_purge_old_backups",
+		MH_PURGE_OLD_BACKUPS = NativeLibrary.downcall("rocksdb_backup_engine_purge_old_backups",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,  // be
 						ValueLayout.JAVA_INT, // num_backups_to_keep (uint32_t)
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_VERIFY_BACKUP = NativeLibrary.rocksdb("rocksdb_backup_engine_verify_backup",
+		MH_VERIFY_BACKUP = NativeLibrary.downcall("rocksdb_backup_engine_verify_backup",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,  // be
 						ValueLayout.JAVA_INT, // backup_id (uint32_t)
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_RESTORE_FROM_LATEST = NativeLibrary.rocksdb(
+		MH_RESTORE_FROM_LATEST = NativeLibrary.downcall(
 				"rocksdb_backup_engine_restore_db_from_latest_backup",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,  // be
@@ -111,7 +111,7 @@ public final class BackupEngine extends NativeObject {
 						ValueLayout.ADDRESS,  // restore_options
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_RESTORE_FROM_BACKUP = NativeLibrary.rocksdb(
+		MH_RESTORE_FROM_BACKUP = NativeLibrary.downcall(
 				"rocksdb_backup_engine_restore_db_from_backup",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS,  // be
@@ -121,36 +121,36 @@ public final class BackupEngine extends NativeObject {
 						ValueLayout.JAVA_INT, // backup_id (uint32_t)
 						ValueLayout.ADDRESS)); // errptr
 
-		MH_GET_BACKUP_INFO = NativeLibrary.rocksdb("rocksdb_backup_engine_get_backup_info",
+		MH_GET_BACKUP_INFO = NativeLibrary.downcall("rocksdb_backup_engine_get_backup_info",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_INFO_COUNT = NativeLibrary.rocksdb("rocksdb_backup_engine_info_count",
+		MH_INFO_COUNT = NativeLibrary.downcall("rocksdb_backup_engine_info_count",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_INFO_TIMESTAMP = NativeLibrary.rocksdb("rocksdb_backup_engine_info_timestamp",
+		MH_INFO_TIMESTAMP = NativeLibrary.downcall("rocksdb_backup_engine_info_timestamp",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS,  // info
 						ValueLayout.JAVA_INT)); // index
 
-		MH_INFO_BACKUP_ID = NativeLibrary.rocksdb("rocksdb_backup_engine_info_backup_id",
+		MH_INFO_BACKUP_ID = NativeLibrary.downcall("rocksdb_backup_engine_info_backup_id",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT,
 						ValueLayout.ADDRESS,  // info
 						ValueLayout.JAVA_INT)); // index
 
-		MH_INFO_SIZE = NativeLibrary.rocksdb("rocksdb_backup_engine_info_size",
+		MH_INFO_SIZE = NativeLibrary.downcall("rocksdb_backup_engine_info_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG,
 						ValueLayout.ADDRESS,  // info
 						ValueLayout.JAVA_INT)); // index
 
-		MH_INFO_NUMBER_FILES = NativeLibrary.rocksdb("rocksdb_backup_engine_info_number_files",
+		MH_INFO_NUMBER_FILES = NativeLibrary.downcall("rocksdb_backup_engine_info_number_files",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT,
 						ValueLayout.ADDRESS,  // info
 						ValueLayout.JAVA_INT)); // index
 
-		MH_INFO_DESTROY = NativeLibrary.rocksdb("rocksdb_backup_engine_info_destroy",
+		MH_INFO_DESTROY = NativeLibrary.downcall("rocksdb_backup_engine_info_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_CLOSE = NativeLibrary.rocksdb("rocksdb_backup_engine_close",
+		MH_CLOSE = NativeLibrary.downcall("rocksdb_backup_engine_close",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

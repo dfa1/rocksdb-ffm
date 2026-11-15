@@ -47,13 +47,13 @@ public final class LiveFiles extends NativeObject implements Iterable<LiveFileIn
 	private static final MethodHandle MH_DESTROY;
 
 	static {
-		MH_LIVEFILES = NativeLibrary.rocksdb("rocksdb_livefiles",
+		MH_LIVEFILES = NativeLibrary.downcall("rocksdb_livefiles",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_COUNT = NativeLibrary.rocksdb("rocksdb_livefiles_count",
+		MH_COUNT = NativeLibrary.downcall("rocksdb_livefiles_count",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_livefiles_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_livefiles_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

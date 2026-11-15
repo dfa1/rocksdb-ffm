@@ -58,61 +58,61 @@ public final class WriteBufferManager extends NativeObject {
 	private static final MethodHandle MH_SET_FLUSH_POLICY;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_write_buffer_manager_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						NativeCalls.SIZE_T,
 						ValueLayout.JAVA_BYTE));
 
-		MH_CREATE_WITH_CACHE = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_create_with_cache",
+		MH_CREATE_WITH_CACHE = NativeLibrary.downcall("rocksdb_write_buffer_manager_create_with_cache",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS,
 						ValueLayout.JAVA_BYTE));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_write_buffer_manager_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_ENABLED = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_enabled",
+		MH_ENABLED = NativeLibrary.downcall("rocksdb_write_buffer_manager_enabled",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_COST_TO_CACHE = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_cost_to_cache",
+		MH_COST_TO_CACHE = NativeLibrary.downcall("rocksdb_write_buffer_manager_cost_to_cache",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_MEMORY_USAGE = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_memory_usage",
+		MH_MEMORY_USAGE = NativeLibrary.downcall("rocksdb_write_buffer_manager_memory_usage",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_MUTABLE_MEMTABLE_MEMORY_USAGE = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_mutable_memtable_memory_usage",
+		MH_MUTABLE_MEMTABLE_MEMORY_USAGE = NativeLibrary.downcall("rocksdb_write_buffer_manager_mutable_memtable_memory_usage",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_DUMMY_ENTRIES_IN_CACHE_USAGE = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_dummy_entries_in_cache_usage",
+		MH_DUMMY_ENTRIES_IN_CACHE_USAGE = NativeLibrary.downcall("rocksdb_write_buffer_manager_dummy_entries_in_cache_usage",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_BUFFER_SIZE = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_buffer_size",
+		MH_BUFFER_SIZE = NativeLibrary.downcall("rocksdb_write_buffer_manager_buffer_size",
 				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
 
-		MH_SET_BUFFER_SIZE = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_set_buffer_size",
+		MH_SET_BUFFER_SIZE = NativeLibrary.downcall("rocksdb_write_buffer_manager_set_buffer_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
 
-		MH_SET_ALLOW_STALL = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_set_allow_stall",
+		MH_SET_ALLOW_STALL = NativeLibrary.downcall("rocksdb_write_buffer_manager_set_allow_stall",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_CREATE_WITH_POLICY = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_create_with_policy",
+		MH_CREATE_WITH_POLICY = NativeLibrary.downcall("rocksdb_write_buffer_manager_create_with_policy",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						NativeCalls.SIZE_T,
 						ValueLayout.JAVA_BYTE,
 						ValueLayout.JAVA_INT));
 
-		MH_CREATE_WITH_CACHE_AND_POLICY = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_create_with_cache_and_policy",
+		MH_CREATE_WITH_CACHE_AND_POLICY = NativeLibrary.downcall("rocksdb_write_buffer_manager_create_with_cache_and_policy",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS,
 						ValueLayout.JAVA_BYTE,
 						ValueLayout.JAVA_INT));
 
-		MH_FLUSH_POLICY = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_flush_policy",
+		MH_FLUSH_POLICY = NativeLibrary.downcall("rocksdb_write_buffer_manager_flush_policy",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_FLUSH_POLICY = NativeLibrary.rocksdb("rocksdb_write_buffer_manager_set_flush_policy",
+		MH_SET_FLUSH_POLICY = NativeLibrary.downcall("rocksdb_write_buffer_manager_set_flush_policy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 	}
 

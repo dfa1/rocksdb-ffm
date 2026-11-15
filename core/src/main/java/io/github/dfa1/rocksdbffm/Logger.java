@@ -68,13 +68,13 @@ public final class Logger extends NativeObject {
 	private static final MemorySegment GLOBAL_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "dispatch", CALLBACK_DESC);
 
 	static {
-		MH_CREATE_STDERR = NativeLibrary.rocksdb("rocksdb_logger_create_stderr_logger",
+		MH_CREATE_STDERR = NativeLibrary.downcall("rocksdb_logger_create_stderr_logger",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_CREATE_CALLBACK = NativeLibrary.rocksdb("rocksdb_logger_create_callback_logger",
+		MH_CREATE_CALLBACK = NativeLibrary.downcall("rocksdb_logger_create_callback_logger",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_logger_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_logger_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

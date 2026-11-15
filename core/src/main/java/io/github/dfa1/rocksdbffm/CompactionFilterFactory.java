@@ -32,7 +32,7 @@ import java.lang.invoke.MethodHandles;
 public final class CompactionFilterFactory extends NativeObject {
 
 	/// `rocksdb_compactionfilterfactory_t* rocksdb_compactionfilterfactory_create(void* state, void (*destructor)(void*), rocksdb_compactionfilter_t* (*create_compaction_filter)(void*, rocksdb_compactionfiltercontext_t* context), const char* (*name)(void*));`
-	private static final MethodHandle MH_COMPACTIONFILTERFACTORY_CREATE = NativeLibrary.rocksdb(
+	private static final MethodHandle MH_COMPACTIONFILTERFACTORY_CREATE = NativeLibrary.downcall(
 			"rocksdb_compactionfilterfactory_create",
 			FunctionDescriptor.of(ValueLayout.ADDRESS,
 					ValueLayout.ADDRESS,  // state
@@ -41,12 +41,12 @@ public final class CompactionFilterFactory extends NativeObject {
 					ValueLayout.ADDRESS)); // name
 
 	/// `void rocksdb_compactionfilterfactory_destroy(rocksdb_compactionfilterfactory_t*);`
-	private static final MethodHandle MH_COMPACTIONFILTERFACTORY_DESTROY = NativeLibrary.rocksdb(
+	private static final MethodHandle MH_COMPACTIONFILTERFACTORY_DESTROY = NativeLibrary.downcall(
 			"rocksdb_compactionfilterfactory_destroy",
 			FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
 	/// `void rocksdb_options_set_compaction_filter_factory(rocksdb_options_t*, rocksdb_compactionfilterfactory_t*);`
-	private static final MethodHandle MH_SET_COMPACTION_FILTER_FACTORY = NativeLibrary.rocksdb(
+	private static final MethodHandle MH_SET_COMPACTION_FILTER_FACTORY = NativeLibrary.downcall(
 			"rocksdb_options_set_compaction_filter_factory",
 			FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 

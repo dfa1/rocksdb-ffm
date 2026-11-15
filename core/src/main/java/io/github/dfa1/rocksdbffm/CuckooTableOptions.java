@@ -48,40 +48,40 @@ public final class CuckooTableOptions extends NativeObject {
 	private static final MethodHandle MH_GET_USE_MODULE_HASH;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_cuckoo_options_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_cuckoo_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_cuckoo_options_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_cuckoo_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_HASH_TABLE_RATIO = NativeLibrary.rocksdb("rocksdb_cuckoo_options_set_hash_table_ratio",
+		MH_SET_HASH_TABLE_RATIO = NativeLibrary.downcall("rocksdb_cuckoo_options_set_hash_table_ratio",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
 
-		MH_GET_HASH_TABLE_RATIO = NativeLibrary.rocksdb("rocksdb_cuckoo_options_get_hash_table_ratio",
+		MH_GET_HASH_TABLE_RATIO = NativeLibrary.downcall("rocksdb_cuckoo_options_get_hash_table_ratio",
 				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
 
-		MH_SET_MAX_SEARCH_DEPTH = NativeLibrary.rocksdb("rocksdb_cuckoo_options_set_max_search_depth",
+		MH_SET_MAX_SEARCH_DEPTH = NativeLibrary.downcall("rocksdb_cuckoo_options_set_max_search_depth",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_MAX_SEARCH_DEPTH = NativeLibrary.rocksdb("rocksdb_cuckoo_options_get_max_search_depth",
+		MH_GET_MAX_SEARCH_DEPTH = NativeLibrary.downcall("rocksdb_cuckoo_options_get_max_search_depth",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_CUCKOO_BLOCK_SIZE = NativeLibrary.rocksdb("rocksdb_cuckoo_options_set_cuckoo_block_size",
+		MH_SET_CUCKOO_BLOCK_SIZE = NativeLibrary.downcall("rocksdb_cuckoo_options_set_cuckoo_block_size",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
-		MH_GET_CUCKOO_BLOCK_SIZE = NativeLibrary.rocksdb("rocksdb_cuckoo_options_get_cuckoo_block_size",
+		MH_GET_CUCKOO_BLOCK_SIZE = NativeLibrary.downcall("rocksdb_cuckoo_options_get_cuckoo_block_size",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
-		MH_SET_IDENTITY_AS_FIRST_HASH = NativeLibrary.rocksdb("rocksdb_cuckoo_options_set_identity_as_first_hash",
+		MH_SET_IDENTITY_AS_FIRST_HASH = NativeLibrary.downcall("rocksdb_cuckoo_options_set_identity_as_first_hash",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_IDENTITY_AS_FIRST_HASH = NativeLibrary.rocksdb("rocksdb_cuckoo_options_get_identity_as_first_hash",
+		MH_GET_IDENTITY_AS_FIRST_HASH = NativeLibrary.downcall("rocksdb_cuckoo_options_get_identity_as_first_hash",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_USE_MODULE_HASH = NativeLibrary.rocksdb("rocksdb_cuckoo_options_set_use_module_hash",
+		MH_SET_USE_MODULE_HASH = NativeLibrary.downcall("rocksdb_cuckoo_options_set_use_module_hash",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_USE_MODULE_HASH = NativeLibrary.rocksdb("rocksdb_cuckoo_options_get_use_module_hash",
+		MH_GET_USE_MODULE_HASH = NativeLibrary.downcall("rocksdb_cuckoo_options_get_use_module_hash",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 	}
 

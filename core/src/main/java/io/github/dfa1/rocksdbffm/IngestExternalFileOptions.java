@@ -34,28 +34,28 @@ public final class IngestExternalFileOptions extends NativeObject {
 	private static final MethodHandle MH_SET_FAIL_IF_NOT_BOTTOMMOST_LEVEL;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_ingestexternalfileoptions_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_ingestexternalfileoptions_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_ingestexternalfileoptions_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_ingestexternalfileoptions_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_MOVE_FILES = NativeLibrary.rocksdb("rocksdb_ingestexternalfileoptions_set_move_files",
+		MH_SET_MOVE_FILES = NativeLibrary.downcall("rocksdb_ingestexternalfileoptions_set_move_files",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_SET_SNAPSHOT_CONSISTENCY = NativeLibrary.rocksdb("rocksdb_ingestexternalfileoptions_set_snapshot_consistency",
+		MH_SET_SNAPSHOT_CONSISTENCY = NativeLibrary.downcall("rocksdb_ingestexternalfileoptions_set_snapshot_consistency",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_SET_ALLOW_GLOBAL_SEQNO = NativeLibrary.rocksdb("rocksdb_ingestexternalfileoptions_set_allow_global_seqno",
+		MH_SET_ALLOW_GLOBAL_SEQNO = NativeLibrary.downcall("rocksdb_ingestexternalfileoptions_set_allow_global_seqno",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_SET_ALLOW_BLOCKING_FLUSH = NativeLibrary.rocksdb("rocksdb_ingestexternalfileoptions_set_allow_blocking_flush",
+		MH_SET_ALLOW_BLOCKING_FLUSH = NativeLibrary.downcall("rocksdb_ingestexternalfileoptions_set_allow_blocking_flush",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_SET_INGEST_BEHIND = NativeLibrary.rocksdb("rocksdb_ingestexternalfileoptions_set_ingest_behind",
+		MH_SET_INGEST_BEHIND = NativeLibrary.downcall("rocksdb_ingestexternalfileoptions_set_ingest_behind",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_SET_FAIL_IF_NOT_BOTTOMMOST_LEVEL = NativeLibrary.rocksdb(
+		MH_SET_FAIL_IF_NOT_BOTTOMMOST_LEVEL = NativeLibrary.downcall(
 				"rocksdb_ingestexternalfileoptions_set_fail_if_not_bottommost_level",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 	}

@@ -114,7 +114,10 @@ drawing any conclusion from a RocksDB-shaped one.
 
 - Real upfront investigation work before any further `critical(false)` marking lands — this ADR
   authorizes a study, not a rollout. Until it's done, `critical(false)` stays exactly where it already
-  was before this experiment: `PinnableHandle` only.
+  was before this experiment: `PinnableHandle` only. The one later exception is not a speed claim:
+  `RocksIterator`'s `rocksdb_iter_key`/`_value` are `critical(true)` so their `size_t*` out-param can
+  be a heap `long[1]` instead of `malloc`'d memory; both only read the current entry's `Slice`
+  (`db/c.cc`), so they cannot block.
 - The microbenchmark step (1) only measures the JVM-side transition cost in isolation; it cannot
   measure how much of `PinnableSlice`'s originally-observed 6-7% was genuine native-side work
   (`rocksdb_pinnableslice_destroy`'s actual `delete`) that no linker option can remove — that would

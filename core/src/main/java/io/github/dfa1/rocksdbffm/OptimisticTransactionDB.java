@@ -46,15 +46,15 @@ public final class OptimisticTransactionDB extends NativeDBWithBaseDB
 	private static final MethodHandle MH_CLOSE_BASE_DB;
 
 	static {
-		MH_CLOSE = NativeLibrary.rocksdb("rocksdb_optimistictransactiondb_close",
+		MH_CLOSE = NativeLibrary.downcall("rocksdb_optimistictransactiondb_close",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_BEGIN = NativeLibrary.rocksdb("rocksdb_optimistictransaction_begin",
+		MH_BEGIN = NativeLibrary.downcall("rocksdb_optimistictransaction_begin",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_CLOSE_BASE_DB = NativeLibrary.rocksdb("rocksdb_optimistictransactiondb_close_base_db",
+		MH_CLOSE_BASE_DB = NativeLibrary.downcall("rocksdb_optimistictransactiondb_close_base_db",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 	}
 

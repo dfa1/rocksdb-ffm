@@ -39,34 +39,34 @@ public final class WaitForCompactOptions extends NativeObject {
 	private static final MethodHandle MH_GET_TIMEOUT;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_wait_for_compact_options_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_wait_for_compact_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_wait_for_compact_options_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_wait_for_compact_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_ABORT_ON_PAUSE = NativeLibrary.rocksdb("rocksdb_wait_for_compact_options_set_abort_on_pause",
+		MH_SET_ABORT_ON_PAUSE = NativeLibrary.downcall("rocksdb_wait_for_compact_options_set_abort_on_pause",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_ABORT_ON_PAUSE = NativeLibrary.rocksdb("rocksdb_wait_for_compact_options_get_abort_on_pause",
+		MH_GET_ABORT_ON_PAUSE = NativeLibrary.downcall("rocksdb_wait_for_compact_options_get_abort_on_pause",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_FLUSH = NativeLibrary.rocksdb("rocksdb_wait_for_compact_options_set_flush",
+		MH_SET_FLUSH = NativeLibrary.downcall("rocksdb_wait_for_compact_options_set_flush",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_FLUSH = NativeLibrary.rocksdb("rocksdb_wait_for_compact_options_get_flush",
+		MH_GET_FLUSH = NativeLibrary.downcall("rocksdb_wait_for_compact_options_get_flush",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_CLOSE_DB = NativeLibrary.rocksdb("rocksdb_wait_for_compact_options_set_close_db",
+		MH_SET_CLOSE_DB = NativeLibrary.downcall("rocksdb_wait_for_compact_options_set_close_db",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
 
-		MH_GET_CLOSE_DB = NativeLibrary.rocksdb("rocksdb_wait_for_compact_options_get_close_db",
+		MH_GET_CLOSE_DB = NativeLibrary.downcall("rocksdb_wait_for_compact_options_get_close_db",
 				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_SET_TIMEOUT = NativeLibrary.rocksdb("rocksdb_wait_for_compact_options_set_timeout",
+		MH_SET_TIMEOUT = NativeLibrary.downcall("rocksdb_wait_for_compact_options_set_timeout",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_TIMEOUT = NativeLibrary.rocksdb("rocksdb_wait_for_compact_options_get_timeout",
+		MH_GET_TIMEOUT = NativeLibrary.downcall("rocksdb_wait_for_compact_options_get_timeout",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 	}
 

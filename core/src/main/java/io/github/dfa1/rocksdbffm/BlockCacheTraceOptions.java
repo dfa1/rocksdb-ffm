@@ -23,16 +23,16 @@ public final class BlockCacheTraceOptions extends NativeObject {
 	private static final MethodHandle MH_GET_SAMPLING_FREQUENCY;
 
 	static {
-		MH_CREATE = NativeLibrary.rocksdb("rocksdb_block_cache_trace_options_create",
+		MH_CREATE = NativeLibrary.downcall("rocksdb_block_cache_trace_options_create",
 				FunctionDescriptor.of(ValueLayout.ADDRESS));
 
-		MH_DESTROY = NativeLibrary.rocksdb("rocksdb_block_cache_trace_options_destroy",
+		MH_DESTROY = NativeLibrary.downcall("rocksdb_block_cache_trace_options_destroy",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_SET_SAMPLING_FREQUENCY = NativeLibrary.rocksdb("rocksdb_block_cache_trace_options_set_sampling_frequency",
+		MH_SET_SAMPLING_FREQUENCY = NativeLibrary.downcall("rocksdb_block_cache_trace_options_set_sampling_frequency",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
-		MH_GET_SAMPLING_FREQUENCY = NativeLibrary.rocksdb("rocksdb_block_cache_trace_options_get_sampling_frequency",
+		MH_GET_SAMPLING_FREQUENCY = NativeLibrary.downcall("rocksdb_block_cache_trace_options_get_sampling_frequency",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 	}
 

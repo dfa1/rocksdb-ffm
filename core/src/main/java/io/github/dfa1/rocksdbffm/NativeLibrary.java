@@ -31,20 +31,20 @@ public class NativeLibrary {
 	private static final Linker LINKER = Linker.nativeLinker();
 	private static final SymbolLookup LIB = SymbolLookup.libraryLookup(resolveLibPath(), Arena.ofAuto());
 
-	static MethodHandle rocksdb(String name, FunctionDescriptor fd, Linker.Option... options) {
+	/// Creates a downcall handle for the symbol `name` of the bundled `librocksdb`, the only library this project binds
+	/// (never libc: see `AGENTS.md`, "No C `malloc`"). Meant for a `private static final` `MH_` field: a missing
+	/// symbol fails class initialization.
+	///
+	/// @param name    the C symbol, as declared in `rocksdb/c.h`
+	/// @param fd      the native signature of `name`
+	/// @param options linker options, e.g. `Linker.Option.critical(...)` for a pure accessor that cannot block
+	/// @return a handle invoking `name`
+	/// @throws UnsatisfiedLinkError if `librocksdb` does not export `name`
+	static MethodHandle downcall(String name, FunctionDescriptor fd, Linker.Option... options) {
 		return LINKER.downcallHandle(
 				LIB.find(name).orElseThrow(() ->
 						new UnsatisfiedLinkError("Symbol not found: " + name)),
 				fd, options);
-	}
-
-	/// Like [#rocksdb(String, FunctionDescriptor, Linker.Option...)] but for a libc symbol (e.g. `malloc`), which the
-	/// bundled RocksDB library does not export on every platform: resolved through the platform's default lookup.
-	static MethodHandle libc(String name, FunctionDescriptor fd) {
-		return LINKER.downcallHandle(
-				LINKER.defaultLookup().find(name).orElseThrow(() ->
-						new UnsatisfiedLinkError("Symbol not found: " + name)),
-				fd);
 	}
 
 	/// Creates a global-lifetime upcall stub for the private static method `name` of `lookup`'s class, whose Java

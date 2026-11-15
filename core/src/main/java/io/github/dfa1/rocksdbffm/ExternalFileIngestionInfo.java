@@ -16,22 +16,22 @@ import java.nio.file.Path;
 public final class ExternalFileIngestionInfo {
 
 	/// `const char* rocksdb_externalfileingestioninfo_cf_name(const rocksdb_externalfileingestioninfo_t*, size_t* size);`
-	private static final MethodHandle MH_CF_NAME = NativeLibrary.rocksdb(
+	private static final MethodHandle MH_CF_NAME = NativeLibrary.downcall(
 			"rocksdb_externalfileingestioninfo_cf_name",
 			FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 	/// `const char* rocksdb_externalfileingestioninfo_external_file_path(const rocksdb_externalfileingestioninfo_t*, size_t* size);`
-	private static final MethodHandle MH_EXTERNAL_FILE_PATH = NativeLibrary.rocksdb(
+	private static final MethodHandle MH_EXTERNAL_FILE_PATH = NativeLibrary.downcall(
 			"rocksdb_externalfileingestioninfo_external_file_path",
 			FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 	/// `const char* rocksdb_externalfileingestioninfo_internal_file_path(const rocksdb_externalfileingestioninfo_t*, size_t* size);`
-	private static final MethodHandle MH_INTERNAL_FILE_PATH = NativeLibrary.rocksdb(
+	private static final MethodHandle MH_INTERNAL_FILE_PATH = NativeLibrary.downcall(
 			"rocksdb_externalfileingestioninfo_internal_file_path",
 			FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
 	/// `uint64_t rocksdb_externalfileingestioninfo_global_seqno(const rocksdb_externalfileingestioninfo_t*);`
-	private static final MethodHandle MH_GLOBAL_SEQNO = NativeLibrary.rocksdb(
+	private static final MethodHandle MH_GLOBAL_SEQNO = NativeLibrary.downcall(
 			"rocksdb_externalfileingestioninfo_global_seqno",
 			FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 

@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 abstract class NativeDB extends NativeObjectWithChildren {
 
 	/// `void rocksdb_close(rocksdb_t* db);`
-	private static final MethodHandle MH_CLOSE = NativeLibrary.rocksdb("rocksdb_close", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+	private static final MethodHandle MH_CLOSE = NativeLibrary.downcall("rocksdb_close", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
 	/// In open order, then creation order. An immutable snapshot replaced wholesale on every change
 	/// (copy-on-write): lookups are lock-free, and changes happen only on open, create and drop.

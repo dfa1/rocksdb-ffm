@@ -75,95 +75,95 @@ public final class TransactionDB extends NativeDBWithBaseDB
 
 
 	static {
-		MH_CLOSE = NativeLibrary.rocksdb("rocksdb_transactiondb_close",
+		MH_CLOSE = NativeLibrary.downcall("rocksdb_transactiondb_close",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_CLOSE_BASE_DB = NativeLibrary.rocksdb("rocksdb_transactiondb_close_base_db",
+		MH_CLOSE_BASE_DB = NativeLibrary.downcall("rocksdb_transactiondb_close_base_db",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
 
-		MH_BEGIN = NativeLibrary.rocksdb("rocksdb_transaction_begin",
+		MH_BEGIN = NativeLibrary.downcall("rocksdb_transaction_begin",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_PUT = NativeLibrary.rocksdb("rocksdb_transactiondb_put",
+		MH_PUT = NativeLibrary.downcall("rocksdb_transactiondb_put",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_DELETE = NativeLibrary.rocksdb("rocksdb_transactiondb_delete",
+		MH_DELETE = NativeLibrary.downcall("rocksdb_transactiondb_delete",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_MERGE = NativeLibrary.rocksdb("rocksdb_transactiondb_merge",
+		MH_MERGE = NativeLibrary.downcall("rocksdb_transactiondb_merge",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_GET_PINNED = NativeLibrary.rocksdb("rocksdb_transactiondb_get_pinned",
+		MH_GET_PINNED = NativeLibrary.downcall("rocksdb_transactiondb_get_pinned",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_PUT_CF = NativeLibrary.rocksdb("rocksdb_transactiondb_put_cf",
+		MH_PUT_CF = NativeLibrary.downcall("rocksdb_transactiondb_put_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_DELETE_CF = NativeLibrary.rocksdb("rocksdb_transactiondb_delete_cf",
+		MH_DELETE_CF = NativeLibrary.downcall("rocksdb_transactiondb_delete_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_MERGE_CF = NativeLibrary.rocksdb("rocksdb_transactiondb_merge_cf",
+		MH_MERGE_CF = NativeLibrary.downcall("rocksdb_transactiondb_merge_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_GET_PINNED_CF = NativeLibrary.rocksdb("rocksdb_transactiondb_get_pinned_cf",
+		MH_GET_PINNED_CF = NativeLibrary.downcall("rocksdb_transactiondb_get_pinned_cf",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
 						ValueLayout.ADDRESS));
 
-		MH_CREATE_ITERATOR_CF = NativeLibrary.rocksdb("rocksdb_transactiondb_create_iterator_cf",
+		MH_CREATE_ITERATOR_CF = NativeLibrary.downcall("rocksdb_transactiondb_create_iterator_cf",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_FLUSH_CF = NativeLibrary.rocksdb("rocksdb_transactiondb_flush_cf",
+		MH_FLUSH_CF = NativeLibrary.downcall("rocksdb_transactiondb_flush_cf",
 				FunctionDescriptor.ofVoid(
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_CREATE_SNAPSHOT = NativeLibrary.rocksdb("rocksdb_transactiondb_create_snapshot",
+		MH_CREATE_SNAPSHOT = NativeLibrary.downcall("rocksdb_transactiondb_create_snapshot",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_CREATE_CF = NativeLibrary.rocksdb("rocksdb_transactiondb_create_column_family",
+		MH_CREATE_CF = NativeLibrary.downcall("rocksdb_transactiondb_create_column_family",
 				FunctionDescriptor.of(ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_FLUSH = NativeLibrary.rocksdb("rocksdb_transactiondb_flush",
+		MH_FLUSH = NativeLibrary.downcall("rocksdb_transactiondb_flush",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_FLUSH_WAL = NativeLibrary.rocksdb("rocksdb_transactiondb_flush_wal",
+		MH_FLUSH_WAL = NativeLibrary.downcall("rocksdb_transactiondb_flush_wal",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
 
-		MH_PROPERTY_VALUE = NativeLibrary.rocksdb("rocksdb_transactiondb_property_value",
+		MH_PROPERTY_VALUE = NativeLibrary.downcall("rocksdb_transactiondb_property_value",
 				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
-		MH_PROPERTY_INT = NativeLibrary.rocksdb("rocksdb_transactiondb_property_int",
+		MH_PROPERTY_INT = NativeLibrary.downcall("rocksdb_transactiondb_property_int",
 				FunctionDescriptor.of(ValueLayout.JAVA_INT,
 						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}

@@ -37,10 +37,10 @@ public final class Snapshot extends NativeObject {
 	// rocksdb_free(ptr*) — for Transaction snapshots
 
 	static {
-		MH_SEQUENCE_NUMBER = NativeLibrary.rocksdb("rocksdb_snapshot_get_sequence_number",
+		MH_SEQUENCE_NUMBER = NativeLibrary.downcall("rocksdb_snapshot_get_sequence_number",
 				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-		MH_RELEASE = NativeLibrary.rocksdb("rocksdb_release_snapshot",
+		MH_RELEASE = NativeLibrary.downcall("rocksdb_release_snapshot",
 				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 	}
 
