@@ -2,12 +2,10 @@ package io.github.dfa1.rocksdbffm;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,8 +74,8 @@ public sealed interface MergeOperator {
 		/// @param existingValue zero-copy view of the current value, or `null` if the key does
 		///                      not exist yet
 		/// @param operands      zero-copy views of merge operands queued for this key, oldest first
-		/// @return the folded value to store; still copied into a malloc'd buffer once on the way
-		/// out, since RocksDB takes ownership of the returned pointer
+		/// @return the folded value to store; copied once into a reused per-thread native buffer
+		/// on the way out
 		byte[] fullMerge(MemorySegment key, MemorySegment existingValue, List<MemorySegment> operands);
 	}
 
@@ -148,43 +146,26 @@ public sealed interface MergeOperator {
 
 		private static final FunctionDescriptor DESTRUCTOR_DESC = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
 
+		private static final FunctionDescriptor DELETE_VALUE_DESC = FunctionDescriptor.ofVoid(
+				ValueLayout.ADDRESS,   // state
+				ValueLayout.ADDRESS,   // value
+				NativeCalls.SIZE_T);   // value_length
+
 		private static final FunctionDescriptor NAME_DESC = FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS);
 
 		// One global upcall stub per callback shape, shared by every Custom instance. Lives for the
 		// JVM lifetime so the function pointers are always valid; dispatch is keyed off the `state`
 		// pointer, which carries a registry ID rather than real memory (same trick as Logger).
-		private static final MemorySegment FULL_MERGE_STUB;
-		private static final MemorySegment PARTIAL_MERGE_STUB;
-		private static final MemorySegment DESTRUCTOR_STUB;
-		private static final MemorySegment NAME_STUB;
+		private static final MemorySegment FULL_MERGE_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "fullMergeDispatch", FULL_MERGE_DESC);
+		private static final MemorySegment PARTIAL_MERGE_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "partialMergeDispatch", PARTIAL_MERGE_DESC);
+		private static final MemorySegment DESTRUCTOR_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "destructorDispatch", DESTRUCTOR_DESC);
+		private static final MemorySegment NAME_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "nameDispatch", NAME_DESC);
+		private static final MemorySegment DELETE_VALUE_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "deleteValueDispatch", DELETE_VALUE_DESC);
 
-		static {
-			try {
-				MethodHandles.Lookup lookup = MethodHandles.lookup();
-				FULL_MERGE_STUB = Linker.nativeLinker().upcallStub(
-						lookup.findStatic(Custom.class, "fullMergeDispatch", MethodType.methodType(
-								MemorySegment.class, MemorySegment.class, MemorySegment.class, long.class,
-								MemorySegment.class, long.class, MemorySegment.class, MemorySegment.class,
-								int.class, MemorySegment.class, MemorySegment.class)),
-						FULL_MERGE_DESC, Arena.global());
-				PARTIAL_MERGE_STUB = Linker.nativeLinker().upcallStub(
-						lookup.findStatic(Custom.class, "partialMergeDispatch", MethodType.methodType(
-								MemorySegment.class, MemorySegment.class, MemorySegment.class, long.class,
-								MemorySegment.class, MemorySegment.class, int.class, MemorySegment.class,
-								MemorySegment.class)),
-						PARTIAL_MERGE_DESC, Arena.global());
-				DESTRUCTOR_STUB = Linker.nativeLinker().upcallStub(
-						lookup.findStatic(Custom.class, "destructorDispatch",
-								MethodType.methodType(void.class, MemorySegment.class)),
-						DESTRUCTOR_DESC, Arena.global());
-				NAME_STUB = Linker.nativeLinker().upcallStub(
-						lookup.findStatic(Custom.class, "nameDispatch",
-								MethodType.methodType(MemorySegment.class, MemorySegment.class)),
-						NAME_DESC, Arena.global());
-			} catch (ReflectiveOperationException e) {
-				throw new ExceptionInInitializerError(e);
-			}
-		}
+		/// Per-thread buffer every merge result is returned in, grown as needed. Safe to reuse: `db/c.cc` copies the
+		/// result out (`assign`) before the calling thread can merge again, and [#deleteValueDispatch] keeps RocksDB
+		/// from `free()`ing it. `Arena.ofAuto()` so a dead thread's (or an outgrown) buffer is reclaimed by the GC.
+		private static final ThreadLocal<MemorySegment> SCRATCH = ThreadLocal.withInitial(() -> MemorySegment.NULL);
 
 		private record State(FullMergeFn fn, MemorySegment nameSeg) {
 		}
@@ -209,7 +190,7 @@ public sealed interface MergeOperator {
 			try {
 				MemorySegment ptr = (MemorySegment) MH_MERGEOPERATOR_CREATE.invokeExact(
 						statePtr, DESTRUCTOR_STUB, FULL_MERGE_STUB, PARTIAL_MERGE_STUB,
-						MemorySegment.NULL, NAME_STUB);
+						DELETE_VALUE_STUB, NAME_STUB);
 				return new Custom(ptr);
 			} catch (Throwable t) {
 				REGISTRY.unregister(statePtr);
@@ -231,10 +212,12 @@ public sealed interface MergeOperator {
 			MH_MERGEOPERATOR_DESTROY.invokeExact(ptr);
 		}
 
-		private static MemorySegment mallocCopy(byte[] data) {
-			// `full_merge`/`partial_merge` hand a malloc'd buffer back to RocksDB, which copies it out and frees it
-			// with plain `free()` (`delete_value` is passed as `NULL`, see [#create(String, FullMergeFn)]).
-			MemorySegment buf = NativeCalls.malloc(data.length);
+		private static MemorySegment scratchCopy(byte[] data) {
+			MemorySegment buf = SCRATCH.get();
+			if (buf.byteSize() < data.length) {
+				buf = Arena.ofAuto().allocate(Math.max(data.length, 2 * buf.byteSize()));
+				SCRATCH.set(buf);
+			}
 			MemorySegment.copy(data, 0, buf, ValueLayout.JAVA_BYTE, 0, data.length);
 			return buf;
 		}
@@ -301,14 +284,14 @@ public sealed interface MergeOperator {
 				byte[] result = s.fn().fullMerge(keyView, existingView, operandViews);
 				successPtr.set(ValueLayout.JAVA_BYTE, 0, (byte) 1);
 				newValueLenPtr.set(NativeCalls.SIZE_T, 0, result.length);
-				return requireNonNullUpcallResult(mallocCopy(result), "fullMergeDispatch");
+				return requireNonNullUpcallResult(scratchCopy(result), "fullMergeDispatch");
 			} catch (Throwable t) {
 				// must not throw across the upcall boundary — an escaping AssertionError here
 				// (assertions are on by default under Surefire) would abort the JVM, not just
 				// this call, so report failure to RocksDB instead of asserting.
 				LOG.log(System.Logger.Level.ERROR, "fullMerge callback failed", t);
 				writeMergeFailure(successPtr, newValueLenPtr);
-				return mallocCopy(new byte[0]);
+				return EMPTY;
 			}
 		}
 
@@ -322,12 +305,12 @@ public sealed interface MergeOperator {
 			MemorySegment newValueLenPtr = newValueLen.reinterpret(NativeCalls.SIZE_T.byteSize());
 			try {
 				writeMergeFailure(successPtr, newValueLenPtr);
-				return mallocCopy(new byte[0]);
+				return EMPTY;
 			} catch (Throwable t) {
 				// same "must not throw" contract as fullMergeDispatch.
 				LOG.log(System.Logger.Level.ERROR, "partialMerge callback failed", t);
 				writeMergeFailure(successPtr, newValueLenPtr);
-				return mallocCopy(new byte[0]);
+				return EMPTY;
 			}
 		}
 
@@ -338,23 +321,30 @@ public sealed interface MergeOperator {
 			REGISTRY.unregister(state);
 		}
 
-		/// Fallback for [#nameDispatch] when the registry entry is missing. RocksDB's `Name()`
-		/// does `std::string(name)` on whatever this returns with no null check of its own, so
-		/// unlike the full/partial-merge paths — where `MemorySegment.NULL` legitimately means
-		/// "nothing to report" to code that checks for it — a raw null pointer here would itself
-		/// be a native crash; an empty, NUL-terminated C string is the safe equivalent.
-		private static final MemorySegment EMPTY_NAME = Arena.global().allocateFrom("");
+		/// Called from [#DELETE_VALUE_STUB] once RocksDB has copied a merge result out. Deliberately a no-op:
+		/// every result is [#SCRATCH] or [#EMPTY], both owned on the Java side; its mere presence stops `db/c.cc`
+		/// from calling `free()` on them instead.
+		private static void deleteValueDispatch(MemorySegment state, MemorySegment value, long valueLength) {
+			// nothing to release
+		}
+
+		/// Empty, NUL-terminated native string, returned wherever an upcall has nothing to hand back:
+		/// zero-length merge results (copied out by RocksDB, never freed — see [#deleteValueDispatch]),
+		/// and [#nameDispatch]'s fallback when the registry entry is missing. RocksDB's `Name()` does
+		/// `std::string(name)` with no null check of its own, so a raw null pointer there would be a
+		/// native crash.
+		private static final MemorySegment EMPTY = Arena.global().allocateFrom("");
 
 		/// Called from [#NAME_STUB]. Must not throw, and must never return a value that isn't
-		/// a valid NUL-terminated native string (see [#EMPTY_NAME]).
+		/// a valid NUL-terminated native string (see [#EMPTY]).
 		private static MemorySegment nameDispatch(MemorySegment state) {
 			try {
 				State s = REGISTRY.get(state);
-				return requireNonNullUpcallResult(s != null ? s.nameSeg() : EMPTY_NAME, "nameDispatch");
+				return requireNonNullUpcallResult(s != null ? s.nameSeg() : EMPTY, "nameDispatch");
 			} catch (Throwable t) {
 				// same "must not throw" contract as fullMergeDispatch/partialMergeDispatch.
 				LOG.log(System.Logger.Level.ERROR, "nameDispatch failed", t);
-				return EMPTY_NAME;
+				return EMPTY;
 			}
 		}
 	}

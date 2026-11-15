@@ -5,8 +5,10 @@ import java.io.InputStream;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SymbolLookup;
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -43,6 +45,22 @@ public class NativeLibrary {
 				LINKER.defaultLookup().find(name).orElseThrow(() ->
 						new UnsatisfiedLinkError("Symbol not found: " + name)),
 				fd);
+	}
+
+	/// Creates a global-lifetime upcall stub for the private static method `name` of `lookup`'s class, whose Java
+	/// signature is derived from `fd`. Meant for the `static` block of a callback host: a method that does not match
+	/// `fd` fails class initialization.
+	///
+	/// @param lookup the caller's own lookup (`MethodHandles.lookup()`), so private dispatch methods are reachable
+	/// @param name name of the static method to expose to native code
+	/// @param fd the native signature the stub presents
+	/// @return the stub's native entry point, valid for the life of the JVM
+	static MemorySegment upcall(MethodHandles.Lookup lookup, String name, FunctionDescriptor fd) {
+		try {
+			return LINKER.upcallStub(lookup.findStatic(lookup.lookupClass(), name, fd.toMethodType()), fd, Arena.global());
+		} catch (ReflectiveOperationException e) {
+			throw new ExceptionInInitializerError(e);
+		}
 	}
 
 	private static Path resolveLibPath() {

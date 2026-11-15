@@ -2,12 +2,10 @@ package io.github.dfa1.rocksdbffm;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -97,31 +95,9 @@ public final class CompactionFilter extends NativeObject {
 	// One global upcall stub per callback shape, shared by every instance. Lives for the JVM
 	// lifetime so the function pointers are always valid; dispatch is keyed off the `state`
 	// pointer, which carries a registry ID rather than real memory (same trick as MergeOperator.Custom).
-	private static final MemorySegment FILTER_STUB;
-	private static final MemorySegment DESTRUCTOR_STUB;
-	private static final MemorySegment NAME_STUB;
-
-	static {
-		try {
-			MethodHandles.Lookup lookup = MethodHandles.lookup();
-			FILTER_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(CompactionFilter.class, "filterDispatch", MethodType.methodType(
-							byte.class, MemorySegment.class, int.class, MemorySegment.class, long.class,
-							MemorySegment.class, long.class, MemorySegment.class, MemorySegment.class,
-							MemorySegment.class)),
-					FILTER_DESC, Arena.global());
-			DESTRUCTOR_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(CompactionFilter.class, "destructorDispatch",
-							MethodType.methodType(void.class, MemorySegment.class)),
-					DESTRUCTOR_DESC, Arena.global());
-			NAME_STUB = Linker.nativeLinker().upcallStub(
-					lookup.findStatic(CompactionFilter.class, "nameDispatch",
-							MethodType.methodType(MemorySegment.class, MemorySegment.class)),
-					NAME_DESC, Arena.global());
-		} catch (ReflectiveOperationException e) {
-			throw new ExceptionInInitializerError(e);
-		}
-	}
+	private static final MemorySegment FILTER_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "filterDispatch", FILTER_DESC);
+	private static final MemorySegment DESTRUCTOR_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "destructorDispatch", DESTRUCTOR_DESC);
+	private static final MemorySegment NAME_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "nameDispatch", NAME_DESC);
 
 	/// `scratchBuffers` backs [#scratchBuffer(State, byte[])] — one buffer per compaction thread
 	/// that has returned a [FilterDecision.ChangeValue], reused and grown as needed rather than
