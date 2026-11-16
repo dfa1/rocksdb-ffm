@@ -23,15 +23,16 @@ class NativeObjectParentTest {
 
 	private static final class TestParent extends NativeObjectParent {
 
-		final AtomicInteger tryCloseResourceCount = new AtomicInteger();
+		final AtomicInteger tryCloseCount = new AtomicInteger();
 
 		TestParent(MemorySegment ptr) {
 			super(ptr);
 		}
 
 		@Override
-		protected void tryCloseResource(MemorySegment ptr) {
-			tryCloseResourceCount.incrementAndGet();
+		protected void tryClose(MemorySegment ptr) {
+			releaseChildren();
+			tryCloseCount.incrementAndGet();
 		}
 	}
 
@@ -65,7 +66,7 @@ class NativeObjectParentTest {
 
 		// Then
 		assertThat(child.tryCloseCount).hasValue(1);
-		assertThat(parent.tryCloseResourceCount).hasValue(1);
+		assertThat(parent.tryCloseCount).hasValue(1);
 	}
 
 	@Test
@@ -179,7 +180,8 @@ class NativeObjectParentTest {
 		var childMayFinish = new CountDownLatch(1);
 		var parent = new NativeObjectParent(fakePtr(0x1)) {
 			@Override
-			protected void tryCloseResource(MemorySegment ptr) {
+			protected void tryClose(MemorySegment ptr) {
+				releaseChildren();
 				order.add("parent");
 			}
 		};
@@ -322,13 +324,15 @@ class NativeObjectParentTest {
 		var grandchildMayFinish = new CountDownLatch(1);
 		var grandparent = new NativeObjectParent(fakePtr(0x1)) {
 			@Override
-			protected void tryCloseResource(MemorySegment ptr) {
+			protected void tryClose(MemorySegment ptr) {
+				releaseChildren();
 				order.add("grandparent");
 			}
 		};
 		var child = new NativeObjectParent(fakePtr(0x2)) {
 			@Override
-			protected void tryCloseResource(MemorySegment ptr) {
+			protected void tryClose(MemorySegment ptr) {
+				releaseChildren();
 				order.add("child");
 			}
 		};

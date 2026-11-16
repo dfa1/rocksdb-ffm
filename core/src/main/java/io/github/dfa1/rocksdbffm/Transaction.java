@@ -849,7 +849,7 @@ public final class Transaction extends NativeObjectParent {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_COMMIT.invokeExact(ptr(), err);
 			NativeCalls.checkError(err);
-			releaseChildren(NativeObjectChild.class);
+			releaseChildren();
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("transaction commit failed", t);
 		}
@@ -862,7 +862,7 @@ public final class Transaction extends NativeObjectParent {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_ROLLBACK.invokeExact(ptr(), err);
 			NativeCalls.checkError(err);
-			releaseChildren(NativeObjectChild.class);
+			releaseChildren();
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("transaction rollback failed", t);
 		}
@@ -894,7 +894,8 @@ public final class Transaction extends NativeObjectParent {
 	/// call [#commit()] or [#rollback()] first: anything uncommitted is discarded. Its iterators are
 	/// closed first, and a transaction closed on its own stops being tracked by its database.
 	@Override
-	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
+	protected void tryClose(MemorySegment ptr) throws Throwable {
+		releaseChildren();
 		MH_DESTROY.invokeExact(ptr);
 	}
 

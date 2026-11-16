@@ -71,19 +71,18 @@ public abstract class NativeObject implements AutoCloseable {
 	}
 
 	/// Releases the native resource, unless this object is immortal. A wrapper that is released by its owner and
-	/// not by whoever holds it (a [ColumnFamilyHandle]) overrides this as a no-op; `release()`
-	/// still frees it.
+	/// not by whoever holds it (a [ColumnFamilyHandle]) overrides this as a no-op; `release()` still frees it.
 	///
 	/// Returns at once if another thread is already releasing this object, instead of waiting for it: only a
-	/// parent's sweep needs that wait, and it goes through `release()`. A native release can block
-	/// on a callback thread (`rocksdb_close` draining an event listener), and a `close()` from that callback would
-	/// otherwise deadlock.
+	/// parent's sweep needs that wait, and a [NativeObjectChild] gives it that in `release()`. A native release can
+	/// block on a callback thread (`rocksdb_close` draining an event listener), and a `close()` from that callback
+	/// would otherwise deadlock.
 	@Override
 	public void close() {
 		if (immortal || isClosed()) {
 			return;
 		}
-		doRelease();
+		release();
 	}
 
 	/// @return `true` if [#makeImmortal()] was called, so [#close()] does nothing
@@ -91,9 +90,11 @@ public abstract class NativeObject implements AutoCloseable {
 		return immortal;
 	}
 
-	/// Swaps the pointer to NULL and, if this call won that swap, runs [#tryClose(MemorySegment)] and then
-	/// [#afterRelease()]. Idempotent and never throws.
-	final void doRelease() {
+	/// Swaps the pointer to NULL and, if this call won that swap, runs [#tryClose(MemorySegment)], logging
+	/// instead of throwing. Idempotent and never throws. Whatever [#close()] would otherwise do: the entry point for
+	/// an owner that frees an object whose `close()` is a no-op. A [NativeObjectChild] overrides it to add the
+	/// monitor a parent's sweep waits on, and its unregistration from the parents.
+	void release() {
 		MemorySegment ptr = (MemorySegment) OWNING_POINTER.getAndSet(this, MemorySegment.NULL);
 		if (!MemorySegment.NULL.equals(ptr)) {
 			try {
@@ -103,19 +104,13 @@ public abstract class NativeObject implements AutoCloseable {
 				// try-with-resources chain from closing — but a failure to release a native
 				// resource is still worth knowing about.
 				LOG.log(System.Logger.Level.ERROR, getClass().getSimpleName() + ".close() failed", throwable);
-			} finally {
-				afterRelease();
 			}
 		}
 	}
 
-	/// Hook run last in [#doRelease()], after the native release call. A [NativeObjectChild] unregisters from its
-	/// owners here.
-	void afterRelease() {
-	}
-
-	/// Called exactly once with the non-NULL pointer when this object is closed.
-	/// Implementations must release the native resource.
+	/// Called exactly once with the non-NULL pointer when this object is closed. Implementations release everything
+	/// this object owns, in the order it needs: a [NativeObjectParent] starts with `releaseChildren()`, so no child's
+	/// release runs against memory this object has already freed.
 	///
 	/// A [NativeObjectChild] runs it while holding its own monitor, so an implementation must never close, release or
 	/// lock another [NativeObject] that could be one of its owners: owners are locked before the objects that

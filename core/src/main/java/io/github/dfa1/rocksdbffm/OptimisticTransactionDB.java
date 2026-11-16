@@ -89,12 +89,13 @@ public final class OptimisticTransactionDB extends NativeDBWithBaseDB
 	// -----------------------------------------------------------------------
 
 	@Override
-	protected void tryCloseBaseDb(MemorySegment baseDb) throws Throwable {
-		MH_CLOSE_BASE_DB.invokeExact(baseDb);
-	}
-
-	@Override
-	protected void tryClosePrimary(MemorySegment ptr) throws Throwable {
+	protected void tryClose(MemorySegment ptr) throws Throwable {
+		releaseChildren();
+		try {
+			MH_CLOSE_BASE_DB.invokeExact(baseDb);
+		} catch (Throwable _) {
+			// best-effort: still close the primary pointer below
+		}
 		MH_CLOSE.invokeExact(ptr);
 	}
 }

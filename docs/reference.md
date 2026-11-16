@@ -503,8 +503,8 @@ return `null` to run that compaction with no filter at all.
 | `RocksDBException`| Unchecked; thrown for a genuine RocksDB-reported error (see [explanation.md#errors-are-always-loud](explanation.md#errors-are-always-loud)) |
 | `NativeObject`    | Base class of every native wrapper; `ptr()`, `close()` (idempotent), abstract `tryClose`      |
 | `NativeObjectChild`     | `NativeObject` subclass for wrappers that borrow native memory from an owner (`RocksIterator`, `Snapshot`, `ColumnFamilyHandle`, ...); `childOf(owners)` registers it so the owner closes it first |
-| `NativeObjectParent` | `NativeObjectChild` subclass for wrappers that can produce children borrowing their pointer (every DB type producing `Snapshot`/`RocksIterator`); children register with `NativeObjectChild#childOf`, closes children before `tryCloseResource` — see [explanation.md](explanation.md#lifecycle-and-ownership) |
-| `NativeDBWithBaseDB` | `NativeObjectParent` subclass for wrappers with a second owned pointer (`TransactionDB`/`OptimisticTransactionDB`'s `rocksdb_t*` "base DB"); guarded `dbPtr()`, hooks `tryCloseBaseDb`/`tryClosePrimary` — see [explanation.md](explanation.md#lifecycle-and-ownership) |
+| `NativeObjectParent` | `NativeObjectChild` subclass for wrappers that can produce children borrowing their pointer (every DB type producing `Snapshot`/`RocksIterator`); children register with `NativeObjectChild#childOf`, its `tryClose` starts with `releaseChildren()` — see [explanation.md](explanation.md#lifecycle-and-ownership) |
+| `NativeDBWithBaseDB` | `NativeObjectParent` subclass for wrappers with a second owned pointer (`TransactionDB`/`OptimisticTransactionDB`'s `rocksdb_t*` "base DB"); guarded `dbPtr()`, `baseDb` read only by `tryClose` — see [explanation.md](explanation.md#lifecycle-and-ownership) |
 
 `Path` is used for every filesystem argument; there is no `String` path overload anywhere.
 

@@ -9,18 +9,18 @@ import java.lang.foreign.MemorySegment;
 ///
 /// Per `rocksdb/db/c.cc`, each `get_base_db` call heap-allocates a small `rocksdb_t` wrapper
 /// struct (`{ DB* rep; }`) around the already-owned database object — a distinct allocation
-/// from the database itself. [#tryCloseBaseDb(MemorySegment)] frees only that wrapper,
+/// from the database itself. A subclass's [#tryClose(MemorySegment)] frees only that wrapper,
 /// best-effort (a failure there does not prevent the primary pointer from still being closed);
-/// it neither destroys nor can destroy the real database object, which the primary handle's own
-/// close ([#tryClosePrimary(MemorySegment)], run afterward) already owns and destroys.
+/// it neither destroys nor can destroy the real database object, which the primary close, run
+/// afterward, already owns and destroys.
 ///
-/// The base DB pointer is private to this class — subclasses have no name for it, so they
-/// cannot accidentally read it unchecked. The only access is [#dbPtr()], which calls [#ptr()]
-/// first and therefore throws [IllegalStateException] once this object is closed, the same way
-/// every other native call on this object already does.
+/// The base DB pointer is read unchecked only from `tryClose`, where the guard of [#ptr()] has already been
+/// consumed. Everything else goes through [#dbPtr()], which calls [#ptr()] first and therefore throws
+/// [IllegalStateException] once this object is closed, the same way every other native call on this object
+/// already does.
 abstract class NativeDBWithBaseDB extends NativeDB {
 
-	private final MemorySegment baseDb;
+	final MemorySegment baseDb;
 
 	protected NativeDBWithBaseDB(MemorySegment ptr, MemorySegment baseDb) {
 		super(ptr);
@@ -37,31 +37,4 @@ abstract class NativeDBWithBaseDB extends NativeDB {
 		ptr();
 		return baseDb;
 	}
-
-	@Override
-	protected final void tryCloseResource(MemorySegment ptr) throws Throwable {
-		try {
-			tryCloseBaseDb(baseDb);
-		} catch (Throwable _) {
-			// best-effort: still attempt to close the primary pointer below
-		}
-		tryClosePrimary(ptr);
-	}
-
-	/// Frees the small `rocksdb_t` wrapper struct that [#dbPtr()] returns, for subclasses whose
-	/// C API exposes a matching close call (e.g. `rocksdb_optimistictransactiondb_close_base_db`).
-	/// This does not touch the underlying database object itself — only
-	/// [#tryClosePrimary(MemorySegment)] does that, via its own teardown. Default: no-op.
-	///
-	/// @param baseDb the base DB pointer to release
-	/// @throws Throwable if the native destroy call fails
-	protected void tryCloseBaseDb(MemorySegment baseDb) throws Throwable {
-		// no separate close needed by default
-	}
-
-	/// Closes the primary native pointer. Same contract as [NativeObject#tryClose(MemorySegment)].
-	///
-	/// @param ptr the non-NULL primary native pointer to release
-	/// @throws Throwable if the native destroy call fails
-	protected abstract void tryClosePrimary(MemorySegment ptr) throws Throwable;
 }
