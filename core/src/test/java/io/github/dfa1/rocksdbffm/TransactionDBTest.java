@@ -4,6 +4,7 @@ import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
@@ -15,6 +16,7 @@ import java.util.List;
 import static io.github.dfa1.rocksdbffm.TestBytes.decodeUint64;
 import static io.github.dfa1.rocksdbffm.TestBytes.directBuffer;
 import static io.github.dfa1.rocksdbffm.TestBytes.encodeUint64;
+import static io.github.dfa1.rocksdbffm.TestFiles.countFiles;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -1283,7 +1285,7 @@ class TransactionDBTest {
 	}
 
 	@Test
-	void flush_columnFamily_writesSstFile(@TempDir Path dir) throws java.io.IOException {
+	void flush_columnFamily_writesSstFile(@TempDir Path dir) throws IOException {
 		// Given
 		try (var db = openDb(dir);
 		     var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
@@ -1294,9 +1296,8 @@ class TransactionDBTest {
 			db.flush(cf, fo);
 
 			// Then
-			try (var files = java.nio.file.Files.list(dir)) {
-				assertThat(files.filter(f -> f.toString().endsWith(".sst"))).isNotEmpty();
-			}
+			var sstFiles = countFiles(dir, ".sst");
+			assertThat(sstFiles).isPositive();
 		}
 	}
 }

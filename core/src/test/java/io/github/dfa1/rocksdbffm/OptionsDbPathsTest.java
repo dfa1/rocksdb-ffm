@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.Stream;
 
+import static io.github.dfa1.rocksdbffm.TestFiles.countFiles;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -38,8 +38,8 @@ class OptionsDbPathsTest {
 		}
 
 		// Then
-		assertThat(countSstFiles(hot)).isPositive();
-		assertThat(countSstFiles(cold)).isPositive();
+		assertThat(countFiles(hot, ".sst")).isPositive();
+		assertThat(countFiles(cold, ".sst")).isPositive();
 	}
 
 	@Test
@@ -60,7 +60,7 @@ class OptionsDbPathsTest {
 		}
 
 		// Then
-		assertThat(countSstFiles(cfDir)).isPositive();
+		assertThat(countFiles(cfDir, ".sst")).isPositive();
 	}
 
 	@Test
@@ -103,9 +103,4 @@ class OptionsDbPathsTest {
 		nullSize.isInstanceOf(NullPointerException.class);
 	}
 
-	private static long countSstFiles(Path dir) throws IOException {
-		try (Stream<Path> files = Files.list(dir)) {
-			return files.filter(f -> f.getFileName().toString().endsWith(".sst")).count();
-		}
-	}
 }
