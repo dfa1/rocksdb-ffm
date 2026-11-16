@@ -250,12 +250,12 @@ class NativeObjectParentTest {
 	}
 
 	@Test
-	void borrowedFrom_twoParents_closingTheChildUnregistersFromBoth() {
+	void childOf_twoParents_closingTheChildUnregistersFromBoth() {
 		// Given
 		var first = new TestParent(fakePtr(0x1));
 		var second = new TestParent(fakePtr(0x2));
 		var child = new TestChild(fakePtr(0x3));
-		child.borrowedFrom(first, second);
+		child.childOf(first, second);
 		var registeredBefore = first.childCount() + second.childCount();
 
 		// When
@@ -269,12 +269,12 @@ class NativeObjectParentTest {
 	}
 
 	@Test
-	void borrowedFrom_twoParents_closingOneParentReleasesTheChildAndUnregistersFromTheOther() {
+	void childOf_twoParents_closingOneParentReleasesTheChildAndUnregistersFromTheOther() {
 		// Given
 		var first = new TestParent(fakePtr(0x1));
 		var second = new TestParent(fakePtr(0x2));
 		var child = new TestChild(fakePtr(0x3));
-		child.borrowedFrom(first, second);
+		child.childOf(first, second);
 
 		// When
 		first.close();
@@ -285,7 +285,7 @@ class NativeObjectParentTest {
 	}
 
 	@Test
-	void borrowedFrom_twoParents_oneAlreadyClosed_abandonsTheChildAndLeavesNoEntryInTheOther() {
+	void childOf_twoParents_oneAlreadyClosed_abandonsTheChildAndLeavesNoEntryInTheOther() {
 		// Given
 		var alive = new TestParent(fakePtr(0x1));
 		var closed = new TestParent(fakePtr(0x2));
@@ -293,7 +293,7 @@ class NativeObjectParentTest {
 		var child = new TestChild(fakePtr(0x3));
 
 		// When
-		child.borrowedFrom(alive, closed);
+		child.childOf(alive, closed);
 
 		// Then
 		assertThat(child.isClosed()).isTrue();
@@ -302,13 +302,13 @@ class NativeObjectParentTest {
 	}
 
 	@Test
-	void borrowedFrom_anImmortalParent_isNotRegisteredWith() {
+	void childOf_anImmortalParent_isNotRegisteredWith() {
 		// Given
 		TestParent immortal = new TestParent(fakePtr(0x1)).makeImmortal();
 		var child = new TestChild(fakePtr(0x2));
 
 		// When
-		child.borrowedFrom(immortal);
+		child.childOf(immortal);
 
 		// Then
 		assertThat(immortal.childCount()).isZero();
@@ -344,8 +344,8 @@ class NativeObjectParentTest {
 				order.add("grandchild");
 			}
 		};
-		child.borrowedFrom(grandparent);
-		grandchild.borrowedFrom(child);
+		child.childOf(grandparent);
+		grandchild.childOf(child);
 		try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
 			var closingChild = executor.submit(child::close);
 			assertThat(grandchildStarted.await(5, TimeUnit.SECONDS)).isTrue();

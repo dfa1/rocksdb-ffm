@@ -53,7 +53,7 @@ public final class Snapshot extends NativeObjectChild {
 	Snapshot(NativeObjectParent owningDb, MemorySegment dbPtr, MemorySegment ptr) {
 		super(ptr);
 		this.dbPtr = dbPtr;
-		borrowedFrom(owningDb);
+		childOf(owningDb);
 	}
 
 	/// Creates a snapshot borrowed from a [Transaction]: `rocksdb_transaction_get_snapshot` returns a malloc'd
@@ -66,7 +66,7 @@ public final class Snapshot extends NativeObjectChild {
 	Snapshot(Transaction owningTransaction, MemorySegment ptr) {
 		super(ptr);
 		this.dbPtr = MemorySegment.NULL;
-		borrowedFrom(owningTransaction);
+		childOf(owningTransaction);
 	}
 
 	/// Returns the sequence number at which this snapshot was taken.

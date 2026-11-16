@@ -64,7 +64,7 @@ public final class SstFileWriter extends NativeObjectChild {
 	private SstFileWriter(EnvOptions envOptions, MemorySegment ptr) {
 		super(ptr);
 		// The options this writer was created with, whose rate limiter the native writer's copy points at.
-		borrowedFrom(envOptions);
+		childOf(envOptions);
 	}
 
 	/// Creates an SST file writer using the given DB options (comparator, compression, etc.)

@@ -39,7 +39,7 @@ public final class ColumnFamilyHandle extends NativeObjectChild {
 
 	private ColumnFamilyHandle(NativeObjectParent owningDb, MemorySegment ptr) {
 		super(ptr);
-		borrowedFrom(owningDb);
+		childOf(owningDb);
 	}
 
 	/// Wraps a handle the database owns: it is registered as a child of `owningDb`, which releases it.

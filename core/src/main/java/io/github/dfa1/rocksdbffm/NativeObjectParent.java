@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /// native pointer for their own release call (e.g. [Snapshot]'s `rocksdb_release_snapshot`
 /// needs its owning DB's pointer) — and would otherwise dangle if this object closed first.
 ///
-/// A child registers itself with [NativeObjectChild#borrowedFrom(NativeObjectParent...)], last in its own
+/// A child registers itself with [NativeObjectChild#childOf(NativeObjectParent)], last in its own
 /// constructor, and [NativeObjectChild#afterRelease()] unregisters it once released on its own, so a long-lived parent
 /// doesn't accumulate strong references to every child it ever produced.
 /// [#tryClose(MemorySegment)] closes every still-registered child, synchronously, while `ptr`

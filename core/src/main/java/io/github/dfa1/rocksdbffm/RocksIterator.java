@@ -96,7 +96,7 @@ public final class RocksIterator extends NativeObjectChild {
 		super(ptr);
 		// Two parents: the database or transaction, and the options, whose iterate bounds the native iterator keeps raw
 		// pointers into. Holding them also keeps the options' bounds memory reachable.
-		borrowedFrom(owningDb, readOptions);
+		childOf(owningDb, readOptions);
 	}
 
 	/// Package-private factory called by RocksDB.

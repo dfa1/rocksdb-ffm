@@ -57,7 +57,7 @@ public final class WalIterator extends NativeObjectChild {
 	private WalIterator(NativeObjectParent owningDb, MemorySegment ptr) {
 		super(ptr);
 		// The database this iterator reads through; it holds raw pointers into the database's state.
-		borrowedFrom(owningDb);
+		childOf(owningDb);
 	}
 
 	static WalIterator wrap(NativeObjectParent owningDb, MemorySegment ptr) {
