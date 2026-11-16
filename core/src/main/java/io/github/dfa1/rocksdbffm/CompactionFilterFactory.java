@@ -5,7 +5,6 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 
 /// A factory that creates a fresh [CompactionFilter] for every compaction, attached via
 /// [Options#setCompactionFilterFactory(CompactionFilterFactory)].
@@ -62,9 +61,15 @@ public final class CompactionFilterFactory extends NativeObject {
 	// One global upcall stub per callback shape, shared by every instance. Lives for the JVM
 	// lifetime so the function pointers are always valid; dispatch is keyed off the `state`
 	// pointer, which carries a registry ID rather than real memory (same trick as CompactionFilter).
-	private static final MemorySegment CREATE_FILTER_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "createCompactionFilterDispatch", CREATE_FILTER_DESC);
-	private static final MemorySegment DESTRUCTOR_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "destructorDispatch", DESTRUCTOR_DESC);
-	private static final MemorySegment NAME_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "nameDispatch", NAME_DESC);
+	private static final MemorySegment CREATE_FILTER_STUB = NativeLibrary.upcall(
+		"createCompactionFilterDispatch", CREATE_FILTER_DESC
+	);
+	private static final MemorySegment DESTRUCTOR_STUB = NativeLibrary.upcall(
+		"destructorDispatch", DESTRUCTOR_DESC
+	);
+	private static final MemorySegment NAME_STUB = NativeLibrary.upcall(
+		"nameDispatch", NAME_DESC
+	);
 
 	private record State(CreateFilterFn fn, MemorySegment nameSeg) {
 	}
@@ -142,6 +147,7 @@ public final class CompactionFilterFactory extends NativeObject {
 	}
 
 	/// Called from [#CREATE_FILTER_STUB]. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static MemorySegment createCompactionFilterDispatch(MemorySegment state, MemorySegment contextPtr) {
 		BackgroundUpcallThreads.track();
 		try {
@@ -177,6 +183,7 @@ public final class CompactionFilterFactory extends NativeObject {
 	/// Called from [#DESTRUCTOR_STUB] when RocksDB's internal `shared_ptr` refcount hits zero.
 	/// This is the only reliable unregistration point: ownership transfer via [#applyTo] means
 	/// [#tryClose(MemorySegment)] may never run for this instance. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void destructorDispatch(MemorySegment state) {
 		REGISTRY.unregister(state);
 	}
@@ -189,6 +196,7 @@ public final class CompactionFilterFactory extends NativeObject {
 
 	/// Called from [#NAME_STUB]. Must not throw, and must never return a value that isn't a
 	/// valid NUL-terminated native string (see [#EMPTY_NAME]).
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static MemorySegment nameDispatch(MemorySegment state) {
 		try {
 			State s = REGISTRY.get(state);

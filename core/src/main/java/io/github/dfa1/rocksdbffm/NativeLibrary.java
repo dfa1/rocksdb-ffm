@@ -31,33 +31,34 @@ public class NativeLibrary {
 	private static final Linker LINKER = Linker.nativeLinker();
 	private static final SymbolLookup LIB = SymbolLookup.libraryLookup(resolveLibPath(), Arena.ofAuto());
 
-		/// Creates a downcall handle for the symbol `name` of the bundled `librocksdb`, the only library this project binds
-		/// (never libc: see `AGENTS.md`, "No C `malloc`"). Meant for a `private static final` `MH_` field: a missing
-		/// symbol fails class initialization.
-		///
-		/// @param name    the C symbol, as declared in `rocksdb/c.h`
-		/// @param fd      the native signature of `name`
-		/// @param options linker options, e.g. `Linker.Option.critical(...)` for a pure accessor that cannot block
-		/// @return a handle invoking `name`
-		/// @throws UnsatisfiedLinkError if `librocksdb` does not export `name`
-		static MethodHandle downcall(String name, FunctionDescriptor fd, Linker.Option... options) {
+	/// Creates a downcall handle for the symbol `name` of the bundled `librocksdb`, the only library this project binds
+	/// (never libc: see `AGENTS.md`, "No C `malloc`"). Meant for a `private static final` `MH_` field: a missing
+	/// symbol fails class initialization.
+	///
+	/// @param name    the C symbol, as declared in `rocksdb/c.h`
+	/// @param fd      the native signature of `name`
+	/// @param options linker options, e.g. `Linker.Option.critical(...)` for a pure accessor that cannot block
+	/// @return a handle invoking `name`
+	/// @throws UnsatisfiedLinkError if `librocksdb` does not export `name`
+	static MethodHandle downcall(String name, FunctionDescriptor fd, Linker.Option... options) {
 		return LINKER.downcallHandle(
 				LIB.find(name).orElseThrow(() ->
-						new UnsatisfiedLinkError("Symbol not found: " + name)),
+						                           new UnsatisfiedLinkError("Symbol not found: " + name)),
 				fd, options);
 	}
 
-	/// Creates a global-lifetime upcall stub for the private static method `name` of `lookup`'s class, whose Java
-	/// signature is derived from `fd`. Meant for the `static` block of a callback host: a method that does not match
+	/// Creates a global-lifetime upcall stub for the private static method `name` of the calling class, whose Java
+	/// signature is derived from `fd`. Meant for a field initializer of a callback host: a method that does not match
 	/// `fd` fails class initialization.
 	///
-	/// @param lookup the caller's own lookup (`MethodHandles.lookup()`), so private dispatch methods are reachable
 	/// @param name name of the static method to expose to native code
-	/// @param fd the native signature the stub presents
+	/// @param fd   the native signature the stub presents
 	/// @return the stub's native entry point, valid for the life of the JVM
-	static MemorySegment upcall(MethodHandles.Lookup lookup, String name, FunctionDescriptor fd) {
+	static MemorySegment upcall(String name, FunctionDescriptor fd) {
+		Class<?> host = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).getCallerClass();
 		try {
-			return LINKER.upcallStub(lookup.findStatic(lookup.lookupClass(), name, fd.toMethodType()), fd, Arena.global());
+			MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(host, MethodHandles.lookup());
+			return LINKER.upcallStub(lookup.findStatic(host, name, fd.toMethodType()), fd, Arena.global());
 		} catch (ReflectiveOperationException e) {
 			throw new ExceptionInInitializerError(e);
 		}

@@ -5,7 +5,6 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
 
 /// FFM wrapper for `rocksdb_logger_t`.
@@ -71,7 +70,9 @@ public final class Logger extends NativeObject {
 
 	// One global upcall stub shared by all callback loggers.
 	// Lives for the JVM lifetime so the function pointer is always valid.
-	private static final MemorySegment GLOBAL_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "dispatch", CALLBACK_DESC);
+	private static final MemorySegment GLOBAL_STUB = NativeLibrary.upcall(
+		"dispatch", CALLBACK_DESC
+	);
 
 	/// `-1` for stderr loggers; the registry key for callback loggers.
 	private final long callbackId;
@@ -128,6 +129,7 @@ public final class Logger extends NativeObject {
 	}
 
 	/// Called from the single global upcall stub. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void dispatch(MemorySegment priv, int lev, MemorySegment msg, long len) {
 		BackgroundUpcallThreads.track();
 		try {
