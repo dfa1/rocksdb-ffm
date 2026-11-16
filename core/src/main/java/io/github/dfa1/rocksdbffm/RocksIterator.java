@@ -30,7 +30,7 @@ import java.util.stream.StreamSupport;
 ///     it.checkError();
 /// }
 /// ```
-public final class RocksIterator extends NativeObject {
+public final class RocksIterator extends NativeChild {
 
 	/// `rocksdb_iterator_t* rocksdb_create_iterator(rocksdb_t* db, const rocksdb_readoptions_t* options);`
 	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(

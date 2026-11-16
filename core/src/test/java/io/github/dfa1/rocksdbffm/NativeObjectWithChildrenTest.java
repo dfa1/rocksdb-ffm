@@ -35,7 +35,7 @@ class NativeObjectWithChildrenTest {
 		}
 	}
 
-	private static final class TestChild extends NativeObject {
+	private static final class TestChild extends NativeChild {
 
 		final AtomicInteger tryCloseCount = new AtomicInteger();
 
@@ -332,7 +332,7 @@ class NativeObjectWithChildrenTest {
 				order.add("child");
 			}
 		};
-		var grandchild = new NativeObject(fakePtr(0x3)) {
+		var grandchild = new NativeChild(fakePtr(0x3)) {
 			@Override
 			protected void tryClose(MemorySegment ptr) {
 				grandchildStarted.countDown();

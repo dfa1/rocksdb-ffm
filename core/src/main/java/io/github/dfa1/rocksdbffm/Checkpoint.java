@@ -25,7 +25,7 @@ import java.nio.file.Path;
 ///     snap.get("k".getBytes()); // returns value at checkpoint time
 /// }
 /// ```
-public final class Checkpoint extends NativeObject {
+public final class Checkpoint extends NativeChild {
 
 	/// `rocksdb_checkpoint_t* rocksdb_checkpoint_object_create(rocksdb_t* db, char** errptr);`
 	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(

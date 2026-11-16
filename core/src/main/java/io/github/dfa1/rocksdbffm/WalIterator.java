@@ -26,7 +26,7 @@ import java.lang.invoke.MethodHandle;
 ///     it.checkStatus();
 /// }
 /// ```
-public final class WalIterator extends NativeObject {
+public final class WalIterator extends NativeChild {
 
 	/// `void rocksdb_wal_iter_next(rocksdb_wal_iterator_t* iter);`
 	private static final MethodHandle MH_NEXT = NativeLibrary.downcall(

@@ -28,7 +28,7 @@ import java.lang.invoke.MethodHandle;
 ///     byte[] v2 = db.get(ro, key); // still returns v1 — consistent read
 /// }
 /// ```
-public final class Snapshot extends NativeObject {
+public final class Snapshot extends NativeChild {
 
 	/// `uint64_t rocksdb_snapshot_get_sequence_number(const rocksdb_snapshot_t* snapshot);`
 	private static final MethodHandle MH_SEQUENCE_NUMBER = NativeLibrary.downcall(

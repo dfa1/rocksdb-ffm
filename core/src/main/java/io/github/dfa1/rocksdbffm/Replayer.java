@@ -26,7 +26,7 @@ import java.util.List;
 ///     replayer.replay(ReplayOptions.newReplayOptions());
 /// }
 /// ```
-public final class Replayer extends NativeObject {
+public final class Replayer extends NativeChild {
 
 	/// `rocksdb_replayer_t* rocksdb_new_default_replayer(rocksdb_t* db, rocksdb_column_family_handle_t** column_families, size_t num_column_families, rocksdb_env_t* env, const rocksdb_envoptions_t* env_options, const char* trace_path, char** errptr);`
 	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
