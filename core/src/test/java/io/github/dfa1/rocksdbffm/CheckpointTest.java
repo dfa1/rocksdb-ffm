@@ -4,11 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.stream.Stream;
 
+import static io.github.dfa1.rocksdbffm.TestFiles.countFiles;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CheckpointTest {
@@ -174,12 +173,6 @@ class CheckpointTest {
 		var walFiles = countFiles(cpDir, ".log");
 		assertThat(sstFiles).isZero();
 		assertThat(walFiles).isPositive();
-	}
-
-	private static long countFiles(Path dir, String suffix) throws IOException {
-		try (Stream<Path> files = Files.list(dir)) {
-			return files.filter(p -> p.getFileName().toString().endsWith(suffix)).count();
-		}
 	}
 
 	// -----------------------------------------------------------------------
