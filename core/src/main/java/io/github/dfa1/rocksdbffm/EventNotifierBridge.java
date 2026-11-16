@@ -5,7 +5,6 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -64,19 +63,39 @@ final class EventNotifierBridge {
 	// One global upcall stub per callback, shared by every attached EventNotifier. Live for the
 	// JVM lifetime so the function pointers stay valid; dispatch is keyed off the `state` pointer,
 	// which carries a registry id rather than real memory (same trick as Logger/MergeOperator.Custom).
-	private static final MemorySegment FLUSH_BEGIN_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "flushBeginDispatch", DB_SCOPED_INFO_DESC);
-	private static final MemorySegment FLUSH_COMPLETED_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "flushCompletedDispatch", DB_SCOPED_INFO_DESC);
-	private static final MemorySegment COMPACTION_BEGIN_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "compactionBeginDispatch", DB_SCOPED_INFO_DESC);
-	private static final MemorySegment COMPACTION_COMPLETED_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "compactionCompletedDispatch", DB_SCOPED_INFO_DESC);
+	private static final MemorySegment FLUSH_BEGIN_STUB = NativeLibrary.upcall(
+		"flushBeginDispatch", DB_SCOPED_INFO_DESC
+	);
+	private static final MemorySegment FLUSH_COMPLETED_STUB = NativeLibrary.upcall(
+		"flushCompletedDispatch", DB_SCOPED_INFO_DESC
+	);
+	private static final MemorySegment COMPACTION_BEGIN_STUB = NativeLibrary.upcall(
+		"compactionBeginDispatch", DB_SCOPED_INFO_DESC
+	);
+	private static final MemorySegment COMPACTION_COMPLETED_STUB = NativeLibrary.upcall(
+		"compactionCompletedDispatch", DB_SCOPED_INFO_DESC
+	);
 	// RocksDB's C struct calls on_subcompaction_begin/on_subcompaction_completed unconditionally
 	// (db/c.cc has no null check), so both slots still need a valid function pointer even though
 	// EventNotifier does not expose subcompaction callbacks; one shared no-op stub covers both.
-	private static final MemorySegment SUBCOMPACTION_NOOP_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "subcompactionNoopDispatch", INFO_ONLY_DESC);
-	private static final MemorySegment EXTERNAL_FILE_INGESTED_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "externalFileIngestedDispatch", DB_SCOPED_INFO_DESC);
-	private static final MemorySegment BACKGROUND_ERROR_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "backgroundErrorDispatch", BACKGROUND_ERROR_DESC);
-	private static final MemorySegment STALL_CONDITIONS_CHANGED_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "stallConditionsChangedDispatch", INFO_ONLY_DESC);
-	private static final MemorySegment MEMTABLE_SEALED_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "memTableSealedDispatch", INFO_ONLY_DESC);
-	private static final MemorySegment DESTRUCTOR_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "destructorDispatch", DESTRUCTOR_DESC);
+	private static final MemorySegment SUBCOMPACTION_NOOP_STUB = NativeLibrary.upcall(
+		"subcompactionNoopDispatch", INFO_ONLY_DESC
+	);
+	private static final MemorySegment EXTERNAL_FILE_INGESTED_STUB = NativeLibrary.upcall(
+		"externalFileIngestedDispatch", DB_SCOPED_INFO_DESC
+	);
+	private static final MemorySegment BACKGROUND_ERROR_STUB = NativeLibrary.upcall(
+		"backgroundErrorDispatch", BACKGROUND_ERROR_DESC
+	);
+	private static final MemorySegment STALL_CONDITIONS_CHANGED_STUB = NativeLibrary.upcall(
+		"stallConditionsChangedDispatch", INFO_ONLY_DESC
+	);
+	private static final MemorySegment MEMTABLE_SEALED_STUB = NativeLibrary.upcall(
+		"memTableSealedDispatch", INFO_ONLY_DESC
+	);
+	private static final MemorySegment DESTRUCTOR_STUB = NativeLibrary.upcall(
+		"destructorDispatch", DESTRUCTOR_DESC
+	);
 
 	private static final UpcallRegistry<EventNotifier> REGISTRY = new UpcallRegistry<>();
 	private static final System.Logger LOG = System.getLogger(EventNotifierBridge.class.getName());
@@ -104,47 +123,56 @@ final class EventNotifierBridge {
 	}
 
 	/// Called from [#FLUSH_BEGIN_STUB]. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void flushBeginDispatch(MemorySegment state, MemorySegment db, MemorySegment info) {
 		dispatchView(state, info, FlushJobInfo::new, EventNotifier::onFlushBegin, "onFlushBegin");
 	}
 
 	/// Called from [#FLUSH_COMPLETED_STUB]. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void flushCompletedDispatch(MemorySegment state, MemorySegment db, MemorySegment info) {
 		dispatchView(state, info, FlushJobInfo::new, EventNotifier::onFlushCompleted, "onFlushCompleted");
 	}
 
 	/// Called from [#COMPACTION_BEGIN_STUB]. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void compactionBeginDispatch(MemorySegment state, MemorySegment db, MemorySegment info) {
 		dispatchView(state, info, CompactionJobInfo::new, EventNotifier::onCompactionBegin, "onCompactionBegin");
 	}
 
 	/// Called from [#COMPACTION_COMPLETED_STUB]. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void compactionCompletedDispatch(MemorySegment state, MemorySegment db, MemorySegment info) {
 		dispatchView(state, info, CompactionJobInfo::new, EventNotifier::onCompactionCompleted, "onCompactionCompleted");
 	}
 
 	/// Called from [#SUBCOMPACTION_NOOP_STUB]. Deliberately does nothing: subcompaction events are
 	/// not exposed on [EventNotifier]. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void subcompactionNoopDispatch(MemorySegment state, MemorySegment info) {
 		// intentionally empty: db/c.cc invokes this callback without a null check
 	}
 
 	/// Called from [#EXTERNAL_FILE_INGESTED_STUB]. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void externalFileIngestedDispatch(MemorySegment state, MemorySegment db, MemorySegment info) {
 		dispatchView(state, info, ExternalFileIngestionInfo::new, EventNotifier::onExternalFileIngested, "onExternalFileIngested");
 	}
 
 	/// Called from [#STALL_CONDITIONS_CHANGED_STUB]. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void stallConditionsChangedDispatch(MemorySegment state, MemorySegment info) {
 		dispatchView(state, info, WriteStallInfo::new, EventNotifier::onStallConditionsChanged, "onStallConditionsChanged");
 	}
 
 	/// Called from [#MEMTABLE_SEALED_STUB]. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void memTableSealedDispatch(MemorySegment state, MemorySegment info) {
 		dispatchView(state, info, MemTableInfo::new, EventNotifier::onMemTableSealed, "onMemTableSealed");
 	}
 
 	/// Called from [#BACKGROUND_ERROR_STUB]. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void backgroundErrorDispatch(MemorySegment state, int reason, MemorySegment statusPtr) {
 		dispatch(state, n -> {
 			try (Arena arena = Arena.ofConfined()) {
@@ -168,6 +196,7 @@ final class EventNotifierBridge {
 	/// Called from [#DESTRUCTOR_STUB] when RocksDB's internal `shared_ptr` refcount hits zero.
 	/// This is the only reliable unregistration point, since [#attach(MemorySegment, EventNotifier)]
 	/// transfers ownership immediately. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void destructorDispatch(MemorySegment state) {
 		REGISTRY.unregister(state);
 	}

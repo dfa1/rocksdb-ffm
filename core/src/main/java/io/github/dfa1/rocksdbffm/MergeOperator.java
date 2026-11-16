@@ -5,7 +5,6 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -157,11 +156,21 @@ public sealed interface MergeOperator {
 		// One global upcall stub per callback shape, shared by every Custom instance. Lives for the
 		// JVM lifetime so the function pointers are always valid; dispatch is keyed off the `state`
 		// pointer, which carries a registry ID rather than real memory (same trick as Logger).
-		private static final MemorySegment FULL_MERGE_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "fullMergeDispatch", FULL_MERGE_DESC);
-		private static final MemorySegment PARTIAL_MERGE_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "partialMergeDispatch", PARTIAL_MERGE_DESC);
-		private static final MemorySegment DESTRUCTOR_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "destructorDispatch", DESTRUCTOR_DESC);
-		private static final MemorySegment NAME_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "nameDispatch", NAME_DESC);
-		private static final MemorySegment DELETE_VALUE_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "deleteValueDispatch", DELETE_VALUE_DESC);
+		private static final MemorySegment FULL_MERGE_STUB = NativeLibrary.upcall(
+			"fullMergeDispatch", FULL_MERGE_DESC
+		);
+		private static final MemorySegment PARTIAL_MERGE_STUB = NativeLibrary.upcall(
+			"partialMergeDispatch", PARTIAL_MERGE_DESC
+		);
+		private static final MemorySegment DESTRUCTOR_STUB = NativeLibrary.upcall(
+			"destructorDispatch", DESTRUCTOR_DESC
+		);
+		private static final MemorySegment NAME_STUB = NativeLibrary.upcall(
+			"nameDispatch", NAME_DESC
+		);
+		private static final MemorySegment DELETE_VALUE_STUB = NativeLibrary.upcall(
+			"deleteValueDispatch", DELETE_VALUE_DESC
+		);
 
 		/// Per-thread buffer every merge result is returned in, grown as needed. Safe to reuse: `db/c.cc` copies the
 		/// result out (`assign`) before the calling thread can merge again, and [#deleteValueDispatch] keeps RocksDB
@@ -271,6 +280,7 @@ public sealed interface MergeOperator {
 		}
 
 		/// Called from [#FULL_MERGE_STUB]. Must not throw.
+		@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 		private static MemorySegment fullMergeDispatch(MemorySegment state, MemorySegment key, long keyLen,
 				MemorySegment existingValue, long existingValueLen, MemorySegment operandsList,
 				MemorySegment operandsLen, int numOperands, MemorySegment success, MemorySegment newValueLen) {
@@ -298,6 +308,7 @@ public sealed interface MergeOperator {
 
 		/// Called from [#PARTIAL_MERGE_STUB]. Always declines: RocksDB then keeps accumulating
 		/// operands and calls [#fullMergeDispatch] later instead. Must not throw.
+		@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 		private static MemorySegment partialMergeDispatch(MemorySegment state, MemorySegment key, long keyLen,
 				MemorySegment operandsList, MemorySegment operandsLen, int numOperands,
 				MemorySegment success, MemorySegment newValueLen) {
@@ -318,6 +329,7 @@ public sealed interface MergeOperator {
 		/// Called from [#DESTRUCTOR_STUB] when RocksDB's internal `shared_ptr` refcount hits zero.
 		/// This is the only reliable unregistration point: ownership transfer via [#applyTo] means
 		/// [#tryClose(MemorySegment)] may never run for this instance. Must not throw.
+		@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 		private static void destructorDispatch(MemorySegment state) {
 			REGISTRY.unregister(state);
 		}
@@ -325,6 +337,7 @@ public sealed interface MergeOperator {
 		/// Called from [#DELETE_VALUE_STUB] once RocksDB has copied a merge result out. Deliberately a no-op:
 		/// every result is [#SCRATCH] or [#EMPTY], both owned on the Java side; its mere presence stops `db/c.cc`
 		/// from calling `free()` on them instead.
+		@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 		private static void deleteValueDispatch(MemorySegment state, MemorySegment value, long valueLength) {
 			// nothing to release
 		}
@@ -338,6 +351,7 @@ public sealed interface MergeOperator {
 
 		/// Called from [#NAME_STUB]. Must not throw, and must never return a value that isn't
 		/// a valid NUL-terminated native string (see [#EMPTY]).
+		@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 		private static MemorySegment nameDispatch(MemorySegment state) {
 			try {
 				State s = REGISTRY.get(state);

@@ -5,7 +5,6 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -53,32 +52,38 @@ import java.util.concurrent.ConcurrentHashMap;
 /// ```
 public final class CompactionFilter extends NativeObject {
 
+	private static final System.Logger LOG = System.getLogger(CompactionFilter.class.getName());
+
 	/// `rocksdb_compactionfilter_t* rocksdb_compactionfilter_create(void* state, void (*destructor)(void*), unsigned char (*filter)(void*, int level, const char* key, size_t key_length, const char* existing_value, size_t value_length, char** new_value, size_t* new_value_length, unsigned char* value_changed), const char* (*name)(void*));`
 	private static final MethodHandle MH_COMPACTIONFILTER_CREATE = NativeLibrary.downcall(
-		"rocksdb_compactionfilter_create",
-		FunctionDescriptor.of(ValueLayout.ADDRESS,
-			ValueLayout.ADDRESS,  // state
-			ValueLayout.ADDRESS,  // destructor
-			ValueLayout.ADDRESS,  // filter
-			ValueLayout.ADDRESS) // name
+			"rocksdb_compactionfilter_create",
+			FunctionDescriptor.of(ValueLayout.ADDRESS,
+					ValueLayout.ADDRESS,  // state
+					ValueLayout.ADDRESS,  // destructor
+					ValueLayout.ADDRESS,  // filter
+					ValueLayout.ADDRESS) // name
 	);
 
 	/// `void rocksdb_compactionfilter_set_ignore_snapshots(rocksdb_compactionfilter_t*, unsigned char);`
 	private static final MethodHandle MH_SET_IGNORE_SNAPSHOTS = NativeLibrary.downcall(
-		"rocksdb_compactionfilter_set_ignore_snapshots", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+			"rocksdb_compactionfilter_set_ignore_snapshots", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
 	);
 
 	/// `void rocksdb_compactionfilter_destroy(rocksdb_compactionfilter_t*);`
 	private static final MethodHandle MH_COMPACTIONFILTER_DESTROY = NativeLibrary.downcall(
-		"rocksdb_compactionfilter_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+			"rocksdb_compactionfilter_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
 	);
 
 	/// `void rocksdb_options_set_compaction_filter(rocksdb_options_t*, rocksdb_compactionfilter_t*);`
 	private static final MethodHandle MH_SET_COMPACTION_FILTER = NativeLibrary.downcall(
-		"rocksdb_options_set_compaction_filter", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+			"rocksdb_options_set_compaction_filter", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
 	);
 
-	private static final FunctionDescriptor FILTER_DESC = FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
+	// One global upcall stub per callback shape, shared by every instance. Lives for the JVM
+	// lifetime so the function pointers are always valid; dispatch is keyed off the `state`
+	// pointer, which carries a registry ID rather than real memory (same trick as MergeOperator.Custom).
+	private static final MemorySegment FILTER_STUB = NativeLibrary.upcall(
+		"filterDispatch", FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
 			ValueLayout.ADDRESS,   // state
 			ValueLayout.JAVA_INT,  // level
 			ValueLayout.ADDRESS,   // key
@@ -87,18 +92,14 @@ public final class CompactionFilter extends NativeObject {
 			NativeCalls.SIZE_T,    // value_length
 			ValueLayout.ADDRESS,   // new_value
 			ValueLayout.ADDRESS,   // new_value_length
-			ValueLayout.ADDRESS);  // value_changed
-
-	private static final FunctionDescriptor DESTRUCTOR_DESC = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
-
-	private static final FunctionDescriptor NAME_DESC = FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS);
-
-	// One global upcall stub per callback shape, shared by every instance. Lives for the JVM
-	// lifetime so the function pointers are always valid; dispatch is keyed off the `state`
-	// pointer, which carries a registry ID rather than real memory (same trick as MergeOperator.Custom).
-	private static final MemorySegment FILTER_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "filterDispatch", FILTER_DESC);
-	private static final MemorySegment DESTRUCTOR_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "destructorDispatch", DESTRUCTOR_DESC);
-	private static final MemorySegment NAME_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "nameDispatch", NAME_DESC);
+			ValueLayout.ADDRESS)
+	);
+	private static final MemorySegment DESTRUCTOR_STUB = NativeLibrary.upcall(
+		"destructorDispatch", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
+	private static final MemorySegment NAME_STUB = NativeLibrary.upcall(
+		"nameDispatch", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	/// `scratchBuffers` backs [#scratchBuffer(State, byte[])] — one buffer per compaction thread
 	/// that has returned a [FilterDecision.ChangeValue], reused and grown as needed rather than
@@ -124,7 +125,6 @@ public final class CompactionFilter extends NativeObject {
 	// so this entry lives for the JVM; a filter closed before it is attached is destroyed by tryClose, which
 	// fires destructorDispatch (same rationale as MergeOperator.Custom).
 	private static final UpcallRegistry<State> REGISTRY = new UpcallRegistry<>();
-	private static final System.Logger LOG = System.getLogger(CompactionFilter.class.getName());
 
 	private CompactionFilter(MemorySegment ptr) {
 		super(ptr);
@@ -159,7 +159,7 @@ public final class CompactionFilter extends NativeObject {
 	/// **`false` does not work in the pinned RocksDB version:** `CompactionJob::SetupAndValidateCompactionFilter`
 	/// (`db/compaction/compaction_job.cc`) rejects every compaction that uses a filter with
 	/// `IgnoreSnapshots() == false`, returning `Status::NotSupported("CompactionFilter::IgnoreSnapshots() = false is
-	/// not supported anymore.")` — confirmed by upstream's own `DBTestCompactionFilter.IgnoreSnapshotsFalse` test.
+    /// not supported anymore.")` — confirmed by upstream's own `DBTestCompactionFilter.IgnoreSnapshotsFalse` test.
 	/// `rocksdb_compact_range` (what `compactRange()` wraps) takes no `errptr` and returns `void`, so this failure
 	/// is silent: the compaction simply does nothing, and the caller has no way to detect it. Passing `false` here
 	/// is kept only for parity with the C API's setter; leave this at its `true` default.
@@ -352,6 +352,7 @@ public final class CompactionFilter extends NativeObject {
 	}
 
 	/// Called from [#FILTER_STUB]. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static byte filterDispatch(MemorySegment state, int level, MemorySegment key, long keyLength,
 			MemorySegment existingValue, long valueLength, MemorySegment newValue, MemorySegment newValueLength,
 			MemorySegment valueChanged) {
@@ -392,6 +393,7 @@ public final class CompactionFilter extends NativeObject {
 	/// immortal. Also frees every scratch
 	/// buffer [#scratchBuffer(State, byte[])] handed out — safe because no `Filter()` call can
 	/// still be in flight once RocksDB itself is destroying this filter. Must not throw.
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static void destructorDispatch(MemorySegment state) {
 		State s = REGISTRY.unregister(state);
 		if (s != null) {
@@ -407,6 +409,7 @@ public final class CompactionFilter extends NativeObject {
 
 	/// Called from [#NAME_STUB]. Must not throw, and must never return a value that isn't a
 	/// valid NUL-terminated native string (see [#EMPTY_NAME]).
+	@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 	private static MemorySegment nameDispatch(MemorySegment state) {
 		try {
 			State s = REGISTRY.get(state);
