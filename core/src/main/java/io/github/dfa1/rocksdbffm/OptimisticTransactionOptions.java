@@ -12,29 +12,21 @@ import java.lang.invoke.MethodHandle;
 public final class OptimisticTransactionOptions extends NativeObject {
 
 	/// `rocksdb_optimistictransaction_options_t* rocksdb_optimistictransaction_options_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_optimistictransaction_options_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_optimistictransaction_options_destroy(rocksdb_optimistictransaction_options_t* opt);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_optimistictransaction_options_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_optimistictransaction_options_set_set_snapshot(rocksdb_optimistictransaction_options_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_SET_SNAPSHOT;
+	private static final MethodHandle MH_SET_SET_SNAPSHOT = NativeLibrary.downcall(
+		"rocksdb_optimistictransaction_options_set_set_snapshot", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_optimistictransaction_options_get_set_snapshot(rocksdb_optimistictransaction_options_t* opt);`
-	private static final MethodHandle MH_GET_SET_SNAPSHOT;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_optimistictransaction_options_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_optimistictransaction_options_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_SET_SNAPSHOT = NativeLibrary.downcall(
-				"rocksdb_optimistictransaction_options_set_set_snapshot",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_SET_SNAPSHOT = NativeLibrary.downcall(
-				"rocksdb_optimistictransaction_options_get_set_snapshot",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_SET_SNAPSHOT = NativeLibrary.downcall(
+		"rocksdb_optimistictransaction_options_get_set_snapshot", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 
 	/// Default options for [OptimisticTransactionDB#beginTransaction(WriteOptions)]; immortal per
 	/// [NativeObject#makeImmortal()]: never closed, and `close()` on it is a no-op.

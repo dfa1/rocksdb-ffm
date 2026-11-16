@@ -15,65 +15,45 @@ import java.lang.invoke.MethodHandle;
 public final class CompactOptions extends NativeObject {
 
 	/// `rocksdb_compactoptions_t* rocksdb_compactoptions_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_compactoptions_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_compactoptions_destroy(rocksdb_compactoptions_t*);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_compactoptions_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_compactoptions_set_exclusive_manual_compaction(rocksdb_compactoptions_t*, unsigned char);`
-	private static final MethodHandle MH_SET_EXCLUSIVE;
+	private static final MethodHandle MH_SET_EXCLUSIVE = NativeLibrary.downcall(
+		"rocksdb_compactoptions_set_exclusive_manual_compaction", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_compactoptions_get_exclusive_manual_compaction(rocksdb_compactoptions_t*);`
-	private static final MethodHandle MH_GET_EXCLUSIVE;
+	private static final MethodHandle MH_GET_EXCLUSIVE = NativeLibrary.downcall(
+		"rocksdb_compactoptions_get_exclusive_manual_compaction", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_compactoptions_set_bottommost_level_compaction(rocksdb_compactoptions_t*, unsigned char);`
-	private static final MethodHandle MH_SET_BOTTOMMOST;
+	private static final MethodHandle MH_SET_BOTTOMMOST = NativeLibrary.downcall(
+		"rocksdb_compactoptions_set_bottommost_level_compaction", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_compactoptions_get_bottommost_level_compaction(rocksdb_compactoptions_t*);`
-	private static final MethodHandle MH_GET_BOTTOMMOST;
+	private static final MethodHandle MH_GET_BOTTOMMOST = NativeLibrary.downcall(
+		"rocksdb_compactoptions_get_bottommost_level_compaction", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_compactoptions_set_change_level(rocksdb_compactoptions_t*, unsigned char);`
-	private static final MethodHandle MH_SET_CHANGE_LEVEL;
+	private static final MethodHandle MH_SET_CHANGE_LEVEL = NativeLibrary.downcall(
+		"rocksdb_compactoptions_set_change_level", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_compactoptions_get_change_level(rocksdb_compactoptions_t*);`
-	private static final MethodHandle MH_GET_CHANGE_LEVEL;
+	private static final MethodHandle MH_GET_CHANGE_LEVEL = NativeLibrary.downcall(
+		"rocksdb_compactoptions_get_change_level", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_compactoptions_set_target_level(rocksdb_compactoptions_t*, int);`
-	private static final MethodHandle MH_SET_TARGET_LEVEL;
+	private static final MethodHandle MH_SET_TARGET_LEVEL = NativeLibrary.downcall(
+		"rocksdb_compactoptions_set_target_level", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `int rocksdb_compactoptions_get_target_level(rocksdb_compactoptions_t*);`
-	private static final MethodHandle MH_GET_TARGET_LEVEL;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_compactoptions_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_compactoptions_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_EXCLUSIVE = NativeLibrary.downcall(
-				"rocksdb_compactoptions_set_exclusive_manual_compaction",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_EXCLUSIVE = NativeLibrary.downcall(
-				"rocksdb_compactoptions_get_exclusive_manual_compaction",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_BOTTOMMOST = NativeLibrary.downcall(
-				"rocksdb_compactoptions_set_bottommost_level_compaction",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_BOTTOMMOST = NativeLibrary.downcall(
-				"rocksdb_compactoptions_get_bottommost_level_compaction",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_CHANGE_LEVEL = NativeLibrary.downcall(
-				"rocksdb_compactoptions_set_change_level",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_CHANGE_LEVEL = NativeLibrary.downcall(
-				"rocksdb_compactoptions_get_change_level",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_TARGET_LEVEL = NativeLibrary.downcall(
-				"rocksdb_compactoptions_set_target_level",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_TARGET_LEVEL = NativeLibrary.downcall(
-				"rocksdb_compactoptions_get_target_level",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_TARGET_LEVEL = NativeLibrary.downcall(
+		"rocksdb_compactoptions_get_target_level", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 
 	private CompactOptions(MemorySegment ptr) {
 		super(ptr);

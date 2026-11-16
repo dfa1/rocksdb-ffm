@@ -21,22 +21,16 @@ import java.util.Objects;
 /// owns every way a pinned value gets consumed.
 final class PinnableHandle extends NativeObject {
 
+	// get_value/destroy are pure in-memory pointer arithmetic — safe and worth
+	// marking critical(false) (no heap-array access) to skip transition overhead.
 	/// `const char* rocksdb_pinnable_handle_get_value(const rocksdb_pinnable_handle_t* handle, size_t* vallen);`
-	private static final MethodHandle MH_GET_VALUE;
+	private static final MethodHandle MH_GET_VALUE = NativeLibrary.downcall(
+		"rocksdb_pinnable_handle_get_value", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS), Linker.Option.critical(false)
+	);
 	/// `void rocksdb_pinnable_handle_destroy(rocksdb_pinnable_handle_t* handle);`
-	private static final MethodHandle MH_DESTROY;
-
-	static {
-		// get_value/destroy are pure in-memory pointer arithmetic — safe and worth
-		// marking critical(false) (no heap-array access) to skip transition overhead.
-		MH_GET_VALUE = NativeLibrary.downcall("rocksdb_pinnable_handle_get_value",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS),
-				Linker.Option.critical(false));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_pinnable_handle_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
-				Linker.Option.critical(false));
-	}
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_pinnable_handle_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS), Linker.Option.critical(false)
+	);
 
 	private PinnableHandle(MemorySegment ptr) {
 		super(ptr);

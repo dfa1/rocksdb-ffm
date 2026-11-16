@@ -9,52 +9,49 @@ import java.lang.invoke.MethodHandle;
 public final class StatisticsHistogramData extends NativeObject {
 
 	/// `rocksdb_statistics_histogram_data_t* rocksdb_statistics_histogram_data_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_statistics_histogram_data_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_statistics_histogram_data_destroy(rocksdb_statistics_histogram_data_t* data);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_statistics_histogram_data_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `double rocksdb_statistics_histogram_data_get_median(rocksdb_statistics_histogram_data_t* data);`
-	private static final MethodHandle MH_GET_MEDIAN;
+	private static final MethodHandle MH_GET_MEDIAN = NativeLibrary.downcall(
+		"rocksdb_statistics_histogram_data_get_median", FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS)
+	);
 	/// `double rocksdb_statistics_histogram_data_get_p95(rocksdb_statistics_histogram_data_t* data);`
-	private static final MethodHandle MH_GET_P95;
+	private static final MethodHandle MH_GET_P95 = NativeLibrary.downcall(
+		"rocksdb_statistics_histogram_data_get_p95", FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS)
+	);
 	/// `double rocksdb_statistics_histogram_data_get_p99(rocksdb_statistics_histogram_data_t* data);`
-	private static final MethodHandle MH_GET_P99;
+	private static final MethodHandle MH_GET_P99 = NativeLibrary.downcall(
+		"rocksdb_statistics_histogram_data_get_p99", FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS)
+	);
 	/// `double rocksdb_statistics_histogram_data_get_average(rocksdb_statistics_histogram_data_t* data);`
-	private static final MethodHandle MH_GET_AVERAGE;
+	private static final MethodHandle MH_GET_AVERAGE = NativeLibrary.downcall(
+		"rocksdb_statistics_histogram_data_get_average", FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS)
+	);
 	/// `double rocksdb_statistics_histogram_data_get_std_dev(rocksdb_statistics_histogram_data_t* data);`
-	private static final MethodHandle MH_GET_STD_DEV;
+	private static final MethodHandle MH_GET_STD_DEV = NativeLibrary.downcall(
+		"rocksdb_statistics_histogram_data_get_std_dev", FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS)
+	);
 	/// `double rocksdb_statistics_histogram_data_get_max(rocksdb_statistics_histogram_data_t* data);`
-	private static final MethodHandle MH_GET_MAX;
+	private static final MethodHandle MH_GET_MAX = NativeLibrary.downcall(
+		"rocksdb_statistics_histogram_data_get_max", FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS)
+	);
 	/// `uint64_t rocksdb_statistics_histogram_data_get_count(rocksdb_statistics_histogram_data_t* data);`
-	private static final MethodHandle MH_GET_COUNT;
+	private static final MethodHandle MH_GET_COUNT = NativeLibrary.downcall(
+		"rocksdb_statistics_histogram_data_get_count", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `uint64_t rocksdb_statistics_histogram_data_get_sum(rocksdb_statistics_histogram_data_t* data);`
-	private static final MethodHandle MH_GET_SUM;
+	private static final MethodHandle MH_GET_SUM = NativeLibrary.downcall(
+		"rocksdb_statistics_histogram_data_get_sum", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `double rocksdb_statistics_histogram_data_get_min(rocksdb_statistics_histogram_data_t* data);`
-	private static final MethodHandle MH_GET_MIN;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_statistics_histogram_data_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_statistics_histogram_data_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-		MH_GET_MEDIAN = NativeLibrary.downcall("rocksdb_statistics_histogram_data_get_median",
-				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
-		MH_GET_P95 = NativeLibrary.downcall("rocksdb_statistics_histogram_data_get_p95",
-				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
-		MH_GET_P99 = NativeLibrary.downcall("rocksdb_statistics_histogram_data_get_p99",
-				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
-		MH_GET_AVERAGE = NativeLibrary.downcall("rocksdb_statistics_histogram_data_get_average",
-				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
-		MH_GET_STD_DEV = NativeLibrary.downcall("rocksdb_statistics_histogram_data_get_std_dev",
-				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
-		MH_GET_MAX = NativeLibrary.downcall("rocksdb_statistics_histogram_data_get_max",
-				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
-		MH_GET_COUNT = NativeLibrary.downcall("rocksdb_statistics_histogram_data_get_count",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-		MH_GET_SUM = NativeLibrary.downcall("rocksdb_statistics_histogram_data_get_sum",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-		MH_GET_MIN = NativeLibrary.downcall("rocksdb_statistics_histogram_data_get_min",
-				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_MIN = NativeLibrary.downcall(
+		"rocksdb_statistics_histogram_data_get_min", FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS)
+	);
 
 	private StatisticsHistogramData(MemorySegment ptr) {
 		super(ptr);

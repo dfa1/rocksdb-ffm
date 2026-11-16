@@ -25,64 +25,49 @@ import java.nio.file.Path;
 public final class LiveFileInfo {
 
 	/// `const char* rocksdb_livefiles_column_family_name(const rocksdb_livefiles_t*, int index);`
-	private static final MethodHandle MH_CF_NAME;
+	private static final MethodHandle MH_CF_NAME = NativeLibrary.downcall(
+		"rocksdb_livefiles_column_family_name", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `const char* rocksdb_livefiles_name(const rocksdb_livefiles_t*, int index);`
-	private static final MethodHandle MH_NAME;
+	private static final MethodHandle MH_NAME = NativeLibrary.downcall(
+		"rocksdb_livefiles_name", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `const char* rocksdb_livefiles_directory(const rocksdb_livefiles_t*, int index);`
-	private static final MethodHandle MH_DIRECTORY;
+	private static final MethodHandle MH_DIRECTORY = NativeLibrary.downcall(
+		"rocksdb_livefiles_directory", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `int rocksdb_livefiles_level(const rocksdb_livefiles_t*, int index);`
-	private static final MethodHandle MH_LEVEL;
+	private static final MethodHandle MH_LEVEL = NativeLibrary.downcall(
+		"rocksdb_livefiles_level", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `size_t rocksdb_livefiles_size(const rocksdb_livefiles_t*, int index);`
-	private static final MethodHandle MH_SIZE;
+	private static final MethodHandle MH_SIZE = NativeLibrary.downcall(
+		"rocksdb_livefiles_size", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `const char* rocksdb_livefiles_smallestkey(const rocksdb_livefiles_t*, int index, size_t* size);`
-	private static final MethodHandle MH_SMALLESTKEY;
+	private static final MethodHandle MH_SMALLESTKEY = NativeLibrary.downcall(
+		"rocksdb_livefiles_smallestkey", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `const char* rocksdb_livefiles_largestkey(const rocksdb_livefiles_t*, int index, size_t* size);`
-	private static final MethodHandle MH_LARGESTKEY;
+	private static final MethodHandle MH_LARGESTKEY = NativeLibrary.downcall(
+		"rocksdb_livefiles_largestkey", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `uint64_t rocksdb_livefiles_smallest_seqno(const rocksdb_livefiles_t*, int index);`
-	private static final MethodHandle MH_SMALLEST_SEQNO;
+	private static final MethodHandle MH_SMALLEST_SEQNO = NativeLibrary.downcall(
+		"rocksdb_livefiles_smallest_seqno", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `uint64_t rocksdb_livefiles_largest_seqno(const rocksdb_livefiles_t*, int index);`
-	private static final MethodHandle MH_LARGEST_SEQNO;
+	private static final MethodHandle MH_LARGEST_SEQNO = NativeLibrary.downcall(
+		"rocksdb_livefiles_largest_seqno", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `uint64_t rocksdb_livefiles_entries(const rocksdb_livefiles_t*, int index);`
-	private static final MethodHandle MH_ENTRIES;
+	private static final MethodHandle MH_ENTRIES = NativeLibrary.downcall(
+		"rocksdb_livefiles_entries", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `uint64_t rocksdb_livefiles_deletions(const rocksdb_livefiles_t*, int index);`
-	private static final MethodHandle MH_DELETIONS;
-
-	static {
-		MH_CF_NAME = NativeLibrary.downcall("rocksdb_livefiles_column_family_name",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_NAME = NativeLibrary.downcall("rocksdb_livefiles_name",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_DIRECTORY = NativeLibrary.downcall("rocksdb_livefiles_directory",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_LEVEL = NativeLibrary.downcall("rocksdb_livefiles_level",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_SIZE = NativeLibrary.downcall("rocksdb_livefiles_size",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_SMALLESTKEY = NativeLibrary.downcall("rocksdb_livefiles_smallestkey",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_LARGESTKEY = NativeLibrary.downcall("rocksdb_livefiles_largestkey",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_SMALLEST_SEQNO = NativeLibrary.downcall("rocksdb_livefiles_smallest_seqno",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_LARGEST_SEQNO = NativeLibrary.downcall("rocksdb_livefiles_largest_seqno",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_ENTRIES = NativeLibrary.downcall("rocksdb_livefiles_entries",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_DELETIONS = NativeLibrary.downcall("rocksdb_livefiles_deletions",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-	}
+	private static final MethodHandle MH_DELETIONS = NativeLibrary.downcall(
+		"rocksdb_livefiles_deletions", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 
 	private final LiveFiles owner;
 	private final int index;

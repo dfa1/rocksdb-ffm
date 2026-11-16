@@ -47,11 +47,17 @@ public final class Logger extends NativeObject {
 	private static final int STDERR_CALLBACK_ID = -1;
 
 	/// `rocksdb_logger_t* rocksdb_logger_create_stderr_logger(int log_level, const char* prefix);`
-	private static final MethodHandle MH_CREATE_STDERR;
+	private static final MethodHandle MH_CREATE_STDERR = NativeLibrary.downcall(
+		"rocksdb_logger_create_stderr_logger", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_logger_t* rocksdb_logger_create_callback_logger(int log_level, void (*)(void* priv, unsigned lev, char* msg, size_t len), void* priv);`
-	private static final MethodHandle MH_CREATE_CALLBACK;
+	private static final MethodHandle MH_CREATE_CALLBACK = NativeLibrary.downcall(
+		"rocksdb_logger_create_callback_logger", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_logger_destroy(rocksdb_logger_t* logger);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_logger_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	private static final FunctionDescriptor CALLBACK_DESC = FunctionDescriptor.ofVoid(
 			ValueLayout.ADDRESS,   // void* priv  — carries the callback ID
@@ -66,17 +72,6 @@ public final class Logger extends NativeObject {
 	// One global upcall stub shared by all callback loggers.
 	// Lives for the JVM lifetime so the function pointer is always valid.
 	private static final MemorySegment GLOBAL_STUB = NativeLibrary.upcall(MethodHandles.lookup(), "dispatch", CALLBACK_DESC);
-
-	static {
-		MH_CREATE_STDERR = NativeLibrary.downcall("rocksdb_logger_create_stderr_logger",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_CREATE_CALLBACK = NativeLibrary.downcall("rocksdb_logger_create_callback_logger",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_logger_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
 
 	/// `-1` for stderr loggers; the registry key for callback loggers.
 	private final long callbackId;

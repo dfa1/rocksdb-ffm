@@ -14,27 +14,21 @@ import java.lang.invoke.MethodHandle;
 public final class BlockCacheTraceOptions extends NativeObject {
 
 	/// `rocksdb_block_cache_trace_options_t* rocksdb_block_cache_trace_options_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_block_cache_trace_options_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_block_cache_trace_options_destroy(rocksdb_block_cache_trace_options_t*);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_block_cache_trace_options_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_block_cache_trace_options_set_sampling_frequency(rocksdb_block_cache_trace_options_t*, uint64_t);`
-	private static final MethodHandle MH_SET_SAMPLING_FREQUENCY;
+	private static final MethodHandle MH_SET_SAMPLING_FREQUENCY = NativeLibrary.downcall(
+		"rocksdb_block_cache_trace_options_set_sampling_frequency", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
+	);
 	/// `uint64_t rocksdb_block_cache_trace_options_get_sampling_frequency(rocksdb_block_cache_trace_options_t*);`
-	private static final MethodHandle MH_GET_SAMPLING_FREQUENCY;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_block_cache_trace_options_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_block_cache_trace_options_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_SAMPLING_FREQUENCY = NativeLibrary.downcall("rocksdb_block_cache_trace_options_set_sampling_frequency",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-
-		MH_GET_SAMPLING_FREQUENCY = NativeLibrary.downcall("rocksdb_block_cache_trace_options_get_sampling_frequency",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_SAMPLING_FREQUENCY = NativeLibrary.downcall(
+		"rocksdb_block_cache_trace_options_get_sampling_frequency", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 
 	private BlockCacheTraceOptions(MemorySegment ptr) {
 		super(ptr);

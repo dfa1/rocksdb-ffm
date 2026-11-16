@@ -30,23 +30,17 @@ import java.util.NoSuchElementException;
 public final class LiveFilesStorageInfo extends NativeObject implements Iterable<LiveFileStorageInfo> {
 
 	/// `rocksdb_livefiles_storage_info_t* rocksdb_get_livefiles_storage_info(rocksdb_t* db, const rocksdb_livefiles_storage_info_options_t* options, char** errptr);`
-	private static final MethodHandle MH_GET;
+	private static final MethodHandle MH_GET = NativeLibrary.downcall(
+		"rocksdb_get_livefiles_storage_info", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `size_t rocksdb_livefiles_storage_info_count(const rocksdb_livefiles_storage_info_t* info);`
-	private static final MethodHandle MH_COUNT;
+	private static final MethodHandle MH_COUNT = NativeLibrary.downcall(
+		"rocksdb_livefiles_storage_info_count", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_livefiles_storage_info_destroy(rocksdb_livefiles_storage_info_t* info);`
-	private static final MethodHandle MH_DESTROY;
-
-	static {
-		MH_GET = NativeLibrary.downcall("rocksdb_get_livefiles_storage_info",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_COUNT = NativeLibrary.downcall("rocksdb_livefiles_storage_info_count",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_livefiles_storage_info_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_livefiles_storage_info_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	// See LiveFiles.count for why this is cached rather than re-derived: size()/get() need to
 	// keep working after close() without touching ptr(), not a performance concern.

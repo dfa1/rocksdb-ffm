@@ -29,33 +29,25 @@ import java.lang.invoke.MethodHandle;
 public final class WalIterator extends NativeObject {
 
 	/// `void rocksdb_wal_iter_next(rocksdb_wal_iterator_t* iter);`
-	private static final MethodHandle MH_NEXT;
+	private static final MethodHandle MH_NEXT = NativeLibrary.downcall(
+		"rocksdb_wal_iter_next", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `unsigned char rocksdb_wal_iter_valid(const rocksdb_wal_iterator_t*);`
-	private static final MethodHandle MH_VALID;
+	private static final MethodHandle MH_VALID = NativeLibrary.downcall(
+		"rocksdb_wal_iter_valid", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_wal_iter_status(const rocksdb_wal_iterator_t* iter, char** errptr);`
-	private static final MethodHandle MH_STATUS;
+	private static final MethodHandle MH_STATUS = NativeLibrary.downcall(
+		"rocksdb_wal_iter_status", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_writebatch_t* rocksdb_wal_iter_get_batch(const rocksdb_wal_iterator_t* iter, uint64_t* seq);`
-	private static final MethodHandle MH_GET_BATCH;
+	private static final MethodHandle MH_GET_BATCH = NativeLibrary.downcall(
+		"rocksdb_wal_iter_get_batch", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_wal_iter_destroy(const rocksdb_wal_iterator_t* iter);`
-	private static final MethodHandle MH_DESTROY;
-
-	static {
-		MH_NEXT = NativeLibrary.downcall("rocksdb_wal_iter_next",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_VALID = NativeLibrary.downcall("rocksdb_wal_iter_valid",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_STATUS = NativeLibrary.downcall("rocksdb_wal_iter_status",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_GET_BATCH = NativeLibrary.downcall("rocksdb_wal_iter_get_batch",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_wal_iter_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_wal_iter_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	// rocksdb_wal_iter_get_batch is only safe to call once per position: a second call before
 	// next() moves the iterator on crashes inside RocksDB's own WriteBatch move-assignment

@@ -29,145 +29,101 @@ import java.nio.file.Path;
 public final class BackupEngineOptions extends NativeObject {
 
 	/// `rocksdb_backup_engine_options_t* rocksdb_backup_engine_options_create(const char* backup_dir);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_create", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_destroy(rocksdb_backup_engine_options_t*);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_set_backup_dir(rocksdb_backup_engine_options_t* options, const char* backup_dir);`
-	private static final MethodHandle MH_SET_BACKUP_DIR;
+	private static final MethodHandle MH_SET_BACKUP_DIR = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_set_backup_dir", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_set_env(rocksdb_backup_engine_options_t* options, rocksdb_env_t* env);`
-	private static final MethodHandle MH_SET_ENV;
+	private static final MethodHandle MH_SET_ENV = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_set_env", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_set_share_table_files(rocksdb_backup_engine_options_t* options, unsigned char val);`
-	private static final MethodHandle MH_SET_SHARE_TABLE_FILES;
+	private static final MethodHandle MH_SET_SHARE_TABLE_FILES = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_set_share_table_files", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_backup_engine_options_get_share_table_files(rocksdb_backup_engine_options_t* options);`
-	private static final MethodHandle MH_GET_SHARE_TABLE_FILES;
+	private static final MethodHandle MH_GET_SHARE_TABLE_FILES = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_get_share_table_files", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_set_sync(rocksdb_backup_engine_options_t* options, unsigned char val);`
-	private static final MethodHandle MH_SET_SYNC;
+	private static final MethodHandle MH_SET_SYNC = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_set_sync", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_backup_engine_options_get_sync(rocksdb_backup_engine_options_t* options);`
-	private static final MethodHandle MH_GET_SYNC;
+	private static final MethodHandle MH_GET_SYNC = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_get_sync", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_set_destroy_old_data(rocksdb_backup_engine_options_t* options, unsigned char val);`
-	private static final MethodHandle MH_SET_DESTROY_OLD_DATA;
+	private static final MethodHandle MH_SET_DESTROY_OLD_DATA = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_set_destroy_old_data", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_backup_engine_options_get_destroy_old_data(rocksdb_backup_engine_options_t* options);`
-	private static final MethodHandle MH_GET_DESTROY_OLD_DATA;
+	private static final MethodHandle MH_GET_DESTROY_OLD_DATA = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_get_destroy_old_data", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_set_backup_log_files(rocksdb_backup_engine_options_t* options, unsigned char val);`
-	private static final MethodHandle MH_SET_BACKUP_LOG_FILES;
+	private static final MethodHandle MH_SET_BACKUP_LOG_FILES = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_set_backup_log_files", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_backup_engine_options_get_backup_log_files(rocksdb_backup_engine_options_t* options);`
-	private static final MethodHandle MH_GET_BACKUP_LOG_FILES;
+	private static final MethodHandle MH_GET_BACKUP_LOG_FILES = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_get_backup_log_files", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_set_backup_rate_limit(rocksdb_backup_engine_options_t* options, uint64_t limit);`
-	private static final MethodHandle MH_SET_BACKUP_RATE_LIMIT;
+	private static final MethodHandle MH_SET_BACKUP_RATE_LIMIT = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_set_backup_rate_limit", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
+	);
 	/// `uint64_t rocksdb_backup_engine_options_get_backup_rate_limit(rocksdb_backup_engine_options_t* options);`
-	private static final MethodHandle MH_GET_BACKUP_RATE_LIMIT;
+	private static final MethodHandle MH_GET_BACKUP_RATE_LIMIT = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_get_backup_rate_limit", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_set_restore_rate_limit(rocksdb_backup_engine_options_t* options, uint64_t limit);`
-	private static final MethodHandle MH_SET_RESTORE_RATE_LIMIT;
+	private static final MethodHandle MH_SET_RESTORE_RATE_LIMIT = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_set_restore_rate_limit", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
+	);
 	/// `uint64_t rocksdb_backup_engine_options_get_restore_rate_limit(rocksdb_backup_engine_options_t* options);`
-	private static final MethodHandle MH_GET_RESTORE_RATE_LIMIT;
+	private static final MethodHandle MH_GET_RESTORE_RATE_LIMIT = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_get_restore_rate_limit", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_set_max_background_operations(rocksdb_backup_engine_options_t* options, int val);`
-	private static final MethodHandle MH_SET_MAX_BACKGROUND_OPERATIONS;
+	private static final MethodHandle MH_SET_MAX_BACKGROUND_OPERATIONS = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_set_max_background_operations", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `int rocksdb_backup_engine_options_get_max_background_operations(rocksdb_backup_engine_options_t* options);`
-	private static final MethodHandle MH_GET_MAX_BACKGROUND_OPERATIONS;
+	private static final MethodHandle MH_GET_MAX_BACKGROUND_OPERATIONS = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_get_max_background_operations", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_set_callback_trigger_interval_size(rocksdb_backup_engine_options_t* options, uint64_t size);`
-	private static final MethodHandle MH_SET_CALLBACK_TRIGGER_INTERVAL_SIZE;
+	private static final MethodHandle MH_SET_CALLBACK_TRIGGER_INTERVAL_SIZE = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_set_callback_trigger_interval_size", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
+	);
 	/// `uint64_t rocksdb_backup_engine_options_get_callback_trigger_interval_size(rocksdb_backup_engine_options_t* options);`
-	private static final MethodHandle MH_GET_CALLBACK_TRIGGER_INTERVAL_SIZE;
+	private static final MethodHandle MH_GET_CALLBACK_TRIGGER_INTERVAL_SIZE = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_get_callback_trigger_interval_size", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_set_max_valid_backups_to_open(rocksdb_backup_engine_options_t* options, int val);`
-	private static final MethodHandle MH_SET_MAX_VALID_BACKUPS_TO_OPEN;
+	private static final MethodHandle MH_SET_MAX_VALID_BACKUPS_TO_OPEN = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_set_max_valid_backups_to_open", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `int rocksdb_backup_engine_options_get_max_valid_backups_to_open(rocksdb_backup_engine_options_t* options);`
-	private static final MethodHandle MH_GET_MAX_VALID_BACKUPS_TO_OPEN;
+	private static final MethodHandle MH_GET_MAX_VALID_BACKUPS_TO_OPEN = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_get_max_valid_backups_to_open", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_backup_engine_options_set_share_files_with_checksum_naming(rocksdb_backup_engine_options_t* options, int val);`
-	private static final MethodHandle MH_SET_SHARE_FILES_WITH_CHECKSUM_NAMING;
+	private static final MethodHandle MH_SET_SHARE_FILES_WITH_CHECKSUM_NAMING = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_set_share_files_with_checksum_naming", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `int rocksdb_backup_engine_options_get_share_files_with_checksum_naming(rocksdb_backup_engine_options_t* options);`
-	private static final MethodHandle MH_GET_SHARE_FILES_WITH_CHECKSUM_NAMING;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_backup_engine_options_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_backup_engine_options_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_BACKUP_DIR = NativeLibrary.downcall("rocksdb_backup_engine_options_set_backup_dir",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_SET_ENV = NativeLibrary.downcall("rocksdb_backup_engine_options_set_env",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_SET_SHARE_TABLE_FILES = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_set_share_table_files",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_SHARE_TABLE_FILES = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_get_share_table_files",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_SYNC = NativeLibrary.downcall("rocksdb_backup_engine_options_set_sync",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_SYNC = NativeLibrary.downcall("rocksdb_backup_engine_options_get_sync",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_DESTROY_OLD_DATA = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_set_destroy_old_data",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_DESTROY_OLD_DATA = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_get_destroy_old_data",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_BACKUP_LOG_FILES = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_set_backup_log_files",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_BACKUP_LOG_FILES = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_get_backup_log_files",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_BACKUP_RATE_LIMIT = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_set_backup_rate_limit",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-
-		MH_GET_BACKUP_RATE_LIMIT = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_get_backup_rate_limit",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-
-		MH_SET_RESTORE_RATE_LIMIT = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_set_restore_rate_limit",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-
-		MH_GET_RESTORE_RATE_LIMIT = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_get_restore_rate_limit",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-
-		MH_SET_MAX_BACKGROUND_OPERATIONS = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_set_max_background_operations",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_MAX_BACKGROUND_OPERATIONS = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_get_max_background_operations",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_SET_CALLBACK_TRIGGER_INTERVAL_SIZE = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_set_callback_trigger_interval_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-
-		MH_GET_CALLBACK_TRIGGER_INTERVAL_SIZE = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_get_callback_trigger_interval_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-
-		MH_SET_MAX_VALID_BACKUPS_TO_OPEN = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_set_max_valid_backups_to_open",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_MAX_VALID_BACKUPS_TO_OPEN = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_get_max_valid_backups_to_open",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_SET_SHARE_FILES_WITH_CHECKSUM_NAMING = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_set_share_files_with_checksum_naming",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_SHARE_FILES_WITH_CHECKSUM_NAMING = NativeLibrary.downcall(
-				"rocksdb_backup_engine_options_get_share_files_with_checksum_naming",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_SHARE_FILES_WITH_CHECKSUM_NAMING = NativeLibrary.downcall(
+		"rocksdb_backup_engine_options_get_share_files_with_checksum_naming", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 
 	private BackupEngineOptions(MemorySegment ptr) {
 		super(ptr);

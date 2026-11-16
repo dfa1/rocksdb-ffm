@@ -17,101 +17,56 @@ import java.util.OptionalLong;
 /// [#131](https://github.com/dfa1/rocksdb-ffm/issues/131).
 final class RocksDBReadOperationsBindings {
 
+	// get_pinned_*_v2 can block on disk I/O (a Get), so it must NOT be marked
+	// critical: a critical downcall stalls GC for its entire duration.
 	/// `rocksdb_pinnable_handle_t* rocksdb_get_pinned_v2(rocksdb_t* db, const rocksdb_readoptions_t* options, const char* key, size_t keylen, char** errptr);`
-	private static final MethodHandle MH_GET_PINNED_V2;
+	private static final MethodHandle MH_GET_PINNED_V2 = NativeLibrary.downcall(
+		"rocksdb_get_pinned_v2", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_pinnable_handle_t* rocksdb_get_pinned_cf_v2(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char** errptr);`
-	private static final MethodHandle MH_GET_PINNED_CF_V2;
+	private static final MethodHandle MH_GET_PINNED_CF_V2 = NativeLibrary.downcall(
+		"rocksdb_get_pinned_cf_v2", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `unsigned char rocksdb_get_into_buffer(rocksdb_t* db, const rocksdb_readoptions_t* options, const char* key, size_t keylen, char* buffer, size_t buffer_size, size_t* vallen, unsigned char* found, char** errptr);`
-	private static final MethodHandle MH_GET_INTO_BUFFER;
+	private static final MethodHandle MH_GET_INTO_BUFFER = NativeLibrary.downcall(
+		"rocksdb_get_into_buffer", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `unsigned char rocksdb_get_into_buffer_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char* buffer, size_t buffer_size, size_t* vallen, unsigned char* found, char** errptr);`
-	private static final MethodHandle MH_GET_INTO_BUFFER_CF;
+	private static final MethodHandle MH_GET_INTO_BUFFER_CF = NativeLibrary.downcall(
+		"rocksdb_get_into_buffer_cf", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `unsigned char rocksdb_key_may_exist(rocksdb_t* db, const rocksdb_readoptions_t* options, const char* key, size_t key_len, char** value, size_t* val_len, const char* timestamp, size_t timestamp_len, unsigned char* value_found);`
-	private static final MethodHandle MH_KEY_MAY_EXIST;
+	private static final MethodHandle MH_KEY_MAY_EXIST = NativeLibrary.downcall(
+		"rocksdb_key_may_exist", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `unsigned char rocksdb_key_may_exist_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t key_len, char** value, size_t* val_len, const char* timestamp, size_t timestamp_len, unsigned char* value_found);`
-	private static final MethodHandle MH_KEY_MAY_EXIST_CF;
+	private static final MethodHandle MH_KEY_MAY_EXIST_CF = NativeLibrary.downcall(
+		"rocksdb_key_may_exist_cf", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_iterator_t* rocksdb_create_iterator_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family);`
-	private static final MethodHandle MH_CREATE_ITERATOR_CF;
+	private static final MethodHandle MH_CREATE_ITERATOR_CF = NativeLibrary.downcall(
+		"rocksdb_create_iterator_cf", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `const rocksdb_snapshot_t* rocksdb_create_snapshot(rocksdb_t* db);`
-	private static final MethodHandle MH_CREATE_SNAPSHOT;
+	private static final MethodHandle MH_CREATE_SNAPSHOT = NativeLibrary.downcall(
+		"rocksdb_create_snapshot", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `char* rocksdb_property_value(rocksdb_t* db, const char* propname);`
-	private static final MethodHandle MH_PROPERTY_VALUE;
+	private static final MethodHandle MH_PROPERTY_VALUE = NativeLibrary.downcall(
+		"rocksdb_property_value", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `int rocksdb_property_int(rocksdb_t* db, const char* propname, uint64_t* out_val);`
-	private static final MethodHandle MH_PROPERTY_INT;
+	private static final MethodHandle MH_PROPERTY_INT = NativeLibrary.downcall(
+		"rocksdb_property_int", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `char* rocksdb_property_value_cf(rocksdb_t* db, rocksdb_column_family_handle_t* column_family, const char* propname);`
-	private static final MethodHandle MH_PROPERTY_VALUE_CF;
+	private static final MethodHandle MH_PROPERTY_VALUE_CF = NativeLibrary.downcall(
+		"rocksdb_property_value_cf", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `int rocksdb_property_int_cf(rocksdb_t* db, rocksdb_column_family_handle_t* column_family, const char* propname, uint64_t* out_val);`
-	private static final MethodHandle MH_PROPERTY_INT_CF;
-
-	static {
-		// get_pinned_*_v2 can block on disk I/O (a Get), so it must NOT be marked
-		// critical: a critical downcall stalls GC for its entire duration.
-		MH_GET_PINNED_V2 =NativeLibrary.downcall("rocksdb_get_pinned_v2",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_GET_PINNED_CF_V2 = NativeLibrary.downcall("rocksdb_get_pinned_cf_v2",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_GET_INTO_BUFFER = NativeLibrary.downcall("rocksdb_get_into_buffer",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS));
-
-		MH_GET_INTO_BUFFER_CF = NativeLibrary.downcall("rocksdb_get_into_buffer_cf",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS));
-
-		MH_KEY_MAY_EXIST = NativeLibrary.downcall("rocksdb_key_may_exist",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_KEY_MAY_EXIST_CF = NativeLibrary.downcall("rocksdb_key_may_exist_cf",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_CREATE_ITERATOR_CF = NativeLibrary.downcall("rocksdb_create_iterator_cf",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_CREATE_SNAPSHOT = NativeLibrary.downcall("rocksdb_create_snapshot",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_PROPERTY_VALUE = NativeLibrary.downcall("rocksdb_property_value",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_PROPERTY_INT = NativeLibrary.downcall("rocksdb_property_int",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_PROPERTY_VALUE_CF = NativeLibrary.downcall("rocksdb_property_value_cf",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_PROPERTY_INT_CF = NativeLibrary.downcall("rocksdb_property_int_cf",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_PROPERTY_INT_CF = NativeLibrary.downcall(
+		"rocksdb_property_int_cf", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	private RocksDBReadOperationsBindings() {
 	}

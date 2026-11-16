@@ -18,59 +18,45 @@ import java.lang.invoke.MethodHandle;
 public final class SizeApproximationOptions extends NativeObject {
 
 	/// `rocksdb_size_approximation_options_t* rocksdb_size_approximation_options_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_size_approximation_options_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_size_approximation_options_destroy(rocksdb_size_approximation_options_t* options);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_size_approximation_options_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_size_approximation_options_set_include_memtables(rocksdb_size_approximation_options_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_INCLUDE_MEMTABLES;
+	private static final MethodHandle MH_SET_INCLUDE_MEMTABLES = NativeLibrary.downcall(
+		"rocksdb_size_approximation_options_set_include_memtables", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_size_approximation_options_get_include_memtables(rocksdb_size_approximation_options_t* opt);`
-	private static final MethodHandle MH_GET_INCLUDE_MEMTABLES;
+	private static final MethodHandle MH_GET_INCLUDE_MEMTABLES = NativeLibrary.downcall(
+		"rocksdb_size_approximation_options_get_include_memtables", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_size_approximation_options_set_include_files(rocksdb_size_approximation_options_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_INCLUDE_FILES;
+	private static final MethodHandle MH_SET_INCLUDE_FILES = NativeLibrary.downcall(
+		"rocksdb_size_approximation_options_set_include_files", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_size_approximation_options_get_include_files(rocksdb_size_approximation_options_t* opt);`
-	private static final MethodHandle MH_GET_INCLUDE_FILES;
+	private static final MethodHandle MH_GET_INCLUDE_FILES = NativeLibrary.downcall(
+		"rocksdb_size_approximation_options_get_include_files", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_size_approximation_options_set_include_blob_files(rocksdb_size_approximation_options_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_INCLUDE_BLOB_FILES;
+	private static final MethodHandle MH_SET_INCLUDE_BLOB_FILES = NativeLibrary.downcall(
+		"rocksdb_size_approximation_options_set_include_blob_files", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_size_approximation_options_get_include_blob_files(rocksdb_size_approximation_options_t* opt);`
-	private static final MethodHandle MH_GET_INCLUDE_BLOB_FILES;
+	private static final MethodHandle MH_GET_INCLUDE_BLOB_FILES = NativeLibrary.downcall(
+		"rocksdb_size_approximation_options_get_include_blob_files", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_size_approximation_options_set_files_size_error_margin(rocksdb_size_approximation_options_t* opt, double v);`
-	private static final MethodHandle MH_SET_FILES_SIZE_ERROR_MARGIN;
+	private static final MethodHandle MH_SET_FILES_SIZE_ERROR_MARGIN = NativeLibrary.downcall(
+		"rocksdb_size_approximation_options_set_files_size_error_margin", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)
+	);
 	/// `double rocksdb_size_approximation_options_get_files_size_error_margin(rocksdb_size_approximation_options_t* opt);`
-	private static final MethodHandle MH_GET_FILES_SIZE_ERROR_MARGIN;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_size_approximation_options_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_size_approximation_options_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_INCLUDE_MEMTABLES = NativeLibrary.downcall("rocksdb_size_approximation_options_set_include_memtables",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_INCLUDE_MEMTABLES = NativeLibrary.downcall("rocksdb_size_approximation_options_get_include_memtables",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_INCLUDE_FILES = NativeLibrary.downcall("rocksdb_size_approximation_options_set_include_files",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_INCLUDE_FILES = NativeLibrary.downcall("rocksdb_size_approximation_options_get_include_files",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_INCLUDE_BLOB_FILES = NativeLibrary.downcall("rocksdb_size_approximation_options_set_include_blob_files",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_INCLUDE_BLOB_FILES = NativeLibrary.downcall("rocksdb_size_approximation_options_get_include_blob_files",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_FILES_SIZE_ERROR_MARGIN = NativeLibrary.downcall(
-				"rocksdb_size_approximation_options_set_files_size_error_margin",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
-
-		MH_GET_FILES_SIZE_ERROR_MARGIN = NativeLibrary.downcall(
-				"rocksdb_size_approximation_options_get_files_size_error_margin",
-				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_FILES_SIZE_ERROR_MARGIN = NativeLibrary.downcall(
+		"rocksdb_size_approximation_options_get_files_size_error_margin", FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS)
+	);
 
 	private SizeApproximationOptions(MemorySegment ptr) {
 		super(ptr);

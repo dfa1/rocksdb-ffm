@@ -42,142 +42,82 @@ public final class RocksDB {
 	// -----------------------------------------------------------------------
 
 	/// `rocksdb_t* rocksdb_open(const rocksdb_options_t* options, const char* name, char** errptr);`
-	private static final MethodHandle MH_OPEN;
+	private static final MethodHandle MH_OPEN = NativeLibrary.downcall(
+		"rocksdb_open", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_t* rocksdb_open_with_ttl(const rocksdb_options_t* options, const char* name, int ttl, char** errptr);`
-	private static final MethodHandle MH_OPEN_WITH_TTL;
+	private static final MethodHandle MH_OPEN_WITH_TTL = NativeLibrary.downcall(
+		"rocksdb_open_with_ttl", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_t* rocksdb_open_for_read_only(const rocksdb_options_t* options, const char* name, unsigned char error_if_wal_file_exists, char** errptr);`
-	private static final MethodHandle MH_OPEN_FOR_READ_ONLY;
+	private static final MethodHandle MH_OPEN_FOR_READ_ONLY = NativeLibrary.downcall(
+		"rocksdb_open_for_read_only", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_t* rocksdb_open_as_secondary(const rocksdb_options_t* options, const char* name, const char* secondary_path, char** errptr);`
-	private static final MethodHandle MH_OPEN_SECONDARY;
+	private static final MethodHandle MH_OPEN_SECONDARY = NativeLibrary.downcall(
+		"rocksdb_open_as_secondary", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_transactiondb_t* rocksdb_transactiondb_open(const rocksdb_options_t* options, const rocksdb_transactiondb_options_t* txn_db_options, const char* name, char** errptr);`
-	private static final MethodHandle MH_OPEN_TRANSACTION;
+	private static final MethodHandle MH_OPEN_TRANSACTION = NativeLibrary.downcall(
+		"rocksdb_transactiondb_open", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_optimistictransactiondb_t* rocksdb_optimistictransactiondb_open(const rocksdb_options_t* options, const char* name, char** errptr);`
-	private static final MethodHandle MH_OPEN_OPTIMISTIC;
+	private static final MethodHandle MH_OPEN_OPTIMISTIC = NativeLibrary.downcall(
+		"rocksdb_optimistictransactiondb_open", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_t* rocksdb_optimistictransactiondb_get_base_db(rocksdb_optimistictransactiondb_t* otxn_db);`
-	private static final MethodHandle MH_OPTIMISTIC_GET_BASE_DB;
+	private static final MethodHandle MH_OPTIMISTIC_GET_BASE_DB = NativeLibrary.downcall(
+		"rocksdb_optimistictransactiondb_get_base_db", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	// -----------------------------------------------------------------------
 	// Column-family open/list method handles — used only inside factory methods
 	// -----------------------------------------------------------------------
 
 	/// `rocksdb_t* rocksdb_open_column_families(const rocksdb_options_t* options, const char* name, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, char** errptr);`
-	private static final MethodHandle MH_OPEN_CF;
+	private static final MethodHandle MH_OPEN_CF = NativeLibrary.downcall(
+		"rocksdb_open_column_families", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `char** rocksdb_list_column_families(const rocksdb_options_t* options, const char* name, size_t* lencf, char** errptr);`
-	private static final MethodHandle MH_LIST_CF;
+	private static final MethodHandle MH_LIST_CF = NativeLibrary.downcall(
+		"rocksdb_list_column_families", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_list_column_families_destroy(char** list, size_t len);`
-	private static final MethodHandle MH_LIST_CF_DESTROY;
+	private static final MethodHandle MH_LIST_CF_DESTROY = NativeLibrary.downcall(
+		"rocksdb_list_column_families_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_load_latest_options(const char* db_path, rocksdb_env_t* env, bool ignore_unknown_options, rocksdb_cache_t* cache, rocksdb_options_t** db_options, size_t* num_column_families, char*** column_family_names, rocksdb_options_t*** column_family_options, char** errptr);`
-	private static final MethodHandle MH_LOAD_LATEST_OPTIONS;
+	private static final MethodHandle MH_LOAD_LATEST_OPTIONS = NativeLibrary.downcall(
+		"rocksdb_load_latest_options", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_BOOLEAN, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_load_latest_options_destroy(rocksdb_options_t* db_options, char** list_column_family_names, rocksdb_options_t** list_column_family_options, size_t len);`
-	private static final MethodHandle MH_LOAD_LATEST_OPTIONS_DESTROY;
+	private static final MethodHandle MH_LOAD_LATEST_OPTIONS_DESTROY = NativeLibrary.downcall(
+		"rocksdb_load_latest_options_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `rocksdb_t* rocksdb_open_for_read_only_column_families(const rocksdb_options_t* options, const char* name, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, unsigned char error_if_wal_file_exists, char** errptr);`
-	private static final MethodHandle MH_OPEN_FOR_READ_ONLY_CF;
+	private static final MethodHandle MH_OPEN_FOR_READ_ONLY_CF = NativeLibrary.downcall(
+		"rocksdb_open_for_read_only_column_families", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_t* rocksdb_open_as_secondary_column_families(const rocksdb_options_t* options, const char* name, const char* secondary_path, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, char** errptr);`
-	private static final MethodHandle MH_OPEN_SECONDARY_CF;
+	private static final MethodHandle MH_OPEN_SECONDARY_CF = NativeLibrary.downcall(
+		"rocksdb_open_as_secondary_column_families", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_t* rocksdb_open_column_families_with_ttl(const rocksdb_options_t* options, const char* name, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, const int* ttls, char** errptr);`
-	private static final MethodHandle MH_OPEN_CF_WITH_TTL;
+	private static final MethodHandle MH_OPEN_CF_WITH_TTL = NativeLibrary.downcall(
+		"rocksdb_open_column_families_with_ttl", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_transactiondb_t* rocksdb_transactiondb_open_column_families(const rocksdb_options_t* options, const rocksdb_transactiondb_options_t* txn_db_options, const char* name, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, char** errptr);`
-	private static final MethodHandle MH_OPEN_TRANSACTION_CF;
+	private static final MethodHandle MH_OPEN_TRANSACTION_CF = NativeLibrary.downcall(
+		"rocksdb_transactiondb_open_column_families", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_optimistictransactiondb_t* rocksdb_optimistictransactiondb_open_column_families(const rocksdb_options_t* options, const char* name, int num_column_families, const char* const* column_family_names, const rocksdb_options_t* const* column_family_options, rocksdb_column_family_handle_t** column_family_handles, char** errptr);`
-	private static final MethodHandle MH_OPEN_OPTIMISTIC_CF;
+	private static final MethodHandle MH_OPEN_OPTIMISTIC_CF = NativeLibrary.downcall(
+		"rocksdb_optimistictransactiondb_open_column_families", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_t* rocksdb_transactiondb_get_base_db(rocksdb_transactiondb_t* txn_db);`
-	private static final MethodHandle MH_TRANSACTION_GET_BASE_DB;
-
-	static {
-		MH_OPEN = NativeLibrary.downcall("rocksdb_open",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_OPEN_WITH_TTL = NativeLibrary.downcall("rocksdb_open_with_ttl",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_OPEN_FOR_READ_ONLY = NativeLibrary.downcall("rocksdb_open_for_read_only",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_OPEN_SECONDARY = NativeLibrary.downcall("rocksdb_open_as_secondary",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_OPEN_TRANSACTION = NativeLibrary.downcall("rocksdb_transactiondb_open",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_OPEN_OPTIMISTIC = NativeLibrary.downcall("rocksdb_optimistictransactiondb_open",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_OPTIMISTIC_GET_BASE_DB = NativeLibrary.downcall("rocksdb_optimistictransactiondb_get_base_db",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_OPEN_CF = NativeLibrary.downcall("rocksdb_open_column_families",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.JAVA_INT,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_LIST_CF = NativeLibrary.downcall("rocksdb_list_column_families",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_LIST_CF_DESTROY = NativeLibrary.downcall("rocksdb_list_column_families_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_LOAD_LATEST_OPTIONS = NativeLibrary.downcall("rocksdb_load_latest_options",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_BOOLEAN,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_LOAD_LATEST_OPTIONS_DESTROY = NativeLibrary.downcall("rocksdb_load_latest_options_destroy",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_OPEN_FOR_READ_ONLY_CF = NativeLibrary.downcall("rocksdb_open_for_read_only_column_families",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.JAVA_INT,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_OPEN_SECONDARY_CF = NativeLibrary.downcall("rocksdb_open_as_secondary_column_families",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.JAVA_INT,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_OPEN_CF_WITH_TTL = NativeLibrary.downcall("rocksdb_open_column_families_with_ttl",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.JAVA_INT,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_OPEN_TRANSACTION_CF = NativeLibrary.downcall("rocksdb_transactiondb_open_column_families",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.JAVA_INT,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_OPEN_OPTIMISTIC_CF = NativeLibrary.downcall("rocksdb_optimistictransactiondb_open_column_families",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.JAVA_INT,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_TRANSACTION_GET_BASE_DB = NativeLibrary.downcall("rocksdb_transactiondb_get_base_db",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_TRANSACTION_GET_BASE_DB = NativeLibrary.downcall(
+		"rocksdb_transactiondb_get_base_db", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	private RocksDB() {
 		// no instances

@@ -26,14 +26,9 @@ public final class TtlDB extends NativeDB
 		RocksDBTracingOperations {
 
 	/// `rocksdb_column_family_handle_t* rocksdb_create_column_family_with_ttl(rocksdb_t* db, const rocksdb_options_t* column_family_options, const char* column_family_name, int ttl, char** errptr);`
-	private static final MethodHandle MH_CREATE_CF_WITH_TTL;
-
-	static {
-		MH_CREATE_CF_WITH_TTL = NativeLibrary.downcall("rocksdb_create_column_family_with_ttl",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT,
-						ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_CREATE_CF_WITH_TTL = NativeLibrary.downcall(
+		"rocksdb_create_column_family_with_ttl", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 
 	private final Duration ttl; // null for a per-column-family open
 

@@ -9,101 +9,77 @@ import java.lang.invoke.MethodHandle;
 public final class WriteOptions extends NativeObject {
 
 	/// `rocksdb_writeoptions_t* rocksdb_writeoptions_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_writeoptions_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_writeoptions_destroy(rocksdb_writeoptions_t*);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_writeoptions_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_writeoptions_set_sync(rocksdb_writeoptions_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_SYNC;
+	private static final MethodHandle MH_SET_SYNC = NativeLibrary.downcall(
+		"rocksdb_writeoptions_set_sync", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_writeoptions_get_sync(rocksdb_writeoptions_t* opt);`
-	private static final MethodHandle MH_GET_SYNC;
+	private static final MethodHandle MH_GET_SYNC = NativeLibrary.downcall(
+		"rocksdb_writeoptions_get_sync", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_writeoptions_disable_WAL(rocksdb_writeoptions_t* opt, int v);`
-	private static final MethodHandle MH_DISABLE_WAL;
+	private static final MethodHandle MH_DISABLE_WAL = NativeLibrary.downcall(
+		"rocksdb_writeoptions_disable_WAL", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `unsigned char rocksdb_writeoptions_get_disable_WAL(rocksdb_writeoptions_t* opt);`
-	private static final MethodHandle MH_GET_DISABLE_WAL;
+	private static final MethodHandle MH_GET_DISABLE_WAL = NativeLibrary.downcall(
+		"rocksdb_writeoptions_get_disable_WAL", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_writeoptions_set_ignore_missing_column_families(rocksdb_writeoptions_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_IGNORE_MISSING_COLUMN_FAMILIES;
+	private static final MethodHandle MH_SET_IGNORE_MISSING_COLUMN_FAMILIES = NativeLibrary.downcall(
+		"rocksdb_writeoptions_set_ignore_missing_column_families", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_writeoptions_get_ignore_missing_column_families(rocksdb_writeoptions_t* opt);`
-	private static final MethodHandle MH_GET_IGNORE_MISSING_COLUMN_FAMILIES;
+	private static final MethodHandle MH_GET_IGNORE_MISSING_COLUMN_FAMILIES = NativeLibrary.downcall(
+		"rocksdb_writeoptions_get_ignore_missing_column_families", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_writeoptions_set_no_slowdown(rocksdb_writeoptions_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_NO_SLOWDOWN;
+	private static final MethodHandle MH_SET_NO_SLOWDOWN = NativeLibrary.downcall(
+		"rocksdb_writeoptions_set_no_slowdown", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_writeoptions_get_no_slowdown(rocksdb_writeoptions_t* opt);`
-	private static final MethodHandle MH_GET_NO_SLOWDOWN;
+	private static final MethodHandle MH_GET_NO_SLOWDOWN = NativeLibrary.downcall(
+		"rocksdb_writeoptions_get_no_slowdown", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_writeoptions_set_low_pri(rocksdb_writeoptions_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_LOW_PRI;
+	private static final MethodHandle MH_SET_LOW_PRI = NativeLibrary.downcall(
+		"rocksdb_writeoptions_set_low_pri", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_writeoptions_get_low_pri(rocksdb_writeoptions_t* opt);`
-	private static final MethodHandle MH_GET_LOW_PRI;
+	private static final MethodHandle MH_GET_LOW_PRI = NativeLibrary.downcall(
+		"rocksdb_writeoptions_get_low_pri", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_writeoptions_set_memtable_insert_hint_per_batch(rocksdb_writeoptions_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_MEMTABLE_INSERT_HINT_PER_BATCH;
+	private static final MethodHandle MH_SET_MEMTABLE_INSERT_HINT_PER_BATCH = NativeLibrary.downcall(
+		"rocksdb_writeoptions_set_memtable_insert_hint_per_batch", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_writeoptions_get_memtable_insert_hint_per_batch(rocksdb_writeoptions_t* opt);`
-	private static final MethodHandle MH_GET_MEMTABLE_INSERT_HINT_PER_BATCH;
+	private static final MethodHandle MH_GET_MEMTABLE_INSERT_HINT_PER_BATCH = NativeLibrary.downcall(
+		"rocksdb_writeoptions_get_memtable_insert_hint_per_batch", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_writeoptions_set_rate_limiter_priority(rocksdb_writeoptions_t* opt, int v);`
-	private static final MethodHandle MH_SET_RATE_LIMITER_PRIORITY;
+	private static final MethodHandle MH_SET_RATE_LIMITER_PRIORITY = NativeLibrary.downcall(
+		"rocksdb_writeoptions_set_rate_limiter_priority", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `int rocksdb_writeoptions_get_rate_limiter_priority(rocksdb_writeoptions_t* opt);`
-	private static final MethodHandle MH_GET_RATE_LIMITER_PRIORITY;
+	private static final MethodHandle MH_GET_RATE_LIMITER_PRIORITY = NativeLibrary.downcall(
+		"rocksdb_writeoptions_get_rate_limiter_priority", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_writeoptions_set_io_activity(rocksdb_writeoptions_t* opt, int v);`
-	private static final MethodHandle MH_SET_IO_ACTIVITY;
+	private static final MethodHandle MH_SET_IO_ACTIVITY = NativeLibrary.downcall(
+		"rocksdb_writeoptions_set_io_activity", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `int rocksdb_writeoptions_get_io_activity(rocksdb_writeoptions_t* opt);`
-	private static final MethodHandle MH_GET_IO_ACTIVITY;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_writeoptions_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_writeoptions_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_SYNC = NativeLibrary.downcall("rocksdb_writeoptions_set_sync",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_SYNC = NativeLibrary.downcall("rocksdb_writeoptions_get_sync",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_DISABLE_WAL = NativeLibrary.downcall("rocksdb_writeoptions_disable_WAL",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_DISABLE_WAL = NativeLibrary.downcall("rocksdb_writeoptions_get_disable_WAL",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_IGNORE_MISSING_COLUMN_FAMILIES = NativeLibrary.downcall(
-				"rocksdb_writeoptions_set_ignore_missing_column_families",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_IGNORE_MISSING_COLUMN_FAMILIES = NativeLibrary.downcall(
-				"rocksdb_writeoptions_get_ignore_missing_column_families",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_NO_SLOWDOWN = NativeLibrary.downcall("rocksdb_writeoptions_set_no_slowdown",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_NO_SLOWDOWN = NativeLibrary.downcall("rocksdb_writeoptions_get_no_slowdown",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_LOW_PRI = NativeLibrary.downcall("rocksdb_writeoptions_set_low_pri",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_LOW_PRI = NativeLibrary.downcall("rocksdb_writeoptions_get_low_pri",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_MEMTABLE_INSERT_HINT_PER_BATCH = NativeLibrary.downcall(
-				"rocksdb_writeoptions_set_memtable_insert_hint_per_batch",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_MEMTABLE_INSERT_HINT_PER_BATCH = NativeLibrary.downcall(
-				"rocksdb_writeoptions_get_memtable_insert_hint_per_batch",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_RATE_LIMITER_PRIORITY = NativeLibrary.downcall("rocksdb_writeoptions_set_rate_limiter_priority",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_RATE_LIMITER_PRIORITY = NativeLibrary.downcall("rocksdb_writeoptions_get_rate_limiter_priority",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_SET_IO_ACTIVITY = NativeLibrary.downcall("rocksdb_writeoptions_set_io_activity",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_IO_ACTIVITY = NativeLibrary.downcall("rocksdb_writeoptions_get_io_activity",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_IO_ACTIVITY = NativeLibrary.downcall(
+		"rocksdb_writeoptions_get_io_activity", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 
 	/// RocksDB-default WriteOptions for the get/put overloads that take none; a native read/write call only reads
 	/// the struct, so one instance serves every open DB. Immortal per [NativeObject#makeImmortal()]:

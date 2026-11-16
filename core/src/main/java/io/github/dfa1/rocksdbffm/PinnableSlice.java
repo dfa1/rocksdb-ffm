@@ -27,17 +27,13 @@ import java.util.Objects;
 final class PinnableSlice extends NativeObject {
 
 	/// `const char* rocksdb_pinnableslice_value(const rocksdb_pinnableslice_t* t, size_t* vlen);`
-	private static final MethodHandle MH_VALUE;
+	private static final MethodHandle MH_VALUE = NativeLibrary.downcall(
+		"rocksdb_pinnableslice_value", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_pinnableslice_destroy(rocksdb_pinnableslice_t* v);`
-	private static final MethodHandle MH_DESTROY;
-
-	static {
-		MH_VALUE = NativeLibrary.downcall("rocksdb_pinnableslice_value",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_pinnableslice_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_pinnableslice_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	private PinnableSlice(MemorySegment ptr) {
 		super(ptr);

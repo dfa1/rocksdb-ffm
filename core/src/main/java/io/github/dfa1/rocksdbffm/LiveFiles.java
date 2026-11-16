@@ -40,22 +40,17 @@ import java.util.NoSuchElementException;
 public final class LiveFiles extends NativeObject implements Iterable<LiveFileInfo> {
 
 	/// `const rocksdb_livefiles_t* rocksdb_livefiles(rocksdb_t* db);`
-	private static final MethodHandle MH_LIVEFILES;
+	private static final MethodHandle MH_LIVEFILES = NativeLibrary.downcall(
+		"rocksdb_livefiles", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `int rocksdb_livefiles_count(const rocksdb_livefiles_t*);`
-	private static final MethodHandle MH_COUNT;
+	private static final MethodHandle MH_COUNT = NativeLibrary.downcall(
+		"rocksdb_livefiles_count", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_livefiles_destroy(const rocksdb_livefiles_t*);`
-	private static final MethodHandle MH_DESTROY;
-
-	static {
-		MH_LIVEFILES = NativeLibrary.downcall("rocksdb_livefiles",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_COUNT = NativeLibrary.downcall("rocksdb_livefiles_count",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_livefiles_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_livefiles_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	// Cached at fetch time so size()/get() keep working after close() instead of going through
 	// ptr() (which would throw IllegalStateException) — not a performance optimization, since
