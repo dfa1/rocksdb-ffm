@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 /// FFM wrapper for `rocksdb_readoptions_t`.
-public final class ReadOptions extends NativeObjectWithChildren {
+public final class ReadOptions extends NativeObjectParent {
 
 	/// `rocksdb_readoptions_t* rocksdb_readoptions_create(void);`
 	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(

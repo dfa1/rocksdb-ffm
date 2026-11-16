@@ -16,12 +16,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/// Covers [NativeObjectWithChildren] in isolation, without any real native pointer — including
+/// Covers [NativeObjectParent] in isolation, without any real native pointer — including
 /// the issues/143 TOCTOU race: a child registering itself after its parent's one-shot sweep has
 /// already run must never end up silently unswept and unreleased.
-class NativeObjectWithChildrenTest {
+class NativeObjectParentTest {
 
-	private static final class TestParent extends NativeObjectWithChildren {
+	private static final class TestParent extends NativeObjectParent {
 
 		final AtomicInteger tryCloseResourceCount = new AtomicInteger();
 
@@ -35,7 +35,7 @@ class NativeObjectWithChildrenTest {
 		}
 	}
 
-	private static final class TestChild extends NativeChild {
+	private static final class TestChild extends NativeObjectChild {
 
 		final AtomicInteger tryCloseCount = new AtomicInteger();
 
@@ -177,13 +177,13 @@ class NativeObjectWithChildrenTest {
 		var order = new CopyOnWriteArrayList<String>();
 		var childStarted = new CountDownLatch(1);
 		var childMayFinish = new CountDownLatch(1);
-		var parent = new NativeObjectWithChildren(fakePtr(0x1)) {
+		var parent = new NativeObjectParent(fakePtr(0x1)) {
 			@Override
 			protected void tryCloseResource(MemorySegment ptr) {
 				order.add("parent");
 			}
 		};
-		var child = new NativeObject(fakePtr(0x2)) {
+		var child = new NativeObjectChild(fakePtr(0x2)) {
 			@Override
 			protected void tryClose(MemorySegment ptr) {
 				childStarted.countDown();
@@ -320,19 +320,19 @@ class NativeObjectWithChildrenTest {
 		var order = new CopyOnWriteArrayList<String>();
 		var grandchildStarted = new CountDownLatch(1);
 		var grandchildMayFinish = new CountDownLatch(1);
-		var grandparent = new NativeObjectWithChildren(fakePtr(0x1)) {
+		var grandparent = new NativeObjectParent(fakePtr(0x1)) {
 			@Override
 			protected void tryCloseResource(MemorySegment ptr) {
 				order.add("grandparent");
 			}
 		};
-		var child = new NativeObjectWithChildren(fakePtr(0x2)) {
+		var child = new NativeObjectParent(fakePtr(0x2)) {
 			@Override
 			protected void tryCloseResource(MemorySegment ptr) {
 				order.add("child");
 			}
 		};
-		var grandchild = new NativeChild(fakePtr(0x3)) {
+		var grandchild = new NativeObjectChild(fakePtr(0x3)) {
 			@Override
 			protected void tryClose(MemorySegment ptr) {
 				grandchildStarted.countDown();

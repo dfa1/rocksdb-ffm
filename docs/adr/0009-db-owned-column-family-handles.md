@@ -15,7 +15,7 @@ The seven multi-column-family `open*` overloads (`openReadWrite`, both `openRead
 - **Positional alignment, by convention only.** Handles match descriptors by index; a size mismatch
   between `descriptors` and `ttls` needs a runtime check (#289).
 - **Caller-owned, not children of the DB.** Only `RocksIterator` and `Snapshot` register with
-  `NativeObjectWithChildren`. `rocksdb_column_family_handle_destroy` deletes a
+  `NativeObjectParent`. `rocksdb_column_family_handle_destroy` deletes a
   `ColumnFamilyHandleImpl`, whose destructor locks the DB mutex and unrefs the `ColumnFamilyData`
   (`db/column_family.cc`). Destroying a handle after its DB is closed is therefore a use-after-free,
   and nothing enforces the try-with-resources order.
@@ -36,7 +36,7 @@ Nobody uses the library in production yet, so this can be fixed once, without a 
 - Every DB type (`NativeDB`) keeps a registry of its handles by `ColumnFamilyName`, in open order:
   `getColumnFamily(ColumnFamilyName)` (throws `NoSuchElementException` for an unknown name) and
   `getColumnFamilies()` (an unmodifiable snapshot). `ColumnFamilyName.DEFAULT` is always present.
-- Handles are owned by the DB. They are registered as children, so `NativeObjectWithChildren`
+- Handles are owned by the DB. They are registered as children, so `NativeObjectParent`
   releases them before the DB's own native close. `close()` on a DB-owned handle is a **no-op**:
   only the DB's `close()` or `dropColumnFamily` releases it. This is implemented with a
   package-private "owned by parent" flag on `NativeObject` and a package-private `release()` that
@@ -96,4 +96,4 @@ Nobody uses the library in production yet, so this can be fixed once, without a 
 
 ## References
 
-- [ADR 0003](0003-ownership-model.md); `NativeObjectWithChildren`; issues/143, #289, #302, #303, #304
+- [ADR 0003](0003-ownership-model.md); `NativeObjectParent`; issues/143, #289, #302, #303, #304

@@ -15,7 +15,7 @@ import java.lang.invoke.MethodHandle;
 /// [ReadOnlyDB], [TtlDB], [SecondaryDB], and [OptimisticTransactionDB]),
 /// [TransactionDB#getSnapshot()], or [Transaction#getSnapshot()]. Always close after use to
 /// release the underlying native snapshot. Closing the owning DB (or transaction) first is
-/// safe — the DB registers every snapshot it produces as a [NativeObjectWithChildren] child and
+/// safe — the DB registers every snapshot it produces as a [NativeObjectParent] child and
 /// releases any still-outstanding ones itself, synchronously, before destroying its own native
 /// handle — so a snapshot never outlives the pointer its release call needs, whichever side
 /// closes first.
@@ -28,7 +28,7 @@ import java.lang.invoke.MethodHandle;
 ///     byte[] v2 = db.get(ro, key); // still returns v1 — consistent read
 /// }
 /// ```
-public final class Snapshot extends NativeChild {
+public final class Snapshot extends NativeObjectChild {
 
 	/// `uint64_t rocksdb_snapshot_get_sequence_number(const rocksdb_snapshot_t* snapshot);`
 	private static final MethodHandle MH_SEQUENCE_NUMBER = NativeLibrary.downcall(
@@ -50,7 +50,7 @@ public final class Snapshot extends NativeChild {
 	/// @param owningDb the DB object `dbPtr` belongs to
 	/// @param dbPtr    native pointer passed to `rocksdb_release_snapshot`
 	/// @param ptr      the native snapshot pointer
-	Snapshot(NativeObjectWithChildren owningDb, MemorySegment dbPtr, MemorySegment ptr) {
+	Snapshot(NativeObjectParent owningDb, MemorySegment dbPtr, MemorySegment ptr) {
 		super(ptr);
 		this.dbPtr = dbPtr;
 		borrowedFrom(owningDb);

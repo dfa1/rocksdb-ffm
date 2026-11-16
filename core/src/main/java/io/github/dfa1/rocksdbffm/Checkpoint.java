@@ -25,7 +25,7 @@ import java.nio.file.Path;
 ///     snap.get("k".getBytes()); // returns value at checkpoint time
 /// }
 /// ```
-public final class Checkpoint extends NativeChild {
+public final class Checkpoint extends NativeObjectChild {
 
 	/// `rocksdb_checkpoint_t* rocksdb_checkpoint_object_create(rocksdb_t* db, char** errptr);`
 	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
@@ -48,7 +48,7 @@ public final class Checkpoint extends NativeChild {
 		"rocksdb_checkpoint_object_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
 	);
 
-	private Checkpoint(NativeObjectWithChildren owningDb, MemorySegment ptr) {
+	private Checkpoint(NativeObjectParent owningDb, MemorySegment ptr) {
 		super(ptr);
 		// The database this checkpoint object keeps a raw pointer to.
 		borrowedFrom(owningDb);
@@ -70,7 +70,7 @@ public final class Checkpoint extends NativeChild {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			var ptr = (MemorySegment) MH_CREATE.invokeExact(db.dbPtr(), err);
 			NativeCalls.checkError(err);
-			return new Checkpoint((NativeObjectWithChildren) db, ptr);
+			return new Checkpoint((NativeObjectParent) db, ptr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("newCheckpoint failed", t);
 		}

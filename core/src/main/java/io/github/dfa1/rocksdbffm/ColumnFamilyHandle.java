@@ -18,7 +18,7 @@ import java.lang.invoke.MethodHandle;
 ///     db.put(cf, "key".getBytes(), "value".getBytes());
 /// }
 /// ```
-public final class ColumnFamilyHandle extends NativeChild {
+public final class ColumnFamilyHandle extends NativeObjectChild {
 
 	/// `void rocksdb_column_family_handle_destroy(rocksdb_column_family_handle_t*);`
 	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
@@ -37,7 +37,7 @@ public final class ColumnFamilyHandle extends NativeChild {
 		"rocksdb_column_family_handle_get_name", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
 	);
 
-	private ColumnFamilyHandle(NativeObjectWithChildren owningDb, MemorySegment ptr) {
+	private ColumnFamilyHandle(NativeObjectParent owningDb, MemorySegment ptr) {
 		super(ptr);
 		borrowedFrom(owningDb);
 	}
@@ -47,7 +47,7 @@ public final class ColumnFamilyHandle extends NativeChild {
 	/// @param owningDb the database the column family belongs to
 	/// @param ptr      the native `rocksdb_column_family_handle_t*`
 	/// @return the wrapped handle
-	static ColumnFamilyHandle wrap(NativeObjectWithChildren owningDb, MemorySegment ptr) {
+	static ColumnFamilyHandle wrap(NativeObjectParent owningDb, MemorySegment ptr) {
 		return new ColumnFamilyHandle(owningDb, ptr);
 	}
 

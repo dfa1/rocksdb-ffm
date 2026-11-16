@@ -305,14 +305,14 @@ final class RocksDBReadOperationsBindings {
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE_ITERATOR_CF.invokeExact(
 					db.dbPtr(), readOpts.readPtr(), cf.ptr());
-			// Every implementor extends NativeObjectWithChildren (see RocksDBReadOperations#getSnapshot()).
-			return RocksIterator.create((NativeObjectWithChildren) db, readOpts, iterPtr);
+			// Every implementor extends NativeObjectParent (see RocksDBReadOperations#getSnapshot()).
+			return RocksIterator.create((NativeObjectParent) db, readOpts, iterPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("newIterator failed", t);
 		}
 	}
 
-	static Snapshot createSnapshot(NativeObjectWithChildren owningDb, MemorySegment db) {
+	static Snapshot createSnapshot(NativeObjectParent owningDb, MemorySegment db) {
 		try {
 			MemorySegment snapPtr = (MemorySegment) MH_CREATE_SNAPSHOT.invokeExact(db);
 			return new Snapshot(owningDb, db, snapPtr);

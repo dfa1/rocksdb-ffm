@@ -1,12 +1,13 @@
 package io.github.dfa1.rocksdbffm;
 
 import java.lang.foreign.MemorySegment;
-import java.util.concurrent.atomic.AtomicReference;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 
 /// Base class for all Java wrappers around native RocksDB pointers.
 ///
-/// Holds the native pointer in an [AtomicReference]. On [#close()],
-/// the reference is atomically swapped to [MemorySegment#NULL], ensuring
+/// Holds the native pointer in a volatile field. On [#close()],
+/// it is atomically swapped to [MemorySegment#NULL], ensuring
 /// [#tryClose(MemorySegment)] is called exactly once even under
 /// concurrent or repeated close() calls. A `close()` that loses that race returns at once, possibly
 /// before the winning thread's native release has finished.
@@ -22,7 +23,17 @@ public abstract class NativeObject implements AutoCloseable {
 
 	private static final System.Logger LOG = System.getLogger(NativeObject.class.getName());
 
-	private final AtomicReference<MemorySegment> owningPointer;
+	private static final VarHandle OWNING_POINTER;
+
+	static {
+		try {
+			OWNING_POINTER = MethodHandles.lookup().findVarHandle(NativeObject.class, "owningPointer", MemorySegment.class);
+		} catch (ReflectiveOperationException e) {
+			throw new ExceptionInInitializerError(e);
+		}
+	}
+
+	private volatile MemorySegment owningPointer;
 
 	/// Set by [#makeImmortal()] and never cleared. Usually set before the object is published (a `DEFAULTS` field),
 	/// but a [CompactionFilter] sets it on every attach, hence `volatile`.
@@ -32,7 +43,7 @@ public abstract class NativeObject implements AutoCloseable {
 	///
 	/// @param owningPointer the non-NULL native pointer this object now owns
 	protected NativeObject(MemorySegment owningPointer) {
-		this.owningPointer = new AtomicReference<>(owningPointer);
+		this.owningPointer = owningPointer;
 	}
 
 	/// Returns the current native pointer.
@@ -40,7 +51,7 @@ public abstract class NativeObject implements AutoCloseable {
 	/// @return the live native pointer
 	/// @throws IllegalStateException if this object has been closed or its ownership transferred
 	public final MemorySegment ptr() {
-		MemorySegment p = owningPointer.get();
+		MemorySegment p = owningPointer;
 		if (MemorySegment.NULL.equals(p)) {
 			throw new IllegalStateException("native object is closed or ownership has been transferred");
 		}
@@ -49,28 +60,30 @@ public abstract class NativeObject implements AutoCloseable {
 
 	/// Returns whether this object is closed or its ownership was transferred away — i.e.
 	/// whether [#ptr()] would throw — without throwing. Package-private: used only by
-	/// [NativeObjectWithChildren#registerChild(NativeObject)] to detect "parent already closed"
+	/// [NativeObjectParent#registerChild(NativeObjectChild)] to detect "parent already closed"
 	/// as a plain check rather than via exception-driven control flow. Reads the same
-	/// [AtomicReference] [#close()] atomically nulls, so this observes a close a moment before
+	/// field [#close()] atomically nulls, so this observes a close a moment before
 	/// [#tryClose(MemorySegment)] itself even starts running.
 	///
 	/// @return `true` if [#ptr()] would currently throw
 	final boolean isClosed() {
-		return MemorySegment.NULL.equals(owningPointer.get());
+		return MemorySegment.NULL.equals(owningPointer);
 	}
 
 	/// Releases the native resource, unless this object is immortal. A wrapper that is released by its owner and
-	/// not by whoever holds it (a [ColumnFamilyHandle]) overrides this as a no-op; [#release()] still frees it.
+	/// not by whoever holds it (a [ColumnFamilyHandle]) overrides this as a no-op; `release()`
+	/// still frees it.
 	///
-	/// Returns at once if another thread is already releasing this object, instead of waiting for it as
-	/// [#release()] does: only a parent's sweep needs that wait. A native release can block on a callback thread
-	/// (`rocksdb_close` draining an event listener), and a `close()` from that callback would otherwise deadlock.
+	/// Returns at once if another thread is already releasing this object, instead of waiting for it: only a
+	/// parent's sweep needs that wait, and it goes through `release()`. A native release can block
+	/// on a callback thread (`rocksdb_close` draining an event listener), and a `close()` from that callback would
+	/// otherwise deadlock.
 	@Override
 	public void close() {
 		if (immortal || isClosed()) {
 			return;
 		}
-		release();
+		doRelease();
 	}
 
 	/// @return `true` if [#makeImmortal()] was called, so [#close()] does nothing
@@ -78,44 +91,33 @@ public abstract class NativeObject implements AutoCloseable {
 		return immortal;
 	}
 
-	/// Releases the native resource exactly once, whatever [#close()] would otherwise do: the
-	/// entry point for the owning [NativeObjectWithChildren] to free a child whose [#close()] is a no-op.
-	/// Idempotent and never throws.
-	///
-	/// A call that loses the race to another thread already releasing this object blocks until that
-	/// release has finished, instead of returning at once: a parent's sweep calls this on each child
-	/// and then frees its own pointer, so returning early would let the parent be destroyed while a
-	/// child, released by another thread, is still using it. Parents are always locked before their
-	/// children and [#tryClose(MemorySegment)] never locks a parent, so the wait cannot deadlock.
-	final void release() {
-		// A private monitor (this field is already allocated per object): `synchronized (this)` would let user code
-		// that locks a wrapper it holds block, or deadlock with, a parent's close.
-		synchronized (owningPointer) {
-			MemorySegment ptr = owningPointer.getAndSet(MemorySegment.NULL);
-			if (!MemorySegment.NULL.equals(ptr)) {
-				try {
-					tryClose(ptr);
-				} catch (Throwable throwable) {
-					// close() must never throw — a failure here must not stop the rest of a
-					// try-with-resources chain from closing — but a failure to release a native
-					// resource is still worth knowing about.
-					LOG.log(System.Logger.Level.ERROR, getClass().getSimpleName() + ".close() failed", throwable);
-				} finally {
-					released();
-				}
+	/// Swaps the pointer to NULL and, if this call won that swap, runs [#tryClose(MemorySegment)] and then
+	/// [#afterRelease()]. Idempotent and never throws.
+	final void doRelease() {
+		MemorySegment ptr = (MemorySegment) OWNING_POINTER.getAndSet(this, MemorySegment.NULL);
+		if (!MemorySegment.NULL.equals(ptr)) {
+			try {
+				tryClose(ptr);
+			} catch (Throwable throwable) {
+				// close() must never throw — a failure here must not stop the rest of a
+				// try-with-resources chain from closing — but a failure to release a native
+				// resource is still worth knowing about.
+				LOG.log(System.Logger.Level.ERROR, getClass().getSimpleName() + ".close() failed", throwable);
+			} finally {
+				afterRelease();
 			}
 		}
 	}
 
-	/// Hook run last in [#release()], after the native release call, still holding this object's monitor. A
-	/// [NativeChild] unregisters from its owners here.
-	void released() {
+	/// Hook run last in [#doRelease()], after the native release call. A [NativeObjectChild] unregisters from its
+	/// owners here.
+	void afterRelease() {
 	}
 
 	/// Called exactly once with the non-NULL pointer when this object is closed.
 	/// Implementations must release the native resource.
 	///
-	/// Runs while [#release()] holds this object's monitor, so an implementation must never close, release or
+	/// A [NativeObjectChild] runs it while holding its own monitor, so an implementation must never close, release or
 	/// lock another [NativeObject] that could be one of its owners: owners are locked before the objects that
 	/// borrow from them, and taking them in the other order here can deadlock against an owner's close.
 	///
@@ -159,7 +161,7 @@ public abstract class NativeObject implements AutoCloseable {
 	/// - RocksDB documentation — the C API docs sometimes state it explicitly.
 	/// - The Java JNI bindings (RocksDB official Java library) — they've already solved this; look at how BlockBasedTableConfig handles filter policy lifecycle.
 	///
-	/// Also (re)used by [NativeObjectWithChildren#registerChild(NativeObject)] for a second,
+	/// Also (re)used by [NativeObjectParent#registerChild(NativeObjectChild)] for a second,
 	/// unrelated reason: to abandon a child registered too late (its owning parent already
 	/// started closing) without invoking its normal [#tryClose(MemorySegment)] — that release
 	/// call would itself be a use-after-free against a pointer the parent may have already
@@ -170,6 +172,6 @@ public abstract class NativeObject implements AutoCloseable {
 		if (immortal) {
 			throw new IllegalStateException("immortal object cannot transfer ownership: it is shared process-wide");
 		}
-		owningPointer.set(MemorySegment.NULL);
+		owningPointer = MemorySegment.NULL;
 	}
 }

@@ -26,7 +26,7 @@ import java.util.List;
 ///     replayer.replay(ReplayOptions.newReplayOptions());
 /// }
 /// ```
-public final class Replayer extends NativeChild {
+public final class Replayer extends NativeObjectChild {
 
 	/// `rocksdb_replayer_t* rocksdb_new_default_replayer(rocksdb_t* db, rocksdb_column_family_handle_t** column_families, size_t num_column_families, rocksdb_env_t* env, const rocksdb_envoptions_t* env_options, const char* trace_path, char** errptr);`
 	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
@@ -61,7 +61,7 @@ public final class Replayer extends NativeChild {
 	/// [NativeDB#forget(ColumnFamilyHandle)] frees when one is dropped.
 	private final List<ColumnFamilyHandle> columnFamilies;
 
-	private Replayer(NativeObjectWithChildren owningDb, List<ColumnFamilyHandle> columnFamilies, MemorySegment ptr) {
+	private Replayer(NativeObjectParent owningDb, List<ColumnFamilyHandle> columnFamilies, MemorySegment ptr) {
 		super(ptr);
 		this.columnFamilies = columnFamilies;
 		// The database trace records are replayed into; the replayer keeps raw pointers to it.
@@ -115,7 +115,7 @@ public final class Replayer extends NativeChild {
 			MemorySegment ptr = (MemorySegment) MH_CREATE.invokeExact(
 					db.dbPtr(), cfArr, (long) cfs.size(), env.ptr(), envOptions.ptr(), pathSeg, err);
 			NativeCalls.checkError(err);
-			return new Replayer((NativeObjectWithChildren) db, List.copyOf(cfs), ptr);
+			return new Replayer((NativeObjectParent) db, List.copyOf(cfs), ptr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("Replayer.create failed", t);
 		}
