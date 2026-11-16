@@ -20,7 +20,7 @@ import java.lang.invoke.MethodHandle;
 ///     ...
 /// }
 /// ```
-public final class EnvOptions extends NativeObjectWithChildren {
+public final class EnvOptions extends NativeObjectParent {
 
 	/// `rocksdb_envoptions_t* rocksdb_envoptions_create(void);`
 	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(

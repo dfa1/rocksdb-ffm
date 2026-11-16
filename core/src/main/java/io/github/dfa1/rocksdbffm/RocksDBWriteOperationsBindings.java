@@ -226,8 +226,8 @@ final class RocksDBWriteOperationsBindings {
 			MemorySegment iterPtr = (MemorySegment) MH_GET_UPDATES_SINCE.invokeExact(
 					db.dbPtr(), sequenceNumber.toLong(), MemorySegment.NULL, err);
 			NativeCalls.checkError(err);
-			// Every implementor extends NativeObjectWithChildren (see RocksDBWriteOperations#dbPtr()).
-			return WalIterator.wrap((NativeObjectWithChildren) db, iterPtr);
+			// Every implementor extends NativeObjectParent (see RocksDBWriteOperations#dbPtr()).
+			return WalIterator.wrap((NativeObjectParent) db, iterPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("getUpdatesSince failed", t);
 		}

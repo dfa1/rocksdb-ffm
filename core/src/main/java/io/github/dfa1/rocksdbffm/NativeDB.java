@@ -12,7 +12,7 @@ import java.util.SequencedMap;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
-/// Base of every database type: a [NativeObjectWithChildren] that exposes the `rocksdb_t*` the shared
+/// Base of every database type: a [NativeObjectParent] that exposes the `rocksdb_t*` the shared
 /// capability interfaces ([RocksDBReadOperations], [RocksDBWriteOperations], ...) operate on.
 ///
 /// For the types whose `rocksdb_t*` is their own [#ptr()] (everything but the transaction databases)
@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /// afterward. They are children of this object, so closing the database releases them first, and
 /// [ColumnFamilyHandle#close()] is a no-op. See
 /// [ADR 0009](https://github.com/dfa1/rocksdb-ffm/blob/main/docs/adr/0009-db-owned-column-family-handles.md).
-abstract class NativeDB extends NativeObjectWithChildren {
+abstract class NativeDB extends NativeObjectParent {
 
 	/// `void rocksdb_close(rocksdb_t* db);`
 	private static final MethodHandle MH_CLOSE = NativeLibrary.downcall(

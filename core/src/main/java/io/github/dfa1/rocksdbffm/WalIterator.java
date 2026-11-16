@@ -26,7 +26,7 @@ import java.lang.invoke.MethodHandle;
 ///     it.checkStatus();
 /// }
 /// ```
-public final class WalIterator extends NativeChild {
+public final class WalIterator extends NativeObjectChild {
 
 	/// `void rocksdb_wal_iter_next(rocksdb_wal_iterator_t* iter);`
 	private static final MethodHandle MH_NEXT = NativeLibrary.downcall(
@@ -54,13 +54,13 @@ public final class WalIterator extends NativeChild {
 	// instead of raising a Java exception (see getBatch()'s guard below).
 	private boolean batchFetchedAtCurrentPosition;
 
-	private WalIterator(NativeObjectWithChildren owningDb, MemorySegment ptr) {
+	private WalIterator(NativeObjectParent owningDb, MemorySegment ptr) {
 		super(ptr);
 		// The database this iterator reads through; it holds raw pointers into the database's state.
 		borrowedFrom(owningDb);
 	}
 
-	static WalIterator wrap(NativeObjectWithChildren owningDb, MemorySegment ptr) {
+	static WalIterator wrap(NativeObjectParent owningDb, MemorySegment ptr) {
 		return new WalIterator(owningDb, ptr);
 	}
 

@@ -150,7 +150,7 @@ the second pointer belongs to the *same* object, so `NativeDBWithBaseDB`'s guard
 `ptr()` before returning it) is enough. Here the pointer's owner is a *different* object whose
 lifetime `Snapshot` can't observe from the outside.
 
-`NativeObjectWithChildren` solves this the other direction: instead of the child defensively
+`NativeObjectParent` solves this the other direction: instead of the child defensively
 checking whether its parent is still alive, the parent tracks every child it has handed a
 borrowed pointer to and closes them itself — synchronously, while its own pointer is still
 valid — before running its own real `tryClose`. A `Snapshot` registers with its owning DB at
@@ -165,7 +165,7 @@ a child's native "create" call can succeed an instant before the parent closes, 
 `registerChild` call can arrive *after* the parent's one-shot sweep already ran and iterated whatever
 was registered at that instant. Checking "is this object still open" and then adding are two separate
 operations no matter how the check is implemented, so a plain check-then-add is racy regardless — but
-`NativeObjectWithChildren` closes the window without a lock at all: `registerChild` adds the child
+`NativeObjectParent` closes the window without a lock at all: `registerChild` adds the child
 first, unconditionally, then rechecks. `ConcurrentHashMap` guarantees that an add completing before
 another thread's later traversal of the same set is visible to it, so if the parent's sweep genuinely
 hasn't started yet, the eventual sweep is still guaranteed to see the child. If the recheck instead

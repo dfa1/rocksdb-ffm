@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /// A native wrapper can be released by a thread other than the one that created it: a parent's close sweeps its
-/// children from whichever thread closes the parent. [NativeObject#release()] logs, and never throws, when releasing
+/// children from whichever thread closes the parent. [NativeObjectChild#release()] logs, and never throws, when releasing
 /// fails, so a confined arena closed from the wrong thread shows up only as an ERROR log line and a leak.
 class CloseFromAnotherThreadTest {
 

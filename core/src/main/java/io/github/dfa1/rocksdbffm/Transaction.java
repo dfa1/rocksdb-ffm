@@ -25,7 +25,7 @@ import java.nio.ByteBuffer;
 ///     txn.commit();
 /// }
 /// ```
-public final class Transaction extends NativeObjectWithChildren {
+public final class Transaction extends NativeObjectParent {
 
 	/// `rocksdb_pinnableslice_t* rocksdb_transaction_get_pinned_cf(rocksdb_transaction_t* txn, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, char** errptr);`
 	private static final MethodHandle MH_GET_PINNED_CF = NativeLibrary.downcall(
@@ -111,7 +111,7 @@ public final class Transaction extends NativeObjectWithChildren {
 	/// @param owningDb    the database this transaction was begun on
 	/// @param ptr         the native `rocksdb_transaction_t*`
 	/// @param hasSnapshot whether this transaction was begun with `setSetSnapshot(true)`
-	Transaction(NativeObjectWithChildren owningDb, MemorySegment ptr, boolean hasSnapshot) {
+	Transaction(NativeObjectParent owningDb, MemorySegment ptr, boolean hasSnapshot) {
 		super(ptr);
 		this.hasSnapshot = hasSnapshot;
 		// The database this transaction was begun on, which releases it if it is still open when it closes.
@@ -849,7 +849,7 @@ public final class Transaction extends NativeObjectWithChildren {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_COMMIT.invokeExact(ptr(), err);
 			NativeCalls.checkError(err);
-			releaseChildren(NativeObject.class);
+			releaseChildren(NativeObjectChild.class);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("transaction commit failed", t);
 		}
@@ -862,7 +862,7 @@ public final class Transaction extends NativeObjectWithChildren {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_ROLLBACK.invokeExact(ptr(), err);
 			NativeCalls.checkError(err);
-			releaseChildren(NativeObject.class);
+			releaseChildren(NativeObjectChild.class);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("transaction rollback failed", t);
 		}

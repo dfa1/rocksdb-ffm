@@ -368,10 +368,10 @@ public interface RocksDBReadOperations {
 	///
 	/// @return a new [Snapshot]; caller must close it
 	default Snapshot getSnapshot() {
-		// Every implementor extends NativeObjectWithChildren (see #dbPtr()); passed through so
+		// Every implementor extends NativeObjectParent (see #dbPtr()); passed through so
 		// the returned Snapshot registers itself and is released automatically if this DB
 		// closes first, rather than dangling.
-		return RocksDBReadOperationsBindings.createSnapshot((NativeObjectWithChildren) this, dbPtr());
+		return RocksDBReadOperationsBindings.createSnapshot((NativeObjectParent) this, dbPtr());
 	}
 
 	// -----------------------------------------------------------------------

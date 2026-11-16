@@ -16,7 +16,7 @@ import java.util.stream.StreamSupport;
 /// FFM wrapper for `rocksdb_iterator_t`.
 ///
 /// Always close after use. Closing the owner first is safe: an iterator registers itself as a
-/// [NativeObjectWithChildren] child of the database that created it, or of the [Transaction] it
+/// [NativeObjectParent] child of the database that created it, or of the [Transaction] it
 /// came from (`Transaction.newIterator`), the same way [Snapshot] does, so the owner closes any
 /// still-open iterator itself, synchronously, before destroying its own native handle. A closed
 /// iterator throws [IllegalStateException] on use.
@@ -30,7 +30,7 @@ import java.util.stream.StreamSupport;
 ///     it.checkError();
 /// }
 /// ```
-public final class RocksIterator extends NativeChild {
+public final class RocksIterator extends NativeObjectChild {
 
 	/// `rocksdb_iterator_t* rocksdb_create_iterator(rocksdb_t* db, const rocksdb_readoptions_t* options);`
 	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
@@ -92,7 +92,7 @@ public final class RocksIterator extends NativeChild {
 	private final MemorySegment lenSegment = MemorySegment.ofArray(new long[1]);
 
 	/// Package-private: created via [#create].
-	private RocksIterator(NativeObjectWithChildren owningDb, ReadOptions readOptions, MemorySegment ptr) {
+	private RocksIterator(NativeObjectParent owningDb, ReadOptions readOptions, MemorySegment ptr) {
 		super(ptr);
 		// Two parents: the database or transaction, and the options, whose iterate bounds the native iterator keeps raw
 		// pointers into. Holding them also keeps the options' bounds memory reachable.
@@ -103,8 +103,8 @@ public final class RocksIterator extends NativeChild {
 	static RocksIterator create(RocksDBReadOperations db, ReadOptions readOptions) {
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE.invokeExact(db.dbPtr(), readOptions.readPtr());
-			// Every implementor extends NativeObjectWithChildren (see RocksDBReadOperations#getSnapshot()).
-			return new RocksIterator((NativeObjectWithChildren) db, readOptions, iterPtr);
+			// Every implementor extends NativeObjectParent (see RocksDBReadOperations#getSnapshot()).
+			return new RocksIterator((NativeObjectParent) db, readOptions, iterPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("iterator create failed", t);
 		}
@@ -112,7 +112,7 @@ public final class RocksIterator extends NativeChild {
 
 	/// Package-private factory for a pre-created iterator pointer scoped to a column family
 	/// (e.g. from `rocksdb_create_iterator_cf`), registered with `owningDb`.
-	static RocksIterator create(NativeObjectWithChildren owningDb, ReadOptions readOptions, MemorySegment iterPtr) {
+	static RocksIterator create(NativeObjectParent owningDb, ReadOptions readOptions, MemorySegment iterPtr) {
 		return new RocksIterator(owningDb, readOptions, iterPtr);
 	}
 
