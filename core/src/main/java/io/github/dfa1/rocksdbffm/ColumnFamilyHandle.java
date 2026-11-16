@@ -18,7 +18,7 @@ import java.lang.invoke.MethodHandle;
 ///     db.put(cf, "key".getBytes(), "value".getBytes());
 /// }
 /// ```
-public final class ColumnFamilyHandle extends NativeObject {
+public final class ColumnFamilyHandle extends NativeChild {
 
 	/// `void rocksdb_column_family_handle_destroy(rocksdb_column_family_handle_t*);`
 	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(

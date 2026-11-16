@@ -26,7 +26,7 @@ import java.nio.file.Path;
 /// }
 /// db.ingestExternalFile(List.of(sstPath));
 /// ```
-public final class SstFileWriter extends NativeObject {
+public final class SstFileWriter extends NativeChild {
 
 	/// `rocksdb_sstfilewriter_t* rocksdb_sstfilewriter_create(const rocksdb_envoptions_t* env, const rocksdb_options_t* io_options);`
 	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(

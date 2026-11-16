@@ -1,6 +1,8 @@
 package io.github.dfa1.rocksdbffm;
 
 import java.lang.foreign.MemorySegment;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -8,8 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /// native pointer for their own release call (e.g. [Snapshot]'s `rocksdb_release_snapshot`
 /// needs its owning DB's pointer) — and would otherwise dangle if this object closed first.
 ///
-/// A child registers itself with [NativeObject#borrowedFrom(NativeObjectWithChildren...)], last in its own
-/// constructor, and [NativeObject#release()] unregisters it once released on its own, so a long-lived parent
+/// A child registers itself with [NativeChild#borrowedFrom(NativeObjectWithChildren...)], last in its own
+/// constructor, and [NativeChild#released()] unregisters it once released on its own, so a long-lived parent
 /// doesn't accumulate strong references to every child it ever produced.
 /// [#tryClose(MemorySegment)] closes every still-registered child, synchronously, while `ptr`
 /// is still valid — before delegating to [#tryCloseResource(MemorySegment)] for this object's
@@ -23,11 +25,24 @@ import java.util.concurrent.ConcurrentHashMap;
 /// afterward, undoing if the validation says it shouldn't have happened — an "insert, recheck,
 /// compensate" pattern that needs nothing beyond [NativeObject]'s existing `AtomicReference`
 /// and [ConcurrentHashMap]'s own atomic add/remove.
-abstract class NativeObjectWithChildren extends NativeObject {
+abstract class NativeObjectWithChildren extends NativeChild {
 
-	/// Effectively free (a [ConcurrentHashMap]-backed set allocates no backing table until
-	/// first written) for any instance that never actually registers a child.
-	private final Set<NativeObject> children = ConcurrentHashMap.newKeySet();
+	private static final VarHandle CHILDREN;
+
+	static {
+		try {
+			CHILDREN = MethodHandles.lookup().findVarHandle(NativeObjectWithChildren.class, "children", Set.class);
+		} catch (ReflectiveOperationException e) {
+			throw new ExceptionInInitializerError(e);
+		}
+	}
+
+	/// Created by the first [#registerChild(NativeObject)], so an instance that never gets a child (most
+	/// [ReadOptions] and [EnvOptions]) allocates no set at all. Readers treat `null` as empty: a sweep that reads
+	/// `null` started before any registration published a set, and that registration's own recheck of
+	/// [#isClosed()] (see [#registerChild(NativeObject)]) sees this object already closed, because [#close()]
+	/// nulls the pointer before the sweep runs.
+	private volatile Set<NativeObject> children;
 
 	protected NativeObjectWithChildren(MemorySegment ptr) {
 		super(ptr);
@@ -78,8 +93,15 @@ abstract class NativeObjectWithChildren extends NativeObject {
 			// Never swept, so tracking the child would only pin it for the life of the JVM.
 			return;
 		}
-		children.add(child);
-		if (isClosed() && children.remove(child)) {
+		Set<NativeObject> set = children;
+		if (set == null) {
+			Set<NativeObject> fresh = ConcurrentHashMap.newKeySet();
+			@SuppressWarnings("unchecked")
+			Set<NativeObject> witness = (Set<NativeObject>) CHILDREN.compareAndExchange(this, null, fresh);
+			set = witness == null ? fresh : witness;
+		}
+		set.add(child);
+		if (isClosed() && set.remove(child)) {
 			child.transferOwnership();
 		}
 	}
@@ -91,7 +113,10 @@ abstract class NativeObjectWithChildren extends NativeObject {
 	///
 	/// @param child the child resource to stop tracking
 	final void unregisterChild(NativeObject child) {
-		children.remove(child);
+		Set<NativeObject> set = children;
+		if (set != null) {
+			set.remove(child);
+		}
 	}
 
 	/// Releases every still-registered child of the given type, leaving this object and its other
@@ -100,7 +125,11 @@ abstract class NativeObjectWithChildren extends NativeObject {
 	///
 	/// @param type the kind of child to release
 	final void releaseChildren(Class<? extends NativeObject> type) {
-		for (NativeObject child : children) {
+		Set<NativeObject> set = children;
+		if (set == null) {
+			return;
+		}
+		for (NativeObject child : set) {
 			if (type.isInstance(child)) {
 				child.release();
 			}
@@ -109,7 +138,8 @@ abstract class NativeObjectWithChildren extends NativeObject {
 
 	/// @return how many children are registered right now, for tests asserting that a closed child unregistered
 	final int childCount() {
-		return children.size();
+		Set<NativeObject> set = children;
+		return set == null ? 0 : set.size();
 	}
 
 	@Override
@@ -123,8 +153,11 @@ abstract class NativeObjectWithChildren extends NativeObject {
 		// own; anything still present after this loop is exactly the registerChild-added-during-
 		// this-very-sweep stragglers described there, and registerChild's own recheck cleans
 		// those up (whether that happens before or after this method returns).
-		for (NativeObject child : children) {
-			child.release();
+		Set<NativeObject> set = children;
+		if (set != null) {
+			for (NativeObject child : set) {
+				child.release();
+			}
 		}
 		tryCloseResource(ptr);
 	}
