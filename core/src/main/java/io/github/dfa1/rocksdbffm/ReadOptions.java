@@ -485,7 +485,8 @@ public final class ReadOptions extends NativeObjectParent {
 	}
 
 	@Override
-	protected void tryCloseResource(MemorySegment ptr) throws Throwable {
+	protected void tryClose(MemorySegment ptr) throws Throwable {
+		releaseChildren();
 		MH_DESTROY.invokeExact(ptr);
 	}
 }

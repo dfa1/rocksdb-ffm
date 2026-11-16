@@ -8,7 +8,7 @@ import java.lang.foreign.MemorySegment;
 abstract class NativeObjectChild extends NativeObject {
 
 	/// The objects this one borrows native memory from, set once by [#childOf(NativeObjectParent)] or
-	/// [#childOf(NativeObjectParent, NativeObjectParent)]; [#afterRelease()] unregisters from them after the native
+	/// [#childOf(NativeObjectParent, NativeObjectParent)]; `release()` unregisters from them after the native
 	/// release call. Plain fields: they are assigned before the registration that publishes this object to a
 	/// parent's sweep, and that registration is what makes the writes visible to the sweeping thread.
 	private NativeObjectParent parent;
@@ -23,7 +23,7 @@ abstract class NativeObjectChild extends NativeObject {
 	}
 
 	/// Declares that this object borrows native memory from `parent`: it is registered as its child, so the parent's close releases it first, and
-	/// [#afterRelease()] unregisters it when it is closed on its own, so a long-lived parent does not accumulate every
+	/// its release unregisters it when it is closed on its own, so a long-lived parent does not accumulate every
 	/// child it ever produced. Call it once, last in the constructor, once every field
 	/// [#tryClose(MemorySegment)] reads is assigned, because registering makes this object visible to a concurrent
 	/// sweep by a parent.
@@ -38,7 +38,7 @@ abstract class NativeObjectChild extends NativeObject {
 	}
 
 	/// Declares that this object borrows native memory from both parents (a [RocksIterator] has its database and its [ReadOptions]): it is registered as a child of each, so either one's close releases it first, and
-	/// [#afterRelease()] unregisters it when it is closed on its own, so a long-lived parent does not accumulate every
+	/// its release unregisters it when it is closed on its own, so a long-lived parent does not accumulate every
 	/// child it ever produced. Call it once, last in the constructor, once every field
 	/// [#tryClose(MemorySegment)] reads is assigned, because registering makes this object visible to a concurrent
 	/// sweep by a parent.
@@ -62,40 +62,31 @@ abstract class NativeObjectChild extends NativeObject {
 		}
 	}
 
-	/// Releases the native resource exactly once, whatever [#close()] would otherwise do: the entry point for the
-	/// owning [NativeObjectParent] to free a child whose [#close()] is a no-op. Idempotent and never throws.
+	/// [NativeObject#release()] under this object's monitor, then unregisters from the parents.
 	///
 	/// A call that loses the race to another thread already releasing this object blocks until that release has
 	/// finished, instead of returning at once: a parent's sweep calls this on each child and then frees its own
 	/// pointer, so returning early would let the parent be destroyed while a child, released by another thread, is
 	/// still using it. Parents are always locked before their children and [#tryClose(MemorySegment)] never locks a
 	/// parent, so the wait cannot deadlock.
+	///
+	/// Unregistering comes last: a parent that starts closing while this release is still running must still find
+	/// this object in its children, so its sweep waits on the monitor instead of freeing the parent under a native
+	/// release in progress. When this runs because that parent's own sweep is releasing its children, its pointer
+	/// stays valid until the sweep ends. Unregistering is idempotent, so a call that lost the race repeats it harmlessly.
+	@Override
 	final void release() {
 		synchronized (lock) {
-			doRelease();
-		}
-	}
-
-	/// Releases through `release()` so an in-progress release is still observed by a sweep waiting on the monitor.
-	@Override
-	public void close() {
-		if (isImmortal() || isClosed()) {
-			return;
-		}
-		release();
-	}
-
-	/// Unregisters from every parent. Runs last in `release()`: a parent that starts closing while this
-	/// release is still running must still find this object in its children, so its sweep waits on the monitor
-	/// instead of freeing the parent under a native release in progress. When this runs because that parent's own
-	/// sweep is releasing its children, its pointer stays valid until the sweep ends.
-	@Override
-	final void afterRelease() {
-		if (parent != null) {
-			parent.unregisterChild(this);
-		}
-		if (secondParent != null) {
-			secondParent.unregisterChild(this);
+			try {
+				super.release();
+			} finally {
+				if (parent != null) {
+					parent.unregisterChild(this);
+				}
+				if (secondParent != null) {
+					secondParent.unregisterChild(this);
+				}
+			}
 		}
 	}
 }

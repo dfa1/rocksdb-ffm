@@ -11,12 +11,11 @@ import java.util.concurrent.ConcurrentHashMap;
 /// needs its owning DB's pointer) — and would otherwise dangle if this object closed first.
 ///
 /// A child registers itself with [NativeObjectChild#childOf(NativeObjectParent)], last in its own
-/// constructor, and [NativeObjectChild#afterRelease()] unregisters it once released on its own, so a long-lived parent
+/// constructor, and [NativeObjectChild]'s release unregisters it once released on its own, so a long-lived parent
 /// doesn't accumulate strong references to every child it ever produced.
-/// [#tryClose(MemorySegment)] closes every still-registered child, synchronously, while `ptr`
-/// is still valid — before delegating to [#tryCloseResource(MemorySegment)] for this object's
-/// own native destroy call — so a child's release call never runs against memory this object
-/// has already freed, whichever side closes first.
+/// A parent's [#tryClose(MemorySegment)] starts with [#releaseChildren()], which closes every still-registered
+/// child, synchronously, while `ptr` is still valid — before its own native destroy call — so a child's release
+/// call never runs against memory this object has already freed, whichever side closes first.
 ///
 /// [#registerChild(NativeObjectChild)] is lock-free — see its doc for the TOCTOU race it narrows
 /// (issues/143): a child's native "create" call can succeed an instant before this object
@@ -77,7 +76,7 @@ abstract class NativeObjectParent extends NativeObjectChild {
 	/// [NativeObject#transferOwnership()] -- a real native resource leak, of everything its release would have freed
 	/// (the native object and any native memory the wrapper owns, such as an iterator's length slot; its release call would
 	/// itself be a use-after-free against a pointer this object's own
-	/// [#tryCloseResource(MemorySegment)] may already have freed), but not the JVM crash a later
+	/// [#tryClose(MemorySegment)] may already have freed), but not the JVM crash a later
 	/// use of a silently-dangling `child` would otherwise risk. If the removal instead finds
 	/// `child` already gone, the sweep won the race and already closed it properly (through the
 	/// normal path below, while `ptr` was still valid) -- nothing left to do.
@@ -124,6 +123,12 @@ abstract class NativeObjectParent extends NativeObjectChild {
 	/// transaction's iterators on commit) without destroying its parent.
 	///
 	/// @param type the kind of child to release
+	///
+	/// A parent's [#tryClose(MemorySegment)] calls [#releaseChildren()] first. `release()` is safe on a child whether
+	/// or not its own caller already closed it, and `children` is a [ConcurrentHashMap]-backed set, so a child
+	/// unregistering itself mid-iteration does not throw. Nothing is cleared afterward: every `release()` already
+	/// unregisters its child, so a sweep drains the set on its own; anything left is a `registerChild` made during
+	/// this very sweep, which that call's own recheck cleans up.
 	final void releaseChildren(Class<? extends NativeObjectChild> type) {
 		Set<NativeObjectChild> set = children;
 		if (set == null) {
@@ -136,37 +141,15 @@ abstract class NativeObjectParent extends NativeObjectChild {
 		}
 	}
 
+	/// Releases every still-registered child, synchronously: the first step of a parent's
+	/// [#tryClose(MemorySegment)], while its own pointer is still valid.
+	final void releaseChildren() {
+		releaseChildren(NativeObjectChild.class);
+	}
+
 	/// @return how many children are registered right now, for tests asserting that a closed child unregistered
 	final int childCount() {
 		Set<NativeObjectChild> set = children;
 		return set == null ? 0 : set.size();
 	}
-
-	@Override
-	protected final void tryClose(MemorySegment ptr) throws Throwable {
-		// child.release() is safe to call whether or not the child was already closed by its own
-		// caller (NativeObject's release() is idempotent), and children is a ConcurrentHashMap-
-		// backed set, so a child unregistering itself mid-iteration does not throw
-		// ConcurrentModificationException. No children.clear() afterward: every child.release()
-		// call above already unregisters that child from `children` (see NativeObjectChild#release()),
-		// so a normal sweep already drains the set on its
-		// own; anything still present after this loop is exactly the registerChild-added-during-
-		// this-very-sweep stragglers described there, and registerChild's own recheck cleans
-		// those up (whether that happens before or after this method returns).
-		Set<NativeObjectChild> set = children;
-		if (set != null) {
-			for (NativeObjectChild child : set) {
-				child.release();
-			}
-		}
-		tryCloseResource(ptr);
-	}
-
-	/// Closes this object's own native resource. Same contract as
-	/// [NativeObject#tryClose(MemorySegment)] — renamed only because `tryClose` itself is
-	/// final here, to guarantee children are always closed first.
-	///
-	/// @param ptr the non-NULL primary native pointer to release
-	/// @throws Throwable if the native destroy call fails
-	protected abstract void tryCloseResource(MemorySegment ptr) throws Throwable;
 }
