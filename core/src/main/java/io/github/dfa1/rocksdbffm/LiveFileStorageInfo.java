@@ -23,58 +23,45 @@ public final class LiveFileStorageInfo {
 	private static final long CRC32C_LENGTH = 4;
 
 	/// `const char* rocksdb_livefiles_storage_info_relative_filename(const rocksdb_livefiles_storage_info_t*, size_t index);`
-	private static final MethodHandle MH_RELATIVE_FILENAME;
+	private static final MethodHandle MH_RELATIVE_FILENAME = NativeLibrary.downcall(
+		"rocksdb_livefiles_storage_info_relative_filename", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `const char* rocksdb_livefiles_storage_info_directory(const rocksdb_livefiles_storage_info_t*, size_t index);`
-	private static final MethodHandle MH_DIRECTORY;
+	private static final MethodHandle MH_DIRECTORY = NativeLibrary.downcall(
+		"rocksdb_livefiles_storage_info_directory", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `uint64_t rocksdb_livefiles_storage_info_file_number(const rocksdb_livefiles_storage_info_t*, size_t index);`
-	private static final MethodHandle MH_FILE_NUMBER;
+	private static final MethodHandle MH_FILE_NUMBER = NativeLibrary.downcall(
+		"rocksdb_livefiles_storage_info_file_number", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `int rocksdb_livefiles_storage_info_file_type(const rocksdb_livefiles_storage_info_t*, size_t index);`
-	private static final MethodHandle MH_FILE_TYPE;
+	private static final MethodHandle MH_FILE_TYPE = NativeLibrary.downcall(
+		"rocksdb_livefiles_storage_info_file_type", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `uint64_t rocksdb_livefiles_storage_info_size(const rocksdb_livefiles_storage_info_t*, size_t index);`
-	private static final MethodHandle MH_SIZE;
+	private static final MethodHandle MH_SIZE = NativeLibrary.downcall(
+		"rocksdb_livefiles_storage_info_size", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `int rocksdb_livefiles_storage_info_temperature(const rocksdb_livefiles_storage_info_t*, size_t index);`
-	private static final MethodHandle MH_TEMPERATURE;
+	private static final MethodHandle MH_TEMPERATURE = NativeLibrary.downcall(
+		"rocksdb_livefiles_storage_info_temperature", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `const char* rocksdb_livefiles_storage_info_file_checksum(const rocksdb_livefiles_storage_info_t*, size_t index);`
-	private static final MethodHandle MH_FILE_CHECKSUM;
+	private static final MethodHandle MH_FILE_CHECKSUM = NativeLibrary.downcall(
+		"rocksdb_livefiles_storage_info_file_checksum", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `const char* rocksdb_livefiles_storage_info_file_checksum_func_name(const rocksdb_livefiles_storage_info_t*, size_t index);`
-	private static final MethodHandle MH_FILE_CHECKSUM_FUNC_NAME;
+	private static final MethodHandle MH_FILE_CHECKSUM_FUNC_NAME = NativeLibrary.downcall(
+		"rocksdb_livefiles_storage_info_file_checksum_func_name", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `const char* rocksdb_livefiles_storage_info_replacement_contents(const rocksdb_livefiles_storage_info_t*, size_t index, size_t* size);`
-	private static final MethodHandle MH_REPLACEMENT_CONTENTS;
+	private static final MethodHandle MH_REPLACEMENT_CONTENTS = NativeLibrary.downcall(
+		"rocksdb_livefiles_storage_info_replacement_contents", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `unsigned char rocksdb_livefiles_storage_info_trim_to_size(const rocksdb_livefiles_storage_info_t*, size_t index);`
-	private static final MethodHandle MH_TRIM_TO_SIZE;
-
-	static {
-		MH_RELATIVE_FILENAME = NativeLibrary.downcall("rocksdb_livefiles_storage_info_relative_filename",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_DIRECTORY = NativeLibrary.downcall("rocksdb_livefiles_storage_info_directory",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_FILE_NUMBER = NativeLibrary.downcall("rocksdb_livefiles_storage_info_file_number",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_FILE_TYPE = NativeLibrary.downcall("rocksdb_livefiles_storage_info_file_type",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_SIZE = NativeLibrary.downcall("rocksdb_livefiles_storage_info_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_TEMPERATURE = NativeLibrary.downcall("rocksdb_livefiles_storage_info_temperature",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_FILE_CHECKSUM = NativeLibrary.downcall("rocksdb_livefiles_storage_info_file_checksum",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_FILE_CHECKSUM_FUNC_NAME = NativeLibrary.downcall("rocksdb_livefiles_storage_info_file_checksum_func_name",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_REPLACEMENT_CONTENTS = NativeLibrary.downcall("rocksdb_livefiles_storage_info_replacement_contents",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_TRIM_TO_SIZE = NativeLibrary.downcall("rocksdb_livefiles_storage_info_trim_to_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-	}
+	private static final MethodHandle MH_TRIM_TO_SIZE = NativeLibrary.downcall(
+		"rocksdb_livefiles_storage_info_trim_to_size", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 
 	private final LiveFilesStorageInfo owner;
 	private final int index;

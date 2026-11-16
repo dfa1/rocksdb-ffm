@@ -21,28 +21,21 @@ import java.lang.invoke.MethodHandle;
 public final class ColumnFamilyHandle extends NativeObject {
 
 	/// `void rocksdb_column_family_handle_destroy(rocksdb_column_family_handle_t*);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_column_family_handle_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_column_family_handle_t* rocksdb_get_default_column_family_handle(rocksdb_t* db);`
-	private static final MethodHandle MH_GET_DEFAULT;
+	private static final MethodHandle MH_GET_DEFAULT = NativeLibrary.downcall(
+		"rocksdb_get_default_column_family_handle", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `uint32_t rocksdb_column_family_handle_get_id(rocksdb_column_family_handle_t* handle);`
-	private static final MethodHandle MH_GET_ID;
+	private static final MethodHandle MH_GET_ID = NativeLibrary.downcall(
+		"rocksdb_column_family_handle_get_id", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `char* rocksdb_column_family_handle_get_name(rocksdb_column_family_handle_t* handle, size_t* name_len);`
-	private static final MethodHandle MH_GET_NAME;
-
-	static {
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_column_family_handle_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_GET_DEFAULT = NativeLibrary.downcall("rocksdb_get_default_column_family_handle",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_GET_ID = NativeLibrary.downcall("rocksdb_column_family_handle_get_id",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_GET_NAME = NativeLibrary.downcall("rocksdb_column_family_handle_get_name",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_NAME = NativeLibrary.downcall(
+		"rocksdb_column_family_handle_get_name", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	private ColumnFamilyHandle(NativeObjectWithChildren owningDb, MemorySegment ptr) {
 		super(ptr);

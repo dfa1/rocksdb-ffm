@@ -22,37 +22,25 @@ import java.lang.invoke.MethodHandle;
 public final class HyperClockCache extends Cache {
 
 	/// `rocksdb_hyper_clock_cache_options_t* rocksdb_hyper_clock_cache_options_create(size_t capacity, size_t estimated_entry_charge);`
-	private static final MethodHandle MH_OPTS_CREATE;
+	private static final MethodHandle MH_OPTS_CREATE = NativeLibrary.downcall(
+		"rocksdb_hyper_clock_cache_options_create", FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_hyper_clock_cache_options_destroy(rocksdb_hyper_clock_cache_options_t*);`
-	private static final MethodHandle MH_OPTS_DESTROY;
+	private static final MethodHandle MH_OPTS_DESTROY = NativeLibrary.downcall(
+		"rocksdb_hyper_clock_cache_options_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_hyper_clock_cache_options_set_num_shard_bits(rocksdb_hyper_clock_cache_options_t*, int);`
-	private static final MethodHandle MH_OPTS_SET_NUM_SHARD_BITS;
+	private static final MethodHandle MH_OPTS_SET_NUM_SHARD_BITS = NativeLibrary.downcall(
+		"rocksdb_hyper_clock_cache_options_set_num_shard_bits", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `rocksdb_cache_t* rocksdb_cache_create_hyper_clock(size_t capacity, size_t estimated_entry_charge);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_cache_create_hyper_clock", FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T, NativeCalls.SIZE_T)
+	);
 	/// `rocksdb_cache_t* rocksdb_cache_create_hyper_clock_opts(const rocksdb_hyper_clock_cache_options_t*);`
-	private static final MethodHandle MH_CREATE_OPTS;
-
-	static {
-		MH_OPTS_CREATE = NativeLibrary.downcall("rocksdb_hyper_clock_cache_options_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						NativeCalls.SIZE_T,
-						NativeCalls.SIZE_T));
-
-		MH_OPTS_DESTROY = NativeLibrary.downcall("rocksdb_hyper_clock_cache_options_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_OPTS_SET_NUM_SHARD_BITS = NativeLibrary.downcall(
-				"rocksdb_hyper_clock_cache_options_set_num_shard_bits",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_CREATE = NativeLibrary.downcall("rocksdb_cache_create_hyper_clock",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						NativeCalls.SIZE_T,
-						NativeCalls.SIZE_T));
-
-		MH_CREATE_OPTS = NativeLibrary.downcall("rocksdb_cache_create_hyper_clock_opts",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_CREATE_OPTS = NativeLibrary.downcall(
+		"rocksdb_cache_create_hyper_clock_opts", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	private HyperClockCache(MemorySegment ptr) {
 		super(ptr);
@@ -60,8 +48,8 @@ public final class HyperClockCache extends Cache {
 
 	/// Creates a HyperClockCache.
 	///
-	/// @param capacity              total cache capacity
-	/// @param estimatedEntryCharge  expected average size of a cached block; use
+	/// @param capacity             total cache capacity
+	/// @param estimatedEntryCharge expected average size of a cached block; use
 	///                              [MemorySize#ZERO] to let RocksDB choose
 	/// @return a new [HyperClockCache]; caller must close it
 	public static HyperClockCache newHyperClockCache(
@@ -76,10 +64,10 @@ public final class HyperClockCache extends Cache {
 
 	/// Creates a HyperClockCache with an explicit shard count.
 	///
-	/// @param capacity              total cache capacity
-	/// @param estimatedEntryCharge  expected average size of a cached block; use
+	/// @param capacity             total cache capacity
+	/// @param estimatedEntryCharge expected average size of a cached block; use
 	///                              [MemorySize#ZERO] to let RocksDB choose
-	/// @param numShardBits          number of shard bits (`shards = 1 << numShardBits`);
+	/// @param numShardBits         number of shard bits (`shards = 1 << numShardBits`);
 	///                              pass `-1` to let RocksDB choose automatically
 	/// @return a new [HyperClockCache]; caller must close it
 	public static HyperClockCache newHyperClockCache(

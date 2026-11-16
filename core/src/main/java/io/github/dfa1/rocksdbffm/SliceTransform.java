@@ -21,17 +21,13 @@ import java.lang.invoke.MethodHandle;
 public final class SliceTransform extends NativeObject {
 
 	/// `rocksdb_slicetransform_t* rocksdb_slicetransform_create_fixed_prefix(size_t);`
-	private static final MethodHandle MH_CREATE_FIXED_PREFIX;
+	private static final MethodHandle MH_CREATE_FIXED_PREFIX = NativeLibrary.downcall(
+		"rocksdb_slicetransform_create_fixed_prefix", FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_slicetransform_destroy(rocksdb_slicetransform_t*);`
-	private static final MethodHandle MH_DESTROY;
-
-	static {
-		MH_CREATE_FIXED_PREFIX = NativeLibrary.downcall("rocksdb_slicetransform_create_fixed_prefix",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_slicetransform_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_slicetransform_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	private SliceTransform(MemorySegment ptr) {
 		super(ptr);

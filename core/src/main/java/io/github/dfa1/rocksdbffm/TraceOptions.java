@@ -25,57 +25,45 @@ import java.util.Set;
 public final class TraceOptions extends NativeObject {
 
 	/// `rocksdb_trace_options_t* rocksdb_trace_options_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_trace_options_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_trace_options_destroy(rocksdb_trace_options_t*);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_trace_options_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_trace_options_set_max_trace_file_size(rocksdb_trace_options_t*, uint64_t);`
-	private static final MethodHandle MH_SET_MAX_TRACE_FILE_SIZE;
+	private static final MethodHandle MH_SET_MAX_TRACE_FILE_SIZE = NativeLibrary.downcall(
+		"rocksdb_trace_options_set_max_trace_file_size", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
+	);
 	/// `uint64_t rocksdb_trace_options_get_max_trace_file_size(rocksdb_trace_options_t*);`
-	private static final MethodHandle MH_GET_MAX_TRACE_FILE_SIZE;
+	private static final MethodHandle MH_GET_MAX_TRACE_FILE_SIZE = NativeLibrary.downcall(
+		"rocksdb_trace_options_get_max_trace_file_size", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_trace_options_set_sampling_frequency(rocksdb_trace_options_t*, uint64_t);`
-	private static final MethodHandle MH_SET_SAMPLING_FREQUENCY;
+	private static final MethodHandle MH_SET_SAMPLING_FREQUENCY = NativeLibrary.downcall(
+		"rocksdb_trace_options_set_sampling_frequency", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
+	);
 	/// `uint64_t rocksdb_trace_options_get_sampling_frequency(rocksdb_trace_options_t*);`
-	private static final MethodHandle MH_GET_SAMPLING_FREQUENCY;
+	private static final MethodHandle MH_GET_SAMPLING_FREQUENCY = NativeLibrary.downcall(
+		"rocksdb_trace_options_get_sampling_frequency", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_trace_options_set_filter(rocksdb_trace_options_t*, uint64_t);`
-	private static final MethodHandle MH_SET_FILTER;
+	private static final MethodHandle MH_SET_FILTER = NativeLibrary.downcall(
+		"rocksdb_trace_options_set_filter", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
+	);
 	/// `uint64_t rocksdb_trace_options_get_filter(rocksdb_trace_options_t*);`
-	private static final MethodHandle MH_GET_FILTER;
+	private static final MethodHandle MH_GET_FILTER = NativeLibrary.downcall(
+		"rocksdb_trace_options_get_filter", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_trace_options_set_preserve_write_order(rocksdb_trace_options_t*, unsigned char);`
-	private static final MethodHandle MH_SET_PRESERVE_WRITE_ORDER;
+	private static final MethodHandle MH_SET_PRESERVE_WRITE_ORDER = NativeLibrary.downcall(
+		"rocksdb_trace_options_set_preserve_write_order", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_trace_options_get_preserve_write_order(rocksdb_trace_options_t*);`
-	private static final MethodHandle MH_GET_PRESERVE_WRITE_ORDER;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_trace_options_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_trace_options_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_MAX_TRACE_FILE_SIZE = NativeLibrary.downcall("rocksdb_trace_options_set_max_trace_file_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-
-		MH_GET_MAX_TRACE_FILE_SIZE = NativeLibrary.downcall("rocksdb_trace_options_get_max_trace_file_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-
-		MH_SET_SAMPLING_FREQUENCY = NativeLibrary.downcall("rocksdb_trace_options_set_sampling_frequency",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-
-		MH_GET_SAMPLING_FREQUENCY = NativeLibrary.downcall("rocksdb_trace_options_get_sampling_frequency",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-
-		MH_SET_FILTER = NativeLibrary.downcall("rocksdb_trace_options_set_filter",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-
-		MH_GET_FILTER = NativeLibrary.downcall("rocksdb_trace_options_get_filter",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-
-		MH_SET_PRESERVE_WRITE_ORDER = NativeLibrary.downcall("rocksdb_trace_options_set_preserve_write_order",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_PRESERVE_WRITE_ORDER = NativeLibrary.downcall("rocksdb_trace_options_get_preserve_write_order",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_PRESERVE_WRITE_ORDER = NativeLibrary.downcall(
+		"rocksdb_trace_options_get_preserve_write_order", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 
 	private TraceOptions(MemorySegment ptr) {
 		super(ptr);

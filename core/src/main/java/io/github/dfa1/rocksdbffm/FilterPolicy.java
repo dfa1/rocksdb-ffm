@@ -23,27 +23,21 @@ import java.lang.invoke.MethodHandle;
 public final class FilterPolicy extends NativeObject {
 
 	/// `rocksdb_filterpolicy_t* rocksdb_filterpolicy_create_bloom(double bits_per_key);`
-	private static final MethodHandle MH_CREATE_BLOOM;
+	private static final MethodHandle MH_CREATE_BLOOM = NativeLibrary.downcall(
+		"rocksdb_filterpolicy_create_bloom", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)
+	);
 	/// `rocksdb_filterpolicy_t* rocksdb_filterpolicy_create_ribbon(double bloom_equivalent_bits_per_key);`
-	private static final MethodHandle MH_CREATE_RIBBON;
+	private static final MethodHandle MH_CREATE_RIBBON = NativeLibrary.downcall(
+		"rocksdb_filterpolicy_create_ribbon", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)
+	);
 	/// `rocksdb_filterpolicy_t* rocksdb_filterpolicy_create_ribbon_hybrid(double bloom_equivalent_bits_per_key, int bloom_before_level);`
-	private static final MethodHandle MH_CREATE_RIBBON_HYBRID;
+	private static final MethodHandle MH_CREATE_RIBBON_HYBRID = NativeLibrary.downcall(
+		"rocksdb_filterpolicy_create_ribbon_hybrid", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT)
+	);
 	/// `void rocksdb_filterpolicy_destroy(rocksdb_filterpolicy_t*);`
-	private static final MethodHandle MH_DESTROY;
-
-	static {
-		MH_CREATE_BLOOM = NativeLibrary.downcall("rocksdb_filterpolicy_create_bloom",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
-
-		MH_CREATE_RIBBON = NativeLibrary.downcall("rocksdb_filterpolicy_create_ribbon",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
-
-		MH_CREATE_RIBBON_HYBRID = NativeLibrary.downcall("rocksdb_filterpolicy_create_ribbon_hybrid",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_filterpolicy_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_filterpolicy_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	private FilterPolicy(MemorySegment ptr) {
 		super(ptr);

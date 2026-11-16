@@ -14,127 +14,101 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class ReadOptions extends NativeObjectWithChildren {
 
 	/// `rocksdb_readoptions_t* rocksdb_readoptions_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_readoptions_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_readoptions_destroy(rocksdb_readoptions_t*);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_readoptions_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_readoptions_set_snapshot(rocksdb_readoptions_t*, const rocksdb_snapshot_t*);`
-	private static final MethodHandle MH_SET_SNAPSHOT;
+	private static final MethodHandle MH_SET_SNAPSHOT = NativeLibrary.downcall(
+		"rocksdb_readoptions_set_snapshot", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_readoptions_set_verify_checksums(rocksdb_readoptions_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_VERIFY_CHECKSUMS;
+	private static final MethodHandle MH_SET_VERIFY_CHECKSUMS = NativeLibrary.downcall(
+		"rocksdb_readoptions_set_verify_checksums", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_readoptions_get_verify_checksums(rocksdb_readoptions_t* opt);`
-	private static final MethodHandle MH_GET_VERIFY_CHECKSUMS;
+	private static final MethodHandle MH_GET_VERIFY_CHECKSUMS = NativeLibrary.downcall(
+		"rocksdb_readoptions_get_verify_checksums", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_readoptions_set_fill_cache(rocksdb_readoptions_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_FILL_CACHE;
+	private static final MethodHandle MH_SET_FILL_CACHE = NativeLibrary.downcall(
+		"rocksdb_readoptions_set_fill_cache", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_readoptions_get_fill_cache(rocksdb_readoptions_t* opt);`
-	private static final MethodHandle MH_GET_FILL_CACHE;
+	private static final MethodHandle MH_GET_FILL_CACHE = NativeLibrary.downcall(
+		"rocksdb_readoptions_get_fill_cache", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_readoptions_set_pin_data(rocksdb_readoptions_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_PIN_DATA;
+	private static final MethodHandle MH_SET_PIN_DATA = NativeLibrary.downcall(
+		"rocksdb_readoptions_set_pin_data", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_readoptions_get_pin_data(rocksdb_readoptions_t* opt);`
-	private static final MethodHandle MH_GET_PIN_DATA;
+	private static final MethodHandle MH_GET_PIN_DATA = NativeLibrary.downcall(
+		"rocksdb_readoptions_get_pin_data", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_readoptions_set_tailing(rocksdb_readoptions_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_TAILING;
+	private static final MethodHandle MH_SET_TAILING = NativeLibrary.downcall(
+		"rocksdb_readoptions_set_tailing", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_readoptions_get_tailing(rocksdb_readoptions_t* opt);`
-	private static final MethodHandle MH_GET_TAILING;
+	private static final MethodHandle MH_GET_TAILING = NativeLibrary.downcall(
+		"rocksdb_readoptions_get_tailing", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_readoptions_set_total_order_seek(rocksdb_readoptions_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_TOTAL_ORDER_SEEK;
+	private static final MethodHandle MH_SET_TOTAL_ORDER_SEEK = NativeLibrary.downcall(
+		"rocksdb_readoptions_set_total_order_seek", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_readoptions_get_total_order_seek(rocksdb_readoptions_t* opt);`
-	private static final MethodHandle MH_GET_TOTAL_ORDER_SEEK;
+	private static final MethodHandle MH_GET_TOTAL_ORDER_SEEK = NativeLibrary.downcall(
+		"rocksdb_readoptions_get_total_order_seek", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_readoptions_set_auto_prefix_mode(rocksdb_readoptions_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_AUTO_PREFIX_MODE;
+	private static final MethodHandle MH_SET_AUTO_PREFIX_MODE = NativeLibrary.downcall(
+		"rocksdb_readoptions_set_auto_prefix_mode", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_readoptions_get_auto_prefix_mode(rocksdb_readoptions_t* opt);`
-	private static final MethodHandle MH_GET_AUTO_PREFIX_MODE;
+	private static final MethodHandle MH_GET_AUTO_PREFIX_MODE = NativeLibrary.downcall(
+		"rocksdb_readoptions_get_auto_prefix_mode", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_readoptions_set_prefix_same_as_start(rocksdb_readoptions_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_PREFIX_SAME_AS_START;
+	private static final MethodHandle MH_SET_PREFIX_SAME_AS_START = NativeLibrary.downcall(
+		"rocksdb_readoptions_set_prefix_same_as_start", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_readoptions_get_prefix_same_as_start(rocksdb_readoptions_t* opt);`
-	private static final MethodHandle MH_GET_PREFIX_SAME_AS_START;
+	private static final MethodHandle MH_GET_PREFIX_SAME_AS_START = NativeLibrary.downcall(
+		"rocksdb_readoptions_get_prefix_same_as_start", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_readoptions_set_readahead_size(rocksdb_readoptions_t* opt, size_t v);`
-	private static final MethodHandle MH_SET_READAHEAD_SIZE;
+	private static final MethodHandle MH_SET_READAHEAD_SIZE = NativeLibrary.downcall(
+		"rocksdb_readoptions_set_readahead_size", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `size_t rocksdb_readoptions_get_readahead_size(rocksdb_readoptions_t* opt);`
-	private static final MethodHandle MH_GET_READAHEAD_SIZE;
+	private static final MethodHandle MH_GET_READAHEAD_SIZE = NativeLibrary.downcall(
+		"rocksdb_readoptions_get_readahead_size", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_readoptions_set_iterate_lower_bound(rocksdb_readoptions_t*, const char* key, size_t keylen);`
-	private static final MethodHandle MH_SET_ITERATE_LOWER_BOUND;
+	private static final MethodHandle MH_SET_ITERATE_LOWER_BOUND = NativeLibrary.downcall(
+		"rocksdb_readoptions_set_iterate_lower_bound", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_readoptions_set_iterate_upper_bound(rocksdb_readoptions_t*, const char* key, size_t keylen);`
-	private static final MethodHandle MH_SET_ITERATE_UPPER_BOUND;
+	private static final MethodHandle MH_SET_ITERATE_UPPER_BOUND = NativeLibrary.downcall(
+		"rocksdb_readoptions_set_iterate_upper_bound", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_readoptions_set_request_id(rocksdb_readoptions_t*, const char* request_id, size_t request_id_len);`
-	private static final MethodHandle MH_SET_REQUEST_ID;
+	private static final MethodHandle MH_SET_REQUEST_ID = NativeLibrary.downcall(
+		"rocksdb_readoptions_set_request_id", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_readoptions_clear_request_id(rocksdb_readoptions_t*);`
-	private static final MethodHandle MH_CLEAR_REQUEST_ID;
+	private static final MethodHandle MH_CLEAR_REQUEST_ID = NativeLibrary.downcall(
+		"rocksdb_readoptions_clear_request_id", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `const char* rocksdb_readoptions_get_request_id(rocksdb_readoptions_t*, size_t* request_id_len);`
-	private static final MethodHandle MH_GET_REQUEST_ID;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_readoptions_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_readoptions_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_SNAPSHOT = NativeLibrary.downcall("rocksdb_readoptions_set_snapshot",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_SET_VERIFY_CHECKSUMS = NativeLibrary.downcall("rocksdb_readoptions_set_verify_checksums",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_VERIFY_CHECKSUMS = NativeLibrary.downcall("rocksdb_readoptions_get_verify_checksums",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_FILL_CACHE = NativeLibrary.downcall("rocksdb_readoptions_set_fill_cache",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_FILL_CACHE = NativeLibrary.downcall("rocksdb_readoptions_get_fill_cache",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_PIN_DATA = NativeLibrary.downcall("rocksdb_readoptions_set_pin_data",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_PIN_DATA = NativeLibrary.downcall("rocksdb_readoptions_get_pin_data",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_TAILING = NativeLibrary.downcall("rocksdb_readoptions_set_tailing",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_TAILING = NativeLibrary.downcall("rocksdb_readoptions_get_tailing",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_TOTAL_ORDER_SEEK = NativeLibrary.downcall("rocksdb_readoptions_set_total_order_seek",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_TOTAL_ORDER_SEEK = NativeLibrary.downcall("rocksdb_readoptions_get_total_order_seek",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_AUTO_PREFIX_MODE = NativeLibrary.downcall("rocksdb_readoptions_set_auto_prefix_mode",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_AUTO_PREFIX_MODE = NativeLibrary.downcall("rocksdb_readoptions_get_auto_prefix_mode",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_PREFIX_SAME_AS_START = NativeLibrary.downcall("rocksdb_readoptions_set_prefix_same_as_start",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_PREFIX_SAME_AS_START = NativeLibrary.downcall("rocksdb_readoptions_get_prefix_same_as_start",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_READAHEAD_SIZE = NativeLibrary.downcall("rocksdb_readoptions_set_readahead_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_GET_READAHEAD_SIZE = NativeLibrary.downcall("rocksdb_readoptions_get_readahead_size",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_SET_ITERATE_LOWER_BOUND = NativeLibrary.downcall("rocksdb_readoptions_set_iterate_lower_bound",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_SET_ITERATE_UPPER_BOUND = NativeLibrary.downcall("rocksdb_readoptions_set_iterate_upper_bound",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_SET_REQUEST_ID = NativeLibrary.downcall("rocksdb_readoptions_set_request_id",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_CLEAR_REQUEST_ID = NativeLibrary.downcall("rocksdb_readoptions_clear_request_id",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_GET_REQUEST_ID = NativeLibrary.downcall("rocksdb_readoptions_get_request_id",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_REQUEST_ID = NativeLibrary.downcall(
+		"rocksdb_readoptions_get_request_id", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	/// RocksDB-default ReadOptions for the get/put overloads that take none; a native read/write call only reads
 	/// the struct, so one instance serves every open DB. Immortal per [NativeObject#makeImmortal()]:

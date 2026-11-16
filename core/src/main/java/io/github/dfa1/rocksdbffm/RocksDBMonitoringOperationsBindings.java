@@ -15,92 +15,80 @@ import java.util.List;
 final class RocksDBMonitoringOperationsBindings {
 
 	/// `void rocksdb_approximate_sizes(rocksdb_t* db, int num_ranges, const char* const* range_start_key, const size_t* range_start_key_len, const char* const* range_limit_key, const size_t* range_limit_key_len, uint64_t* sizes, char** errptr);`
-	private static final MethodHandle MH_APPROXIMATE_SIZES;
+	private static final MethodHandle MH_APPROXIMATE_SIZES = NativeLibrary.downcall(
+		"rocksdb_approximate_sizes",
+		FunctionDescriptor.ofVoid(
+			ValueLayout.ADDRESS,   // db
+			ValueLayout.JAVA_INT,  // num_ranges
+			ValueLayout.ADDRESS,   // range_start_key
+			ValueLayout.ADDRESS,   // range_start_key_len
+			ValueLayout.ADDRESS,   // range_limit_key
+			ValueLayout.ADDRESS,   // range_limit_key_len
+			ValueLayout.ADDRESS,   // sizes
+			ValueLayout.ADDRESS) // errptr
+	);
 	/// `void rocksdb_approximate_sizes_cf(rocksdb_t* db, rocksdb_column_family_handle_t* column_family, int num_ranges, const char* const* range_start_key, const size_t* range_start_key_len, const char* const* range_limit_key, const size_t* range_limit_key_len, uint64_t* sizes, char** errptr);`
-	private static final MethodHandle MH_APPROXIMATE_SIZES_CF;
+	private static final MethodHandle MH_APPROXIMATE_SIZES_CF = NativeLibrary.downcall(
+		"rocksdb_approximate_sizes_cf",
+		FunctionDescriptor.ofVoid(
+			ValueLayout.ADDRESS,   // db
+			ValueLayout.ADDRESS,   // column_family
+			ValueLayout.JAVA_INT,  // num_ranges
+			ValueLayout.ADDRESS,   // range_start_key
+			ValueLayout.ADDRESS,   // range_start_key_len
+			ValueLayout.ADDRESS,   // range_limit_key
+			ValueLayout.ADDRESS,   // range_limit_key_len
+			ValueLayout.ADDRESS,   // sizes
+			ValueLayout.ADDRESS) // errptr
+	);
 	/// `void rocksdb_approximate_sizes_with_options(rocksdb_t* db, const rocksdb_size_approximation_options_t* options, int num_ranges, const char* const* range_start_key, const size_t* range_start_key_len, const char* const* range_limit_key, const size_t* range_limit_key_len, uint64_t* sizes, char** errptr);`
-	private static final MethodHandle MH_APPROXIMATE_SIZES_WITH_OPTIONS;
+	private static final MethodHandle MH_APPROXIMATE_SIZES_WITH_OPTIONS = NativeLibrary.downcall(
+		"rocksdb_approximate_sizes_with_options",
+		FunctionDescriptor.ofVoid(
+			ValueLayout.ADDRESS,   // db
+			ValueLayout.ADDRESS,   // options
+			ValueLayout.JAVA_INT,  // num_ranges
+			ValueLayout.ADDRESS,   // range_start_key
+			ValueLayout.ADDRESS,   // range_start_key_len
+			ValueLayout.ADDRESS,   // range_limit_key
+			ValueLayout.ADDRESS,   // range_limit_key_len
+			ValueLayout.ADDRESS,   // sizes
+			ValueLayout.ADDRESS) // errptr
+	);
 	/// `void rocksdb_approximate_sizes_cf_with_options(rocksdb_t* db, rocksdb_column_family_handle_t* column_family, const rocksdb_size_approximation_options_t* options, int num_ranges, const char* const* range_start_key, const size_t* range_start_key_len, const char* const* range_limit_key, const size_t* range_limit_key_len, uint64_t* sizes, char** errptr);`
-	private static final MethodHandle MH_APPROXIMATE_SIZES_CF_WITH_OPTIONS;
-    /// `void rocksdb_verify_checksum(rocksdb_t* db, char** errptr);`
-    private static final MethodHandle MH_VERIFY_CHECKSUM;
+	private static final MethodHandle MH_APPROXIMATE_SIZES_CF_WITH_OPTIONS = NativeLibrary.downcall(
+		"rocksdb_approximate_sizes_cf_with_options",
+		FunctionDescriptor.ofVoid(
+			ValueLayout.ADDRESS,   // db
+			ValueLayout.ADDRESS,   // column_family
+			ValueLayout.ADDRESS,   // options
+			ValueLayout.JAVA_INT,  // num_ranges
+			ValueLayout.ADDRESS,   // range_start_key
+			ValueLayout.ADDRESS,   // range_start_key_len
+			ValueLayout.ADDRESS,   // range_limit_key
+			ValueLayout.ADDRESS,   // range_limit_key_len
+			ValueLayout.ADDRESS,   // sizes
+			ValueLayout.ADDRESS) // errptr
+	);
+	/// `void rocksdb_verify_checksum(rocksdb_t* db, char** errptr);`
+	private static final MethodHandle MH_VERIFY_CHECKSUM = NativeLibrary.downcall(
+		"rocksdb_verify_checksum", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
-    /// `void rocksdb_verify_checksum_with_options(rocksdb_t* db, const rocksdb_readoptions_t* options, char** errptr);`
-    private static final MethodHandle MH_VERIFY_CHECKSUM_WITH_OPTIONS;
+	/// `void rocksdb_verify_checksum_with_options(rocksdb_t* db, const rocksdb_readoptions_t* options, char** errptr);`
+	private static final MethodHandle MH_VERIFY_CHECKSUM_WITH_OPTIONS = NativeLibrary.downcall(
+		"rocksdb_verify_checksum_with_options", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
-    /// `void rocksdb_verify_file_checksums(rocksdb_t* db, char** errptr);`
-    private static final MethodHandle MH_VERIFY_FILE_CHECKSUMS;
+	/// `void rocksdb_verify_file_checksums(rocksdb_t* db, char** errptr);`
+	private static final MethodHandle MH_VERIFY_FILE_CHECKSUMS = NativeLibrary.downcall(
+		"rocksdb_verify_file_checksums", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
-    /// `void rocksdb_verify_file_checksums_with_options(rocksdb_t* db, const rocksdb_readoptions_t* options, char** errptr);`
-    private static final MethodHandle MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS;
-
-	static {
-		MH_APPROXIMATE_SIZES = NativeLibrary.downcall("rocksdb_approximate_sizes",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,   // db
-						ValueLayout.JAVA_INT,  // num_ranges
-						ValueLayout.ADDRESS,   // range_start_key
-						ValueLayout.ADDRESS,   // range_start_key_len
-						ValueLayout.ADDRESS,   // range_limit_key
-						ValueLayout.ADDRESS,   // range_limit_key_len
-						ValueLayout.ADDRESS,   // sizes
-						ValueLayout.ADDRESS)); // errptr
-
-		MH_APPROXIMATE_SIZES_CF = NativeLibrary.downcall("rocksdb_approximate_sizes_cf",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,   // db
-						ValueLayout.ADDRESS,   // column_family
-						ValueLayout.JAVA_INT,  // num_ranges
-						ValueLayout.ADDRESS,   // range_start_key
-						ValueLayout.ADDRESS,   // range_start_key_len
-						ValueLayout.ADDRESS,   // range_limit_key
-						ValueLayout.ADDRESS,   // range_limit_key_len
-						ValueLayout.ADDRESS,   // sizes
-						ValueLayout.ADDRESS)); // errptr
-
-		MH_APPROXIMATE_SIZES_WITH_OPTIONS = NativeLibrary.downcall("rocksdb_approximate_sizes_with_options",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,   // db
-						ValueLayout.ADDRESS,   // options
-						ValueLayout.JAVA_INT,  // num_ranges
-						ValueLayout.ADDRESS,   // range_start_key
-						ValueLayout.ADDRESS,   // range_start_key_len
-						ValueLayout.ADDRESS,   // range_limit_key
-						ValueLayout.ADDRESS,   // range_limit_key_len
-						ValueLayout.ADDRESS,   // sizes
-						ValueLayout.ADDRESS)); // errptr
-
-		MH_APPROXIMATE_SIZES_CF_WITH_OPTIONS = NativeLibrary.downcall("rocksdb_approximate_sizes_cf_with_options",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,   // db
-						ValueLayout.ADDRESS,   // column_family
-						ValueLayout.ADDRESS,   // options
-						ValueLayout.JAVA_INT,  // num_ranges
-						ValueLayout.ADDRESS,   // range_start_key
-						ValueLayout.ADDRESS,   // range_start_key_len
-						ValueLayout.ADDRESS,   // range_limit_key
-						ValueLayout.ADDRESS,   // range_limit_key_len
-						ValueLayout.ADDRESS,   // sizes
-						ValueLayout.ADDRESS)); // errptr
-
-        MH_VERIFY_CHECKSUM = NativeLibrary.downcall(
-                "rocksdb_verify_checksum",
-                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-        MH_VERIFY_CHECKSUM_WITH_OPTIONS = NativeLibrary.downcall(
-                "rocksdb_verify_checksum_with_options",
-                FunctionDescriptor.ofVoid(
-                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-        MH_VERIFY_FILE_CHECKSUMS = NativeLibrary.downcall(
-                "rocksdb_verify_file_checksums",
-                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-        MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS = NativeLibrary.downcall(
-                "rocksdb_verify_file_checksums_with_options",
-                FunctionDescriptor.ofVoid(
-                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
+	/// `void rocksdb_verify_file_checksums_with_options(rocksdb_t* db, const rocksdb_readoptions_t* options, char** errptr);`
+	private static final MethodHandle MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS = NativeLibrary.downcall(
+		"rocksdb_verify_file_checksums_with_options", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	private RocksDBMonitoringOperationsBindings() {
 	}
@@ -184,43 +172,43 @@ final class RocksDBMonitoringOperationsBindings {
 			throw NativeCalls.wrapInvokeFailure("getApproximateSizes failed", t);
 		}
 	}
-    static void verifyChecksum(MemorySegment db) {
-        try (Arena arena = Arena.ofConfined()) {
-            MemorySegment err = NativeCalls.errHolder(arena);
-            MH_VERIFY_CHECKSUM.invokeExact(db, err);
-            NativeCalls.checkError(err);
-        } catch (Throwable t) {
-            throw NativeCalls.wrapInvokeFailure("verifyChecksum failed", t);
-        }
-    }
+	static void verifyChecksum(MemorySegment db) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MH_VERIFY_CHECKSUM.invokeExact(db, err);
+			NativeCalls.checkError(err);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("verifyChecksum failed", t);
+		}
+	}
 
-    static void verifyChecksum(MemorySegment db, ReadOptions options) {
-        try (Arena arena = Arena.ofConfined()) {
-            MemorySegment err = NativeCalls.errHolder(arena);
-            MH_VERIFY_CHECKSUM_WITH_OPTIONS.invokeExact(db, options.readPtr(), err);
-            NativeCalls.checkError(err);
-        } catch (Throwable t) {
-            throw NativeCalls.wrapInvokeFailure("verifyChecksum failed", t);
-        }
-    }
+	static void verifyChecksum(MemorySegment db, ReadOptions options) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MH_VERIFY_CHECKSUM_WITH_OPTIONS.invokeExact(db, options.readPtr(), err);
+			NativeCalls.checkError(err);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("verifyChecksum failed", t);
+		}
+	}
 
-    static void verifyFileChecksums(MemorySegment db) {
-        try (Arena arena = Arena.ofConfined()) {
-            MemorySegment err = NativeCalls.errHolder(arena);
-            MH_VERIFY_FILE_CHECKSUMS.invokeExact(db, err);
-            NativeCalls.checkError(err);
-        } catch (Throwable t) {
-            throw NativeCalls.wrapInvokeFailure("verifyFileChecksums failed", t);
-        }
-    }
+	static void verifyFileChecksums(MemorySegment db) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MH_VERIFY_FILE_CHECKSUMS.invokeExact(db, err);
+			NativeCalls.checkError(err);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("verifyFileChecksums failed", t);
+		}
+	}
 
-    static void verifyFileChecksums(MemorySegment db, ReadOptions options) {
-        try (Arena arena = Arena.ofConfined()) {
-            MemorySegment err = NativeCalls.errHolder(arena);
-            MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS.invokeExact(db, options.readPtr(), err);
-            NativeCalls.checkError(err);
-        } catch (Throwable t) {
-            throw NativeCalls.wrapInvokeFailure("verifyFileChecksums failed", t);
-        }
-    }
+	static void verifyFileChecksums(MemorySegment db, ReadOptions options) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment err = NativeCalls.errHolder(arena);
+			MH_VERIFY_FILE_CHECKSUMS_WITH_OPTIONS.invokeExact(db, options.readPtr(), err);
+			NativeCalls.checkError(err);
+		} catch (Throwable t) {
+			throw NativeCalls.wrapInvokeFailure("verifyFileChecksums failed", t);
+		}
+	}
 }

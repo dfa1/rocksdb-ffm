@@ -34,12 +34,9 @@ public final class SecondaryDB extends NativeDB
 	// -----------------------------------------------------------------------
 
 	/// `void rocksdb_try_catch_up_with_primary(rocksdb_t* db, char** errptr);`
-	private static final MethodHandle MH_CATCH_UP;
-
-	static {
-		MH_CATCH_UP = NativeLibrary.downcall("rocksdb_try_catch_up_with_primary",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_CATCH_UP = NativeLibrary.downcall(
+		"rocksdb_try_catch_up_with_primary", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	SecondaryDB(MemorySegment ptr) {
 		super(ptr);

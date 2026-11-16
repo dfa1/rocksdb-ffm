@@ -25,7 +25,9 @@ final class NativeCalls {
 	static final ValueLayout.OfLong SIZE_T = (ValueLayout.OfLong) Linker.nativeLinker().canonicalLayouts().get("size_t");
 
 	/// `void rocksdb_free(void* ptr);`
-	private static final MethodHandle MH_FREE = NativeLibrary.downcall("rocksdb_free", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+	private static final MethodHandle MH_FREE = NativeLibrary.downcall(
+		"rocksdb_free", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	private NativeCalls() {
 	}

@@ -13,65 +13,41 @@ import java.nio.ByteBuffer;
 final class RocksDBCompactionOperationsBindings {
 
 	/// `void rocksdb_compact_range(rocksdb_t* db, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len);`
-	private static final MethodHandle MH_COMPACT_RANGE;
+	private static final MethodHandle MH_COMPACT_RANGE = NativeLibrary.downcall(
+		"rocksdb_compact_range", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_compact_range_cf(rocksdb_t* db, rocksdb_column_family_handle_t* column_family, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len);`
-	private static final MethodHandle MH_COMPACT_RANGE_CF;
+	private static final MethodHandle MH_COMPACT_RANGE_CF = NativeLibrary.downcall(
+		"rocksdb_compact_range_cf", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_compact_range_opt(rocksdb_t* db, rocksdb_compactoptions_t* opt, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len);`
-	private static final MethodHandle MH_COMPACT_RANGE_OPT;
+	private static final MethodHandle MH_COMPACT_RANGE_OPT = NativeLibrary.downcall(
+		"rocksdb_compact_range_opt", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_suggest_compact_range(rocksdb_t* db, const char* start_key, size_t start_key_len, const char* limit_key, size_t limit_key_len, char** errptr);`
-	private static final MethodHandle MH_SUGGEST_COMPACT_RANGE;
+	private static final MethodHandle MH_SUGGEST_COMPACT_RANGE = NativeLibrary.downcall(
+		"rocksdb_suggest_compact_range", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_disable_file_deletions(rocksdb_t* db, char** errptr);`
-	private static final MethodHandle MH_DISABLE_FILE_DELETIONS;
+	private static final MethodHandle MH_DISABLE_FILE_DELETIONS = NativeLibrary.downcall(
+		"rocksdb_disable_file_deletions", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_enable_file_deletions(rocksdb_t* db, char** errptr);`
-	private static final MethodHandle MH_ENABLE_FILE_DELETIONS;
+	private static final MethodHandle MH_ENABLE_FILE_DELETIONS = NativeLibrary.downcall(
+		"rocksdb_enable_file_deletions", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_disable_manual_compaction(rocksdb_t* db);`
-	private static final MethodHandle MH_DISABLE_MANUAL_COMPACTION;
+	private static final MethodHandle MH_DISABLE_MANUAL_COMPACTION = NativeLibrary.downcall(
+		"rocksdb_disable_manual_compaction", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_enable_manual_compaction(rocksdb_t* db);`
-	private static final MethodHandle MH_ENABLE_MANUAL_COMPACTION;
+	private static final MethodHandle MH_ENABLE_MANUAL_COMPACTION = NativeLibrary.downcall(
+		"rocksdb_enable_manual_compaction", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_wait_for_compact(rocksdb_t* db, rocksdb_wait_for_compact_options_t* options, char** errptr);`
-	private static final MethodHandle MH_WAIT_FOR_COMPACT;
-
-	static {
-		MH_COMPACT_RANGE = NativeLibrary.downcall("rocksdb_compact_range",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_COMPACT_RANGE_CF = NativeLibrary.downcall("rocksdb_compact_range_cf",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_COMPACT_RANGE_OPT = NativeLibrary.downcall("rocksdb_compact_range_opt",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_SUGGEST_COMPACT_RANGE = NativeLibrary.downcall("rocksdb_suggest_compact_range",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_DISABLE_FILE_DELETIONS = NativeLibrary.downcall("rocksdb_disable_file_deletions",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_ENABLE_FILE_DELETIONS = NativeLibrary.downcall("rocksdb_enable_file_deletions",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_DISABLE_MANUAL_COMPACTION = NativeLibrary.downcall("rocksdb_disable_manual_compaction",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_ENABLE_MANUAL_COMPACTION = NativeLibrary.downcall("rocksdb_enable_manual_compaction",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_WAIT_FOR_COMPACT = NativeLibrary.downcall("rocksdb_wait_for_compact",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_WAIT_FOR_COMPACT = NativeLibrary.downcall(
+		"rocksdb_wait_for_compact", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	private RocksDBCompactionOperationsBindings() {
 	}

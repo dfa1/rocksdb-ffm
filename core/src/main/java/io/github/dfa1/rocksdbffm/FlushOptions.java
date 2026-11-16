@@ -18,27 +18,21 @@ import java.lang.invoke.MethodHandle;
 public final class FlushOptions extends NativeObject {
 
 	/// `rocksdb_flushoptions_t* rocksdb_flushoptions_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_flushoptions_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_flushoptions_destroy(rocksdb_flushoptions_t*);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_flushoptions_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_flushoptions_set_wait(rocksdb_flushoptions_t*, unsigned char);`
-	private static final MethodHandle MH_SET_WAIT;
+	private static final MethodHandle MH_SET_WAIT = NativeLibrary.downcall(
+		"rocksdb_flushoptions_set_wait", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_flushoptions_get_wait(rocksdb_flushoptions_t*);`
-	private static final MethodHandle MH_GET_WAIT;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_flushoptions_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_flushoptions_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_WAIT = NativeLibrary.downcall("rocksdb_flushoptions_set_wait",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_WAIT = NativeLibrary.downcall("rocksdb_flushoptions_get_wait",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_WAIT = NativeLibrary.downcall(
+		"rocksdb_flushoptions_get_wait", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 
 	private FlushOptions(MemorySegment ptr) {
 		super(ptr);

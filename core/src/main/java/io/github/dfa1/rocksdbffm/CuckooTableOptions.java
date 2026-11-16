@@ -23,67 +23,53 @@ import java.lang.invoke.MethodHandle;
 public final class CuckooTableOptions extends NativeObject {
 
 	/// `rocksdb_cuckoo_table_options_t* rocksdb_cuckoo_options_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_cuckoo_options_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_cuckoo_options_destroy(rocksdb_cuckoo_table_options_t* options);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_cuckoo_options_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_cuckoo_options_set_hash_table_ratio(rocksdb_cuckoo_table_options_t* opt, double v);`
-	private static final MethodHandle MH_SET_HASH_TABLE_RATIO;
+	private static final MethodHandle MH_SET_HASH_TABLE_RATIO = NativeLibrary.downcall(
+		"rocksdb_cuckoo_options_set_hash_table_ratio", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)
+	);
 	/// `double rocksdb_cuckoo_options_get_hash_table_ratio(rocksdb_cuckoo_table_options_t* opt);`
-	private static final MethodHandle MH_GET_HASH_TABLE_RATIO;
+	private static final MethodHandle MH_GET_HASH_TABLE_RATIO = NativeLibrary.downcall(
+		"rocksdb_cuckoo_options_get_hash_table_ratio", FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_cuckoo_options_set_max_search_depth(rocksdb_cuckoo_table_options_t* opt, uint32_t v);`
-	private static final MethodHandle MH_SET_MAX_SEARCH_DEPTH;
+	private static final MethodHandle MH_SET_MAX_SEARCH_DEPTH = NativeLibrary.downcall(
+		"rocksdb_cuckoo_options_set_max_search_depth", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `uint32_t rocksdb_cuckoo_options_get_max_search_depth(rocksdb_cuckoo_table_options_t* opt);`
-	private static final MethodHandle MH_GET_MAX_SEARCH_DEPTH;
+	private static final MethodHandle MH_GET_MAX_SEARCH_DEPTH = NativeLibrary.downcall(
+		"rocksdb_cuckoo_options_get_max_search_depth", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_cuckoo_options_set_cuckoo_block_size(rocksdb_cuckoo_table_options_t* opt, uint32_t v);`
-	private static final MethodHandle MH_SET_CUCKOO_BLOCK_SIZE;
+	private static final MethodHandle MH_SET_CUCKOO_BLOCK_SIZE = NativeLibrary.downcall(
+		"rocksdb_cuckoo_options_set_cuckoo_block_size", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `uint32_t rocksdb_cuckoo_options_get_cuckoo_block_size(rocksdb_cuckoo_table_options_t* opt);`
-	private static final MethodHandle MH_GET_CUCKOO_BLOCK_SIZE;
+	private static final MethodHandle MH_GET_CUCKOO_BLOCK_SIZE = NativeLibrary.downcall(
+		"rocksdb_cuckoo_options_get_cuckoo_block_size", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_cuckoo_options_set_identity_as_first_hash(rocksdb_cuckoo_table_options_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_IDENTITY_AS_FIRST_HASH;
+	private static final MethodHandle MH_SET_IDENTITY_AS_FIRST_HASH = NativeLibrary.downcall(
+		"rocksdb_cuckoo_options_set_identity_as_first_hash", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_cuckoo_options_get_identity_as_first_hash(rocksdb_cuckoo_table_options_t* opt);`
-	private static final MethodHandle MH_GET_IDENTITY_AS_FIRST_HASH;
+	private static final MethodHandle MH_GET_IDENTITY_AS_FIRST_HASH = NativeLibrary.downcall(
+		"rocksdb_cuckoo_options_get_identity_as_first_hash", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_cuckoo_options_set_use_module_hash(rocksdb_cuckoo_table_options_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_USE_MODULE_HASH;
+	private static final MethodHandle MH_SET_USE_MODULE_HASH = NativeLibrary.downcall(
+		"rocksdb_cuckoo_options_set_use_module_hash", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_cuckoo_options_get_use_module_hash(rocksdb_cuckoo_table_options_t* opt);`
-	private static final MethodHandle MH_GET_USE_MODULE_HASH;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_cuckoo_options_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_cuckoo_options_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_HASH_TABLE_RATIO = NativeLibrary.downcall("rocksdb_cuckoo_options_set_hash_table_ratio",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
-
-		MH_GET_HASH_TABLE_RATIO = NativeLibrary.downcall("rocksdb_cuckoo_options_get_hash_table_ratio",
-				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
-
-		MH_SET_MAX_SEARCH_DEPTH = NativeLibrary.downcall("rocksdb_cuckoo_options_set_max_search_depth",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_MAX_SEARCH_DEPTH = NativeLibrary.downcall("rocksdb_cuckoo_options_get_max_search_depth",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_SET_CUCKOO_BLOCK_SIZE = NativeLibrary.downcall("rocksdb_cuckoo_options_set_cuckoo_block_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_CUCKOO_BLOCK_SIZE = NativeLibrary.downcall("rocksdb_cuckoo_options_get_cuckoo_block_size",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_SET_IDENTITY_AS_FIRST_HASH = NativeLibrary.downcall("rocksdb_cuckoo_options_set_identity_as_first_hash",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_IDENTITY_AS_FIRST_HASH = NativeLibrary.downcall("rocksdb_cuckoo_options_get_identity_as_first_hash",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_USE_MODULE_HASH = NativeLibrary.downcall("rocksdb_cuckoo_options_set_use_module_hash",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_USE_MODULE_HASH = NativeLibrary.downcall("rocksdb_cuckoo_options_get_use_module_hash",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_USE_MODULE_HASH = NativeLibrary.downcall(
+		"rocksdb_cuckoo_options_get_use_module_hash", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 
 	private CuckooTableOptions(MemorySegment ptr) {
 		super(ptr);

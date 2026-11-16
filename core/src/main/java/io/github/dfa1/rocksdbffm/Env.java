@@ -24,44 +24,33 @@ import java.lang.invoke.MethodHandle;
 public final class Env extends NativeObject {
 
 	/// `rocksdb_env_t* rocksdb_create_default_env(void);`
-	private static final MethodHandle MH_CREATE_DEFAULT;
+	private static final MethodHandle MH_CREATE_DEFAULT = NativeLibrary.downcall(
+		"rocksdb_create_default_env", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_env_t* rocksdb_create_mem_env(void);`
-	private static final MethodHandle MH_CREATE_MEM;
+	private static final MethodHandle MH_CREATE_MEM = NativeLibrary.downcall(
+		"rocksdb_create_mem_env", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_env_destroy(rocksdb_env_t*);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_env_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_env_set_background_threads(rocksdb_env_t* env, int n);`
-	private static final MethodHandle MH_SET_BACKGROUND_THREADS;
+	private static final MethodHandle MH_SET_BACKGROUND_THREADS = NativeLibrary.downcall(
+		"rocksdb_env_set_background_threads", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `int rocksdb_env_get_background_threads(rocksdb_env_t* env);`
-	private static final MethodHandle MH_GET_BACKGROUND_THREADS;
+	private static final MethodHandle MH_GET_BACKGROUND_THREADS = NativeLibrary.downcall(
+		"rocksdb_env_get_background_threads", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_env_set_high_priority_background_threads(rocksdb_env_t* env, int n);`
-	private static final MethodHandle MH_SET_HIGH_PRIORITY_BACKGROUND_THREADS;
+	private static final MethodHandle MH_SET_HIGH_PRIORITY_BACKGROUND_THREADS = NativeLibrary.downcall(
+		"rocksdb_env_set_high_priority_background_threads", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `int rocksdb_env_get_high_priority_background_threads(rocksdb_env_t* env);`
-	private static final MethodHandle MH_GET_HIGH_PRIORITY_BACKGROUND_THREADS;
-
-	static {
-		MH_CREATE_DEFAULT = NativeLibrary.downcall("rocksdb_create_default_env",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_CREATE_MEM = NativeLibrary.downcall("rocksdb_create_mem_env",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_env_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_BACKGROUND_THREADS = NativeLibrary.downcall("rocksdb_env_set_background_threads",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_BACKGROUND_THREADS = NativeLibrary.downcall("rocksdb_env_get_background_threads",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_SET_HIGH_PRIORITY_BACKGROUND_THREADS = NativeLibrary.downcall(
-				"rocksdb_env_set_high_priority_background_threads",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_HIGH_PRIORITY_BACKGROUND_THREADS = NativeLibrary.downcall(
-				"rocksdb_env_get_high_priority_background_threads",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_HIGH_PRIORITY_BACKGROUND_THREADS = NativeLibrary.downcall(
+		"rocksdb_env_get_high_priority_background_threads", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 
 	/// Wrapper around `Env::Default()` for the tracing/[Replayer] overloads that take no [Env]; immortal per
 	/// [NativeObject#makeImmortal()]: never closed, and `close()` on it is a no-op.

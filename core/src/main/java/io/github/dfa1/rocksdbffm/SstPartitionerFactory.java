@@ -26,17 +26,13 @@ import java.lang.invoke.MethodHandle;
 public final class SstPartitionerFactory extends NativeObject {
 
 	/// `rocksdb_sst_partitioner_factory_t* rocksdb_sst_partitioner_fixed_prefix_factory_create(size_t prefix_len);`
-	private static final MethodHandle MH_CREATE_FIXED_PREFIX;
+	private static final MethodHandle MH_CREATE_FIXED_PREFIX = NativeLibrary.downcall(
+		"rocksdb_sst_partitioner_fixed_prefix_factory_create", FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_sst_partitioner_factory_destroy(rocksdb_sst_partitioner_factory_t*);`
-	private static final MethodHandle MH_DESTROY;
-
-	static {
-		MH_CREATE_FIXED_PREFIX = NativeLibrary.downcall("rocksdb_sst_partitioner_fixed_prefix_factory_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_sst_partitioner_factory_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_sst_partitioner_factory_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	private SstPartitionerFactory(MemorySegment ptr) {
 		super(ptr);

@@ -29,39 +29,33 @@ import java.util.List;
 public final class Replayer extends NativeObject {
 
 	/// `rocksdb_replayer_t* rocksdb_new_default_replayer(rocksdb_t* db, rocksdb_column_family_handle_t** column_families, size_t num_column_families, rocksdb_env_t* env, const rocksdb_envoptions_t* env_options, const char* trace_path, char** errptr);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_new_default_replayer",
+		FunctionDescriptor.of(ValueLayout.ADDRESS,
+			ValueLayout.ADDRESS,   // db
+			ValueLayout.ADDRESS,   // column_families
+			NativeCalls.SIZE_T,    // num_column_families
+			ValueLayout.ADDRESS,   // env
+			ValueLayout.ADDRESS,   // env_options
+			ValueLayout.ADDRESS,   // trace_path
+			ValueLayout.ADDRESS) // errptr
+	);
 	/// `void rocksdb_replayer_prepare(rocksdb_replayer_t*, char** errptr);`
-	private static final MethodHandle MH_PREPARE;
+	private static final MethodHandle MH_PREPARE = NativeLibrary.downcall(
+		"rocksdb_replayer_prepare", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `uint64_t rocksdb_replayer_get_header_timestamp(const rocksdb_replayer_t*);`
-	private static final MethodHandle MH_GET_HEADER_TIMESTAMP;
+	private static final MethodHandle MH_GET_HEADER_TIMESTAMP = NativeLibrary.downcall(
+		"rocksdb_replayer_get_header_timestamp", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_replayer_replay(rocksdb_replayer_t*, const rocksdb_replay_options_t*, char** errptr);`
-	private static final MethodHandle MH_REPLAY;
+	private static final MethodHandle MH_REPLAY = NativeLibrary.downcall(
+		"rocksdb_replayer_replay", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_replayer_destroy(rocksdb_replayer_t*);`
-	private static final MethodHandle MH_DESTROY;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_new_default_replayer",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS,   // db
-						ValueLayout.ADDRESS,   // column_families
-						NativeCalls.SIZE_T,    // num_column_families
-						ValueLayout.ADDRESS,   // env
-						ValueLayout.ADDRESS,   // env_options
-						ValueLayout.ADDRESS,   // trace_path
-						ValueLayout.ADDRESS)); // errptr
-
-		MH_PREPARE = NativeLibrary.downcall("rocksdb_replayer_prepare",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_GET_HEADER_TIMESTAMP = NativeLibrary.downcall("rocksdb_replayer_get_header_timestamp",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-
-		MH_REPLAY = NativeLibrary.downcall("rocksdb_replayer_replay",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_replayer_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_replayer_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	/// The column families this replayer replays into. The native replayer keeps raw pointers to their handles, which
 	/// [NativeDB#forget(ColumnFamilyHandle)] frees when one is dropped.

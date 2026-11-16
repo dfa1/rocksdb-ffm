@@ -29,60 +29,37 @@ import java.nio.file.Path;
 public final class SstFileWriter extends NativeObject {
 
 	/// `rocksdb_sstfilewriter_t* rocksdb_sstfilewriter_create(const rocksdb_envoptions_t* env, const rocksdb_options_t* io_options);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_sstfilewriter_create", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_sstfilewriter_destroy(rocksdb_sstfilewriter_t* writer);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_sstfilewriter_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_sstfilewriter_open(rocksdb_sstfilewriter_t* writer, const char* name, char** errptr);`
-	private static final MethodHandle MH_OPEN;
+	private static final MethodHandle MH_OPEN = NativeLibrary.downcall(
+		"rocksdb_sstfilewriter_open", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_sstfilewriter_put(rocksdb_sstfilewriter_t* writer, const char* key, size_t keylen, const char* val, size_t vallen, char** errptr);`
-	private static final MethodHandle MH_PUT;
+	private static final MethodHandle MH_PUT = NativeLibrary.downcall(
+		"rocksdb_sstfilewriter_put", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_sstfilewriter_delete(rocksdb_sstfilewriter_t* writer, const char* key, size_t keylen, char** errptr);`
-	private static final MethodHandle MH_DELETE;
+	private static final MethodHandle MH_DELETE = NativeLibrary.downcall(
+		"rocksdb_sstfilewriter_delete", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_sstfilewriter_delete_range(rocksdb_sstfilewriter_t* writer, const char* begin_key, size_t begin_keylen, const char* end_key, size_t end_keylen, char** errptr);`
-	private static final MethodHandle MH_DELETE_RANGE;
+	private static final MethodHandle MH_DELETE_RANGE = NativeLibrary.downcall(
+		"rocksdb_sstfilewriter_delete_range", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_sstfilewriter_finish(rocksdb_sstfilewriter_t* writer, char** errptr);`
-	private static final MethodHandle MH_FINISH;
+	private static final MethodHandle MH_FINISH = NativeLibrary.downcall(
+		"rocksdb_sstfilewriter_finish", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_sstfilewriter_file_size(rocksdb_sstfilewriter_t* writer, uint64_t* file_size);`
-	private static final MethodHandle MH_FILE_SIZE;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_sstfilewriter_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_sstfilewriter_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_OPEN = NativeLibrary.downcall("rocksdb_sstfilewriter_open",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_PUT = NativeLibrary.downcall("rocksdb_sstfilewriter_put",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_DELETE = NativeLibrary.downcall("rocksdb_sstfilewriter_delete",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_DELETE_RANGE = NativeLibrary.downcall("rocksdb_sstfilewriter_delete_range",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_FINISH = NativeLibrary.downcall("rocksdb_sstfilewriter_finish",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_FILE_SIZE = NativeLibrary.downcall("rocksdb_sstfilewriter_file_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_FILE_SIZE = NativeLibrary.downcall(
+		"rocksdb_sstfilewriter_file_size", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	private SstFileWriter(EnvOptions envOptions, MemorySegment ptr) {
 		super(ptr);

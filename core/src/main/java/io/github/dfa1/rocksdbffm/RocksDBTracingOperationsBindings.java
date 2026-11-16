@@ -17,68 +17,62 @@ import java.nio.file.Path;
 final class RocksDBTracingOperationsBindings {
 
 	/// `void rocksdb_start_trace(rocksdb_t* db, rocksdb_env_t* env, const rocksdb_envoptions_t* env_options, const rocksdb_trace_options_t* options, const char* trace_path, char** errptr);`
-	private static final MethodHandle MH_START_TRACE;
+	private static final MethodHandle MH_START_TRACE = NativeLibrary.downcall(
+		"rocksdb_start_trace",
+		FunctionDescriptor.ofVoid(
+			ValueLayout.ADDRESS,  // db
+			ValueLayout.ADDRESS,  // env
+			ValueLayout.ADDRESS,  // env_options
+			ValueLayout.ADDRESS,  // options
+			ValueLayout.ADDRESS,  // trace_path
+			ValueLayout.ADDRESS) // errptr
+	);
 	/// `void rocksdb_end_trace(rocksdb_t* db, char** errptr);`
-	private static final MethodHandle MH_END_TRACE;
+	private static final MethodHandle MH_END_TRACE = NativeLibrary.downcall(
+		"rocksdb_end_trace", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_start_io_trace(rocksdb_t* db, rocksdb_env_t* env, const rocksdb_envoptions_t* env_options, const rocksdb_trace_options_t* options, const char* trace_path, char** errptr);`
-	private static final MethodHandle MH_START_IO_TRACE;
+	private static final MethodHandle MH_START_IO_TRACE = NativeLibrary.downcall(
+		"rocksdb_start_io_trace",
+		FunctionDescriptor.ofVoid(
+			ValueLayout.ADDRESS,  // db
+			ValueLayout.ADDRESS,  // env
+			ValueLayout.ADDRESS,  // env_options
+			ValueLayout.ADDRESS,  // options
+			ValueLayout.ADDRESS,  // trace_path
+			ValueLayout.ADDRESS) // errptr
+	);
 	/// `void rocksdb_end_io_trace(rocksdb_t* db, char** errptr);`
-	private static final MethodHandle MH_END_IO_TRACE;
+	private static final MethodHandle MH_END_IO_TRACE = NativeLibrary.downcall(
+		"rocksdb_end_io_trace", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_start_block_cache_trace(rocksdb_t* db, rocksdb_env_t* env, const rocksdb_envoptions_t* env_options, const rocksdb_trace_options_t* options, const char* trace_path, char** errptr);`
-	private static final MethodHandle MH_START_BLOCK_CACHE_TRACE;
+	private static final MethodHandle MH_START_BLOCK_CACHE_TRACE = NativeLibrary.downcall(
+		"rocksdb_start_block_cache_trace",
+		FunctionDescriptor.ofVoid(
+			ValueLayout.ADDRESS,  // db
+			ValueLayout.ADDRESS,  // env
+			ValueLayout.ADDRESS,  // env_options
+			ValueLayout.ADDRESS,  // options
+			ValueLayout.ADDRESS,  // trace_path
+			ValueLayout.ADDRESS) // errptr
+	);
 	/// `void rocksdb_start_block_cache_trace_with_options(rocksdb_t* db, rocksdb_env_t* env, const rocksdb_envoptions_t* env_options, const rocksdb_block_cache_trace_options_t* options, const rocksdb_block_cache_trace_writer_options_t* writer_options, const char* trace_path, char** errptr);`
-	private static final MethodHandle MH_START_BLOCK_CACHE_TRACE_WITH_OPTIONS;
+	private static final MethodHandle MH_START_BLOCK_CACHE_TRACE_WITH_OPTIONS = NativeLibrary.downcall(
+		"rocksdb_start_block_cache_trace_with_options",
+		FunctionDescriptor.ofVoid(
+			ValueLayout.ADDRESS,  // db
+			ValueLayout.ADDRESS,  // env
+			ValueLayout.ADDRESS,  // env_options
+			ValueLayout.ADDRESS,  // options
+			ValueLayout.ADDRESS,  // writer_options
+			ValueLayout.ADDRESS,  // trace_path
+			ValueLayout.ADDRESS) // errptr
+	);
 	/// `void rocksdb_end_block_cache_trace(rocksdb_t* db, char** errptr);`
-	private static final MethodHandle MH_END_BLOCK_CACHE_TRACE;
-
-	static {
-		MH_START_TRACE = NativeLibrary.downcall("rocksdb_start_trace",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,  // db
-						ValueLayout.ADDRESS,  // env
-						ValueLayout.ADDRESS,  // env_options
-						ValueLayout.ADDRESS,  // options
-						ValueLayout.ADDRESS,  // trace_path
-						ValueLayout.ADDRESS)); // errptr
-
-		MH_END_TRACE = NativeLibrary.downcall("rocksdb_end_trace",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_START_IO_TRACE = NativeLibrary.downcall("rocksdb_start_io_trace",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,  // db
-						ValueLayout.ADDRESS,  // env
-						ValueLayout.ADDRESS,  // env_options
-						ValueLayout.ADDRESS,  // options
-						ValueLayout.ADDRESS,  // trace_path
-						ValueLayout.ADDRESS)); // errptr
-
-		MH_END_IO_TRACE = NativeLibrary.downcall("rocksdb_end_io_trace",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_START_BLOCK_CACHE_TRACE = NativeLibrary.downcall("rocksdb_start_block_cache_trace",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,  // db
-						ValueLayout.ADDRESS,  // env
-						ValueLayout.ADDRESS,  // env_options
-						ValueLayout.ADDRESS,  // options
-						ValueLayout.ADDRESS,  // trace_path
-						ValueLayout.ADDRESS)); // errptr
-
-		MH_START_BLOCK_CACHE_TRACE_WITH_OPTIONS = NativeLibrary.downcall(
-				"rocksdb_start_block_cache_trace_with_options",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS,  // db
-						ValueLayout.ADDRESS,  // env
-						ValueLayout.ADDRESS,  // env_options
-						ValueLayout.ADDRESS,  // options
-						ValueLayout.ADDRESS,  // writer_options
-						ValueLayout.ADDRESS,  // trace_path
-						ValueLayout.ADDRESS)); // errptr
-
-		MH_END_BLOCK_CACHE_TRACE = NativeLibrary.downcall("rocksdb_end_block_cache_trace",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_END_BLOCK_CACHE_TRACE = NativeLibrary.downcall(
+		"rocksdb_end_block_cache_trace", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	private RocksDBTracingOperationsBindings() {
 	}

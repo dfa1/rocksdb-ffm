@@ -27,94 +27,65 @@ import java.util.Objects;
 public final class WriteBufferManager extends NativeObject {
 
 	/// `rocksdb_write_buffer_manager_t* rocksdb_write_buffer_manager_create(size_t buffer_size, bool allow_stall);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_create", FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.JAVA_BYTE)
+	);
 	/// `rocksdb_write_buffer_manager_t* rocksdb_write_buffer_manager_create_with_cache(size_t buffer_size, const rocksdb_cache_t* cache, bool allow_stall);`
-	private static final MethodHandle MH_CREATE_WITH_CACHE;
+	private static final MethodHandle MH_CREATE_WITH_CACHE = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_create_with_cache", FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `void rocksdb_write_buffer_manager_destroy(rocksdb_write_buffer_manager_t* wbm);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `bool rocksdb_write_buffer_manager_enabled(rocksdb_write_buffer_manager_t* wbm);`
-	private static final MethodHandle MH_ENABLED;
+	private static final MethodHandle MH_ENABLED = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_enabled", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `bool rocksdb_write_buffer_manager_cost_to_cache(rocksdb_write_buffer_manager_t* wbm);`
-	private static final MethodHandle MH_COST_TO_CACHE;
+	private static final MethodHandle MH_COST_TO_CACHE = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_cost_to_cache", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `size_t rocksdb_write_buffer_manager_memory_usage(rocksdb_write_buffer_manager_t* wbm);`
-	private static final MethodHandle MH_MEMORY_USAGE;
+	private static final MethodHandle MH_MEMORY_USAGE = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_memory_usage", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `size_t rocksdb_write_buffer_manager_mutable_memtable_memory_usage(rocksdb_write_buffer_manager_t* wbm);`
-	private static final MethodHandle MH_MUTABLE_MEMTABLE_MEMORY_USAGE;
+	private static final MethodHandle MH_MUTABLE_MEMTABLE_MEMORY_USAGE = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_mutable_memtable_memory_usage", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `size_t rocksdb_write_buffer_manager_dummy_entries_in_cache_usage(rocksdb_write_buffer_manager_t* wbm);`
-	private static final MethodHandle MH_DUMMY_ENTRIES_IN_CACHE_USAGE;
+	private static final MethodHandle MH_DUMMY_ENTRIES_IN_CACHE_USAGE = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_dummy_entries_in_cache_usage", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `size_t rocksdb_write_buffer_manager_buffer_size(rocksdb_write_buffer_manager_t* wbm);`
-	private static final MethodHandle MH_BUFFER_SIZE;
+	private static final MethodHandle MH_BUFFER_SIZE = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_buffer_size", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_write_buffer_manager_set_buffer_size(rocksdb_write_buffer_manager_t* wbm, size_t new_size);`
-	private static final MethodHandle MH_SET_BUFFER_SIZE;
+	private static final MethodHandle MH_SET_BUFFER_SIZE = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_set_buffer_size", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_write_buffer_manager_set_allow_stall(rocksdb_write_buffer_manager_t* wbm, bool new_allow_stall);`
-	private static final MethodHandle MH_SET_ALLOW_STALL;
+	private static final MethodHandle MH_SET_ALLOW_STALL = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_set_allow_stall", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `rocksdb_write_buffer_manager_t* rocksdb_write_buffer_manager_create_with_policy(size_t buffer_size, bool allow_stall, int flush_policy);`
-	private static final MethodHandle MH_CREATE_WITH_POLICY;
+	private static final MethodHandle MH_CREATE_WITH_POLICY = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_create_with_policy", FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.JAVA_BYTE, ValueLayout.JAVA_INT)
+	);
 	/// `rocksdb_write_buffer_manager_t* rocksdb_write_buffer_manager_create_with_cache_and_policy(size_t buffer_size, const rocksdb_cache_t* cache, bool allow_stall, int flush_policy);`
-	private static final MethodHandle MH_CREATE_WITH_CACHE_AND_POLICY;
+	private static final MethodHandle MH_CREATE_WITH_CACHE_AND_POLICY = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_create_with_cache_and_policy", FunctionDescriptor.of(ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE, ValueLayout.JAVA_INT)
+	);
 	/// `int rocksdb_write_buffer_manager_flush_policy(rocksdb_write_buffer_manager_t* wbm);`
-	private static final MethodHandle MH_FLUSH_POLICY;
+	private static final MethodHandle MH_FLUSH_POLICY = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_flush_policy", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_write_buffer_manager_set_flush_policy(rocksdb_write_buffer_manager_t* wbm, int flush_policy);`
-	private static final MethodHandle MH_SET_FLUSH_POLICY;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_write_buffer_manager_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						NativeCalls.SIZE_T,
-						ValueLayout.JAVA_BYTE));
-
-		MH_CREATE_WITH_CACHE = NativeLibrary.downcall("rocksdb_write_buffer_manager_create_with_cache",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS,
-						ValueLayout.JAVA_BYTE));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_write_buffer_manager_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_ENABLED = NativeLibrary.downcall("rocksdb_write_buffer_manager_enabled",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_COST_TO_CACHE = NativeLibrary.downcall("rocksdb_write_buffer_manager_cost_to_cache",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_MEMORY_USAGE = NativeLibrary.downcall("rocksdb_write_buffer_manager_memory_usage",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_MUTABLE_MEMTABLE_MEMORY_USAGE = NativeLibrary.downcall("rocksdb_write_buffer_manager_mutable_memtable_memory_usage",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_DUMMY_ENTRIES_IN_CACHE_USAGE = NativeLibrary.downcall("rocksdb_write_buffer_manager_dummy_entries_in_cache_usage",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_BUFFER_SIZE = NativeLibrary.downcall("rocksdb_write_buffer_manager_buffer_size",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_SET_BUFFER_SIZE = NativeLibrary.downcall("rocksdb_write_buffer_manager_set_buffer_size",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_SET_ALLOW_STALL = NativeLibrary.downcall("rocksdb_write_buffer_manager_set_allow_stall",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_CREATE_WITH_POLICY = NativeLibrary.downcall("rocksdb_write_buffer_manager_create_with_policy",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						NativeCalls.SIZE_T,
-						ValueLayout.JAVA_BYTE,
-						ValueLayout.JAVA_INT));
-
-		MH_CREATE_WITH_CACHE_AND_POLICY = NativeLibrary.downcall("rocksdb_write_buffer_manager_create_with_cache_and_policy",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS,
-						ValueLayout.JAVA_BYTE,
-						ValueLayout.JAVA_INT));
-
-		MH_FLUSH_POLICY = NativeLibrary.downcall("rocksdb_write_buffer_manager_flush_policy",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_SET_FLUSH_POLICY = NativeLibrary.downcall("rocksdb_write_buffer_manager_set_flush_policy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-	}
+	private static final MethodHandle MH_SET_FLUSH_POLICY = NativeLibrary.downcall(
+		"rocksdb_write_buffer_manager_set_flush_policy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 
 	/// Policy choosing which memtable is flushed once the shared write-buffer budget is hit.
 	public enum FlushPolicy {

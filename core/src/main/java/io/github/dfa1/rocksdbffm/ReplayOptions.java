@@ -20,37 +20,29 @@ import java.lang.invoke.MethodHandle;
 public final class ReplayOptions extends NativeObject {
 
 	/// `rocksdb_replay_options_t* rocksdb_replay_options_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_replay_options_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_replay_options_destroy(rocksdb_replay_options_t*);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_replay_options_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_replay_options_set_num_threads(rocksdb_replay_options_t*, uint32_t);`
-	private static final MethodHandle MH_SET_NUM_THREADS;
+	private static final MethodHandle MH_SET_NUM_THREADS = NativeLibrary.downcall(
+		"rocksdb_replay_options_set_num_threads", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `uint32_t rocksdb_replay_options_get_num_threads(rocksdb_replay_options_t*);`
-	private static final MethodHandle MH_GET_NUM_THREADS;
+	private static final MethodHandle MH_GET_NUM_THREADS = NativeLibrary.downcall(
+		"rocksdb_replay_options_get_num_threads", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_replay_options_set_fast_forward(rocksdb_replay_options_t*, double);`
-	private static final MethodHandle MH_SET_FAST_FORWARD;
+	private static final MethodHandle MH_SET_FAST_FORWARD = NativeLibrary.downcall(
+		"rocksdb_replay_options_set_fast_forward", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)
+	);
 	/// `double rocksdb_replay_options_get_fast_forward(rocksdb_replay_options_t*);`
-	private static final MethodHandle MH_GET_FAST_FORWARD;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_replay_options_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_replay_options_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_NUM_THREADS = NativeLibrary.downcall("rocksdb_replay_options_set_num_threads",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_NUM_THREADS = NativeLibrary.downcall("rocksdb_replay_options_get_num_threads",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_SET_FAST_FORWARD = NativeLibrary.downcall("rocksdb_replay_options_set_fast_forward",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE));
-
-		MH_GET_FAST_FORWARD = NativeLibrary.downcall("rocksdb_replay_options_get_fast_forward",
-				FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_FAST_FORWARD = NativeLibrary.downcall(
+		"rocksdb_replay_options_get_fast_forward", FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS)
+	);
 
 	private ReplayOptions(MemorySegment ptr) {
 		super(ptr);

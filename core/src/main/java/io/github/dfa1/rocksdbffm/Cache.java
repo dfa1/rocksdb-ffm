@@ -13,47 +13,37 @@ import java.lang.invoke.MethodHandle;
 public abstract class Cache extends NativeObject {
 
 	/// `void rocksdb_cache_destroy(rocksdb_cache_t* cache);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_cache_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_cache_set_capacity(rocksdb_cache_t* cache, size_t capacity);`
-	private static final MethodHandle MH_SET_CAPACITY;
+	private static final MethodHandle MH_SET_CAPACITY = NativeLibrary.downcall(
+		"rocksdb_cache_set_capacity", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `size_t rocksdb_cache_get_capacity(const rocksdb_cache_t* cache);`
-	private static final MethodHandle MH_GET_CAPACITY;
+	private static final MethodHandle MH_GET_CAPACITY = NativeLibrary.downcall(
+		"rocksdb_cache_get_capacity", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `size_t rocksdb_cache_get_usage(const rocksdb_cache_t* cache);`
-	private static final MethodHandle MH_GET_USAGE;
+	private static final MethodHandle MH_GET_USAGE = NativeLibrary.downcall(
+		"rocksdb_cache_get_usage", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `size_t rocksdb_cache_get_pinned_usage(const rocksdb_cache_t* cache);`
-	private static final MethodHandle MH_GET_PINNED_USAGE;
+	private static final MethodHandle MH_GET_PINNED_USAGE = NativeLibrary.downcall(
+		"rocksdb_cache_get_pinned_usage", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `size_t rocksdb_cache_get_table_address_count(const rocksdb_cache_t* cache);`
-	private static final MethodHandle MH_GET_TABLE_ADDRESS_COUNT;
+	private static final MethodHandle MH_GET_TABLE_ADDRESS_COUNT = NativeLibrary.downcall(
+		"rocksdb_cache_get_table_address_count", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `size_t rocksdb_cache_get_occupancy_count(const rocksdb_cache_t* cache);`
-	private static final MethodHandle MH_GET_OCCUPANCY_COUNT;
+	private static final MethodHandle MH_GET_OCCUPANCY_COUNT = NativeLibrary.downcall(
+		"rocksdb_cache_get_occupancy_count", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_cache_disown_data(rocksdb_cache_t* cache);`
-	private static final MethodHandle MH_DISOWN_DATA;
-
-	static {
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_cache_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_CAPACITY = NativeLibrary.downcall("rocksdb_cache_set_capacity",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_GET_CAPACITY = NativeLibrary.downcall("rocksdb_cache_get_capacity",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_GET_USAGE = NativeLibrary.downcall("rocksdb_cache_get_usage",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_GET_PINNED_USAGE = NativeLibrary.downcall("rocksdb_cache_get_pinned_usage",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_GET_TABLE_ADDRESS_COUNT = NativeLibrary.downcall("rocksdb_cache_get_table_address_count",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_GET_OCCUPANCY_COUNT = NativeLibrary.downcall("rocksdb_cache_get_occupancy_count",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_DISOWN_DATA = NativeLibrary.downcall("rocksdb_cache_disown_data",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_DISOWN_DATA = NativeLibrary.downcall(
+		"rocksdb_cache_disown_data", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	/// Constructs a cache wrapping the given native pointer.
 	///

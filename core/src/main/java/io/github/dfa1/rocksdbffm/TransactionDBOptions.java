@@ -12,153 +12,109 @@ import java.time.Duration;
 public final class TransactionDBOptions extends NativeObject {
 
 	/// `rocksdb_transactiondb_options_t* rocksdb_transactiondb_options_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_destroy(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_set_max_num_locks(rocksdb_transactiondb_options_t* opt, int64_t v);`
-	private static final MethodHandle MH_SET_MAX_NUM_LOCKS;
+	private static final MethodHandle MH_SET_MAX_NUM_LOCKS = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_set_max_num_locks", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
+	);
 	/// `int64_t rocksdb_transactiondb_options_get_max_num_locks(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_GET_MAX_NUM_LOCKS;
+	private static final MethodHandle MH_GET_MAX_NUM_LOCKS = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_get_max_num_locks", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_set_max_num_deadlocks(rocksdb_transactiondb_options_t* opt, uint32_t v);`
-	private static final MethodHandle MH_SET_MAX_NUM_DEADLOCKS;
+	private static final MethodHandle MH_SET_MAX_NUM_DEADLOCKS = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_set_max_num_deadlocks", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `uint32_t rocksdb_transactiondb_options_get_max_num_deadlocks(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_GET_MAX_NUM_DEADLOCKS;
+	private static final MethodHandle MH_GET_MAX_NUM_DEADLOCKS = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_get_max_num_deadlocks", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_set_num_stripes(rocksdb_transactiondb_options_t* opt, size_t v);`
-	private static final MethodHandle MH_SET_NUM_STRIPES;
+	private static final MethodHandle MH_SET_NUM_STRIPES = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_set_num_stripes", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `size_t rocksdb_transactiondb_options_get_num_stripes(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_GET_NUM_STRIPES;
+	private static final MethodHandle MH_GET_NUM_STRIPES = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_get_num_stripes", FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_set_transaction_lock_timeout(rocksdb_transactiondb_options_t* opt, int64_t v);`
-	private static final MethodHandle MH_SET_TRANSACTION_LOCK_TIMEOUT;
+	private static final MethodHandle MH_SET_TRANSACTION_LOCK_TIMEOUT = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_set_transaction_lock_timeout", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
+	);
 	/// `int64_t rocksdb_transactiondb_options_get_transaction_lock_timeout(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_GET_TRANSACTION_LOCK_TIMEOUT;
+	private static final MethodHandle MH_GET_TRANSACTION_LOCK_TIMEOUT = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_get_transaction_lock_timeout", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_set_default_lock_timeout(rocksdb_transactiondb_options_t* opt, int64_t v);`
-	private static final MethodHandle MH_SET_DEFAULT_LOCK_TIMEOUT;
+	private static final MethodHandle MH_SET_DEFAULT_LOCK_TIMEOUT = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_set_default_lock_timeout", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
+	);
 	/// `int64_t rocksdb_transactiondb_options_get_default_lock_timeout(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_GET_DEFAULT_LOCK_TIMEOUT;
+	private static final MethodHandle MH_GET_DEFAULT_LOCK_TIMEOUT = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_get_default_lock_timeout", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_set_write_policy(rocksdb_transactiondb_options_t* opt, int v);`
-	private static final MethodHandle MH_SET_WRITE_POLICY;
+	private static final MethodHandle MH_SET_WRITE_POLICY = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_set_write_policy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `int rocksdb_transactiondb_options_get_write_policy(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_GET_WRITE_POLICY;
+	private static final MethodHandle MH_GET_WRITE_POLICY = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_get_write_policy", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_set_rollback_merge_operands(rocksdb_transactiondb_options_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_ROLLBACK_MERGE_OPERANDS;
+	private static final MethodHandle MH_SET_ROLLBACK_MERGE_OPERANDS = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_set_rollback_merge_operands", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_transactiondb_options_get_rollback_merge_operands(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_GET_ROLLBACK_MERGE_OPERANDS;
+	private static final MethodHandle MH_GET_ROLLBACK_MERGE_OPERANDS = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_get_rollback_merge_operands", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_set_use_per_key_point_lock_mgr(rocksdb_transactiondb_options_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_USE_PER_KEY_POINT_LOCK_MGR;
+	private static final MethodHandle MH_SET_USE_PER_KEY_POINT_LOCK_MGR = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_set_use_per_key_point_lock_mgr", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_transactiondb_options_get_use_per_key_point_lock_mgr(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_GET_USE_PER_KEY_POINT_LOCK_MGR;
+	private static final MethodHandle MH_GET_USE_PER_KEY_POINT_LOCK_MGR = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_get_use_per_key_point_lock_mgr", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_set_skip_concurrency_control(rocksdb_transactiondb_options_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_SKIP_CONCURRENCY_CONTROL;
+	private static final MethodHandle MH_SET_SKIP_CONCURRENCY_CONTROL = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_set_skip_concurrency_control", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_transactiondb_options_get_skip_concurrency_control(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_GET_SKIP_CONCURRENCY_CONTROL;
+	private static final MethodHandle MH_GET_SKIP_CONCURRENCY_CONTROL = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_get_skip_concurrency_control", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_set_default_write_batch_flush_threshold(rocksdb_transactiondb_options_t* opt, int64_t v);`
-	private static final MethodHandle MH_SET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD;
+	private static final MethodHandle MH_SET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_set_default_write_batch_flush_threshold", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
+	);
 	/// `int64_t rocksdb_transactiondb_options_get_default_write_batch_flush_threshold(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_GET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD;
+	private static final MethodHandle MH_GET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_get_default_write_batch_flush_threshold", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_set_enable_udt_validation(rocksdb_transactiondb_options_t* opt, unsigned char v);`
-	private static final MethodHandle MH_SET_ENABLE_UDT_VALIDATION;
+	private static final MethodHandle MH_SET_ENABLE_UDT_VALIDATION = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_set_enable_udt_validation", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE)
+	);
 	/// `unsigned char rocksdb_transactiondb_options_get_enable_udt_validation(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_GET_ENABLE_UDT_VALIDATION;
+	private static final MethodHandle MH_GET_ENABLE_UDT_VALIDATION = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_get_enable_udt_validation", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_options_set_txn_commit_bypass_memtable_threshold(rocksdb_transactiondb_options_t* opt, uint32_t v);`
-	private static final MethodHandle MH_SET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD;
+	private static final MethodHandle MH_SET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_set_txn_commit_bypass_memtable_threshold", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 	/// `uint32_t rocksdb_transactiondb_options_get_txn_commit_bypass_memtable_threshold(rocksdb_transactiondb_options_t* opt);`
-	private static final MethodHandle MH_GET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_transactiondb_options_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_transactiondb_options_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_MAX_NUM_LOCKS = NativeLibrary.downcall("rocksdb_transactiondb_options_set_max_num_locks",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-
-		MH_GET_MAX_NUM_LOCKS = NativeLibrary.downcall("rocksdb_transactiondb_options_get_max_num_locks",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-
-		MH_SET_MAX_NUM_DEADLOCKS = NativeLibrary.downcall("rocksdb_transactiondb_options_set_max_num_deadlocks",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_MAX_NUM_DEADLOCKS = NativeLibrary.downcall("rocksdb_transactiondb_options_get_max_num_deadlocks",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_SET_NUM_STRIPES = NativeLibrary.downcall("rocksdb_transactiondb_options_set_num_stripes",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_GET_NUM_STRIPES = NativeLibrary.downcall("rocksdb_transactiondb_options_get_num_stripes",
-				FunctionDescriptor.of(NativeCalls.SIZE_T, ValueLayout.ADDRESS));
-
-		MH_SET_TRANSACTION_LOCK_TIMEOUT = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_set_transaction_lock_timeout",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-
-		MH_GET_TRANSACTION_LOCK_TIMEOUT = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_get_transaction_lock_timeout",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-
-		MH_SET_DEFAULT_LOCK_TIMEOUT = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_set_default_lock_timeout",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-
-		MH_GET_DEFAULT_LOCK_TIMEOUT = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_get_default_lock_timeout",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-
-		MH_SET_WRITE_POLICY = NativeLibrary.downcall("rocksdb_transactiondb_options_set_write_policy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_WRITE_POLICY = NativeLibrary.downcall("rocksdb_transactiondb_options_get_write_policy",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
-		MH_SET_ROLLBACK_MERGE_OPERANDS = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_set_rollback_merge_operands",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_ROLLBACK_MERGE_OPERANDS = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_get_rollback_merge_operands",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_USE_PER_KEY_POINT_LOCK_MGR = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_set_use_per_key_point_lock_mgr",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_USE_PER_KEY_POINT_LOCK_MGR = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_get_use_per_key_point_lock_mgr",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_SKIP_CONCURRENCY_CONTROL = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_set_skip_concurrency_control",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_SKIP_CONCURRENCY_CONTROL = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_get_skip_concurrency_control",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_set_default_write_batch_flush_threshold",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-
-		MH_GET_DEFAULT_WRITE_BATCH_FLUSH_THRESHOLD = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_get_default_write_batch_flush_threshold",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-
-		MH_SET_ENABLE_UDT_VALIDATION = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_set_enable_udt_validation",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE));
-
-		MH_GET_ENABLE_UDT_VALIDATION = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_get_enable_udt_validation",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_set_txn_commit_bypass_memtable_threshold",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-
-		MH_GET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD = NativeLibrary.downcall(
-				"rocksdb_transactiondb_options_get_txn_commit_bypass_memtable_threshold",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_GET_TXN_COMMIT_BYPASS_MEMTABLE_THRESHOLD = NativeLibrary.downcall(
+		"rocksdb_transactiondb_options_get_txn_commit_bypass_memtable_threshold", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+	);
 
 	private TransactionDBOptions(MemorySegment ptr) {
 		super(ptr);

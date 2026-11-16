@@ -38,16 +38,9 @@ import java.util.List;
 public final class ReadBatch implements AutoCloseable {
 
 	/// `void rocksdb_batched_multi_get_cf(rocksdb_t* db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, size_t num_keys, const char* const* keys_list, const size_t* keys_list_sizes, rocksdb_pinnableslice_t** values, char** errs, const bool sorted_input);`
-	private static final MethodHandle MH_BATCHED_MULTI_GET_CF;
-
-	static {
-		MH_BATCHED_MULTI_GET_CF = NativeLibrary.downcall("rocksdb_batched_multi_get_cf",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.JAVA_BOOLEAN));
-	}
+	private static final MethodHandle MH_BATCHED_MULTI_GET_CF = NativeLibrary.downcall(
+		"rocksdb_batched_multi_get_cf", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_BOOLEAN)
+	);
 
 	private final Arena arena;
 	private final RocksDBReadOperations db;

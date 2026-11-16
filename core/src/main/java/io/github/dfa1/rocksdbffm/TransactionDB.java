@@ -31,142 +31,85 @@ public final class TransactionDB extends NativeDBWithBaseDB
 	// -----------------------------------------------------------------------
 
 	/// `void rocksdb_transactiondb_close(rocksdb_transactiondb_t* txn_db);`
-	private static final MethodHandle MH_CLOSE;
+	private static final MethodHandle MH_CLOSE = NativeLibrary.downcall(
+		"rocksdb_transactiondb_close", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_close_base_db(rocksdb_t* base_db);`
-	private static final MethodHandle MH_CLOSE_BASE_DB;
+	private static final MethodHandle MH_CLOSE_BASE_DB = NativeLibrary.downcall(
+		"rocksdb_transactiondb_close_base_db", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_transaction_t* rocksdb_transaction_begin(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* write_options, const rocksdb_transaction_options_t* txn_options, rocksdb_transaction_t* old_txn);`
-	private static final MethodHandle MH_BEGIN;
+	private static final MethodHandle MH_BEGIN = NativeLibrary.downcall(
+		"rocksdb_transaction_begin", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `const rocksdb_snapshot_t* rocksdb_transactiondb_create_snapshot(rocksdb_transactiondb_t* txn_db);`
-	private static final MethodHandle MH_CREATE_SNAPSHOT;
+	private static final MethodHandle MH_CREATE_SNAPSHOT = NativeLibrary.downcall(
+		"rocksdb_transactiondb_create_snapshot", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_flush(rocksdb_transactiondb_t* txn_db, const rocksdb_flushoptions_t* options, char** errptr);`
-	private static final MethodHandle MH_FLUSH;
+	private static final MethodHandle MH_FLUSH = NativeLibrary.downcall(
+		"rocksdb_transactiondb_flush", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_flush_wal(rocksdb_transactiondb_t* txn_db, unsigned char sync, char** errptr);`
-	private static final MethodHandle MH_FLUSH_WAL;
+	private static final MethodHandle MH_FLUSH_WAL = NativeLibrary.downcall(
+		"rocksdb_transactiondb_flush_wal", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `char* rocksdb_transactiondb_property_value(rocksdb_transactiondb_t* db, const char* propname);`
-	private static final MethodHandle MH_PROPERTY_VALUE;
+	private static final MethodHandle MH_PROPERTY_VALUE = NativeLibrary.downcall(
+		"rocksdb_transactiondb_property_value", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `int rocksdb_transactiondb_property_int(rocksdb_transactiondb_t* db, const char* propname, uint64_t* out_val);`
-	private static final MethodHandle MH_PROPERTY_INT;
+	private static final MethodHandle MH_PROPERTY_INT = NativeLibrary.downcall(
+		"rocksdb_transactiondb_property_int", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_column_family_handle_t* rocksdb_transactiondb_create_column_family(rocksdb_transactiondb_t* txn_db, const rocksdb_options_t* column_family_options, const char* column_family_name, char** errptr);`
-	private static final MethodHandle MH_CREATE_CF;
+	private static final MethodHandle MH_CREATE_CF = NativeLibrary.downcall(
+		"rocksdb_transactiondb_create_column_family", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	// Direct (non-transactional) operations on the TransactionDB
 	/// `void rocksdb_transactiondb_put(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* options, const char* key, size_t klen, const char* val, size_t vlen, char** errptr);`
-	private static final MethodHandle MH_PUT;
+	private static final MethodHandle MH_PUT = NativeLibrary.downcall(
+		"rocksdb_transactiondb_put", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_delete(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* options, const char* key, size_t klen, char** errptr);`
-	private static final MethodHandle MH_DELETE;
+	private static final MethodHandle MH_DELETE = NativeLibrary.downcall(
+		"rocksdb_transactiondb_delete", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_merge(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* options, const char* key, size_t klen, const char* val, size_t vlen, char** errptr);`
-	private static final MethodHandle MH_MERGE;
+	private static final MethodHandle MH_MERGE = NativeLibrary.downcall(
+		"rocksdb_transactiondb_merge", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_pinnableslice_t* rocksdb_transactiondb_get_pinned(rocksdb_transactiondb_t* txn_db, const rocksdb_readoptions_t* options, const char* key, size_t klen, char** errptr);`
-	private static final MethodHandle MH_GET_PINNED;
+	private static final MethodHandle MH_GET_PINNED = NativeLibrary.downcall(
+		"rocksdb_transactiondb_get_pinned", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 
 	// Column-family variants
 	/// `void rocksdb_transactiondb_put_cf(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, const char* val, size_t vallen, char** errptr);`
-	private static final MethodHandle MH_PUT_CF;
+	private static final MethodHandle MH_PUT_CF = NativeLibrary.downcall(
+		"rocksdb_transactiondb_put_cf", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_delete_cf(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char** errptr);`
-	private static final MethodHandle MH_DELETE_CF;
+	private static final MethodHandle MH_DELETE_CF = NativeLibrary.downcall(
+		"rocksdb_transactiondb_delete_cf", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_merge_cf(rocksdb_transactiondb_t* txn_db, const rocksdb_writeoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t klen, const char* val, size_t vlen, char** errptr);`
-	private static final MethodHandle MH_MERGE_CF;
+	private static final MethodHandle MH_MERGE_CF = NativeLibrary.downcall(
+		"rocksdb_transactiondb_merge_cf", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_pinnableslice_t* rocksdb_transactiondb_get_pinned_cf(rocksdb_transactiondb_t* txn_db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family, const char* key, size_t keylen, char** errptr);`
-	private static final MethodHandle MH_GET_PINNED_CF;
+	private static final MethodHandle MH_GET_PINNED_CF = NativeLibrary.downcall(
+		"rocksdb_transactiondb_get_pinned_cf", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T, ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_iterator_t* rocksdb_transactiondb_create_iterator_cf(rocksdb_transactiondb_t* txn_db, const rocksdb_readoptions_t* options, rocksdb_column_family_handle_t* column_family);`
-	private static final MethodHandle MH_CREATE_ITERATOR_CF;
+	private static final MethodHandle MH_CREATE_ITERATOR_CF = NativeLibrary.downcall(
+		"rocksdb_transactiondb_create_iterator_cf", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_transactiondb_flush_cf(rocksdb_transactiondb_t* txn_db, const rocksdb_flushoptions_t* options, rocksdb_column_family_handle_t* column_family, char** errptr);`
-	private static final MethodHandle MH_FLUSH_CF;
-
-
-	static {
-		MH_CLOSE = NativeLibrary.downcall("rocksdb_transactiondb_close",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_CLOSE_BASE_DB = NativeLibrary.downcall("rocksdb_transactiondb_close_base_db",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_BEGIN = NativeLibrary.downcall("rocksdb_transaction_begin",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_PUT = NativeLibrary.downcall("rocksdb_transactiondb_put",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_DELETE = NativeLibrary.downcall("rocksdb_transactiondb_delete",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_MERGE = NativeLibrary.downcall("rocksdb_transactiondb_merge",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_GET_PINNED = NativeLibrary.downcall("rocksdb_transactiondb_get_pinned",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_PUT_CF = NativeLibrary.downcall("rocksdb_transactiondb_put_cf",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_DELETE_CF = NativeLibrary.downcall("rocksdb_transactiondb_delete_cf",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_MERGE_CF = NativeLibrary.downcall("rocksdb_transactiondb_merge_cf",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_GET_PINNED_CF = NativeLibrary.downcall("rocksdb_transactiondb_get_pinned_cf",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T,
-						ValueLayout.ADDRESS));
-
-		MH_CREATE_ITERATOR_CF = NativeLibrary.downcall("rocksdb_transactiondb_create_iterator_cf",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_FLUSH_CF = NativeLibrary.downcall("rocksdb_transactiondb_flush_cf",
-				FunctionDescriptor.ofVoid(
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_CREATE_SNAPSHOT = NativeLibrary.downcall("rocksdb_transactiondb_create_snapshot",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_CREATE_CF = NativeLibrary.downcall("rocksdb_transactiondb_create_column_family",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_FLUSH = NativeLibrary.downcall("rocksdb_transactiondb_flush",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_FLUSH_WAL = NativeLibrary.downcall("rocksdb_transactiondb_flush_wal",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_PROPERTY_VALUE = NativeLibrary.downcall("rocksdb_transactiondb_property_value",
-				FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_PROPERTY_INT = NativeLibrary.downcall("rocksdb_transactiondb_property_int",
-				FunctionDescriptor.of(ValueLayout.JAVA_INT,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_FLUSH_CF = NativeLibrary.downcall(
+		"rocksdb_transactiondb_flush_cf", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	// -----------------------------------------------------------------------
 	// Instance state

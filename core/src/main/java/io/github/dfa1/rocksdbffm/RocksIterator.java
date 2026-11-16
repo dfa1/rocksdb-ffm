@@ -33,81 +33,59 @@ import java.util.stream.StreamSupport;
 public final class RocksIterator extends NativeObject {
 
 	/// `rocksdb_iterator_t* rocksdb_create_iterator(rocksdb_t* db, const rocksdb_readoptions_t* options);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_create_iterator", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_iter_destroy(rocksdb_iterator_t*);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_iter_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `unsigned char rocksdb_iter_valid(const rocksdb_iterator_t*);`
-	private static final MethodHandle MH_VALID;
+	private static final MethodHandle MH_VALID = NativeLibrary.downcall(
+		"rocksdb_iter_valid", FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_iter_seek_to_first(rocksdb_iterator_t*);`
-	private static final MethodHandle MH_SEEK_TO_FIRST;
+	private static final MethodHandle MH_SEEK_TO_FIRST = NativeLibrary.downcall(
+		"rocksdb_iter_seek_to_first", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_iter_seek_to_last(rocksdb_iterator_t*);`
-	private static final MethodHandle MH_SEEK_TO_LAST;
+	private static final MethodHandle MH_SEEK_TO_LAST = NativeLibrary.downcall(
+		"rocksdb_iter_seek_to_last", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_iter_seek(rocksdb_iterator_t*, const char* k, size_t klen);`
-	private static final MethodHandle MH_SEEK;
+	private static final MethodHandle MH_SEEK = NativeLibrary.downcall(
+		"rocksdb_iter_seek", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_iter_seek_for_prev(rocksdb_iterator_t*, const char* k, size_t klen);`
-	private static final MethodHandle MH_SEEK_FOR_PREV;
+	private static final MethodHandle MH_SEEK_FOR_PREV = NativeLibrary.downcall(
+		"rocksdb_iter_seek_for_prev", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, NativeCalls.SIZE_T)
+	);
 	/// `void rocksdb_iter_next(rocksdb_iterator_t*);`
-	private static final MethodHandle MH_NEXT;
+	private static final MethodHandle MH_NEXT = NativeLibrary.downcall(
+		"rocksdb_iter_next", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_iter_prev(rocksdb_iterator_t*);`
-	private static final MethodHandle MH_PREV;
+	private static final MethodHandle MH_PREV = NativeLibrary.downcall(
+		"rocksdb_iter_prev", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
+	// key/value only read the current entry's Slice (db/c.cc), so they are critical, with heap access for the
+	// on-heap lenSegment.
 	/// `const char* rocksdb_iter_key(const rocksdb_iterator_t*, size_t* klen);`
-	private static final MethodHandle MH_KEY;
+	private static final MethodHandle MH_KEY = NativeLibrary.downcall(
+		"rocksdb_iter_key", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS), Linker.Option.critical(true)
+	);
 	/// `const char* rocksdb_iter_value(const rocksdb_iterator_t*, size_t* vlen);`
-	private static final MethodHandle MH_VALUE;
+	private static final MethodHandle MH_VALUE = NativeLibrary.downcall(
+		"rocksdb_iter_value", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS), Linker.Option.critical(true)
+	);
 	/// `void rocksdb_iter_get_error(const rocksdb_iterator_t*, char** errptr);`
-	private static final MethodHandle MH_GET_ERROR;
+	private static final MethodHandle MH_GET_ERROR = NativeLibrary.downcall(
+		"rocksdb_iter_get_error", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_iter_refresh(const rocksdb_iterator_t* iter, char** errptr);`
-	private static final MethodHandle MH_REFRESH;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_create_iterator",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_iter_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_VALID = NativeLibrary.downcall("rocksdb_iter_valid",
-				FunctionDescriptor.of(ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS));
-
-		MH_SEEK_TO_FIRST = NativeLibrary.downcall("rocksdb_iter_seek_to_first",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SEEK_TO_LAST = NativeLibrary.downcall("rocksdb_iter_seek_to_last",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SEEK = NativeLibrary.downcall("rocksdb_iter_seek",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_SEEK_FOR_PREV = NativeLibrary.downcall("rocksdb_iter_seek_for_prev",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, NativeCalls.SIZE_T));
-
-		MH_NEXT = NativeLibrary.downcall("rocksdb_iter_next",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_PREV = NativeLibrary.downcall("rocksdb_iter_prev",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		// key/value only read the current entry's Slice (db/c.cc), so they are critical, with heap access for the
-		// on-heap lenSegment.
-		MH_KEY = NativeLibrary.downcall("rocksdb_iter_key",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS),
-				Linker.Option.critical(true));
-
-		MH_VALUE = NativeLibrary.downcall("rocksdb_iter_value",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS),
-				Linker.Option.critical(true));
-
-		MH_GET_ERROR = NativeLibrary.downcall("rocksdb_iter_get_error",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_REFRESH = NativeLibrary.downcall("rocksdb_iter_refresh",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_REFRESH = NativeLibrary.downcall(
+		"rocksdb_iter_refresh", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 
 	// The key/value length out-param, reused across calls. On the heap (a long[] is size_t-aligned), so there is no
 	// native memory to free, from whichever thread a parent's close releases this iterator.

@@ -31,18 +31,14 @@ import java.lang.invoke.MethodHandle;
 public final class Snapshot extends NativeObject {
 
 	/// `uint64_t rocksdb_snapshot_get_sequence_number(const rocksdb_snapshot_t* snapshot);`
-	private static final MethodHandle MH_SEQUENCE_NUMBER;
+	private static final MethodHandle MH_SEQUENCE_NUMBER = NativeLibrary.downcall(
+		"rocksdb_snapshot_get_sequence_number", FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_release_snapshot(rocksdb_t* db, const rocksdb_snapshot_t* snapshot);`
-	private static final MethodHandle MH_RELEASE;
+	private static final MethodHandle MH_RELEASE = NativeLibrary.downcall(
+		"rocksdb_release_snapshot", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	// rocksdb_free(ptr*) — for Transaction snapshots
-
-	static {
-		MH_SEQUENCE_NUMBER = NativeLibrary.downcall("rocksdb_snapshot_get_sequence_number",
-				FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-
-		MH_RELEASE = NativeLibrary.downcall("rocksdb_release_snapshot",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-	}
 
 	/// DB pointer used to release the snapshot; NULL signals that `rocksdb_free`
 	/// should be used instead (transaction snapshot ownership model).

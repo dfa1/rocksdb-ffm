@@ -23,6 +23,8 @@ import java.util.regex.Pattern;
 /// fields are covered: the upcall descriptors (`MergeOperator`, `CompactionFilter`, `Logger`, ...) and the `size_t*`
 /// slots are not, and stay a review concern.
 ///
+/// Every `MH_` field is also required to use the shape `= NativeLibrary.downcall(` / name and descriptor / `);`.
+///
 /// Run from the repository root: `java scripts/CheckPrototypes.java`.
 
 static final Path C_H = Path.of("rocksdb/include/rocksdb/c.h");
@@ -160,6 +162,11 @@ void main() throws Exception {
 				continue;
 			}
 			String where = source + ":" + (i + 1);
+			if (!lines.get(i).matches("\\t+private static final MethodHandle MH_\\w+ = NativeLibrary\\.downcall\\(")) {
+				errors.add(where + ": MH_ field must be initialized inline: `= NativeLibrary.downcall(`, then the symbol name and descriptor, then `);` on its own line");
+			} else if (lines.subList(i + 1, lines.size()).stream().dropWhile(l -> !l.matches("\\t+\\);") && !l.contains("MethodHandle MH_")).findFirst().filter(l -> l.matches("\\t+\\);")).isEmpty()) {
+				errors.add(where + ": the closing `);` of the MH_ initializer must be on its own line");
+			}
 			int docStart = i;
 			while (docStart > 0 && lines.get(docStart - 1).strip().startsWith("///")) {
 				docStart--;

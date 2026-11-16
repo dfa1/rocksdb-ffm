@@ -41,38 +41,21 @@ public final class RateLimiter extends NativeObject {
 	}
 
 	/// `rocksdb_ratelimiter_t* rocksdb_ratelimiter_create(int64_t rate_bytes_per_sec, int64_t refill_period_us, int32_t fairness);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_ratelimiter_create", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT)
+	);
 	/// `rocksdb_ratelimiter_t* rocksdb_ratelimiter_create_auto_tuned(int64_t rate_bytes_per_sec, int64_t refill_period_us, int32_t fairness);`
-	private static final MethodHandle MH_CREATE_AUTO_TUNED;
+	private static final MethodHandle MH_CREATE_AUTO_TUNED = NativeLibrary.downcall(
+		"rocksdb_ratelimiter_create_auto_tuned", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT)
+	);
 	/// `rocksdb_ratelimiter_t* rocksdb_ratelimiter_create_with_mode(int64_t rate_bytes_per_sec, int64_t refill_period_us, int32_t fairness, int mode, bool auto_tuned);`
-	private static final MethodHandle MH_CREATE_WITH_MODE;
+	private static final MethodHandle MH_CREATE_WITH_MODE = NativeLibrary.downcall(
+		"rocksdb_ratelimiter_create_with_mode", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_BYTE)
+	);
 	/// `void rocksdb_ratelimiter_destroy(rocksdb_ratelimiter_t*);`
-	private static final MethodHandle MH_DESTROY;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_ratelimiter_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.JAVA_LONG,
-						ValueLayout.JAVA_LONG,
-						ValueLayout.JAVA_INT));
-
-		MH_CREATE_AUTO_TUNED = NativeLibrary.downcall("rocksdb_ratelimiter_create_auto_tuned",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.JAVA_LONG,
-						ValueLayout.JAVA_LONG,
-						ValueLayout.JAVA_INT));
-
-		MH_CREATE_WITH_MODE = NativeLibrary.downcall("rocksdb_ratelimiter_create_with_mode",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.JAVA_LONG,
-						ValueLayout.JAVA_LONG,
-						ValueLayout.JAVA_INT,
-						ValueLayout.JAVA_INT,
-						ValueLayout.JAVA_BYTE));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_ratelimiter_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_ratelimiter_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	private RateLimiter(MemorySegment ptr) {
 		super(ptr);

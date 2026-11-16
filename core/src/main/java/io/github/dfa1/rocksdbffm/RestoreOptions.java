@@ -18,22 +18,17 @@ import java.lang.invoke.MethodHandle;
 public final class RestoreOptions extends NativeObject {
 
 	/// `rocksdb_restore_options_t* rocksdb_restore_options_create(void);`
-	private static final MethodHandle MH_CREATE;
+	private static final MethodHandle MH_CREATE = NativeLibrary.downcall(
+		"rocksdb_restore_options_create", FunctionDescriptor.of(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_restore_options_destroy(rocksdb_restore_options_t* opt);`
-	private static final MethodHandle MH_DESTROY;
+	private static final MethodHandle MH_DESTROY = NativeLibrary.downcall(
+		"rocksdb_restore_options_destroy", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_restore_options_set_keep_log_files(rocksdb_restore_options_t* opt, int v);`
-	private static final MethodHandle MH_SET_KEEP_LOG_FILES;
-
-	static {
-		MH_CREATE = NativeLibrary.downcall("rocksdb_restore_options_create",
-				FunctionDescriptor.of(ValueLayout.ADDRESS));
-
-		MH_DESTROY = NativeLibrary.downcall("rocksdb_restore_options_destroy",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_SET_KEEP_LOG_FILES = NativeLibrary.downcall("rocksdb_restore_options_set_keep_log_files",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-	}
+	private static final MethodHandle MH_SET_KEEP_LOG_FILES = NativeLibrary.downcall(
+		"rocksdb_restore_options_set_keep_log_files", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+	);
 
 	private RestoreOptions(MemorySegment ptr) {
 		super(ptr);

@@ -39,24 +39,17 @@ public final class OptimisticTransactionDB extends NativeDBWithBaseDB
 	// -----------------------------------------------------------------------
 
 	/// `void rocksdb_optimistictransactiondb_close(rocksdb_optimistictransactiondb_t* otxn_db);`
-	private static final MethodHandle MH_CLOSE;
+	private static final MethodHandle MH_CLOSE = NativeLibrary.downcall(
+		"rocksdb_optimistictransactiondb_close", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 	/// `rocksdb_transaction_t* rocksdb_optimistictransaction_begin(rocksdb_optimistictransactiondb_t* otxn_db, const rocksdb_writeoptions_t* write_options, const rocksdb_optimistictransaction_options_t* otxn_options, rocksdb_transaction_t* old_txn);`
-	private static final MethodHandle MH_BEGIN;
+	private static final MethodHandle MH_BEGIN = NativeLibrary.downcall(
+		"rocksdb_optimistictransaction_begin", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+	);
 	/// `void rocksdb_optimistictransactiondb_close_base_db(rocksdb_t* base_db);`
-	private static final MethodHandle MH_CLOSE_BASE_DB;
-
-	static {
-		MH_CLOSE = NativeLibrary.downcall("rocksdb_optimistictransactiondb_close",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-
-		MH_BEGIN = NativeLibrary.downcall("rocksdb_optimistictransaction_begin",
-				FunctionDescriptor.of(ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-						ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
-		MH_CLOSE_BASE_DB = NativeLibrary.downcall("rocksdb_optimistictransactiondb_close_base_db",
-				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
-	}
+	private static final MethodHandle MH_CLOSE_BASE_DB = NativeLibrary.downcall(
+		"rocksdb_optimistictransactiondb_close_base_db", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+	);
 
 	OptimisticTransactionDB(MemorySegment ptr, MemorySegment baseDb) {
 		super(ptr, baseDb);
