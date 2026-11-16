@@ -115,7 +115,7 @@ public final class Transaction extends NativeObjectParent {
 		super(ptr);
 		this.hasSnapshot = hasSnapshot;
 		// The database this transaction was begun on, which releases it if it is still open when it closes.
-		borrowedFrom(owningDb);
+		childOf(owningDb);
 	}
 
 	// -----------------------------------------------------------------------

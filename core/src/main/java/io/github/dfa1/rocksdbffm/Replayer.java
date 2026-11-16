@@ -65,7 +65,7 @@ public final class Replayer extends NativeObjectChild {
 		super(ptr);
 		this.columnFamilies = columnFamilies;
 		// The database trace records are replayed into; the replayer keeps raw pointers to it.
-		borrowedFrom(owningDb);
+		childOf(owningDb);
 	}
 
 	/// Returns [#ptr()] for a call that replays into the column families, after checking that none was dropped.

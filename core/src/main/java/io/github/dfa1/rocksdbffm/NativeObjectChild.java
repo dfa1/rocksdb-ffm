@@ -7,11 +7,12 @@ import java.lang.foreign.MemorySegment;
 /// batches, pinned slices) carry none of this bookkeeping.
 abstract class NativeObjectChild extends NativeObject {
 
-	/// The objects this one borrows native memory from, set once by [#borrowedFrom(NativeObjectParent...)];
-	/// [#afterRelease()] unregisters from them after the native release call. A plain field: it is assigned in full
-	/// before the registration that publishes this object to a parent's sweep, and that registration is what
-	/// makes the write visible to the sweeping thread.
-	private NativeObjectParent[] parents;
+	/// The objects this one borrows native memory from, set once by [#childOf(NativeObjectParent)] or
+	/// [#childOf(NativeObjectParent, NativeObjectParent)]; [#afterRelease()] unregisters from them after the native
+	/// release call. Plain fields: they are assigned before the registration that publishes this object to a
+	/// parent's sweep, and that registration is what makes the writes visible to the sweeping thread.
+	private NativeObjectParent parent;
+	private NativeObjectParent secondParent;
 
 	/// Private monitor: `synchronized (this)` would let user code that locks a wrapper it holds block, or deadlock
 	/// with, a parent's close.
@@ -21,27 +22,42 @@ abstract class NativeObjectChild extends NativeObject {
 		super(owningPointer);
 	}
 
-	/// Declares that this object borrows native memory from each of `owners` (usually one; a [RocksIterator] has its
-	/// database and its [ReadOptions]): it is registered as a child of each, so their close releases it first, and
-	/// [#afterRelease()] unregisters it when it is closed on its own, so a long-lived owner does not accumulate every
+	/// Declares that this object borrows native memory from `parent`: it is registered as its child, so the parent's close releases it first, and
+	/// [#afterRelease()] unregisters it when it is closed on its own, so a long-lived parent does not accumulate every
 	/// child it ever produced. Call it once, last in the constructor, once every field
 	/// [#tryClose(MemorySegment)] reads is assigned, because registering makes this object visible to a concurrent
-	/// sweep by an owner.
+	/// sweep by a parent.
 	///
-	/// An immortal owner (a shared `DEFAULTS` instance) is never swept, so its
+	/// An immortal parent (a shared `DEFAULTS` instance) is never swept, so its
 	/// [NativeObjectParent#registerChild(NativeObjectChild)] does nothing.
 	///
-	/// @param owners the objects whose native memory this one borrows
-	final void borrowedFrom(NativeObjectParent... owners) {
-		parents = owners;
-		for (NativeObjectParent owner : owners) {
-			owner.registerChild(this);
-		}
-		if (isClosed()) {
-			// An owner that was already closing abandoned this object: close() will never reach release(), so drop
-			// the registrations with the other owners here instead of leaving a dead entry until they close.
-			for (NativeObjectParent owner : owners) {
-				owner.unregisterChild(this);
+	/// @param parent the object whose native memory this one borrows
+	final void childOf(NativeObjectParent parent) {
+		this.parent = parent;
+		parent.registerChild(this);
+	}
+
+	/// Declares that this object borrows native memory from both parents (a [RocksIterator] has its database and its [ReadOptions]): it is registered as a child of each, so either one's close releases it first, and
+	/// [#afterRelease()] unregisters it when it is closed on its own, so a long-lived parent does not accumulate every
+	/// child it ever produced. Call it once, last in the constructor, once every field
+	/// [#tryClose(MemorySegment)] reads is assigned, because registering makes this object visible to a concurrent
+	/// sweep by a parent.
+	///
+	/// An immortal parent (a shared `DEFAULTS` instance) is never swept, so its
+	/// [NativeObjectParent#registerChild(NativeObjectChild)] does nothing.
+	///
+	/// @param first the first object whose native memory this one borrows
+	/// @param second the second one
+	final void childOf(NativeObjectParent first, NativeObjectParent second) {
+		this.parent = first;
+		this.secondParent = second;
+		first.registerChild(this);
+		if (!isClosed()) {
+			// A parent that was already closing abandoned this object (see NativeObjectParent#registerChild), so
+			// there is nothing to register with the other one; the reverse leaves a dead entry to drop here.
+			second.registerChild(this);
+			if (isClosed()) {
+				first.unregisterChild(this);
 			}
 		}
 	}
@@ -69,16 +85,17 @@ abstract class NativeObjectChild extends NativeObject {
 		release();
 	}
 
-	/// Unregisters from every owner. Runs last in `release()`: a parent that starts closing while this
+	/// Unregisters from every parent. Runs last in `release()`: a parent that starts closing while this
 	/// release is still running must still find this object in its children, so its sweep waits on the monitor
 	/// instead of freeing the parent under a native release in progress. When this runs because that parent's own
 	/// sweep is releasing its children, its pointer stays valid until the sweep ends.
 	@Override
 	final void afterRelease() {
-		if (parents != null) {
-			for (NativeObjectParent owner : parents) {
-				owner.unregisterChild(this);
-			}
+		if (parent != null) {
+			parent.unregisterChild(this);
+		}
+		if (secondParent != null) {
+			secondParent.unregisterChild(this);
 		}
 	}
 }

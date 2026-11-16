@@ -51,7 +51,7 @@ public final class Checkpoint extends NativeObjectChild {
 	private Checkpoint(NativeObjectParent owningDb, MemorySegment ptr) {
 		super(ptr);
 		// The database this checkpoint object keeps a raw pointer to.
-		borrowedFrom(owningDb);
+		childOf(owningDb);
 	}
 
 	/// Creates a checkpoint object bound to `db`.
