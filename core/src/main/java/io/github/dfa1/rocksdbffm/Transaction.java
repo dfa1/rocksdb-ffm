@@ -848,16 +848,14 @@ public final class Transaction extends NativeObjectParent {
 	public void commit() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			try {
-				MH_COMMIT.invokeExact(ptr(), err);
-				NativeCalls.checkError(err);
-			} finally {
-				// Also on failure: RocksDB clears the transaction before reporting most errors, which invalidates
-				// the iterators and frees the snapshot, so they must not stay usable here.
-				releaseChildren();
-			}
+			MH_COMMIT.invokeExact(ptr(), err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("transaction commit failed", t);
+		} finally {
+			// Also on failure: RocksDB clears the transaction before reporting most errors, which invalidates the
+			// iterators and frees the snapshot, so they must not stay usable here.
+			releaseChildren();
 		}
 	}
 
@@ -867,16 +865,14 @@ public final class Transaction extends NativeObjectParent {
 	public void rollback() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			try {
-				MH_ROLLBACK.invokeExact(ptr(), err);
-				NativeCalls.checkError(err);
-			} finally {
-				// Also on failure: RocksDB clears the transaction before reporting most errors, which invalidates
-				// the iterators and frees the snapshot, so they must not stay usable here.
-				releaseChildren();
-			}
+			MH_ROLLBACK.invokeExact(ptr(), err);
+			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("transaction rollback failed", t);
+		} finally {
+			// Also on failure: RocksDB clears the transaction before reporting most errors, which invalidates the
+			// iterators and frees the snapshot, so they must not stay usable here.
+			releaseChildren();
 		}
 	}
 
@@ -896,6 +892,8 @@ public final class Transaction extends NativeObjectParent {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_ROLLBACK_TO_SAVEPOINT.invokeExact(ptr(), err);
 			NativeCalls.checkError(err);
+			// Only after success, unlike commit/rollback: the one error here is NotFound (no savepoint), which
+			// leaves the write batch and so its iterators untouched, and they stay valid.
 			releaseChildren(RocksIterator.class);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("transaction rollbackToSavePoint failed", t);
