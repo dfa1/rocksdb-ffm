@@ -26,10 +26,11 @@ abstract class NativeObjectParent extends NativeObjectChild {
 
 	/// A concurrent set, never behind a lock: [#unregisterChild(NativeObjectChild)] runs inside a child's own monitor
 	/// while a sweep calls into the children, so a lock here would deadlock against them.
-	private final Set<NativeObjectChild> children = ConcurrentHashMap.newKeySet();
+	private final Set<NativeObjectChild> children;
 
 	protected NativeObjectParent(MemorySegment ptr) {
 		super(ptr);
+		children = ConcurrentHashMap.newKeySet();
 	}
 
 	/// Registers `child` to be closed automatically before this object's own native resource is
