@@ -843,26 +843,38 @@ public final class Transaction extends NativeObjectParent {
 	// -----------------------------------------------------------------------
 
 	/// Commits all staged operations in this transaction. Iterators and the [#getSnapshot() snapshot] obtained
-	/// from this transaction are closed: RocksDB invalidates the iterators and frees the snapshot on commit.
+	/// from this transaction are closed, whether or not the commit succeeds: RocksDB invalidates the iterators and
+	/// frees the snapshot.
 	public void commit() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MH_COMMIT.invokeExact(ptr(), err);
-			NativeCalls.checkError(err);
-			releaseChildren();
+			try {
+				MH_COMMIT.invokeExact(ptr(), err);
+				NativeCalls.checkError(err);
+			} finally {
+				// Also on failure: RocksDB clears the transaction before reporting most errors, which invalidates
+				// the iterators and frees the snapshot, so they must not stay usable here.
+				releaseChildren();
+			}
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("transaction commit failed", t);
 		}
 	}
 
 	/// Rolls back all staged operations in this transaction. Iterators and the [#getSnapshot() snapshot] obtained
-	/// from this transaction are closed: RocksDB invalidates the iterators and frees the snapshot on rollback.
+	/// from this transaction are closed, whether or not the rollback succeeds: RocksDB invalidates the iterators and
+	/// frees the snapshot.
 	public void rollback() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
-			MH_ROLLBACK.invokeExact(ptr(), err);
-			NativeCalls.checkError(err);
-			releaseChildren();
+			try {
+				MH_ROLLBACK.invokeExact(ptr(), err);
+				NativeCalls.checkError(err);
+			} finally {
+				// Also on failure: RocksDB clears the transaction before reporting most errors, which invalidates
+				// the iterators and frees the snapshot, so they must not stay usable here.
+				releaseChildren();
+			}
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("transaction rollback failed", t);
 		}
