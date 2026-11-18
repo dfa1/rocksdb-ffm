@@ -59,6 +59,7 @@ Cloned without `--recurse-submodules`? Run `git submodule update --init --recurs
 ## Making a change
 
 - Code is indented with **tabs** (enforced by checkstyle); American English everywhere.
+- Every non-static field is initialized in the constructor, not at its declaration (`static final` constants excepted).
 - Every class wrapping a native pointer extends `NativeObject`; no public constructors, use static
   factories. See [docs/explanation.md#lifecycle-and-ownership](docs/explanation.md#lifecycle-and-ownership).
 - Only the C API (`rocksdb/c.h`) is bound. A missing wrapper is a Type A gap, a missing C function a

@@ -32,11 +32,11 @@ abstract class NativeDB extends NativeObjectParent {
 
 	/// In open order, then creation order. An immutable snapshot replaced wholesale on every change
 	/// (copy-on-write): lookups are lock-free, and changes happen only on open, create and drop.
-	private final AtomicReference<SequencedMap<ColumnFamilyName, ColumnFamilyHandle>> columnFamilies =
-			new AtomicReference<>(Collections.unmodifiableSequencedMap(new LinkedHashMap<>()));
+	private final AtomicReference<SequencedMap<ColumnFamilyName, ColumnFamilyHandle>> columnFamilies;
 
 	protected NativeDB(MemorySegment ptr) {
 		super(ptr);
+		this.columnFamilies = new AtomicReference<>(Collections.unmodifiableSequencedMap(new LinkedHashMap<>()));
 	}
 
 	/// The classes whose frames run a caller-supplied callback while RocksDB, or a pinned value, still uses the

@@ -52,12 +52,15 @@ import java.util.function.Supplier;
 public final class JfrEventNotifier implements EventNotifier {
 
 	private final SstFileManager sstFileManager;
-	private final Map<FlushSlot, PendingFlush> flushes = new ConcurrentHashMap<>();
-	private final Map<Long, PendingCompaction> compactions = new ConcurrentHashMap<>();
-	private final Map<ColumnFamilyName, OpenStall> stalls = new ConcurrentHashMap<>();
+	private final Map<FlushSlot, PendingFlush> flushes;
+	private final Map<Long, PendingCompaction> compactions;
+	private final Map<ColumnFamilyName, OpenStall> stalls;
 
 	private JfrEventNotifier(SstFileManager sstFileManager) {
 		this.sstFileManager = sstFileManager;
+		this.flushes = new ConcurrentHashMap<>();
+		this.compactions = new ConcurrentHashMap<>();
+		this.stalls = new ConcurrentHashMap<>();
 	}
 
 	static {

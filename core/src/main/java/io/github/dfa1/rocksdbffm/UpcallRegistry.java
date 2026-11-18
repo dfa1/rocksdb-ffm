@@ -15,8 +15,13 @@ import java.util.concurrent.atomic.AtomicLong;
 /// @param <T> the type of value being registered (a callback, or a bundle of callback state)
 final class UpcallRegistry<T> {
 
-	private final ConcurrentHashMap<Long, T> registry = new ConcurrentHashMap<>();
-	private final AtomicLong nextId = new AtomicLong(1);
+	private final ConcurrentHashMap<Long, T> registry;
+	private final AtomicLong nextId;
+
+	UpcallRegistry() {
+		this.registry = new ConcurrentHashMap<>();
+		this.nextId = new AtomicLong(1);
+	}
 
 	/// Registers `value` and returns the `state` pointer to pass to the native call.
 	///

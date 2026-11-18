@@ -125,14 +125,19 @@ public class FfmValueSizeBenchmark {
 	// call (a fresh capturing lambda or an autoboxed Long would); same idea as
 	// MultiGetScaleBenchmark's zeroCopyMapper.
 	private long sizeSink;
-	private final Mapper<Boolean> sizeMapper = value -> {
-		sizeSink += value.byteSize();
-		return Boolean.TRUE;
-	};
-	private final Mapper<Boolean> copyMapper = value -> {
-		MemorySegment.copy(value, 0, valueMemorySegment, 0, value.byteSize());
-		return Boolean.TRUE;
-	};
+	private final Mapper<Boolean> sizeMapper;
+	private final Mapper<Boolean> copyMapper;
+
+	public FfmValueSizeBenchmark() {
+		this.sizeMapper = value -> {
+			sizeSink += value.byteSize();
+			return Boolean.TRUE;
+		};
+		this.copyMapper = value -> {
+			MemorySegment.copy(value, 0, valueMemorySegment, 0, value.byteSize());
+			return Boolean.TRUE;
+		};
+	}
 
 	@Setup(Level.Trial)
 	public void setup() throws Exception {

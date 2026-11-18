@@ -27,13 +27,14 @@ public abstract class NativeObject implements AutoCloseable {
 
 	/// Set by [#makeImmortal()] and never cleared. Usually set before the object is published (a `DEFAULTS` field),
 	/// but a [CompactionFilter] sets it on every attach, hence atomic.
-	private final AtomicBoolean immortal = new AtomicBoolean();
+	private final AtomicBoolean immortal;
 
 	/// Initializes this wrapper with the given native pointer.
 	///
 	/// @param owningPointer the non-NULL native pointer this object now owns
 	protected NativeObject(MemorySegment owningPointer) {
 		this.owningPointer = new AtomicReference<>(owningPointer);
+		this.immortal = new AtomicBoolean();
 	}
 
 	/// Returns the current native pointer.

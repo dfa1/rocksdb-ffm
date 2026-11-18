@@ -125,10 +125,11 @@ public final class ReadOptions extends NativeObjectParent {
 
 	/// The snapshot installed by [#setSnapshot(Snapshot)], which the native struct holds a raw pointer to. Reads
 	/// through [#readPtr()] throw once it is closed, instead of dereferencing the freed snapshot.
-	private final AtomicReference<Snapshot> snapshot = new AtomicReference<>();
+	private final AtomicReference<Snapshot> snapshot;
 
 	private ReadOptions(MemorySegment ptr) {
 		super(ptr);
+		this.snapshot = new AtomicReference<>();
 		this.boundsArena = Arena.ofAuto();
 	}
 

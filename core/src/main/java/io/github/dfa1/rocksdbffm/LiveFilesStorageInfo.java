@@ -94,7 +94,7 @@ public final class LiveFilesStorageInfo extends NativeObject implements Iterable
 	@Override
 	public Iterator<LiveFileStorageInfo> iterator() {
 		return new Iterator<>() {
-			private int i = 0;
+			private int i;
 
 			@Override
 			public boolean hasNext() {

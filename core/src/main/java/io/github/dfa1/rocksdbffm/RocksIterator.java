@@ -89,11 +89,12 @@ public final class RocksIterator extends NativeObjectChild {
 
 	// The key/value length out-param, reused across calls. On the heap (a long[] is size_t-aligned), so there is no
 	// native memory to free, from whichever thread a parent's close releases this iterator.
-	private final MemorySegment lenSegment = MemorySegment.ofArray(new long[1]);
+	private final MemorySegment lenSegment;
 
 	/// Package-private: created via [#create].
 	private RocksIterator(NativeObjectParent owningDb, ReadOptions readOptions, MemorySegment ptr) {
 		super(ptr);
+		this.lenSegment = MemorySegment.ofArray(new long[1]);
 		// Two parents: the database or transaction, and the options, whose iterate bounds the native iterator keeps raw
 		// pointers into. Holding them also keeps the options' bounds memory reachable.
 		childOf(owningDb, readOptions);
