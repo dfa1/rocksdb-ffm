@@ -77,10 +77,11 @@ public final class PerfContext extends NativeObject {
 	);
 
 	/// The thread whose perf context this wraps; the native object is a view of that thread's `thread_local`.
-	private final Thread owner = Thread.currentThread();
+	private final Thread owner;
 
 	private PerfContext(MemorySegment ptr) {
 		super(ptr);
+		this.owner = Thread.currentThread();
 	}
 
 	/// Returns [#ptr()] for a call that reads or resets the counters.

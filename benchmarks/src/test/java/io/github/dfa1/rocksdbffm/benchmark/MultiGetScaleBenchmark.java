@@ -83,11 +83,16 @@ public class MultiGetScaleBenchmark {
 	// Mapper -- like CopyResult.Copied.INSTANCE on the ByteBuffer tier -- returns a shared
 	// constant instead of autoboxing a fresh Long per key; otherwise the two tiers wouldn't
 	// be allocation-comparable.
-	private final long[] zeroCopyAccumulator = new long[1];
-	private final Mapper<Boolean> zeroCopyMapper = value -> {
-		zeroCopyAccumulator[0] += value.byteSize();
-		return Boolean.TRUE;
-	};
+	private final long[] zeroCopyAccumulator;
+	private final Mapper<Boolean> zeroCopyMapper;
+
+	public MultiGetScaleBenchmark() {
+		this.zeroCopyAccumulator = new long[1];
+		this.zeroCopyMapper = value -> {
+			zeroCopyAccumulator[0] += value.byteSize();
+			return Boolean.TRUE;
+		};
+	}
 
 	@Setup(Level.Trial)
 	public void setup() throws Exception {

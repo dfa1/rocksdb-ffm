@@ -20,24 +20,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// fails, so a confined arena closed from the wrong thread shows up only as an ERROR log line and a leak.
 class CloseFromAnotherThreadTest {
 
-	private final List<LogRecord> errors = new CopyOnWriteArrayList<>();
-	private final Logger logger = Logger.getLogger(NativeObject.class.getName());
-	private final Handler handler = new Handler() {
-		@Override
-		public void publish(LogRecord record) {
-			if (record.getLevel().intValue() >= Level.SEVERE.intValue()) {
-				errors.add(record);
+	private final List<LogRecord> errors;
+	private final Logger logger;
+	private final Handler handler;
+
+	CloseFromAnotherThreadTest() {
+		this.errors = new CopyOnWriteArrayList<>();
+		this.logger = Logger.getLogger(NativeObject.class.getName());
+		this.handler = new Handler() {
+			@Override
+			public void publish(LogRecord record) {
+				if (record.getLevel().intValue() >= Level.SEVERE.intValue()) {
+					errors.add(record);
+				}
 			}
-		}
 
-		@Override
-		public void flush() {
-		}
+			@Override
+			public void flush() {
+			}
 
-		@Override
-		public void close() {
-		}
-	};
+			@Override
+			public void close() {
+			}
+		};
+	}
 
 	@BeforeEach
 	void captureErrors() {

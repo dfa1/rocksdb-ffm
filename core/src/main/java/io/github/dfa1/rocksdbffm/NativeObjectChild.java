@@ -16,10 +16,11 @@ abstract class NativeObjectChild extends NativeObject {
 
 	/// Private monitor: `synchronized (this)` would let user code that locks a wrapper it holds block, or deadlock
 	/// with, a parent's close.
-	private final Object lock = new Object();
+	private final Object lock;
 
 	protected NativeObjectChild(MemorySegment owningPointer) {
 		super(owningPointer);
+		this.lock = new Object();
 	}
 
 	/// Declares that this object borrows native memory from `parent`: it is registered as its child, so the parent's close releases it first, and

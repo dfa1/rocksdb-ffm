@@ -47,16 +47,24 @@ public final class PlainTableOptions {
 	/// Sentinel for [#setUserKeyLength]: keys have variable length (the default).
 	public static final int VARIABLE_LENGTH = 0;
 
-	private int userKeyLength = VARIABLE_LENGTH;
-	private int bloomBitsPerKey = 10;
-	private double hashTableRatio = 0.75;
-	private long indexSparseness = 16;
-	private long hugePageTlbSize = 0;
-	private EncodingType encodingType = EncodingType.PLAIN;
-	private boolean fullScanMode = false;
-	private boolean storeIndexInFile = false;
+	private int userKeyLength;
+	private int bloomBitsPerKey;
+	private double hashTableRatio;
+	private long indexSparseness;
+	private long hugePageTlbSize;
+	private EncodingType encodingType;
+	private boolean fullScanMode;
+	private boolean storeIndexInFile;
 
 	private PlainTableOptions() {
+		this.userKeyLength = VARIABLE_LENGTH;
+		this.bloomBitsPerKey = 10;
+		this.hashTableRatio = 0.75;
+		this.indexSparseness = 16;
+		this.hugePageTlbSize = 0;
+		this.encodingType = EncodingType.PLAIN;
+		this.fullScanMode = false;
+		this.storeIndexInFile = false;
 	}
 
 	/// Creates [PlainTableOptions] with RocksDB defaults.

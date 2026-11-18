@@ -60,9 +60,15 @@ public class TryCatchWrapperBenchmark {
 
 	// Same values as A/B/LEN, but as instance fields: the JIT cannot treat them as
 	// constants, so a lambda reading them must capture them.
-	private MemorySegment a = A;
-	private MemorySegment b = B;
-	private long len = LEN;
+	private MemorySegment a;
+	private MemorySegment b;
+	private long len;
+
+	public TryCatchWrapperBenchmark() {
+		this.a = A;
+		this.b = B;
+		this.len = LEN;
+	}
 
 	@FunctionalInterface
 	private interface ThrowingIntCall {

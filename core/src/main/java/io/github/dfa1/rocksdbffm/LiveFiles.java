@@ -103,7 +103,7 @@ public final class LiveFiles extends NativeObject implements Iterable<LiveFileIn
 	@Override
 	public Iterator<LiveFileInfo> iterator() {
 		return new Iterator<>() {
-			private int i = 0;
+			private int i;
 
 			@Override
 			public boolean hasNext() {

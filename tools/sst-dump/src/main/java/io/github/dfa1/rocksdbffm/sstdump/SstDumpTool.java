@@ -58,10 +58,11 @@ public final class SstDumpTool {
 		private boolean verifyChecksum;
 		private boolean showProperties;
 		private Integer readNum;
-		private final List<String> extraArgs = new ArrayList<>();
+		private final List<String> extraArgs;
 
 		private Request(Path target) {
 			this.target = target;
+			this.extraArgs = new ArrayList<>();
 		}
 
 		/// Sets which `sst_dump` command to run.
