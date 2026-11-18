@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
+import static io.github.dfa1.rocksdbffm.TestPointers.fakePtr;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,10 +49,6 @@ class NativeObjectParentTest {
 		protected void tryClose(MemorySegment ptr) {
 			tryCloseCount.incrementAndGet();
 		}
-	}
-
-	private static MemorySegment fakePtr(long address) {
-		return MemorySegment.ofAddress(address);
 	}
 
 	@Test

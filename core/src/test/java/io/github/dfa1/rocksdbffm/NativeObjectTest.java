@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
+import static io.github.dfa1.rocksdbffm.TestPointers.fakePtr;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -38,10 +39,6 @@ class NativeObjectTest {
 				throw throwFromTryClose;
 			}
 		}
-	}
-
-	private static MemorySegment fakePtr(long address) {
-		return MemorySegment.ofAddress(address);
 	}
 
 	@Test
