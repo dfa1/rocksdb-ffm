@@ -323,9 +323,8 @@ public final class CompactionFilter extends NativeObject {
 	/// native thread can only ever be inside one `Filter()` call at a time, so by the time it
 	/// asks for a buffer again, the previous call's copy has already completed and the buffer is
 	/// safe to hand back (resized first, if `data` grew) — no per-call leak, and no
-	/// use-after-free. Unlike [MergeOperator.Custom]'s buffer, RocksDB never frees this one
-	/// itself, so — also unlike there — closing an [Arena] on our own schedule is exactly the
-	/// right tool instead of a raw `malloc`/`free` pair.
+	/// use-after-free. RocksDB never frees this buffer itself, so closing an [Arena] on our own
+	/// schedule is exactly the right tool; [MergeOperator.Custom] does the same.
 	private static MemorySegment scratchBuffer(State s, byte[] data) {
 		long needed = Math.max(1, data.length);
 		ScratchBuffer buf = s.scratchBuffers().compute(Thread.currentThread(), (thread, existing) -> {
