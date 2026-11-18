@@ -1,12 +1,12 @@
 package io.github.dfa1.rocksdbffm;
 
 import java.lang.foreign.MemorySegment;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /// Base class for all Java wrappers around native RocksDB pointers.
 ///
-/// Holds the native pointer in a volatile field. On [#close()],
+/// Holds the native pointer in an [AtomicReference]. On [#close()],
 /// it is atomically swapped to [MemorySegment#NULL], ensuring
 /// [#tryClose(MemorySegment)] is called exactly once even under
 /// concurrent or repeated close() calls. A `close()` that loses that race returns at once, possibly
@@ -23,27 +23,17 @@ public abstract class NativeObject implements AutoCloseable {
 
 	private static final System.Logger LOG = System.getLogger(NativeObject.class.getName());
 
-	private static final VarHandle OWNING_POINTER;
-
-	static {
-		try {
-			OWNING_POINTER = MethodHandles.lookup().findVarHandle(NativeObject.class, "owningPointer", MemorySegment.class);
-		} catch (ReflectiveOperationException e) {
-			throw new ExceptionInInitializerError(e);
-		}
-	}
-
-	private volatile MemorySegment owningPointer;
+	private final AtomicReference<MemorySegment> owningPointer;
 
 	/// Set by [#makeImmortal()] and never cleared. Usually set before the object is published (a `DEFAULTS` field),
-	/// but a [CompactionFilter] sets it on every attach, hence `volatile`.
-	private volatile boolean immortal;
+	/// but a [CompactionFilter] sets it on every attach, hence atomic.
+	private final AtomicBoolean immortal = new AtomicBoolean();
 
 	/// Initializes this wrapper with the given native pointer.
 	///
 	/// @param owningPointer the non-NULL native pointer this object now owns
 	protected NativeObject(MemorySegment owningPointer) {
-		this.owningPointer = owningPointer;
+		this.owningPointer = new AtomicReference<>(owningPointer);
 	}
 
 	/// Returns the current native pointer.
@@ -51,7 +41,7 @@ public abstract class NativeObject implements AutoCloseable {
 	/// @return the live native pointer
 	/// @throws IllegalStateException if this object has been closed or its ownership transferred
 	public final MemorySegment ptr() {
-		MemorySegment p = owningPointer;
+		MemorySegment p = owningPointer.get();
 		if (MemorySegment.NULL.equals(p)) {
 			throw new IllegalStateException("native object is closed or ownership has been transferred");
 		}
@@ -67,7 +57,7 @@ public abstract class NativeObject implements AutoCloseable {
 	///
 	/// @return `true` if [#ptr()] would currently throw
 	final boolean isClosed() {
-		return MemorySegment.NULL.equals(owningPointer);
+		return MemorySegment.NULL.equals(owningPointer.get());
 	}
 
 	/// Releases the native resource, unless this object is immortal. A wrapper that is released by its owner and
@@ -79,7 +69,7 @@ public abstract class NativeObject implements AutoCloseable {
 	/// would otherwise deadlock.
 	@Override
 	public void close() {
-		if (immortal || isClosed()) {
+		if (immortal.get() || isClosed()) {
 			return;
 		}
 		release();
@@ -87,7 +77,7 @@ public abstract class NativeObject implements AutoCloseable {
 
 	/// @return `true` if [#makeImmortal()] was called, so [#close()] does nothing
 	final boolean isImmortal() {
-		return immortal;
+		return immortal.get();
 	}
 
 	/// Swaps the pointer to NULL and, if this call won that swap, runs [#tryClose(MemorySegment)], logging
@@ -95,7 +85,7 @@ public abstract class NativeObject implements AutoCloseable {
 	/// an owner that frees an object whose `close()` is a no-op. A [NativeObjectChild] overrides it to add the
 	/// monitor a parent's sweep waits on, and its unregistration from the parents.
 	void release() {
-		MemorySegment ptr = (MemorySegment) OWNING_POINTER.getAndSet(this, MemorySegment.NULL);
+		MemorySegment ptr = owningPointer.getAndSet(MemorySegment.NULL);
 		if (!MemorySegment.NULL.equals(ptr)) {
 			try {
 				tryClose(ptr);
@@ -145,7 +135,7 @@ public abstract class NativeObject implements AutoCloseable {
 	/// @return this object, so it chains off the factory: `static final X DEFAULTS = newX().makeImmortal();`
 	@SuppressWarnings("unchecked")
 	<T extends NativeObject> T makeImmortal() {
-		this.immortal = true;
+		immortal.set(true);
 		return (T) this;
 	}
 
@@ -164,9 +154,9 @@ public abstract class NativeObject implements AutoCloseable {
 	/// already provides: the pointer is dropped and further use throws [IllegalStateException]
 	/// instead of double-freeing or touching freed memory.
 	void transferOwnership() {
-		if (immortal) {
+		if (immortal.get()) {
 			throw new IllegalStateException("immortal object cannot transfer ownership: it is shared process-wide");
 		}
-		owningPointer = MemorySegment.NULL;
+		owningPointer.set(MemorySegment.NULL);
 	}
 }

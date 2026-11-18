@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /// closes, racing its own constructor's `registerChild` call against the one-shot sweep. Rather
 /// than a lock around the check, `registerChild` inserts optimistically and validates
 /// afterward, undoing if the validation says it shouldn't have happened — an "insert, recheck,
-/// compensate" pattern that needs nothing beyond [NativeObject]'s volatile pointer (the recheck reads it through
+/// compensate" pattern that needs nothing beyond [NativeObject]'s `AtomicReference` pointer (the recheck reads it through
 /// [NativeObject#isClosed()]) and [ConcurrentHashMap]'s own atomic add/remove.
 abstract class NativeObjectParent extends NativeObjectChild {
 
@@ -70,7 +70,7 @@ abstract class NativeObjectParent extends NativeObjectChild {
 	/// Both outcomes of a "child visited by the sweep" and "child abandoned here" landing on the
 	/// very same instance at once are safe regardless of which wins: [NativeObject#close()] and
 	/// [NativeObject#transferOwnership()] both just (idempotently) null the same
-	/// pointer field, so whichever runs second is a no-op.
+	/// `AtomicReference`, so whichever runs second is a no-op.
 	///
 	/// @param child the child resource to close alongside (and before) this object
 	final void registerChild(NativeObjectChild child) {
