@@ -7,6 +7,7 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /// A merge operator, attached to a database or column family via [Options#setMergeOperator(MergeOperator)].
 ///
@@ -172,12 +173,23 @@ public sealed interface MergeOperator {
 			"deleteValueDispatch", DELETE_VALUE_DESC
 		);
 
-		/// Per-thread buffer every merge result is returned in, grown as needed. Safe to reuse: `db/c.cc` copies the
-		/// result out (`assign`) before the calling thread can merge again, and [#deleteValueDispatch] keeps RocksDB
-		/// from `free()`ing it. `Arena.ofAuto()` so a dead thread's (or an outgrown) buffer is reclaimed by the GC.
-		private static final ThreadLocal<MemorySegment> SCRATCH = ThreadLocal.withInitial(() -> MemorySegment.NULL);
+		/// Buffers of dead threads are dropped once this many are held.
+		private static final int SCRATCH_PRUNE_THRESHOLD = 64;
 
-		private record State(FullMergeFn fn, MemorySegment nameSeg) {
+		/// The merge function, its name, and the per-thread buffers every merge result is returned in, grown as
+		/// needed. Safe to reuse: `db/c.cc` copies the result out (`assign`) before the calling thread can merge again,
+		/// and [#deleteValueDispatch] keeps RocksDB from `free()`ing it. Owned by the operator, so
+		/// [#destructorDispatch] frees them when RocksDB drops it, the way [CompactionFilter] does.
+		private record State(FullMergeFn fn, MemorySegment nameSeg, ConcurrentHashMap<Thread, ScratchBuffer> scratchBuffers) {
+
+			State(FullMergeFn fn, MemorySegment nameSeg) {
+				this(fn, nameSeg, new ConcurrentHashMap<>());
+			}
+		}
+
+		/// A merge-result buffer and the [Arena] that owns it. `arena` is shared, not confined, because
+		/// [#destructorDispatch] closes it from whichever thread destroys the native operator.
+		private record ScratchBuffer(Arena arena, MemorySegment segment) {
 		}
 
 		// Registry: id (smuggled through the `state` pointer) -> Java-side merge function.
@@ -222,14 +234,30 @@ public sealed interface MergeOperator {
 			MH_MERGEOPERATOR_DESTROY.invokeExact(ptr);
 		}
 
-		private static MemorySegment scratchCopy(byte[] data) {
-			MemorySegment buf = SCRATCH.get();
-			if (buf.byteSize() < data.length) {
-				buf = Arena.ofAuto().allocate(Math.max(data.length, 2 * buf.byteSize()));
-				SCRATCH.set(buf);
+		private static MemorySegment scratchCopy(State s, byte[] data) {
+			long needed = Math.max(1, data.length);
+			ScratchBuffer buf = s.scratchBuffers().compute(Thread.currentThread(), (thread, existing) -> {
+				if (existing != null && existing.segment().byteSize() >= needed) {
+					return existing;
+				}
+				long size = existing == null ? needed : Math.max(needed, 2 * existing.segment().byteSize());
+				if (existing != null) {
+					existing.arena().close();
+				}
+				Arena arena = Arena.ofShared();
+				return new ScratchBuffer(arena, arena.allocate(size));
+			});
+			MemorySegment.copy(data, 0, buf.segment(), ValueLayout.JAVA_BYTE, 0, data.length);
+			if (s.scratchBuffers().size() > SCRATCH_PRUNE_THRESHOLD) {
+				s.scratchBuffers().entrySet().removeIf(entry -> {
+					if (entry.getKey().isAlive()) {
+						return false;
+					}
+					entry.getValue().arena().close();
+					return true;
+				});
 			}
-			MemorySegment.copy(data, 0, buf, ValueLayout.JAVA_BYTE, 0, data.length);
-			return buf;
+			return buf.segment();
 		}
 
 		/// Last checkpoint before a value crosses back into native code as an upcall's `ADDRESS`
@@ -295,7 +323,7 @@ public sealed interface MergeOperator {
 				byte[] result = s.fn().fullMerge(keyView, existingView, operandViews);
 				successPtr.set(ValueLayout.JAVA_BYTE, 0, (byte) 1);
 				newValueLenPtr.set(NativeCalls.SIZE_T, 0, result.length);
-				return requireNonNullUpcallResult(scratchCopy(result), "fullMergeDispatch");
+				return requireNonNullUpcallResult(scratchCopy(s, result), "fullMergeDispatch");
 			} catch (Throwable t) {
 				// must not throw across the upcall boundary — an escaping AssertionError here
 				// (assertions are on by default under Surefire) would abort the JVM, not just
@@ -331,11 +359,15 @@ public sealed interface MergeOperator {
 		/// [#tryClose(MemorySegment)] may never run for this instance. Must not throw.
 		@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 		private static void destructorDispatch(MemorySegment state) {
-			REGISTRY.unregister(state);
+			State s = REGISTRY.unregister(state);
+			if (s != null) {
+				// No merge can still be in flight once RocksDB itself is destroying this operator.
+				s.scratchBuffers().values().forEach(buf -> buf.arena().close());
+			}
 		}
 
 		/// Called from [#DELETE_VALUE_STUB] once RocksDB has copied a merge result out. Deliberately a no-op:
-		/// every result is [#SCRATCH] or [#EMPTY], both owned on the Java side; its mere presence stops `db/c.cc`
+		/// every result is a per-thread scratch buffer or [#EMPTY], both owned on the Java side; its mere presence stops `db/c.cc`
 		/// from calling `free()` on them instead.
 		@SuppressWarnings("unused") // only reached by name, from NativeLibrary.upcall
 		private static void deleteValueDispatch(MemorySegment state, MemorySegment value, long valueLength) {
