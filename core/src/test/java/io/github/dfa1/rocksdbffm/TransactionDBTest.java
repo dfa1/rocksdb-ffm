@@ -1135,7 +1135,7 @@ class TransactionDBTest {
 	@Test
 	void close_isIdempotent(@TempDir Path dir) {
 		// Given — an already-closed TransactionDB; close() must have released both the
-		// primary pointer and the base DB pointer (NativeDBWithBaseDB#tryCloseBaseDb)
+		// primary pointer and the base DB pointer (NativeDBWithBaseDB#tryClose(MemorySegment, MemorySegment))
 		var db = openDb(dir);
 		db.close();
 

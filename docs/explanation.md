@@ -139,7 +139,7 @@ put the pointer somewhere the subclass genuinely cannot see it. `NativeDBWithBas
 place — a `NativeObject` subclass holding the base DB pointer as a private field of *its own*, with
 the only access being `dbPtr()`, which calls `ptr()` first and therefore throws
 `IllegalStateException` once the object is closed, exactly like every other native call already
-does. A future class with the same "second owned pointer" shape should extend it rather than
+does — and `tryClose(ptr, baseDb)`, which hands it to the subclass as a parameter only for its close. A future class with the same "second owned pointer" shape should extend it rather than
 re-inventing a guard.
 
 The fourth hazard is a *borrowed pointer from a different object*. `Snapshot` needs its owning

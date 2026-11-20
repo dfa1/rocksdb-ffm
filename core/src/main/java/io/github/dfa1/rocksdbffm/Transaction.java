@@ -845,7 +845,10 @@ public final class Transaction extends NativeObjectParent {
 	/// Commits all staged operations in this transaction. Iterators and the [#getSnapshot() snapshot] obtained
 	/// from this transaction are closed, whether or not the commit succeeds: RocksDB invalidates the iterators and
 	/// frees the snapshot.
+	///
+	/// @throws IllegalStateException if called from inside a [Mapper] of one of this transaction's iterators
 	public void commit() {
+		refuseFromInsideAMapper();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_COMMIT.invokeExact(ptr(), err);
@@ -862,7 +865,10 @@ public final class Transaction extends NativeObjectParent {
 	/// Rolls back all staged operations in this transaction. Iterators and the [#getSnapshot() snapshot] obtained
 	/// from this transaction are closed, whether or not the rollback succeeds: RocksDB invalidates the iterators and
 	/// frees the snapshot.
+	///
+	/// @throws IllegalStateException if called from inside a [Mapper] of one of this transaction's iterators
 	public void rollback() {
+		refuseFromInsideAMapper();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_ROLLBACK.invokeExact(ptr(), err);
@@ -887,7 +893,10 @@ public final class Transaction extends NativeObjectParent {
 
 	/// Rolls back to the most recent savepoint set by [#setSavePoint()]. Iterators obtained from this transaction
 	/// are closed: RocksDB invalidates them on rollback.
+	///
+	/// @throws IllegalStateException if called from inside a [Mapper] of one of this transaction's iterators
 	public void rollbackToSavePoint() {
+		refuseFromInsideAMapper();
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_ROLLBACK_TO_SAVEPOINT.invokeExact(ptr(), err);

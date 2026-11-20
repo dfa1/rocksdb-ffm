@@ -9,18 +9,18 @@ import java.lang.foreign.MemorySegment;
 ///
 /// Per `rocksdb/db/c.cc`, each `get_base_db` call heap-allocates a small `rocksdb_t` wrapper
 /// struct (`{ DB* rep; }`) around the already-owned database object — a distinct allocation
-/// from the database itself. A subclass's [#tryClose(MemorySegment)] frees only that wrapper,
-/// best-effort (a failure there does not prevent the primary pointer from still being closed);
-/// it neither destroys nor can destroy the real database object, which the primary close, run
-/// afterward, already owns and destroys.
+/// from the database itself. A subclass's [#tryClose(MemorySegment, MemorySegment)] frees that
+/// wrapper; it neither destroys nor can destroy the real database object, which the primary close
+/// already owns and destroys.
 ///
-/// The base DB pointer is read unchecked only from `tryClose`, where the guard of [#ptr()] has already been
-/// consumed. Everything else goes through [#dbPtr()], which calls [#ptr()] first and therefore throws
-/// [IllegalStateException] once this object is closed, the same way every other native call on this object
-/// already does.
+/// The base DB pointer is private to this class — subclasses have no name for it, so they
+/// cannot accidentally read it unchecked. They get it as a parameter of
+/// [#tryClose(MemorySegment, MemorySegment)], and otherwise only through [#dbPtr()], which calls
+/// [#ptr()] first and therefore throws [IllegalStateException] once this object is closed, the
+/// same way every other native call on this object already does.
 abstract class NativeDBWithBaseDB extends NativeDB {
 
-	final MemorySegment baseDb;
+	private final MemorySegment baseDb;
 
 	protected NativeDBWithBaseDB(MemorySegment ptr, MemorySegment baseDb) {
 		super(ptr);
@@ -37,4 +37,18 @@ abstract class NativeDBWithBaseDB extends NativeDB {
 		ptr();
 		return baseDb;
 	}
+
+	@Override
+	protected final void tryClose(MemorySegment ptr) throws Throwable {
+		awaitInFlightCalls();
+		tryClose(ptr, baseDb);
+	}
+
+	/// [NativeObject#tryClose(MemorySegment)] with the base DB pointer handed in: starts with `releaseChildren()`,
+	/// then frees the base DB wrapper and the primary pointer.
+	///
+	/// @param ptr    the non-NULL primary native pointer to release
+	/// @param baseDb the base DB wrapper to free
+	/// @throws Throwable if a native destroy call fails
+	protected abstract void tryClose(MemorySegment ptr, MemorySegment baseDb) throws Throwable;
 }

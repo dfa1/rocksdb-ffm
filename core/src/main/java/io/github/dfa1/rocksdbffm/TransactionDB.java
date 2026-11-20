@@ -1058,13 +1058,9 @@ public final class TransactionDB extends NativeDBWithBaseDB
 	// -----------------------------------------------------------------------
 
 	@Override
-	protected void tryClose(MemorySegment ptr) throws Throwable {
+	protected void tryClose(MemorySegment ptr, MemorySegment baseDb) throws Throwable {
 		releaseChildren();
-		try {
-			MH_CLOSE_BASE_DB.invokeExact(baseDb);
-		} catch (Throwable _) {
-			// best-effort: still close the primary pointer below
-		}
+		MH_CLOSE_BASE_DB.invokeExact(baseDb);
 		MH_CLOSE.invokeExact(ptr);
 	}
 
