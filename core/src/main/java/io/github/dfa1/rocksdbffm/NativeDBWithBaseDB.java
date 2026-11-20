@@ -40,6 +40,7 @@ abstract class NativeDBWithBaseDB extends NativeDB {
 
 	@Override
 	protected final void tryClose(MemorySegment ptr) throws Throwable {
+		awaitInFlightCalls();
 		tryClose(ptr, baseDb);
 	}
 

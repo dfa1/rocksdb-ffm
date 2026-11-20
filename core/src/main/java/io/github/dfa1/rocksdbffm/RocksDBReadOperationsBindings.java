@@ -86,6 +86,7 @@ final class RocksDBReadOperationsBindings {
 	///
 	/// Returns `null` if not found.
 	static byte[] getBytes(RocksDBReadOperations db, ReadOptions readOpts, byte[] key) {
+		NativeDB guard = NativeDB.enter(db);
 		// Single arena: it already needs one to marshal `key`, and withPinned would open
 		// its own, paying for two Arena.ofConfined() per get instead of one.
 		try (Arena arena = Arena.ofConfined()) {
@@ -102,12 +103,15 @@ final class RocksDBReadOperationsBindings {
 			}
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("get failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	/// ByteBuffer get via `rocksdb_get_into_buffer` — copies directly into the caller's buffer,
 	/// with no intermediate PinnableSlice. Copies nothing when the buffer is too small.
 	static CopyResult getIntoBuffer(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, ByteBuffer value) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(NativeCalls.SIZE_T);
@@ -126,12 +130,15 @@ final class RocksDBReadOperationsBindings {
 			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("get failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	/// MemorySegment get via `rocksdb_get_into_buffer` — copies directly into the caller's
 	/// segment, with no intermediate PinnableSlice. Copies nothing when `value` is too small.
 	static CopyResult getIntoSegment(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, MemorySegment value) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(NativeCalls.SIZE_T);
@@ -149,12 +156,15 @@ final class RocksDBReadOperationsBindings {
 			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("get failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	/// Scoped zero-copy get via `rocksdb_get_pinned_v2`. [PinnableHandle] owns the pinned
 	/// value's lifetime and every way it gets consumed.
 	static <R> R withPinned(RocksDBReadOperations db, ReadOptions readOpts, MemorySegment key, Mapper<R> fn) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_V2.invokeExact(db.dbPtr(), readOpts.readPtr(), key, key.byteSize(), err);
@@ -167,6 +177,8 @@ final class RocksDBReadOperationsBindings {
 			}
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("get_pinned failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -174,6 +186,7 @@ final class RocksDBReadOperationsBindings {
 	/// for the lifetime contract.
 	static <R> R withPinnedCf(RocksDBReadOperations db, ReadOptions readOpts, ColumnFamilyHandle cf,
 	                           MemorySegment key, Mapper<R> fn) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment handle = (MemorySegment) MH_GET_PINNED_CF_V2.invokeExact(
@@ -187,6 +200,8 @@ final class RocksDBReadOperationsBindings {
 			}
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("get_pinned failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -195,6 +210,7 @@ final class RocksDBReadOperationsBindings {
 	/// Returns `null` if not found.
 	static byte[] getCfBytes(RocksDBReadOperations db, ReadOptions readOpts, ColumnFamilyHandle cf,
 	                         byte[] key) {
+		NativeDB guard = NativeDB.enter(db);
 		// Single arena, same reasoning as getBytes above.
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
@@ -210,6 +226,8 @@ final class RocksDBReadOperationsBindings {
 			}
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("get failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -217,6 +235,7 @@ final class RocksDBReadOperationsBindings {
 	/// Copies nothing when the buffer is too small.
 	static CopyResult getCfIntoBuffer(RocksDBReadOperations db, ReadOptions readOpts, ColumnFamilyHandle cf,
 	                                  MemorySegment key, ByteBuffer value) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(NativeCalls.SIZE_T);
@@ -235,6 +254,8 @@ final class RocksDBReadOperationsBindings {
 			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("get failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -242,6 +263,7 @@ final class RocksDBReadOperationsBindings {
 	/// copies directly into the caller's segment. Copies nothing when `value` is too small.
 	static CopyResult getCfIntoSegment(RocksDBReadOperations db, ReadOptions readOpts, ColumnFamilyHandle cf,
 	                                   MemorySegment key, MemorySegment value) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment valLenSeg = arena.allocate(NativeCalls.SIZE_T);
@@ -259,16 +281,21 @@ final class RocksDBReadOperationsBindings {
 			return CopyResult.Copied.INSTANCE;
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("get failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static boolean keyMayExistSegment(RocksDBReadOperations db, ReadOptions roOpts, MemorySegment key) {
+		NativeDB guard = NativeDB.enter(db);
 		try {
 			return NativeCalls.fromByte((byte) MH_KEY_MAY_EXIST.invokeExact(db.dbPtr(), roOpts.readPtr(), key, key.byteSize(),
 					MemorySegment.NULL, MemorySegment.NULL,
 					MemorySegment.NULL, 0L, MemorySegment.NULL));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("keyMayExist failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -282,12 +309,15 @@ final class RocksDBReadOperationsBindings {
 
 	static boolean keyMayExistCfSegment(RocksDBReadOperations db, ReadOptions roOpts,
 	                                    ColumnFamilyHandle cf, MemorySegment key) {
+		NativeDB guard = NativeDB.enter(db);
 		try {
 			return NativeCalls.fromByte((byte) MH_KEY_MAY_EXIST_CF.invokeExact(db.dbPtr(), roOpts.readPtr(), cf.ptr(), key, key.byteSize(),
 					MemorySegment.NULL, MemorySegment.NULL,
 					MemorySegment.NULL, 0L, MemorySegment.NULL));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("keyMayExist failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -302,6 +332,7 @@ final class RocksDBReadOperationsBindings {
 
 	static RocksIterator createIteratorCf(RocksDBReadOperations db, ReadOptions readOpts,
 	                                      ColumnFamilyHandle cf) {
+		NativeDB guard = NativeDB.enter(db);
 		try {
 			MemorySegment iterPtr = (MemorySegment) MH_CREATE_ITERATOR_CF.invokeExact(
 					db.dbPtr(), readOpts.readPtr(), cf.ptr());
@@ -309,6 +340,8 @@ final class RocksDBReadOperationsBindings {
 			return RocksIterator.create((NativeObjectParent) db, readOpts, iterPtr);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("newIterator failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
@@ -322,16 +355,20 @@ final class RocksDBReadOperationsBindings {
 	}
 
 	static Optional<String> getProperty(RocksDBReadOperations db, Property property) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment propSeg = arena.allocateFrom(property.propertyName());
 			MemorySegment result = (MemorySegment) MH_PROPERTY_VALUE.invokeExact(db.dbPtr(), propSeg);
 			return NativeCalls.toOptionalString(result);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("getProperty failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static OptionalLong getLongProperty(RocksDBReadOperations db, Property property) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment propSeg = arena.allocateFrom(property.propertyName());
 			MemorySegment out = arena.allocate(ValueLayout.JAVA_LONG);
@@ -342,6 +379,8 @@ final class RocksDBReadOperationsBindings {
 			return OptionalLong.of(out.get(ValueLayout.JAVA_LONG, 0));
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("getLongProperty failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
