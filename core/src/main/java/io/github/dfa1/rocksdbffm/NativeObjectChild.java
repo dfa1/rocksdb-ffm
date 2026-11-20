@@ -63,6 +63,37 @@ abstract class NativeObjectChild extends NativeObject {
 		}
 	}
 
+	/// Releases the native resource, unless this object is immortal.
+	///
+	/// Must not be called from inside a [Mapper] of an iterator that is, or borrows from, this object (the iterator
+	/// itself, its [ReadOptions], its transaction): the mapper is still reading memory the close would free, and a
+	/// close that waited for it would wait for its own thread. Close it once the mapper has returned.
+	///
+	/// @throws IllegalStateException if called from inside such a [Mapper]
+	@Override
+	public void close() {
+		refuseFromInsideAMapper();
+		super.close();
+	}
+
+	/// Throws if the calling thread is inside a [Mapper] of an iterator that is, or borrows from, this object. Called
+	/// before anything is released, by [#close()] and by any other call that invalidates such an iterator (a
+	/// transaction's commit and rollbacks).
+	///
+	/// @throws IllegalStateException if called from inside such a [Mapper]
+	final void refuseFromInsideAMapper() {
+		if (inUseByCurrentThread()) {
+			throw new IllegalStateException(getClass().getSimpleName() + " cannot be released from inside a Mapper "
+					+ "of an iterator that uses it: release it once the Mapper has returned");
+		}
+	}
+
+	/// @return `true` if the calling thread is inside a call on this object, or on one borrowing from it, that runs
+	///         caller code (an iterator's [Mapper]). Nothing runs caller code by default.
+	boolean inUseByCurrentThread() {
+		return false;
+	}
+
 	/// [NativeObject#release()] under this object's monitor, then unregisters from the parents.
 	///
 	/// A call that loses the race to another thread already releasing this object blocks until that release has

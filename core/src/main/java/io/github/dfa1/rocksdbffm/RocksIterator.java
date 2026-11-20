@@ -569,31 +569,19 @@ public final class RocksIterator extends NativeObjectChild {
 		inFlight.getAndDecrement();
 	}
 
-	/// Closes this iterator, waiting for a call in flight on another thread to return first.
-	///
-	/// Must not be called from inside this iterator's own [Mapper]: the mapper is still reading the entry the
-	/// close would free. Close it once the mapper has returned.
-	///
-	/// @throws IllegalStateException if called from inside this iterator's own [Mapper]
+	/// @return `true` if the calling thread is inside one of this iterator's calls, i.e. running its [Mapper]
 	@Override
-	public void close() {
-		if (inFlight.get() != 0 && lastCaller == Thread.currentThread()) {
-			throw new IllegalStateException("an iterator cannot be closed from inside its own Mapper: "
-					+ "close it once the Mapper has returned");
-		}
-		super.close();
+	boolean inUseByCurrentThread() {
+		return inFlight.get() != 0 && lastCaller == Thread.currentThread();
 	}
 
-	/// Waits for calls in flight on other threads, then destroys the iterator. A parent closed from inside this
-	/// iterator's own [Mapper] (its [ReadOptions] or transaction; [#close()] and a database close refuse earlier)
-	/// cannot wait for itself: it throws, which the release logs, and the iterator is left undestroyed rather
-	/// than freed under the mapper.
+	/// Waits for calls in flight, then destroys the iterator. The calls waited for are always on another thread:
+	/// every release from inside this iterator's own [Mapper] is refused before the pointer swap, by `close()` (this
+	/// iterator's, its [ReadOptions]', its transaction's), the transaction's commit and rollbacks, and a database
+	/// close's callback check.
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
 		while (inFlight.get() != 0) {
-			if (lastCaller == Thread.currentThread()) {
-				throw new IllegalStateException("an iterator cannot be closed from inside its own Mapper");
-			}
 			LockSupport.parkNanos(100_000);
 		}
 		MH_DESTROY.invokeExact(ptr);
