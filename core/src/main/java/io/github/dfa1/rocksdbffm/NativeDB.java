@@ -10,7 +10,9 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.SequencedMap;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.LockSupport;
 
 /// Base of every database type: a [NativeObjectParent] that exposes the `rocksdb_t*` the shared
 /// capability interfaces ([RocksDBReadOperations], [RocksDBWriteOperations], ...) operate on.
@@ -34,9 +36,62 @@ abstract class NativeDB extends NativeObjectParent {
 	/// (copy-on-write): lookups are lock-free, and changes happen only on open, create and drop.
 	private final AtomicReference<SequencedMap<ColumnFamilyName, ColumnFamilyHandle>> columnFamilies;
 
+	/// Calls in flight on this database, counted in per-thread stripes so threads sharing the database do not
+	/// contend on one counter. Each stripe is padded to its own cache lines. An iterator counts its own calls.
+	private final AtomicLongArray inFlight;
+
+	private static final int STRIPES = 64;
+	private static final int STRIPE_PADDING = 16;
+
+	private static int stripe() {
+		return (((int) Thread.currentThread().threadId() & (STRIPES - 1)) + 1) * STRIPE_PADDING;
+	}
+
+	/// [#enter()] on `db`, which is always a [NativeDB]: every implementor of the capability interfaces extends it.
+	static NativeDB enter(Object db) {
+		NativeDB guard = (NativeDB) db;
+		guard.enter();
+		return guard;
+	}
+
+	/// Marks a native call as in flight; pair with [#exit()] in a `finally`. The count is raised before the
+	/// closed check, and [#close()] swaps the pointer before reading the counts, so one side always sees the
+	/// other: either this throws, or the close waits for [#exit()].
+	///
+	/// @throws IllegalStateException if this database has been closed
+	final void enter() {
+		int stripe = stripe();
+		inFlight.getAndIncrement(stripe);
+		if (isClosed()) {
+			inFlight.getAndDecrement(stripe);
+			throw new IllegalStateException("native object is closed or ownership has been transferred");
+		}
+	}
+
+	final void exit() {
+		inFlight.getAndDecrement(stripe());
+	}
+
+	/// Waits until every call [#enter()] let through has returned. Called first in `tryClose`, after the pointer
+	/// swap and before anything is released.
+	final void awaitInFlightCalls() {
+		while (inFlightCalls() != 0) {
+			LockSupport.parkNanos(100_000);
+		}
+	}
+
+	private long inFlightCalls() {
+		long sum = 0;
+		for (int i = 1; i <= STRIPES; i++) {
+			sum += inFlight.get(i * STRIPE_PADDING);
+		}
+		return sum;
+	}
+
 	protected NativeDB(MemorySegment ptr) {
 		super(ptr);
 		this.columnFamilies = new AtomicReference<>(Collections.unmodifiableSequencedMap(new LinkedHashMap<>()));
+		this.inFlight = new AtomicLongArray((STRIPES + 2) * STRIPE_PADDING);
 	}
 
 	/// The classes whose frames run a caller-supplied callback while RocksDB, or a pinned value, still uses the
@@ -70,6 +125,7 @@ abstract class NativeDB extends NativeObjectParent {
 
 	@Override
 	protected void tryClose(MemorySegment ptr) throws Throwable {
+		awaitInFlightCalls();
 		releaseChildren();
 		MH_CLOSE.invokeExact(ptr);
 	}
