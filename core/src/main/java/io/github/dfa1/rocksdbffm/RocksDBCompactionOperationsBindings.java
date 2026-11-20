@@ -53,6 +53,7 @@ final class RocksDBCompactionOperationsBindings {
 	}
 
 	static void compactRangeBytes(RocksDBCompactionOperations db, byte[] startKey, byte[] endKey) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment s = startKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, startKey);
 			MemorySegment e = endKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, endKey);
@@ -61,10 +62,13 @@ final class RocksDBCompactionOperationsBindings {
 					e, endKey == null ? 0L : (long) endKey.length);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("compactRange failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void compactRangeCfBytes(RocksDBCompactionOperations db, ColumnFamilyHandle cf, byte[] startKey, byte[] endKey) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment s = startKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, startKey);
 			MemorySegment e = endKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, endKey);
@@ -73,10 +77,13 @@ final class RocksDBCompactionOperationsBindings {
 					e, endKey == null ? 0L : (long) endKey.length);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("compactRange failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void compactRangeBuffer(RocksDBCompactionOperations db, ByteBuffer startKey, ByteBuffer endKey) {
+		NativeDB guard = NativeDB.enter(db);
 		try {
 			MemorySegment s = startKey == null ? MemorySegment.NULL : MemorySegment.ofBuffer(startKey);
 			MemorySegment e = endKey == null ? MemorySegment.NULL : MemorySegment.ofBuffer(endKey);
@@ -85,10 +92,13 @@ final class RocksDBCompactionOperationsBindings {
 					e, endKey == null ? 0L : (long) endKey.remaining());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("compactRange failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void compactRangeSegment(RocksDBCompactionOperations db, MemorySegment startKey, MemorySegment endKey) {
+		NativeDB guard = NativeDB.enter(db);
 		try {
 			MemorySegment s = startKey == null ? MemorySegment.NULL : startKey;
 			MemorySegment e = endKey == null ? MemorySegment.NULL : endKey;
@@ -97,10 +107,13 @@ final class RocksDBCompactionOperationsBindings {
 					e, e == MemorySegment.NULL ? 0L : e.byteSize());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("compactRange failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void compactRangeOptBytes(RocksDBCompactionOperations db, CompactOptions opts, byte[] startKey, byte[] endKey) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment s = startKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, startKey);
 			MemorySegment e = endKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, endKey);
@@ -109,10 +122,13 @@ final class RocksDBCompactionOperationsBindings {
 					e, endKey == null ? 0L : (long) endKey.length);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("compactRange failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void suggestCompactRangeBytes(RocksDBCompactionOperations db, byte[] startKey, byte[] endKey) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MemorySegment s = startKey == null ? MemorySegment.NULL : NativeCalls.toNative(arena, startKey);
@@ -123,52 +139,69 @@ final class RocksDBCompactionOperationsBindings {
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("suggestCompactRange failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void disableFileDeletions(RocksDBCompactionOperations db) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DISABLE_FILE_DELETIONS.invokeExact(db.dbPtr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("disableFileDeletions failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void enableFileDeletions(RocksDBCompactionOperations db) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_ENABLE_FILE_DELETIONS.invokeExact(db.dbPtr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("enableFileDeletions failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void disableManualCompaction(RocksDBCompactionOperations db) {
+		NativeDB guard = NativeDB.enter(db);
 		try {
 			MH_DISABLE_MANUAL_COMPACTION.invokeExact(db.dbPtr());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("disableManualCompaction failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void enableManualCompaction(RocksDBCompactionOperations db) {
+		NativeDB guard = NativeDB.enter(db);
 		try {
 			MH_ENABLE_MANUAL_COMPACTION.invokeExact(db.dbPtr());
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("enableManualCompaction failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 
 	static void waitForCompact(RocksDBCompactionOperations db, WaitForCompactOptions options) {
+		NativeDB guard = NativeDB.enter(db);
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_WAIT_FOR_COMPACT.invokeExact(db.dbPtr(), options.ptr(), err);
 			NativeCalls.checkError(err);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("waitForCompact failed", t);
+		} finally {
+			guard.exit();
 		}
 	}
 }
