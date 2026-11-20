@@ -119,6 +119,17 @@ abstract class NativeObjectParent extends NativeObjectChild {
 		releaseChildren(NativeObjectChild.class);
 	}
 
+	/// @return `true` if any child is in use by the calling thread, so releasing this object would release it
+	@Override
+	final boolean inUseByCurrentThread() {
+		for (NativeObjectChild child : children) {
+			if (child.inUseByCurrentThread()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/// @return how many children are registered right now, for tests asserting that a closed child unregistered
 	final int childCount() {
 		return children.size();

@@ -142,6 +142,50 @@ class CloseWaitsForInFlightCallsTest {
 		}
 	}
 
+	@Test
+	void readOptionsClose_fromInsideItsIteratorsMapper_throwsAndReleasesNothing(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openReadWrite(dir, opts);
+		     var ro = ReadOptions.newReadOptions()) {
+			db.put(KEY, VALUE);
+			var iterator = db.newIterator(ro);
+			iterator.seekToFirst();
+
+			// When
+			var thrown = iterator.key(key -> catchThrowable(ro::close));
+
+			// Then -- refused before the swap, so neither the options nor the iterator was released
+			assertThat(thrown).isInstanceOf(IllegalStateException.class);
+			assertThat(iterator.key()).isEqualTo(KEY);
+			iterator.close();
+		}
+	}
+
+	@Test
+	void transactionCommit_fromInsideItsIteratorsMapper_throwsAndCommitsNothing(@TempDir Path dir) {
+		// Given
+		try (var opts = Options.newOptions().setCreateIfMissing(true);
+		     var db = RocksDB.openOptimistic(dir, opts);
+		     var wo = WriteOptions.newWriteOptions();
+		     var ro = ReadOptions.newReadOptions()) {
+			var txn = db.beginTransaction(wo);
+			var cf = db.getColumnFamily(ColumnFamilyName.DEFAULT);
+			txn.put(cf, KEY, VALUE);
+			var iterator = txn.newIterator(cf, ro);
+			iterator.seekToFirst();
+
+			// When
+			var thrown = iterator.value(value -> catchThrowable(txn::commit));
+
+			// Then -- refused before the native commit: nothing is committed and the iterator still reads
+			assertThat(thrown).isInstanceOf(IllegalStateException.class);
+			assertThat(db.get(KEY)).isNull();
+			assertThat(iterator.value()).isEqualTo(VALUE);
+			txn.close();
+		}
+	}
+
 	private static boolean isDoneWithin(CompletableFuture<?> future, long millis) {
 		try {
 			future.get(millis, TimeUnit.MILLISECONDS);
