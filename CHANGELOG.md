@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Options.setTrackOptionsFileNumberInManifest`/`getTrackOptionsFileNumberInManifest`: experimental option (RocksDB v11.13) that durably records the OPTIONS file number in the MANIFEST, so a crash can't leave a newer, uncommitted OPTIONS file as the "latest"; matters mostly for `RocksDB.loadLatestOptions` ([#278](https://github.com/dfa1/rocksdb-ffm/pull/278), closes [#265](https://github.com/dfa1/rocksdb-ffm/issues/265)) — thanks [@amalsaidov](https://github.com/amalsaidov)
 
+### Changed
+
+- **Behavior change:** a database `close()` blocks until calls in flight on other threads return ([#362](https://github.com/dfa1/rocksdb-ffm/pull/362))
+
+### Fixed
+
+- Closing a database while another thread is inside a call on it (an iterator scan, `compactRange()`, `get`, ...) no longer crashes the JVM: `close()` now waits for calls in flight on the database and its iterators, including transaction iterators. Closing an iterator, its `ReadOptions` or its transaction from inside the iterator's own `Mapper` throws `IllegalStateException` ([#362](https://github.com/dfa1/rocksdb-ffm/pull/362))
+
 ## [0.19] — 2026-11-14
 
 Path-first open factories, database-owned column family handles with a lossless `ColumnFamilyName`, shared immortal defaults, no implicit database creation, `BlobDB` folded into `ReadWriteDB`, and a batch of new options from contributors.
