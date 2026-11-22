@@ -192,6 +192,7 @@ Background jobs and file handles (each with a matching getter):
 | `setMaxFileOpeningThreads`           | `int`         |
 | `setAdviseRandomOnOpen`              | `boolean`     |
 | `setSkipStatsUpdateOnDbOpen`         | `boolean`     |
+| `setTrackOptionsFileNumberInManifest` | `boolean` (experimental, default `false`) |
 
 Write-path tuning (each with a matching getter, except `increaseParallelism`, a one-shot helper
 with no stored value to read back):
