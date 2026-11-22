@@ -4,6 +4,8 @@ import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
@@ -293,6 +295,183 @@ class CompactionControlTest {
 			// Then
 			assertThat(db.get("k".getBytes())).isEqualTo("v".getBytes());
 			assertThat(db.get("k2".getBytes())).isEqualTo("v2".getBytes());
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// deleteFilesInRange
+	// -----------------------------------------------------------------------
+
+	@Test
+	void deleteFilesInRange_byteArray_coveringRange_removesFileAndKeys(@TempDir Path dir) {
+		// Given — one SST file spanning [b, y], compacted out of level 0
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
+			db.put("b".getBytes(), "1".getBytes());
+			db.put("m".getBytes(), "2".getBytes());
+			db.put("y".getBytes(), "3".getBytes());
+			db.compactRange();
+
+			// When
+			db.deleteFilesInRange("a".getBytes(), "z".getBytes());
+
+			// Then — the file and all of its keys are gone
+			try (var files = db.getLiveFiles()) {
+				assertThat(files.size()).isZero();
+			}
+			assertThat(db.get("b".getBytes())).isNull();
+			assertThat(db.get("m".getBytes())).isNull();
+			assertThat(db.get("y".getBytes())).isNull();
+		}
+	}
+
+	@Test
+	void deleteFilesInRange_byteArray_nullBounds_removesWholeKeySpace(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
+			db.put("b".getBytes(), "1".getBytes());
+			db.put("y".getBytes(), "2".getBytes());
+			db.compactRange();
+
+			// When
+			db.deleteFilesInRange((byte[]) null, null);
+
+			// Then
+			assertThat(db.get("b".getBytes())).isNull();
+			assertThat(db.get("y".getBytes())).isNull();
+		}
+	}
+
+	@Test
+	void deleteFilesInRange_byteArray_partiallyOverlappingRange_keepsFile(@TempDir Path dir) {
+		// Given — one SST file spanning [b, y], compacted out of level 0
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
+			db.put("b".getBytes(), "1".getBytes());
+			db.put("m".getBytes(), "2".getBytes());
+			db.put("y".getBytes(), "3".getBytes());
+			db.compactRange();
+
+			// When — the range covers only part of the file (y is past the limit)
+			db.deleteFilesInRange("a".getBytes(), "m".getBytes());
+
+			// Then — the file is not entirely within the range, so it is kept untouched
+			try (var files = db.getLiveFiles()) {
+				assertThat(files.size()).isEqualTo(1);
+			}
+			assertThat(db.get("b".getBytes())).isEqualTo("1".getBytes());
+			assertThat(db.get("y".getBytes())).isEqualTo("3".getBytes());
+		}
+	}
+
+	@Test
+	void deleteFilesInRange_byteArray_levelZeroFile_isKept(@TempDir Path dir) {
+		// Given — a freshly flushed file, still in level 0
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
+		     var flushOptions = FlushOptions.newFlushOptions()) {
+			db.put("b".getBytes(), "1".getBytes());
+			db.flush(flushOptions);
+
+			// When
+			db.deleteFilesInRange("a".getBytes(), "z".getBytes());
+
+			// Then — RocksDB never deletes level-0 files this way
+			assertThat(db.get("b".getBytes())).isEqualTo("1".getBytes());
+		}
+	}
+
+	@Test
+	void deleteFilesInRange_byteBuffer_coveringRange_removesKeys(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
+			db.put("b".getBytes(), "1".getBytes());
+			db.put("m".getBytes(), "2".getBytes());
+			db.compactRange();
+			ByteBuffer start = directBuffer("a");
+			ByteBuffer end = directBuffer("z");
+
+			// When
+			db.deleteFilesInRange(start, end);
+
+			// Then
+			assertThat(db.get("b".getBytes())).isNull();
+			assertThat(db.get("m".getBytes())).isNull();
+		}
+	}
+
+	@Test
+	void deleteFilesInRange_memorySegment_coveringRange_removesKeys(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
+		     Arena arena = Arena.ofConfined()) {
+			db.put("b".getBytes(), "1".getBytes());
+			db.put("m".getBytes(), "2".getBytes());
+			db.compactRange();
+			MemorySegment start = arena.allocateFrom("a").asSlice(0, 1);
+			MemorySegment end = arena.allocateFrom("z").asSlice(0, 1);
+
+			// When
+			db.deleteFilesInRange(start, end);
+
+			// Then
+			assertThat(db.get("b".getBytes())).isNull();
+			assertThat(db.get("m".getBytes())).isNull();
+		}
+	}
+
+	@Test
+	void deleteFilesInRange_columnFamily_byteArray_removesOnlyThatFamily(@TempDir Path dir) {
+		// Given — the same keys in the default family and in cf1, both compacted out of level 0
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
+			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
+			db.put("b".getBytes(), "default".getBytes());
+			db.put(cf, "b".getBytes(), "1".getBytes());
+			db.put(cf, "y".getBytes(), "2".getBytes());
+			db.compactRange();
+			db.compactRange(cf);
+
+			// When
+			db.deleteFilesInRange(cf, "a".getBytes(), "z".getBytes());
+
+			// Then
+			assertThat(db.get(cf, "b".getBytes())).isNull();
+			assertThat(db.get(cf, "y".getBytes())).isNull();
+			assertThat(db.get("b".getBytes())).isEqualTo("default".getBytes());
+		}
+	}
+
+	@Test
+	void deleteFilesInRange_columnFamily_byteBuffer_removesKeys(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts)) {
+			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
+			db.put(cf, "b".getBytes(), "1".getBytes());
+			db.compactRange(cf);
+			ByteBuffer start = directBuffer("a");
+			ByteBuffer end = directBuffer("z");
+
+			// When
+			db.deleteFilesInRange(cf, start, end);
+
+			// Then
+			assertThat(db.get(cf, "b".getBytes())).isNull();
+		}
+	}
+
+	@Test
+	void deleteFilesInRange_columnFamily_memorySegment_removesKeys(@TempDir Path dir) {
+		// Given
+		try (Options dbOpts = Options.newOptions().setCreateIfMissing(true); var db = RocksDB.openReadWrite(dir, dbOpts);
+		     Arena arena = Arena.ofConfined()) {
+			var cf = db.createColumnFamily(ColumnFamilyDescriptor.of(ColumnFamilyName.of("cf1")));
+			db.put(cf, "b".getBytes(), "1".getBytes());
+			db.compactRange(cf);
+			MemorySegment start = arena.allocateFrom("a").asSlice(0, 1);
+			MemorySegment end = arena.allocateFrom("z").asSlice(0, 1);
+
+			// When
+			db.deleteFilesInRange(cf, start, end);
+
+			// Then
+			assertThat(db.get(cf, "b".getBytes())).isNull();
 		}
 	}
 }

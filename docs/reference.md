@@ -439,6 +439,7 @@ stay on `RocksDBWriteOperations`) is implemented by `ReadWriteDB`/`TtlDB`/
 | `compactRange(start, end)`                                     | All three tiers                          |
 | `compactRange(ColumnFamilyHandle)` / `(handle, start, end)`    | One column family; `byte[]` bounds       |
 | `compactRange(CompactOptions, byte[] start, byte[] end)`       | With level control                       |
+| `deleteFilesInRange(start, end)` / `(handle, start, end)`      | All three tiers; drops whole SST files inside the range, no rewrite; level-0 files are kept |
 | `suggestCompactRange(start, end)`                              | Hint; returns immediately                |
 | `waitForCompact(WaitForCompactOptions)`                        | Wait for background compaction to settle |
 | `cancelAllBackgroundWork(boolean wait)`                        | Shutdown path                            |
@@ -560,7 +561,7 @@ Parity tracking against `rocksdbjni`. ✅ implemented · 🚧 partial · ❌ not
 | Compression                |   ✅    | `CompressionType`; `Options.setCompression`                                                 |
 | Column families            |   ✅    | Multi-CF open for every DB type; CF overloads on all data methods and `WriteBatch`          |
 | DeleteRange                |   ✅    | Range tombstones on the DB and in `WriteBatch`; all three tiers                             |
-| Compaction control         |   ✅    | `compactRange` (+`CompactOptions`), `suggestCompactRange`, file-deletion toggles            |
+| Compaction control         |   ✅    | `compactRange` (+`CompactOptions`), `suggestCompactRange`, `deleteFilesInRange`, file-deletion toggles |
 | SST Partitioner             |  🚧    | `SstPartitionerFactory.newFixedPrefix(long)` + `Options.setSstPartitionerFactory` — built-in fixed-prefix only; no callback-based custom partitioner (`rocksdb_sst_partitioner_factory_t` has no callback constructor in `c.h`, unlike `CompactionFilterFactory` — see [c-api-gaps.md](c-api-gaps.md)) |
 | Temperature hints          |   ✅    | `Temperature`; 5 `Options` setter/getter pairs (metadata/WAL/last-level/default-write/default). EXPERIMENTAL upstream, no-op for the default `FileSystem` |
 | SST file ingest            |   ✅    | `SstFileWriter`, `ingestExternalFile`, `IngestExternalFileOptions`                          |
