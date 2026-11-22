@@ -179,7 +179,7 @@ abstract class NativeDB extends NativeObjectParent {
 	/// @param name      the column family's name
 	/// @param handlePtr the native `rocksdb_column_family_handle_t*`, now owned by this database
 	/// @return the wrapped handle
-	final ColumnFamilyHandle adopt(ColumnFamilyName name, MemorySegment handlePtr) {
+	final ColumnFamilyHandle addColumnFamily(ColumnFamilyName name, MemorySegment handlePtr) {
 		ColumnFamilyHandle handle = ColumnFamilyHandle.wrap(this, handlePtr);
 		columnFamilies.updateAndGet(current -> {
 			var copy = new LinkedHashMap<>(current);
@@ -204,17 +204,14 @@ abstract class NativeDB extends NativeObjectParent {
 	///
 	/// @param handle the handle of a column family this database just dropped
 	/// @throws IllegalArgumentException if `handle` does not belong to this database
-	final void forget(ColumnFamilyHandle handle) {
-		SequencedMap<ColumnFamilyName, ColumnFamilyHandle> before;
-		SequencedMap<ColumnFamilyName, ColumnFamilyHandle> after;
-		do {
-			before = columnFamilies.get();
-			var copy = new LinkedHashMap<>(before);
+	final void removeColumnFamily(ColumnFamilyHandle handle) {
+		columnFamilies.updateAndGet(current -> {
+			var copy = new LinkedHashMap<>(current);
 			if (!copy.values().removeIf(h -> h == handle)) {
 				throw new IllegalArgumentException("column family handle does not belong to this database");
 			}
-			after = Collections.unmodifiableSequencedMap(copy);
-		} while (!columnFamilies.compareAndSet(before, after));
+			return Collections.unmodifiableSequencedMap(copy);
+		});
 		handle.release();
 	}
 }

@@ -372,7 +372,7 @@ final class RocksDBWriteOperationsBindings {
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
 					db.dbPtr(), descriptor.options().ptr(), nameSeg, err);
 			NativeCalls.checkError(err);
-			return db.adopt(descriptor.name(), handle);
+			return db.addColumnFamily(descriptor.name(), handle);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("createColumnFamily failed", t);
 		}
@@ -385,7 +385,7 @@ final class RocksDBWriteOperationsBindings {
 			MemorySegment err = NativeCalls.errHolder(arena);
 			MH_DROP_CF.invokeExact(db.dbPtr(), handle.ptr(), err);
 			NativeCalls.checkError(err);
-			db.forget(handle);
+			db.removeColumnFamily(handle);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("dropColumnFamily failed", t);
 		}

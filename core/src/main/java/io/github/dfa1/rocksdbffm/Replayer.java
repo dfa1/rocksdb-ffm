@@ -58,7 +58,7 @@ public final class Replayer extends NativeObjectChild {
 	);
 
 	/// The column families this replayer replays into. The native replayer keeps raw pointers to their handles, which
-	/// [NativeDB#forget(ColumnFamilyHandle)] frees when one is dropped.
+	/// [NativeDB#removeColumnFamily(ColumnFamilyHandle)] frees when one is dropped.
 	private final List<ColumnFamilyHandle> columnFamilies;
 
 	private Replayer(NativeObjectParent owningDb, List<ColumnFamilyHandle> columnFamilies, MemorySegment ptr) {
