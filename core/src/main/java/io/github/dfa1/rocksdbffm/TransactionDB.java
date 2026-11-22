@@ -603,7 +603,7 @@ public final class TransactionDB extends NativeDBWithBaseDB
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF.invokeExact(
 					ptr(), descriptor.options().ptr(), nameSeg, err);
 			NativeCalls.checkError(err);
-			return adopt(descriptor.name(), handle);
+			return addColumnFamily(descriptor.name(), handle);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("createColumnFamily failed", t);
 		}

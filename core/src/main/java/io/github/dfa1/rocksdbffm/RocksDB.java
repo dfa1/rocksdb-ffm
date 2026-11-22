@@ -677,7 +677,7 @@ public final class RocksDB {
 	private static <T extends NativeDB> T adoptHandles(T db, MemorySegment handlesArr, List<ColumnFamilyDescriptor> descriptors) {
 		try {
 			for (int i = 0; i < descriptors.size(); i++) {
-				db.adopt(descriptors.get(i).name(), handlesArr.getAtIndex(ValueLayout.ADDRESS, i));
+				db.addColumnFamily(descriptors.get(i).name(), handlesArr.getAtIndex(ValueLayout.ADDRESS, i));
 			}
 			return db;
 		} catch (Throwable t) {
@@ -694,7 +694,7 @@ public final class RocksDB {
 	/// @return `db` aa
 	private static <T extends NativeDB> T withDefaultColumnFamily(T db) {
 		try {
-			db.adopt(ColumnFamilyName.DEFAULT, ColumnFamilyHandle.defaultHandle(db.dbPtr()));
+			db.addColumnFamily(ColumnFamilyName.DEFAULT, ColumnFamilyHandle.defaultHandle(db.dbPtr()));
 			return db;
 		} catch (Throwable t) {
 			db.close();

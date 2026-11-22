@@ -78,7 +78,7 @@ public final class TtlDB extends NativeDB
 			MemorySegment handle = (MemorySegment) MH_CREATE_CF_WITH_TTL.invokeExact(
 					dbPtr(), descriptor.options().ptr(), descriptor.name().toNative(arena), descriptor.ttlSeconds(), err);
 			NativeCalls.checkError(err);
-			return adopt(descriptor.name(), handle);
+			return addColumnFamily(descriptor.name(), handle);
 		} catch (Throwable t) {
 			throw NativeCalls.wrapInvokeFailure("createColumnFamily failed", t);
 		}
