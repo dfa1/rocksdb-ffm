@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Options.setTrackOptionsFileNumberInManifest`/`getTrackOptionsFileNumberInManifest`: experimental option (RocksDB v11.13) that durably records the OPTIONS file number in the MANIFEST, so a crash can't leave a newer, uncommitted OPTIONS file as the "latest"; matters mostly for `RocksDB.loadLatestOptions` ([#278](https://github.com/dfa1/rocksdb-ffm/pull/278), closes [#265](https://github.com/dfa1/rocksdb-ffm/issues/265)) — thanks [@amalsaidov](https://github.com/amalsaidov)
+- `deleteFilesInRange(start, end)` and `deleteFilesInRange(handle, start, end)` (all three key tiers): drop the SST files that lie entirely within a key range without rewriting them, unlike `compactRange`; level-0 files are kept ([#280](https://github.com/dfa1/rocksdb-ffm/pull/280), closes [#267](https://github.com/dfa1/rocksdb-ffm/issues/267)) — thanks [@amalsaidov](https://github.com/amalsaidov)
 
 ### Changed
 
