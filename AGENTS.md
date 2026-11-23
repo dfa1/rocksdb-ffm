@@ -241,7 +241,9 @@ type (`ReadWriteDB`, `TtlDB`, …) or its capability interface, not on `RocksDB`
   contributor PR** — the maintainer adds the entry at merge time. Format: every entry links the pull request
   (`[#NNN](https://github.com/dfa1/rocksdb-ffm/pull/NNN)`, plus the issue when there is one), and an entry from an
   external contributor ends with `— thanks [@handle](https://github.com/handle)` (kept as an explicit link in the release
-  notes too: `publish.yml` publishes the section verbatim)
+  notes too: `publish.yml` publishes the section verbatim). One line per entry: what changed for the user (a fix names
+  the symptom), about 100 characters of prose before the links. No mechanism: that belongs in the PR, the javadoc or
+  `docs/explanation.md`. Internal refactors get no entry
 
 ## Code
 
