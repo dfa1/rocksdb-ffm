@@ -190,7 +190,7 @@ class CloseWaitsForInFlightCallsTest {
 		try {
 			future.get(millis, TimeUnit.MILLISECONDS);
 			return true;
-		} catch (Exception e) {
+		} catch (Exception _) {
 			return false;
 		}
 	}
@@ -198,7 +198,7 @@ class CloseWaitsForInFlightCallsTest {
 	private static void await(CountDownLatch latch) {
 		try {
 			latch.await();
-		} catch (InterruptedException e) {
+		} catch (InterruptedException _) {
 			Thread.currentThread().interrupt();
 		}
 	}
